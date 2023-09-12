@@ -1,0 +1,232 @@
+// Copyright 2023 Alexey Lavrenchenko. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// 	http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+
+package personalwebsite.logging;
+
+import "data/app/app_info.proto";
+import "data/actions/action.proto";
+import "data/actions/operation.proto";
+
+option go_package = "personal-website-v2/go-data/logging;logging";
+
+// Proto file describing the Log entry.
+
+// The log entry.
+message LogEntry {
+    // The unique ID to identify the log entry.
+    string id = 1;
+
+    // The time (in microseconds) when the event occured.
+    int64 timestamp = 2;
+
+    // The app info.
+    personalwebsite.app.AppInfo app = 3;
+
+    // The agent.
+    Agent agent = 4;
+
+    // The logging session ID.
+    uint64 logging_session_id = 5;
+
+    // Optional. The app session ID.
+    optional uint64 app_session_id = 6;
+
+    // Optional. The transaction.
+    Transaction tran = 7;
+
+    // Optional. The action.
+    Action action = 8;
+
+    // Optional. The operation.
+    Operation operation = 9;
+
+    // The log level.
+    LogLevel level = 10;
+
+    // The logger category name.
+    string category = 11;
+
+    // The event related to this entry.
+    Event event = 12;
+
+    // Optional. The error related to this entry.
+    Error error = 13;
+
+    // The message related to this entry.
+    string message = 14;
+
+    // Optional. The JSON-encoded fields.
+    optional string fields = 15;
+}
+
+// The agent.
+message Agent {
+    // The agent name.
+    string name = 1;
+
+    // The agent type.
+    string type = 2;
+
+    // The agent version.
+    string version = 3;
+}
+
+// The transaction.
+// See ../data/actions/transaction.proto:/^message.Transaction.
+message Transaction {
+    // The transaction ID.
+    string id = 1;
+}
+
+// The action.
+// See ../data/actions/action.proto:/^message.Action.
+message Action {
+    // The action ID.
+    string id = 1;
+
+    // The action type.
+    uint64 type = 2;
+
+    // The action category.
+    personalwebsite.actions.ActionCategoryEnum.ActionCategory category = 3;
+
+    // The action group.
+    uint64 group = 4;
+}
+
+// The operation.
+// See ../data/actions/operation.proto:/^message.Operation.
+message Operation {
+    // The operation ID.
+    string id = 1;
+
+    // The operation type.
+    uint64 type = 2;
+
+    // The operation category.
+    personalwebsite.actions.OperationCategoryEnum.OperationCategory category = 3;
+
+    // The operation group.
+    uint64 group = 4;
+}
+
+// The log level.
+enum LogLevel {
+    TRACE = 0;
+    DEBUG = 1;
+    INFO = 2;
+    WARNING = 3;
+    ERROR = 4;
+    FATAL = 5;
+
+    // None. Do not use.
+    NONE = 6;
+}
+
+// The event.
+message Event {
+    // The event ID (code).
+    uint64 id = 1;
+
+    // The short description of this type of event.
+    string name = 2;
+
+    // The event category.
+    EventCategoryEnum.EventCategory category = 3;
+
+    // The event group.
+    uint64 group = 4;
+}
+
+// Container for enum describing the event category.
+message EventCategoryEnum {
+    // The event category.
+    enum EventCategory {
+        UNKNOWN = 0;
+
+        // Common events.
+        COMMON = 1;
+
+        // Events in this category are related to creating, modifying, or deleting
+        // the settings or parameters of an application, process, or system.
+        CONFIGURATION = 2;
+
+        // Identification, authentication, authorization user/client.
+        IDENTITY = 3;
+        
+        // For example, MySQL, PostgreSQL.
+        DATABASE = 4;
+        
+        // For example, Redis.
+        CACHE_STORAGE = 5;
+
+        // Fields: transport: HTTP, gRPC
+        NETWORK = 6;
+    }
+}
+
+// The error.
+message Error {
+    // The error code.
+    uint64 code = 1;
+
+    // The error message.
+    string message = 2;
+
+    // The error type.
+    string type = 3;
+
+    // The error category.
+    ErrorCategoryEnum.ErrorCategory category = 4;
+
+    // The stack trace of the error.
+    string stack_trace = 5;
+
+    OriginalError original_error = 6;
+}
+
+// The original error.
+message OriginalError {
+    // The error code.
+    uint64 code = 1;
+
+    // The error message.
+    string message = 2;
+
+    // The error type.
+    string type = 3;
+
+    // The error category.
+    ErrorCategoryEnum.ErrorCategory category = 4;
+
+    // The stack trace of the error.
+    string stack_trace = 5;
+}
+
+// Container for enum describing the error category.
+message ErrorCategoryEnum {
+    // The error category.
+    enum ErrorCategory {
+        // Unspecified. Do not use.
+        UNSPECIFIED = 0;
+
+        // Common errors.
+        COMMON = 1;
+
+        // API errors.
+        API = 2;
+    }
+}

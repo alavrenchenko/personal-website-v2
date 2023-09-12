@@ -1,0 +1,101 @@
+// Copyright 2023 Alexey Lavrenchenko. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// 	http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+
+package personalwebsite.appmanager.apps;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/wrappers.proto";
+
+option go_package = "personal-website-v2/go-apis/app-manager/apps;apps";
+
+// Proto file describing the App.
+
+// The app info.
+message AppInfo {
+    // The unique ID to identify the app.
+    uint64 id = 1;
+    
+    // The app group ID.
+    uint64 group_id = 2;
+
+    // The unique name to identify the app.
+    string name = 3;
+
+    // The app type.
+    AppTypeEnum.AppType type = 4;
+
+    // The app category.
+    AppCategoryEnum.AppCategory category = 5;
+
+    // It stores the date and time at which the app was created.
+    google.protobuf.Timestamp created_at = 6;
+
+    // The user ID to identify the user who added the app.
+    uint64 created_by = 7;
+
+    // It stores the date and time at which the app was updated.
+    google.protobuf.Timestamp updated_at = 8;
+
+    // The user ID to identify the user who updated the app.
+    uint64 updated_by = 9;
+
+    // The status of the app can be New(1), Active(2), or Inactive(3).
+    AppStatus status = 10;
+
+    // It stores the date and time at which the app status was updated.
+    google.protobuf.Timestamp status_updated_at = 11;
+
+    // The user ID to identify the user who updated the app status.
+    uint64 status_updated_by = 12;
+
+    // Optional. The app status comment.
+    google.protobuf.StringValue status_comment = 13;
+
+    // The app version.
+    string version = 14;
+
+    // The app description.
+    string description = 15;
+}
+
+// Container for enum describing the app type.
+message AppTypeEnum {
+    // The app type.
+    enum AppType {
+        // Unspecified. Do not use.
+        UNSPECIFIED = 0;
+        SERVICE = 1;
+    }
+}
+
+// Container for enum describing the app category.
+message AppCategoryEnum {
+    // The app category.
+    enum AppCategory {
+        // Unspecified. Do not use.
+        UNSPECIFIED = 0;
+        SERVICE = 1;
+    }
+}
+
+// The app status.
+enum AppStatus {
+    // Unspecified. Do not use.
+    APP_STATUS_UNSPECIFIED = 0;
+    NEW = 1;
+    ACTIVE = 2;
+    INACTIVE = 3;
+}

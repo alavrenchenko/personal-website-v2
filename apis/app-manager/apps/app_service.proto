@@ -1,0 +1,71 @@
+// Copyright 2023 Alexey Lavrenchenko. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// 	http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+
+package personalwebsite.appmanager.apps;
+
+import "apis/app-manager/apps/app_info.proto";
+
+option go_package = "personal-website-v2/go-apis/app-manager/apps;apps";
+
+// Proto file describing the App service.
+
+// The app service definition.
+service AppService {
+    // Gets an app by the specified app ID.
+    rpc GetById(GetByIdRequest) returns (GetByIdResponse) {}
+
+    // Gets an app by the specified app name.
+    rpc GetByName(GetByNameRequest) returns (GetByNameResponse) {}
+
+    // Gets an app status by the specified app ID.
+    rpc GetStatusById(GetStatusByIdRequest) returns (GetStatusByIdResponse) {}
+}
+
+// Request message for 'AppService.GetById'.
+message GetByIdRequest {
+    // The app ID.
+    uint64 id = 1;
+}
+
+// Response message for 'AppService.GetById'.
+message GetByIdResponse {
+    // The app info.
+    AppInfo info = 1;
+}
+
+// Request message for 'AppService.GetByName'.
+message GetByNameRequest {
+    // The app name.
+    string name = 1;
+}
+
+// Response message for 'AppService.GetByName'.
+message GetByNameResponse {
+    // The app info.
+    AppInfo info = 1;
+}
+
+// Request message for 'AppService.GetStatusById'.
+message GetStatusByIdRequest {
+    // The app ID.
+    uint64 id = 1;
+}
+
+// Response message for 'AppService.GetStatusById'.
+message GetStatusByIdResponse {
+    // The app status.
+    AppStatus status = 1;
+}

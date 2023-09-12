@@ -1,0 +1,56 @@
+// Copyright 2023 Alexey Lavrenchenko. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// 	http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+
+package personalwebsite.appmanager.groups;
+
+import "apis/app-manager/groups/app_group.proto";
+
+option go_package = "personal-website-v2/go-apis/app-manager/groups;groups";
+
+// Proto file describing the App group service.
+
+// The app group service definition.
+service AppGroupService {
+    // Gets an app group by the specified app group ID.
+    rpc GetById(GetByIdRequest) returns (GetByIdResponse) {}
+
+    // Gets an app group by the specified app group name.
+    rpc GetByName(GetByNameRequest) returns (GetByNameResponse) {}
+}
+
+// Request message for 'AppGroupService.GetById'.
+message GetByIdRequest {
+    // The app group ID.
+    uint64 id = 1;
+}
+
+// Response message for 'AppGroupService.GetById'.
+message GetByIdResponse {
+    // The app group.
+    AppGroup group = 1;
+}
+
+// Request message for 'AppGroupService.GetByName'.
+message GetByNameRequest {
+    // The app group name.
+    string name = 1;
+}
+
+// Response message for 'AppGroupService.GetByName'.
+message GetByNameResponse {
+    // The app group.
+    AppGroup group = 1;
+}
