@@ -56,13 +56,13 @@ CREATE TABLE IF NOT EXISTS {name}_logdb.log
         code UInt64,
         message String,
         `type` LowCardinality(String),
-        category Enum8('unspecified' = 0, 'common' = 1, 'api' = 2),
+        category Enum8('unspecified' = 0, 'common' = 1, 'api' = 2, 'database' = 3),
         stack_trace String,
         original_error Tuple(
             code UInt64,
             message String,
             `type` LowCardinality(String),
-            category Enum8('unspecified' = 0, 'common' = 1, 'api' = 2),
+            category Enum8('unspecified' = 0, 'common' = 1, 'api' = 2, 'database' = 3),
             stack_trace String
         )
     ) DEFAULT tuple(0, '', '', 0, '', (0, '', '', 0, '')), -- NoError = 0
@@ -143,13 +143,13 @@ CREATE TABLE IF NOT EXISTS {name}_logdb.log_queue
         code UInt64,
         message String,
         `type` String,
-        category Enum8('unspecified' = 0, 'common' = 1, 'api' = 2),
+        category Enum8('unspecified' = 0, 'common' = 1, 'api' = 2, 'database' = 3),
         stack_trace String,
         original_error Tuple(
             code UInt64,
             message String,
             `type` String,
-            category Enum8('unspecified' = 0, 'common' = 1, 'api' = 2),
+            category Enum8('unspecified' = 0, 'common' = 1, 'api' = 2, 'database' = 3),
             stack_trace String
         )
     ), -- NoError = 0

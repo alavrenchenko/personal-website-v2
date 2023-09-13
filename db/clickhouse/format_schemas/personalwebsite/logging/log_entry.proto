@@ -228,5 +228,8 @@ message ErrorCategoryEnum {
 
         // API errors.
         API = 2;
+
+        // Database errors.
+        DATABASE = 3;
     }
 }
