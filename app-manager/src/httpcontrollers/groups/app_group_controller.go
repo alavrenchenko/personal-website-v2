@@ -203,10 +203,10 @@ func (c *AppGroupController) GetByIdOrName(ctx *server.HttpContext) {
 		name := nameVs[0]
 
 		if len(name) == 0 {
-			c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppGroupControllerEvent, nil, "[groups.AppGroupController.FindByName] invalid name")
+			c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppGroupControllerEvent, nil, "[groups.AppGroupController.GetByIdOrName] invalid name")
 
 			if err = apihttp.BadRequest(ctx, apierrors.NewApiError(apierrors.ApiErrorCodeInvalidData, "invalid name")); err != nil {
-				c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppGroupControllerEvent, err, "[groups.AppGroupController.FindByName] write BadRequest")
+				c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppGroupControllerEvent, err, "[groups.AppGroupController.GetByIdOrName] write BadRequest")
 			}
 			return
 		}
@@ -214,18 +214,18 @@ func (c *AppGroupController) GetByIdOrName(ctx *server.HttpContext) {
 		appGroup, err = c.appGroupManager.FindByName(opCtx, name)
 
 		if err != nil {
-			c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppGroupControllerEvent, err, "[groups.AppGroupController.FindByName] find an app group by name")
+			c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppGroupControllerEvent, err, "[groups.AppGroupController.GetByIdOrName] find an app group by name")
 
 			if err = apihttp.InternalServerError(ctx); err != nil {
-				c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppGroupControllerEvent, err, "[groups.AppGroupController.FindByName] write an error (InternalServerError)")
+				c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppGroupControllerEvent, err, "[groups.AppGroupController.GetByIdOrName] write an error (InternalServerError)")
 			}
 			return
 		}
 	} else {
-		c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppGroupControllerEvent, nil, "[groups.AppGroupController.FindByName] id and name are missing or invalid")
+		c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppGroupControllerEvent, nil, "[groups.AppGroupController.GetByIdOrName] id and name are missing or invalid")
 
 		if err = apihttp.BadRequest(ctx, apierrors.NewApiError(apierrors.ApiErrorCodeInvalidQueryString, "id and name are missing or invalid")); err != nil {
-			c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppGroupControllerEvent, err, "[groups.AppGroupController.FindByName] write BadRequest")
+			c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppGroupControllerEvent, err, "[groups.AppGroupController.GetByIdOrName] write BadRequest")
 		}
 		return
 	}
