@@ -7,7 +7,7 @@ bin/
 
 **/experimental/
 
-/admin/
+**/admin/
 
 /api-clients/emailnotifier/
 /api-clients/identity/
