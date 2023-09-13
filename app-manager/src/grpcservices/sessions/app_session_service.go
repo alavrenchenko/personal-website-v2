@@ -155,12 +155,12 @@ func (s *AppSessionService) CreateAndStart(ctx context.Context, req *sessionspb.
 			logginghelper.CreateLogEntryContext(s.appSessionId, nil, nil, nil),
 			events.GrpcServices_AppSessionServiceEvent,
 			nil,
-			"[sessions.AppSessionService.GetById] GrpcContext not found in the incoming context",
+			"[sessions.AppSessionService.CreateAndStart] GrpcContext not found in the incoming context",
 		)
 		return nil, apigrpcerrors.CreateGrpcError(codes.Internal, apierrors.ErrInternal)
 	}
 
-	a, op, err := s.createAndStartActionAndOperation(grpcCtx, "[sessions.AppSessionService.GetById]", amactions.ActionTypeAppSession_GetById, amactions.OperationTypeAppSessionService_GetById)
+	a, op, err := s.createAndStartActionAndOperation(grpcCtx, "[sessions.AppSessionService.CreateAndStart]", amactions.ActionTypeAppSession_CreateAndStart, amactions.OperationTypeAppSessionService_CreateAndStart)
 
 	if err != nil {
 		return nil, err
@@ -168,7 +168,7 @@ func (s *AppSessionService) CreateAndStart(ctx context.Context, req *sessionspb.
 
 	succeeded := false
 	defer func() {
-		s.completeActionAndOperation(grpcCtx, "[sessions.AppSessionService.GetById]", a, op, succeeded)
+		s.completeActionAndOperation(grpcCtx, "[sessions.AppSessionService.CreateAndStart]", a, op, succeeded)
 	}()
 
 	opCtx := actions.NewOperationContext(context.Background(), s.appSessionId, grpcCtx.Transaction, a, op)
@@ -179,7 +179,7 @@ func (s *AppSessionService) CreateAndStart(ctx context.Context, req *sessionspb.
 	id, err := s.appSessionManager.CreateAndStartWithContext(opCtx, req.AppId)
 
 	if err != nil {
-		s.logger.ErrorWithEvent(leCtx, events.GrpcServices_AppSessionServiceEvent, err, "[sessions.AppSessionService.GetById] create and start an app session")
+		s.logger.ErrorWithEvent(leCtx, events.GrpcServices_AppSessionServiceEvent, err, "[sessions.AppSessionService.CreateAndStart] create and start an app session")
 
 		if err2 := errors.Unwrap(err); err2 != nil {
 			if err2 == amerrors.ErrAppNotFound {
@@ -205,12 +205,12 @@ func (s *AppSessionService) Terminate(ctx context.Context, req *sessionspb.Termi
 			logginghelper.CreateLogEntryContext(s.appSessionId, nil, nil, nil),
 			events.GrpcServices_AppSessionServiceEvent,
 			nil,
-			"[sessions.AppSessionService.GetById] GrpcContext not found in the incoming context",
+			"[sessions.AppSessionService.Terminate] GrpcContext not found in the incoming context",
 		)
 		return nil, apigrpcerrors.CreateGrpcError(codes.Internal, apierrors.ErrInternal)
 	}
 
-	a, op, err := s.createAndStartActionAndOperation(grpcCtx, "[sessions.AppSessionService.GetById]", amactions.ActionTypeAppSession_GetById, amactions.OperationTypeAppSessionService_GetById)
+	a, op, err := s.createAndStartActionAndOperation(grpcCtx, "[sessions.AppSessionService.Terminate]", amactions.ActionTypeAppSession_Terminate, amactions.OperationTypeAppSessionService_Terminate)
 
 	if err != nil {
 		return nil, err
@@ -218,7 +218,7 @@ func (s *AppSessionService) Terminate(ctx context.Context, req *sessionspb.Termi
 
 	succeeded := false
 	defer func() {
-		s.completeActionAndOperation(grpcCtx, "[sessions.AppSessionService.GetById]", a, op, succeeded)
+		s.completeActionAndOperation(grpcCtx, "[sessions.AppSessionService.Terminate]", a, op, succeeded)
 	}()
 
 	opCtx := actions.NewOperationContext(context.Background(), s.appSessionId, grpcCtx.Transaction, a, op)
@@ -229,7 +229,7 @@ func (s *AppSessionService) Terminate(ctx context.Context, req *sessionspb.Termi
 	err = s.appSessionManager.TerminateWithContext(opCtx, req.Id)
 
 	if err != nil {
-		s.logger.ErrorWithEvent(leCtx, events.GrpcServices_AppSessionServiceEvent, err, "[sessions.AppSessionService.GetById] terminate an app session")
+		s.logger.ErrorWithEvent(leCtx, events.GrpcServices_AppSessionServiceEvent, err, "[sessions.AppSessionService.Terminate] terminate an app session")
 
 		if err2 := errors.Unwrap(err); err2 != nil {
 			if err2 == amerrors.ErrAppSessionNotFound {
