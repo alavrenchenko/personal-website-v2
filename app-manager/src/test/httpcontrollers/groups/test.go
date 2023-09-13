@@ -120,11 +120,11 @@ func Run() {
 		}
 	}()
 
-	test_GetById()
+	testAppGroups_GetById()
 	serverhelper.PrintStats(s)
 
 	fmt.Println()
-	test_GetByName()
+	testAppGroups_GetByName()
 	serverhelper.PrintStats(s)
 }
 
@@ -138,13 +138,13 @@ func configureHttpRouting(r *routing.Router, actionManager *actions.ActionManage
 	r.AddGet("AppGroups_GetByIdOrName", "/api/app-group", appGroupController.GetByIdOrName)
 }
 
-func test_GetById() {
+func testAppGroups_GetById() {
 	for id := 1; id <= 5; id++ {
 		clienthelper.Exec(http.MethodGet, fmt.Sprintf("http://%s/api/app-group?id=%d", httpServerAddr, id), "")
 	}
 }
 
-func test_GetByName() {
+func testAppGroups_GetByName() {
 	for n := 1; n <= 5; n++ {
 		name := "App Group " + strconv.Itoa(n)
 		clienthelper.Exec(http.MethodGet, fmt.Sprintf("http://%s/api/app-group?name=%s", httpServerAddr, url.QueryEscape(name)), "")

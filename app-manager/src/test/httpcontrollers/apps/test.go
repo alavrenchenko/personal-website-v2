@@ -120,15 +120,15 @@ func Run() {
 		}
 	}()
 
-	test_GetById()
+	testApps_GetById()
 	serverhelper.PrintStats(s)
 
 	fmt.Println()
-	test_GetByName()
+	testApps_GetByName()
 	serverhelper.PrintStats(s)
 
 	fmt.Println()
-	test_GetStatusById()
+	testApps_GetStatusById()
 	serverhelper.PrintStats(s)
 }
 
@@ -143,20 +143,20 @@ func configureHttpRouting(r *routing.Router, actionManager *actions.ActionManage
 	r.AddGet("Apps_GetStatusById", "/api/apps/status", appController.GetStatusById)
 }
 
-func test_GetById() {
+func testApps_GetById() {
 	for id := 1; id <= 5; id++ {
 		clienthelper.Exec(http.MethodGet, fmt.Sprintf("http://%s/api/apps?id=%d", httpServerAddr, id), "")
 	}
 }
 
-func test_GetByName() {
+func testApps_GetByName() {
 	for n := 1; n <= 5; n++ {
 		name := "App " + strconv.Itoa(n)
 		clienthelper.Exec(http.MethodGet, fmt.Sprintf("http://%s/api/apps?name=%s", httpServerAddr, url.QueryEscape(name)), "")
 	}
 }
 
-func test_GetStatusById() {
+func testApps_GetStatusById() {
 	for id := 1; id <= 5; id++ {
 		clienthelper.Exec(http.MethodGet, fmt.Sprintf("http://%s/api/apps/status?id=%d", httpServerAddr, id), "")
 	}
