@@ -18,8 +18,9 @@ type ActionType uint64
 
 const (
 	// Application action types (1-199)
-	ActionTypeApplication_Start ActionType = 1
-	ActionTypeApplication_Stop  ActionType = 2
+	ActionTypeApplication_Start            ActionType = 1
+	ActionTypeApplication_Stop             ActionType = 2
+	ActionTypeApplication_TerminateSession ActionType = 3
 
 	// Application session action types (200-299)
 	ActionTypeApplicationSession_Start     ActionType = 200

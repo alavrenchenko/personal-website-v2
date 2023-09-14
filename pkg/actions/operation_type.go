@@ -18,13 +18,18 @@ type OperationType uint64
 
 const (
 	// Application operation types (1-499)
-	OperationTypeApplication_Start OperationType = 1
-	OperationTypeApplication_Stop  OperationType = 2
+	OperationTypeApplication_Start            OperationType = 1
+	OperationTypeApplication_Stop             OperationType = 2
+	OperationTypeApplication_TerminateSession OperationType = 3
 
 	// Application session action types (500-999)
 	OperationTypeApplicationSession_Start     OperationType = 500
 	OperationTypeApplicationSession_Terminate OperationType = 501
 
-	// reserved event ids: 1000-9999
+	// [HTTP] ApplicationController operation types (7000-7099)
+	OperationTypeApplicationController_Stop OperationType = 7000
 
+	// [gRPC] ApplicationService operation types (8000-8099)
+
+	// reserved event ids: 1000-6999, 7100-7999, 8100-9999
 )
