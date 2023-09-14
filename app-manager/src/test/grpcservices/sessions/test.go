@@ -193,7 +193,7 @@ func exec(s *grpcserver.GrpcServer) {
 	serverhelper.PrintStats(s)
 
 	fmt.Println()
-	testAppSessions_Terminate(opCtx)
+	testAppSessions_Terminate(opCtx.UserId.Value)
 	serverhelper.PrintStats(s)
 
 	fmt.Println()
@@ -210,13 +210,21 @@ func testAppSessions_CreateAndStart(userId uint64) {
 	}
 }
 
-func testAppSessions_Terminate(ctx *actions.OperationContext) {
+func testAppSessions_Terminate(userId uint64) {
 	for id := uint64(1); id <= 5; id++ {
-		err := appManagerService.Sessions.Terminate(ctx, id)
+		err := appManagerService.Sessions.Terminate(id, userId)
 		fmt.Printf("[sessions.testAppSessions_Terminate] appSessionId: %d\nerr: %v\n\n", id, err)
 	}
 }
 
+/*
+	func testAppSessions_Terminate(ctx *actions.OperationContext) {
+		for id := uint64(1); id <= 5; id++ {
+			err := appManagerService.Sessions.Terminate(ctx, id)
+			fmt.Printf("[sessions.testAppSessions_Terminate] appSessionId: %d\nerr: %v\n\n", id, err)
+		}
+	}
+*/
 func testAppSessions_GetById(ctx *actions.OperationContext) {
 	for id := uint64(1); id <= 5; id++ {
 		s, err := appManagerService.Sessions.GetById(ctx, id)
