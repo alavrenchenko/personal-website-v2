@@ -29,7 +29,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/google/uuid"
 	"google.golang.org/grpc/grpclog"
 
 	"personal-website-v2/app-manager/src/app/config"
@@ -42,7 +41,7 @@ import (
 	appservices "personal-website-v2/app-manager/src/grpcservices/apps"
 	groupservices "personal-website-v2/app-manager/src/grpcservices/groups"
 	sessionservices "personal-website-v2/app-manager/src/grpcservices/sessions"
-	appcontrollers "personal-website-v2/app-manager/src/httpcontrollers/apps"
+	amappcontrollers "personal-website-v2/app-manager/src/httpcontrollers/apps"
 	groupcontrollers "personal-website-v2/app-manager/src/httpcontrollers/groups"
 	sessioncontrollers "personal-website-v2/app-manager/src/httpcontrollers/sessions"
 	appmanager "personal-website-v2/app-manager/src/internal/apps/manager"
@@ -56,6 +55,7 @@ import (
 	actionlogging "personal-website-v2/pkg/actions/logging"
 	"personal-website-v2/pkg/app"
 	"personal-website-v2/pkg/app/service"
+	appcontrollers "personal-website-v2/pkg/app/service/net/http/server/controllers/app"
 	"personal-website-v2/pkg/base/env"
 	"personal-website-v2/pkg/base/nullable"
 	"personal-website-v2/pkg/db/postgres"
@@ -671,24 +671,30 @@ func (a *Application) configureHttpServer() error {
 }
 
 func (a *Application) configureHttpRouting(router *httpserverrouting.Router) error {
-	appController, err := appcontrollers.NewAppController(a.appSessionId.Value, a.actionManager, a.appManager, a.loggerFactory)
+	applicationController, err := appcontrollers.NewApplicationController(a, a.appSessionId.Value, a.actionManager, a.loggerFactory)
+	if err != nil {
+		return fmt.Errorf("[app.Application.configureHttpRouting] new application controller: %w", err)
+	}
 
+	appController, err := amappcontrollers.NewAppController(a.appSessionId.Value, a.actionManager, a.appManager, a.loggerFactory)
 	if err != nil {
 		return fmt.Errorf("[app.Application.configureHttpRouting] new app controller: %w", err)
 	}
 
 	appGroupController, err := groupcontrollers.NewAppGroupController(a.appSessionId.Value, a.actionManager, a.appGroupManager, a.loggerFactory)
-
 	if err != nil {
 		return fmt.Errorf("[app.Application.configureHttpRouting] new app group controller: %w", err)
 	}
 
 	appSessionController, err := sessioncontrollers.NewAppSessionController(a.appSessionId.Value, a.actionManager, a.appSessionManager, a.loggerFactory)
-
 	if err != nil {
 		return fmt.Errorf("[app.Application.configureHttpRouting] new app session controller: %w", err)
 	}
 
+	// private
+	router.AddPost("App_Stop", "/private/api/app/stop", applicationController.Stop)
+
+	// public
 	router.AddGet("Apps_GetByIdOrName", "/api/apps", appController.GetByIdOrName)
 	router.AddGet("Apps_GetStatusById", "/api/apps/status", appController.GetStatusById)
 
@@ -816,29 +822,7 @@ func (a *Application) StopWithContext(ctx *actions.OperationContext) error {
 		return errors.New("[app.Application.StopWithContext] app not started")
 	}
 
-	op, err := ctx.Action.Operations.CreateAndStart(
-		actions.OperationTypeApplication_Stop,
-		actions.OperationCategoryCommon,
-		actions.OperationGroupApplication,
-		uuid.NullUUID{UUID: ctx.Operation.Id(), Valid: true},
-	)
-
-	if err != nil {
-		return fmt.Errorf("[app.Application.StopWithContext] create and start an operation: %w", err)
-	}
-
-	succeeded := false
-	ctx2 := ctx.Clone()
-	ctx2.Operation = op
-
-	defer func() {
-		if err := ctx.Action.Operations.Complete(op, succeeded); err != nil {
-			a.logWithContext(ctx2.CreateLogEntryContext(), logging.LogLevelError, events.ApplicationEvent, err, "[app.Application.StopWithContext] complete an operation")
-		}
-	}()
-
-	a.stop(ctx2)
-	succeeded = true
+	a.stop(ctx)
 	return nil
 }
 
@@ -916,23 +900,23 @@ func (a *Application) stop(ctx *actions.OperationContext) {
 		}
 	}
 
-	if a.tranManager != nil {
-		a.tranManager.AllowToCreate(false)
-		a.tranManager.Wait()
-	}
-
-	if a.actionManager != nil {
-		a.actionManager.AllowToCreate(false)
-		a.actionManager.Wait()
-	}
-
-	if a.actionLogger != nil {
-		if err := a.actionLogger.Dispose(); err != nil {
-			a.logWithContext(leCtx, logging.LogLevelError, events.ApplicationEvent, err, "[app.Application.stop] dispose of the action logger")
-		}
-	}
-
 	if a.session != nil && a.session.IsStarted() {
+		if a.tranManager != nil {
+			a.tranManager.AllowToCreate(false)
+			a.tranManager.Wait()
+		}
+
+		if a.actionManager != nil {
+			a.actionManager.AllowToCreate(false)
+			a.actionManager.Wait()
+		}
+
+		if a.actionLogger != nil {
+			if err := a.actionLogger.Dispose(); err != nil {
+				a.logWithContext(leCtx, logging.LogLevelError, events.ApplicationEvent, err, "[app.Application.stop] dispose of the action logger")
+			}
+		}
+
 		var err error
 
 		if ctx != nil {
@@ -963,6 +947,60 @@ func (a *Application) stop(ctx *actions.OperationContext) {
 	}
 }
 
+/*
+	func (a *Application) terminateSessionWithContext(ctx *actions.OperationContext) error {
+		var op *actions.Operation
+		action, err := a.actionManager.CreateAndStart(
+			ctx.Transaction,
+			actions.ActionTypeApplication_TerminateSession,
+			actions.ActionCategoryCommon,
+			actions.ActionGroupApplication,
+			uuid.NullUUID{UUID: ctx.Action.Id(), Valid: true},
+			true,
+		)
+		a.actionManager.AllowToCreate(false)
+
+		if err != nil {
+			return fmt.Errorf("[app.Application.terminateSessionWithContext] create and start an action: %w", err)
+		}
+
+		succeeded := false
+		defer func() {
+			if err := a.actionManager.Complete(action, succeeded); err != nil {
+				leCtx := logginghelper.CreateLogEntryContext(ctx.AppSessionId, ctx.Transaction, action, op)
+				a.logWithContext(leCtx, logging.LogLevelError, events.ApplicationEvent, err, "[app.Application.terminateSessionWithContext] complete an action")
+			}
+		}()
+
+		op, err = ctx.Action.Operations.CreateAndStart(
+			actions.OperationTypeApplication_TerminateSession,
+			actions.OperationCategoryCommon,
+			actions.OperationGroupApplication,
+			uuid.NullUUID{UUID: ctx.Operation.Id(), Valid: true},
+		)
+		if err != nil {
+			op = nil
+			return fmt.Errorf("[app.Application.terminateSessionWithContext] create and start an operation: %w", err)
+		}
+
+		ctx2 := ctx.Clone()
+		ctx2.Action = action
+		ctx2.Operation = op
+
+		defer func() {
+			if err := ctx.Action.Operations.Complete(op, succeeded); err != nil {
+				a.logWithContext(ctx2.CreateLogEntryContext(), logging.LogLevelError, events.ApplicationEvent, err, "[app.Application.terminateSessionWithContext] complete an operation")
+			}
+		}()
+
+		if err = a.session.TerminateWithContext(ctx2); err != nil {
+			return fmt.Errorf("[app.Application.terminateSessionWithContext] terminate a session: %w", err)
+		}
+
+		succeeded = true
+		return nil
+	}
+*/
 func (a *Application) WaitForShutdown() {
 	a.wg.Wait()
 }
