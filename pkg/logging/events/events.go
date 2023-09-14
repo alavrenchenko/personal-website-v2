@@ -97,5 +97,21 @@ var (
 	// Database events (id: 0, 4200-4399)
 	DbEvent = logging.NewEvent(0, "Database", logging.EventCategoryDatabase, logging.EventGroupDb)
 
-	// reserved event ids: 4400-9999
+	// Store events (id: 0, 9000-9199)
+	// ApplicationStore events (id: 0, 9000-9019)
+
+	// CacheStore events (id: 0, 9200-9399)
+	// ApplicationCacheStore events (id: 0, 9200-9219)
+
+	// HttpControllers events (id: 0, 9500-9699)
+
+	// HttpControllers_ApplicationController events (id: 0, 9500-9519)
+	HttpControllers_ApplicationControllerEvent = logging.NewEvent(0, "HttpControllers_ApplicationController", logging.EventCategoryCommon, logging.EventGroupHttpControllers_ApplicationController)
+
+	// GrpcServices events (id: 0, 9700-9899)
+
+	// GrpcServices_ApplicationService events (id: 0, 9700-9719)
+	GrpcServices_ApplicationServiceEvent = logging.NewEvent(0, "GrpcServices_ApplicationService", logging.EventCategoryCommon, logging.EventGroupGrpcServices_ApplicationService)
+
+	// reserved event ids: 9900-9999
 )

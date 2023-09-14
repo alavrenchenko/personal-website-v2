@@ -37,5 +37,21 @@ const (
 	EventGroupNetGrpc_Client                        EventGroup = 17
 	EventGroupDb                                    EventGroup = 18
 
-	// reserved event groups: 19-999
+	// Store event groups (500-549).
+
+	EventGroupApplicationStore EventGroup = 500
+
+	// Cache store event groups (550-599).
+
+	EventGroupApplicationCacheStore EventGroup = 550
+
+	// HTTP controller event groups (700-749).
+
+	EventGroupHttpControllers_ApplicationController EventGroup = 700
+
+	// gRPC service event groups (750-799).
+
+	EventGroupGrpcServices_ApplicationService EventGroup = 750
+
+	// reserved event groups: 800-999
 )
