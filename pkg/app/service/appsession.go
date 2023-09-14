@@ -20,8 +20,6 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/google/uuid"
-
 	"personal-website-v2/pkg/actions"
 	"personal-website-v2/pkg/app"
 	"personal-website-v2/pkg/base/nullable"
@@ -33,7 +31,7 @@ import (
 type appSessions interface {
 	CreateAndStart(appId uint64, userId uint64) (uint64, error)
 	Terminate(id uint64, userId uint64) error
-	TerminateWithContext(ctx *actions.OperationContext, id uint64) error
+	// TerminateWithContext(ctx *actions.OperationContext, id uint64) error
 }
 
 type ApplicationSession struct {
@@ -132,6 +130,50 @@ func (s *ApplicationSession) TerminateWithContext(ctx *actions.OperationContext)
 		return errors.New("[service.ApplicationSession.TerminateWithContext] app session not started")
 	}
 
+	if err := s.terminate(ctx); err != nil {
+		return fmt.Errorf("[service.ApplicationSession.TerminateWithContext] terminate a session: %w", err)
+	}
+	return nil
+}
+
+func (s *ApplicationSession) terminate(ctx *actions.OperationContext) error {
+	var leCtx *context.LogEntryContext
+
+	if ctx != nil {
+		leCtx = ctx.CreateLogEntryContext()
+	} else {
+		leCtx = &context.LogEntryContext{AppSessionId: nullable.NewNullable(s.id.Load())}
+	}
+
+	s.logger.InfoWithEvent(
+		leCtx,
+		events.ApplicationSessionIsEnding,
+		"[service.ApplicationSession.terminate] ending the app session...",
+	)
+
+	if err := s.sessions.Terminate(s.id.Load(), s.userId); err != nil {
+		return fmt.Errorf("[service.ApplicationSession.terminate] terminate an app session: %w", err)
+	}
+
+	s.isStarted.Store(false)
+	s.isEnded = true
+	s.logger.InfoWithEvent(
+		leCtx,
+		events.ApplicationSessionEnded,
+		"[service.ApplicationSession.terminate] app session has been ended",
+	)
+	return nil
+}
+
+/*
+func (s *ApplicationSession) TerminateWithContext(ctx *actions.OperationContext) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if !s.isStarted.Load() {
+		return errors.New("[service.ApplicationSession.TerminateWithContext] app session not started")
+	}
+
 	op, err := ctx.Action.Operations.CreateAndStart(
 		actions.OperationTypeApplicationSession_Terminate,
 		actions.OperationCategoryCommon,
@@ -204,3 +246,4 @@ func (s *ApplicationSession) terminate(ctx *actions.OperationContext) error {
 	)
 	return nil
 }
+*/
