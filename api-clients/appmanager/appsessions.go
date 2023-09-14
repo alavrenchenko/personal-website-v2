@@ -30,7 +30,7 @@ import (
 )
 
 type AppSessionsService struct {
-	client  sessionspb.AppSessionServiceClient
+	client sessionspb.AppSessionServiceClient
 	config *serviceConfig
 }
 
@@ -38,7 +38,7 @@ var _ AppSessions = (*AppSessionsService)(nil)
 
 func newAppSessionsService(conn *grpc.ClientConn, config *serviceConfig) *AppSessionsService {
 	return &AppSessionsService{
-		client:  sessionspb.NewAppSessionServiceClient(conn),
+		client: sessionspb.NewAppSessionServiceClient(conn),
 		config: config,
 	}
 }
@@ -62,6 +62,24 @@ func (s *AppSessionsService) CreateAndStart(appId uint64, userId uint64) (uint64
 }
 
 // Terminate terminates an app session by the specified app session ID.
+func (s *AppSessionsService) Terminate(id uint64, userId uint64) error {
+	md := metadata.New(map[string]string{apimetadata.UserIdMDKey: strconv.FormatUint(userId, 10)})
+	ctx2 := metadata.NewOutgoingContext(context.Background(), md)
+
+	ctx2, cancel := context.WithTimeout(ctx2, s.config.CallTimeout)
+	defer cancel()
+
+	req := &sessionspb.TerminateRequest{Id: id}
+	_, err := s.client.Terminate(ctx2, req)
+
+	if err != nil {
+		return fmt.Errorf("[appmanager.AppSessionsService.Terminate] terminate an app session: %w", apigrpcerrors.ParseGrpcError(err))
+	}
+	return nil
+}
+
+/*
+// Terminate terminates an app session by the specified app session ID.
 func (s *AppSessionsService) Terminate(ctx *actions.OperationContext, id uint64) error {
 	ctx2, err := apigrpc.CreateOutgoingContextWithOperationContext(ctx)
 
@@ -80,7 +98,7 @@ func (s *AppSessionsService) Terminate(ctx *actions.OperationContext, id uint64)
 	}
 	return nil
 }
-
+*/
 // GetById gets an app session info by the specified app session ID.
 func (s *AppSessionsService) GetById(ctx *actions.OperationContext, id uint64) (*sessionspb.AppSessionInfo, error) {
 	ctx2, err := apigrpc.CreateOutgoingContextWithOperationContext(ctx)

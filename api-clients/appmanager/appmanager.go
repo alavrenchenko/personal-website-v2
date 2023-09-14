@@ -46,7 +46,8 @@ type AppSessions interface {
 	CreateAndStart(appId uint64, userId uint64) (uint64, error)
 
 	// Terminate terminates an app session by the specified app session ID.
-	Terminate(ctx *actions.OperationContext, id uint64) error
+	Terminate(id uint64, userId uint64) error
+	// Terminate(ctx *actions.OperationContext, id uint64) error
 
 	// GetById gets an app session info by the specified app session ID.
 	GetById(ctx *actions.OperationContext, id uint64) (*sessionspb.AppSessionInfo, error)
