@@ -24,7 +24,7 @@ import (
 // Transaction events (id: 0, 1000-1199)
 // Action events (id: 0, 1200-1399)
 // Operation events (id: 0, 1400-1599)
-// reserved event ids: 1600-9999
+// Event ids: 0-9999
 
 var (
 	// App events (id: 0, 10000-10199)
@@ -47,25 +47,19 @@ var (
 	// AppSessionStore events (id: 0, 20600-20799)
 	AppSessionStoreEvent = logging.NewEvent(0, "AppSessionStore", logging.EventCategoryDatabase, amlogging.EventGroupAppSessionStore)
 
-	// HttpControllers_ApplicationController events (id: 0, 100000-100199)
-	HttpControllers_ApplicationControllerEvent = logging.NewEvent(0, "HttpControllers_ApplicationController", logging.EventCategoryCommon, amlogging.EventGroupHttpControllers_ApplicationController)
-
-	// HttpControllers_AppController events (id: 0, 100200-100399)
+	// HttpControllers_AppController events (id: 0, 100000-100199)
 	HttpControllers_AppControllerEvent = logging.NewEvent(0, "HttpControllers_AppController", logging.EventCategoryCommon, amlogging.EventGroupHttpControllers_AppController)
 
-	// HttpControllers_AppGroupController events (id: 0, 100400-100599)
+	// HttpControllers_AppGroupController events (id: 0, 100200-100399)
 	HttpControllers_AppGroupControllerEvent = logging.NewEvent(0, "HttpControllers_AppGroupController", logging.EventCategoryCommon, amlogging.EventGroupHttpControllers_AppGroupController)
 
 	// HttpControllers_AppSessionController events (id: 0, 100400-100599)
 	HttpControllers_AppSessionControllerEvent = logging.NewEvent(0, "HttpControllers_AppSessionController", logging.EventCategoryCommon, amlogging.EventGroupHttpControllers_AppSessionController)
 
-	// GrpcServices_ApplicationService events (id: 0, 200000-200199)
-	GrpcServices_ApplicationServiceEvent = logging.NewEvent(0, "GrpcServices_ApplicationService", logging.EventCategoryCommon, amlogging.EventGroupGrpcServices_ApplicationService)
-
-	// GrpcServices_AppService events (id: 0, 200200-200399)
+	// GrpcServices_AppService events (id: 0, 200000-200199)
 	GrpcServices_AppServiceEvent = logging.NewEvent(0, "GrpcServices_AppService", logging.EventCategoryCommon, amlogging.EventGroupGrpcServices_AppService)
 
-	// GrpcServices_AppGroupService events (id: 0, 200400-200599)
+	// GrpcServices_AppGroupService events (id: 0, 200200-200399)
 	GrpcServices_AppGroupServiceEvent = logging.NewEvent(0, "GrpcServices_AppGroupService", logging.EventCategoryCommon, amlogging.EventGroupGrpcServices_AppGroupService)
 
 	// GrpcServices_AppSessionService events (id: 0, 200400-200599)

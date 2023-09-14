@@ -24,18 +24,15 @@ const (
 	EventGroupAppGroup   logging.EventGroup = 1001
 	EventGroupAppSession logging.EventGroup = 1002
 
-	EventGroupApplicationStore logging.EventGroup = 1050
-	EventGroupAppStore         logging.EventGroup = 1051
-	EventGroupAppGroupStore    logging.EventGroup = 1052
-	EventGroupAppSessionStore  logging.EventGroup = 1053
+	EventGroupAppStore        logging.EventGroup = 1050
+	EventGroupAppGroupStore   logging.EventGroup = 1051
+	EventGroupAppSessionStore logging.EventGroup = 1052
 
-	EventGroupHttpControllers_ApplicationController logging.EventGroup = 2000
-	EventGroupHttpControllers_AppController         logging.EventGroup = 2001
-	EventGroupHttpControllers_AppGroupController    logging.EventGroup = 2002
-	EventGroupHttpControllers_AppSessionController  logging.EventGroup = 2003
+	EventGroupHttpControllers_AppController        logging.EventGroup = 2000
+	EventGroupHttpControllers_AppGroupController   logging.EventGroup = 2001
+	EventGroupHttpControllers_AppSessionController logging.EventGroup = 2002
 
-	EventGroupGrpcServices_ApplicationService logging.EventGroup = 3000
-	EventGroupGrpcServices_AppService         logging.EventGroup = 3001
-	EventGroupGrpcServices_AppGroupService    logging.EventGroup = 3002
-	EventGroupGrpcServices_AppSessionService  logging.EventGroup = 3003
+	EventGroupGrpcServices_AppService        logging.EventGroup = 3000
+	EventGroupGrpcServices_AppGroupService   logging.EventGroup = 3001
+	EventGroupGrpcServices_AppSessionService logging.EventGroup = 3002
 )
