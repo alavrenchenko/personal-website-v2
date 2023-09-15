@@ -35,6 +35,6 @@ type AppSessionManager interface {
 	// Terminate terminates an app session by the specified app session ID.
 	TerminateWithContext(ctx *actions.OperationContext, id uint64) error
 
-	// FindById finds and returns an app session info, if any, by the specified app session ID.
+	// FindById finds and returns app session info, if any, by the specified app session ID.
 	FindById(ctx *actions.OperationContext, id uint64) (*dbmodels.AppSessionInfo, error)
 }
