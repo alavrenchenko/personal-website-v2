@@ -1,0 +1,255 @@
+{
+    "appInfo": {
+        "id": 2,
+        "groupId": 2,
+        "version": "0.1.0"
+    },
+    "env": "development",
+    "userId": 1,
+    "logging": {
+        "minLogLevel": "trace",
+        "maxLogLevel": "fatal",
+        "adapters": {
+            "console": {
+                "minLogLevel": "trace",
+                "maxLogLevel": "fatal"
+            },
+            "kafka": {
+                "minLogLevel": "trace",
+                "maxLogLevel": "fatal",
+                "kafkaConfig": {
+                    "addrs": ["localhost:9092"],
+                    "net": {
+                        "maxOpenRequests": 5,
+                        "dialTimeout": 10000,
+                        "readTimeout": 10000,
+                        "writeTimeout": 10000,
+                        "keepAlive": 0
+                    },
+                    "metadata": {
+                        "retry": {
+                            "max": 5,
+                            "backoff": 100
+                        },
+                        "refreshFrequency": 30000,
+                        "full": false,
+                        "allowAutoTopicCreation": false
+                    },
+                    "producer": {
+                        "maxMessageBytes": 1048576,
+                        "requiredAcks": "WaitForAll",
+                        "timeout": 10000,
+                        "compression": "snappy",
+                        "idempotent": false,
+                        "flush": {
+                            "bytes": 10485760,
+                            "messages": 100,
+                            "frequency": 5,
+                            "maxMessages": 100
+                        },
+                        "retry": {
+                            "max": 5,
+                            "backoff": 100
+                        }
+                    },
+                    "clientId": "LoggingManagerLogging",
+                    "channelBufferSize": 1024,
+                    "version": "3.5.0"
+                },
+                "kafkaTopic":"logging_manager.log"
+            }
+        },
+        "fileLog": {
+            "minLogLevel": "trace",
+            "maxLogLevel": "fatal",
+            "writer": {
+                "fileDir": "../log"
+            }
+        }
+    },
+    "actions": {
+        "logging": {
+            "kafka": {
+                "kafkaConfig": {
+                    "addrs": ["localhost:9092"],
+                    "net": {
+                        "maxOpenRequests": 5,
+                        "dialTimeout": 10000,
+                        "readTimeout": 10000,
+                        "writeTimeout": 10000,
+                        "keepAlive": 0
+                    },
+                    "metadata": {
+                        "retry": {
+                            "max": 5,
+                            "backoff": 100
+                        },
+                        "refreshFrequency": 30000,
+                        "full": false,
+                        "allowAutoTopicCreation": false
+                    },
+                    "producer": {
+                        "maxMessageBytes": 1048576,
+                        "requiredAcks": "WaitForAll",
+                        "timeout": 10000,
+                        "compression": "snappy",
+                        "idempotent": false,
+                        "flush": {
+                            "bytes": 10485760,
+                            "messages": 100,
+                            "frequency": 5,
+                            "maxMessages": 100
+                        },
+                        "retry": {
+                            "max": 5,
+                            "backoff": 100
+                        }
+                    },
+                    "clientId": "LoggingManagerActions",
+                    "channelBufferSize": 1024,
+                    "version": "3.5.0"
+                },
+                "transactionTopic":"base.transactions",
+                "actionTopic":"base.actions",
+                "operationTopic":"base.operations"
+            }
+        }
+    },
+    "db": {
+        "postgres": {
+            "configs": {
+                "LoggingManagerDb": {
+                    "applicationName": "LoggingManager",
+                    "host": "{host}",
+                    "port": 0,
+                    "database": "logging_manager",
+                    "user": "{user}",
+                    "password": "{password}",
+                    "sslMode": "disable",
+                    "connectTimeout": 10,
+                    "minConns": 10,
+                    "maxConns": 100,
+                    "maxConnLifetime": 86400,
+                    "maxConnIdleTime": 30,
+                    "healthCheckPeriod": 5
+                }
+            },
+            "dataMap": {
+                "Logging": "LoggingManagerDb"
+            }
+        }
+    },
+    "httpServer": {
+        "addr": "{host}:{port}",
+        "readTimeout": 0,
+        "writeTimeout": 0,
+        "idleTimeout": 0,
+        "logging": {
+            "kafka": {
+                "kafkaConfig": {
+                    "addrs": ["localhost:9092"],
+                    "net": {
+                        "maxOpenRequests": 5,
+                        "dialTimeout": 10000,
+                        "readTimeout": 10000,
+                        "writeTimeout": 10000,
+                        "keepAlive": 0
+                    },
+                    "metadata": {
+                        "retry": {
+                            "max": 5,
+                            "backoff": 100
+                        },
+                        "refreshFrequency": 30000,
+                        "full": false,
+                        "allowAutoTopicCreation": false
+                    },
+                    "producer": {
+                        "maxMessageBytes": 1048576,
+                        "requiredAcks": "WaitForAll",
+                        "timeout": 10000,
+                        "compression": "snappy",
+                        "idempotent": false,
+                        "flush": {
+                            "bytes": 10485760,
+                            "messages": 100,
+                            "frequency": 5,
+                            "maxMessages": 100
+                        },
+                        "retry": {
+                            "max": 5,
+                            "backoff": 100
+                        }
+                    },
+                    "clientId": "LoggingManagerHttpServer",
+                    "channelBufferSize": 1024,
+                    "version": "3.5.0"
+                },
+                "requestTopic":"logging_manager.http_server.requests",
+                "responseTopic":"logging_manager.http_server.responses"
+            }
+        }
+    },
+    "grpc": {
+        "logging":{
+            "minLogLevel": "info",
+            "maxLogLevel": "fatal"
+        },
+        "server": {
+            "addr": "{host}:{port}",
+            "logging": {
+                "kafka": {
+                    "kafkaConfig": {
+                        "addrs": ["localhost:9092"],
+                        "net": {
+                            "maxOpenRequests": 5,
+                            "dialTimeout": 10000,
+                            "readTimeout": 10000,
+                            "writeTimeout": 10000,
+                            "keepAlive": 0
+                        },
+                        "metadata": {
+                            "retry": {
+                                "max": 5,
+                                "backoff": 100
+                            },
+                            "refreshFrequency": 30000,
+                            "full": false,
+                            "allowAutoTopicCreation": false
+                        },
+                        "producer": {
+                            "maxMessageBytes": 1048576,
+                            "requiredAcks": "WaitForAll",
+                            "timeout": 10000,
+                            "compression": "snappy",
+                            "idempotent": false,
+                            "flush": {
+                                "bytes": 10485760,
+                                "messages": 100,
+                                "frequency": 5,
+                                "maxMessages": 100
+                            },
+                            "retry": {
+                                "max": 5,
+                                "backoff": 100
+                            }
+                        },
+                        "clientId": "LoggingManagerGrpcServer",
+                        "channelBufferSize": 1024,
+                        "version": "3.5.0"
+                    },
+                    "callTopic":"logging_manager.grpc_server.calls"
+                }
+            }
+        }
+    },
+    "apis": {
+        "clients": {
+            "appManagerService": {
+                "serverAddr": "{host}:{port}",
+                "dialTimeout": 10000,
+                "callTimeout": 30000
+            }
+        }
+    }
+}
