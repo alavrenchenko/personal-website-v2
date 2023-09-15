@@ -250,11 +250,11 @@ func (s *AppSessionStore) FindById(ctx *actions.OperationContext, id uint64) (*d
 	}()
 
 	const query = "SELECT * FROM " + appSessionsTable + " WHERE id = $1 LIMIT 1"
-	a, err := s.store.Find(ctx, query, id)
+	as, err := s.store.Find(ctx, query, id)
 	if err != nil {
 		return nil, fmt.Errorf("[stores.AppSessionStore.FindById] find an app session by id: %w", err)
 	}
 
 	succeeded = true
-	return a, nil
+	return as, nil
 }
