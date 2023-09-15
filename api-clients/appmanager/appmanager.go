@@ -29,7 +29,10 @@ type Apps interface {
 	GetByName(ctx *actions.OperationContext, name string) (*appspb.AppInfo, error)
 
 	// GetStatusById gets an app status by the specified app ID.
-	GetStatusById(ctx *actions.OperationContext, id uint64) (appspb.AppStatus, error)
+	GetStatusById(id uint64, userId uint64) (appspb.AppStatus, error)
+
+	// GetStatusByIdWithContext gets an app status by the specified app ID.
+	GetStatusByIdWithContext(ctx *actions.OperationContext, id uint64) (appspb.AppStatus, error)
 }
 
 type AppGroups interface {

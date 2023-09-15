@@ -17,17 +17,20 @@ package appmanager
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 
 	appspb "personal-website-v2/go-apis/app-manager/apps"
 	"personal-website-v2/pkg/actions"
 	apigrpc "personal-website-v2/pkg/api/grpc"
 	apigrpcerrors "personal-website-v2/pkg/api/grpc/errors"
+	apimetadata "personal-website-v2/pkg/api/metadata"
 )
 
 type AppsService struct {
-	client  appspb.AppServiceClient
+	client appspb.AppServiceClient
 	config *serviceConfig
 }
 
@@ -35,7 +38,7 @@ var _ Apps = (*AppsService)(nil)
 
 func newAppsService(conn *grpc.ClientConn, config *serviceConfig) *AppsService {
 	return &AppsService{
-		client:  appspb.NewAppServiceClient(conn),
+		client: appspb.NewAppServiceClient(conn),
 		config: config,
 	}
 }
@@ -81,7 +84,24 @@ func (s *AppsService) GetByName(ctx *actions.OperationContext, name string) (*ap
 }
 
 // GetStatusById gets an app status by the specified app ID.
-func (s *AppsService) GetStatusById(ctx *actions.OperationContext, id uint64) (appspb.AppStatus, error) {
+func (s *AppsService) GetStatusById(id uint64, userId uint64) (appspb.AppStatus, error) {
+	md := metadata.New(map[string]string{apimetadata.UserIdMDKey: strconv.FormatUint(userId, 10)})
+	ctx2 := metadata.NewOutgoingContext(context.Background(), md)
+
+	ctx2, cancel := context.WithTimeout(ctx2, s.config.CallTimeout)
+	defer cancel()
+
+	req := &appspb.GetStatusByIdRequest{Id: id}
+	res, err := s.client.GetStatusById(ctx2, req)
+
+	if err != nil {
+		return appspb.AppStatus_APP_STATUS_UNSPECIFIED, fmt.Errorf("[appmanager.AppsService.GetStatusById] get an app status by id: %w", apigrpcerrors.ParseGrpcError(err))
+	}
+	return res.Status, nil
+}
+
+// GetStatusByIdWithContext gets an app status by the specified app ID.
+func (s *AppsService) GetStatusByIdWithContext(ctx *actions.OperationContext, id uint64) (appspb.AppStatus, error) {
 	ctx2, err := apigrpc.CreateOutgoingContextWithOperationContext(ctx)
 
 	if err != nil {

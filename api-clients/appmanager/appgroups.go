@@ -27,7 +27,7 @@ import (
 )
 
 type AppGroupsService struct {
-	client  groupspb.AppGroupServiceClient
+	client groupspb.AppGroupServiceClient
 	config *serviceConfig
 }
 
@@ -35,7 +35,7 @@ var _ AppGroups = (*AppGroupsService)(nil)
 
 func newAppGroupsService(conn *grpc.ClientConn, config *serviceConfig) *AppGroupsService {
 	return &AppGroupsService{
-		client:  groupspb.NewAppGroupServiceClient(conn),
+		client: groupspb.NewAppGroupServiceClient(conn),
 		config: config,
 	}
 }
