@@ -1041,7 +1041,7 @@ func (a *Application) onLoggingError(entry *logging.LogEntry[*context.LogEntryCo
 			if a.fileLogger != nil {
 				a.fileLogger.ErrorWithEvent(ctx, events.ApplicationEvent, err2, "[app.Application.onLoggingError] encode an entry to string")
 			} else {
-				log.Printf("[app.Application.onLoggingError] encode an entry to string: %v\n", err2)
+				log.Println("[app.Application.onLoggingError] encode an entry to string:", err2)
 			}
 		} else {
 			fs = []*logging.Field{{Key: "entry", Value: s}}
@@ -1057,7 +1057,7 @@ func (a *Application) onLoggingError(entry *logging.LogEntry[*context.LogEntryCo
 }
 
 func (a *Application) onFileLoggingError(entry *logging.LogEntry[*context.LogEntryContext], err *logging.LoggingError) {
-	log.Printf("[app.Application.onFileLoggingError] an error occurred while logging: %v\n", err)
+	log.Println("[app.Application.onFileLoggingError] an error occurred while logging:", err)
 
 	if !a.isStarted.Load() {
 		return
@@ -1065,7 +1065,7 @@ func (a *Application) onFileLoggingError(entry *logging.LogEntry[*context.LogEnt
 
 	go func() {
 		if err2 := a.Stop(); err2 != nil && a.isStarted.Load() {
-			log.Fatalf("[app.Application.onFileLoggingError] stop an app: %v\n", err2)
+			log.Fatalln("[app.Application.onFileLoggingError] stop an app:", err2)
 		}
 	}()
 }
@@ -1085,7 +1085,7 @@ func (a *Application) onKafkaAdapterError(entry *logging.LogEntry[*context.LogEn
 			if a.fileLogger != nil {
 				a.fileLogger.ErrorWithEvent(ctx, events.ApplicationEvent, err2, "[app.Application.onKafkaAdapterError] encode an entry to string")
 			} else {
-				log.Printf("[app.Application.onKafkaAdapterError] encode an entry to string: %v\n", err2)
+				log.Println("[app.Application.onKafkaAdapterError] encode an entry to string:", err2)
 			}
 		} else {
 			fs = []*logging.Field{{Key: "entry", Value: s}}
@@ -1178,7 +1178,7 @@ func (a *Application) logLoggingError(err error, fields []*logging.Field) {
 	if a.fileLogger != nil {
 		a.fileLogger.FatalWithEventAndError(ctx, events.ApplicationEvent, err, "[app.Application.logLoggingError] an error occurred while logging", fields...)
 	} else {
-		log.Printf("[app.Application.logLoggingError] an error occurred while logging: %v\n", err)
+		log.Println("[app.Application.logLoggingError] an error occurred while logging:", err)
 	}
 
 	if !a.isStarted.Load() {
@@ -1191,7 +1191,7 @@ func (a *Application) logLoggingError(err error, fields []*logging.Field) {
 				a.fileLogger.FatalWithEventAndError(ctx, events.ApplicationEvent, err2, "[app.Application.logLoggingError] stop an app")
 				os.Exit(1)
 			} else {
-				log.Fatalf("[app.Application.logLoggingError] stop an app: %v\n", err2)
+				log.Fatalln("[app.Application.logLoggingError] stop an app:", err2)
 			}
 		}
 	}()
@@ -1269,7 +1269,7 @@ func (a *Application) logLoggingError(entry any, err error) {
 	if a.fileLogger != nil {
 		a.fileLogger.FatalWithEventAndError(ctx, events.ApplicationEvent, err, "[app.Application.logLoggingError] an error occurred while logging", fs...)
 	} else {
-		log.Printf("[app.Application.logLoggingError] an error occurred while logging: %v\n", err)
+		log.Println("[app.Application.logLoggingError] an error occurred while logging:", err)
 	}
 
 	if !a.isStarted.Load() {
@@ -1282,7 +1282,7 @@ func (a *Application) logLoggingError(entry any, err error) {
 				a.fileLogger.FatalWithEventAndError(ctx, events.ApplicationEvent, err2, "[app.Application.logLoggingError] stop an app")
 				os.Exit(1)
 			} else {
-				log.Fatalf("[app.Application.logLoggingError] stop an app: %v\n", err2)
+				log.Fatalln("[app.Application.logLoggingError] stop an app:", err2)
 			}
 		}
 	}()
