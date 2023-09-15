@@ -31,7 +31,7 @@ import (
 
 	"google.golang.org/grpc/grpclog"
 
-	"personal-website-v2/app-manager/src/app/config"
+	amappconfig "personal-website-v2/app-manager/src/app/config"
 	actionencoding "personal-website-v2/app-manager/src/app/internal/loggingerror/encoding/actions"
 	loggingencoding "personal-website-v2/app-manager/src/app/internal/loggingerror/encoding/logging"
 	grpcserverencoding "personal-website-v2/app-manager/src/app/internal/loggingerror/encoding/net/grpc/server"
@@ -55,6 +55,7 @@ import (
 	actionlogging "personal-website-v2/pkg/actions/logging"
 	"personal-website-v2/pkg/app"
 	"personal-website-v2/pkg/app/service"
+	"personal-website-v2/pkg/app/service/config"
 	appcontrollers "personal-website-v2/pkg/app/service/net/http/server/controllers/app"
 	"personal-website-v2/pkg/base/env"
 	"personal-website-v2/pkg/base/nullable"
@@ -98,7 +99,7 @@ type Application struct {
 	fileLoggerFactory logging.LoggerFactory[*context.LogEntryContext]
 	fileLogger        logging.Logger[*context.LogEntryContext]
 	configPath        string
-	config            *config.AppConfig
+	config            *config.AppConfig[*amappconfig.Apis]
 	isStarted         atomic.Bool
 	isStopped         bool
 	wg                sync.WaitGroup
@@ -325,7 +326,7 @@ func (a *Application) loadConfig() error {
 		return fmt.Errorf("[app.Application.loadConfig] read a file: %w", err)
 	}
 
-	config := new(config.AppConfig)
+	config := new(config.AppConfig[*amappconfig.Apis])
 
 	if err = json.Unmarshal(c, config); err != nil {
 		return fmt.Errorf("[app.Application.loadConfig] unmarshal JSON-encoded data (config): %w", err)
