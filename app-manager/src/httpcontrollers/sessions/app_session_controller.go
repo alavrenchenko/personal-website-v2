@@ -141,7 +141,7 @@ func (c *AppSessionController) completeActionAndOperation(ctx *server.HttpContex
 	}()
 }
 
-// GetById gets an app session info by the specified app session ID.
+// GetById gets app session info by the specified app session ID.
 //
 //	[GET] /api/app-session?id={sessionId}
 func (c *AppSessionController) GetById(ctx *server.HttpContext) {
@@ -195,20 +195,20 @@ func (c *AppSessionController) GetById(ctx *server.HttpContext) {
 		return
 	}
 
-	if appSessionInfo != nil {
-		ctx.Response.Writer.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
-
-		if err = apihttp.Ok(ctx, converter.ConvertToApiAppSessionInfo(appSessionInfo)); err != nil {
-			c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppSessionControllerEvent, err, "[sessions.AppSessionController.GetById] write Ok")
-			return
-		}
-	} else {
+	if appSessionInfo == nil {
 		c.logger.WarningWithEvent(leCtx, events.HttpControllers_AppSessionControllerEvent, "[sessions.AppSessionController.GetById] app session not found")
 
 		if err = apihttp.NotFound(ctx, amapierrors.ErrAppSessionNotFound); err != nil {
 			c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppSessionControllerEvent, err, "[sessions.AppSessionController.GetById] write NotFound")
-			return
 		}
+		return
+	}
+
+	ctx.Response.Writer.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+
+	if err = apihttp.Ok(ctx, converter.ConvertToApiAppSessionInfo(appSessionInfo)); err != nil {
+		c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppSessionControllerEvent, err, "[sessions.AppSessionController.GetById] write Ok")
+		return
 	}
 
 	succeeded = true

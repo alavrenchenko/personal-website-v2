@@ -230,20 +230,20 @@ func (c *AppGroupController) GetByIdOrName(ctx *server.HttpContext) {
 		return
 	}
 
-	if appGroup != nil {
-		ctx.Response.Writer.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
-
-		if err = apihttp.Ok(ctx, converter.ConvertToApiAppGroup(appGroup)); err != nil {
-			c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppGroupControllerEvent, err, "[groups.AppGroupController.GetByIdOrName] write Ok")
-			return
-		}
-	} else {
+	if appGroup == nil {
 		c.logger.WarningWithEvent(leCtx, events.HttpControllers_AppGroupControllerEvent, "[groups.AppGroupController.GetByIdOrName] app group not found")
 
 		if err = apihttp.NotFound(ctx, amapierrors.ErrAppGroupNotFound); err != nil {
 			c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppGroupControllerEvent, err, "[groups.AppGroupController.GetByIdOrName] write NotFound")
-			return
 		}
+		return
+	}
+
+	ctx.Response.Writer.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+
+	if err = apihttp.Ok(ctx, converter.ConvertToApiAppGroup(appGroup)); err != nil {
+		c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppGroupControllerEvent, err, "[groups.AppGroupController.GetByIdOrName] write Ok")
+		return
 	}
 
 	succeeded = true

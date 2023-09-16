@@ -231,20 +231,20 @@ func (c *AppController) GetByIdOrName(ctx *server.HttpContext) {
 		return
 	}
 
-	if appInfo != nil {
-		ctx.Response.Writer.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
-
-		if err = apihttp.Ok(ctx, converter.ConvertToApiAppInfo(appInfo)); err != nil {
-			c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppControllerEvent, err, "[apps.AppController.GetByIdOrName] write Ok")
-			return
-		}
-	} else {
+	if appInfo == nil {
 		c.logger.WarningWithEvent(leCtx, events.HttpControllers_AppControllerEvent, "[apps.AppController.GetByIdOrName] app not found")
 
 		if err = apihttp.NotFound(ctx, amapierrors.ErrAppNotFound); err != nil {
 			c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppControllerEvent, err, "[apps.AppController.GetByIdOrName] write NotFound")
-			return
 		}
+		return
+	}
+
+	ctx.Response.Writer.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+
+	if err = apihttp.Ok(ctx, converter.ConvertToApiAppInfo(appInfo)); err != nil {
+		c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppControllerEvent, err, "[apps.AppController.GetByIdOrName] write Ok")
+		return
 	}
 
 	succeeded = true
