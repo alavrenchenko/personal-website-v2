@@ -31,30 +31,24 @@ import (
 
 	"google.golang.org/grpc/grpclog"
 
+	"personal-website-v2/api-clients/appmanager"
+	sessionspb "personal-website-v2/go-apis/logging-manager/sessions"
 	lmappconfig "personal-website-v2/logging-manager/src/app/config"
 	"personal-website-v2/logging-manager/src/app/server/grpc"
 	"personal-website-v2/logging-manager/src/app/server/http"
-	actionencoding "personal-website-v2/pkg/app/service/helper/loggingerror/encoding/actions"
-	loggingencoding "personal-website-v2/pkg/app/service/helper/loggingerror/encoding/logging"
-	grpcserverencoding "personal-website-v2/pkg/app/service/helper/loggingerror/encoding/net/grpc/server"
-	httpserverencoding "personal-website-v2/pkg/app/service/helper/loggingerror/encoding/net/http/server"
-
-	// sessionservices "personal-website-v2/logging-manager/src/grpcservices/sessions"
-
-	// sessioncontrollers "personal-website-v2/logging-manager/src/httpcontrollers/sessions"
-
+	sessionservices "personal-website-v2/logging-manager/src/grpcservices/sessions"
+	sessioncontrollers "personal-website-v2/logging-manager/src/httpcontrollers/sessions"
 	ampostgres "personal-website-v2/logging-manager/src/internal/db/postgres"
-
 	sessionmanager "personal-website-v2/logging-manager/src/internal/sessions/manager"
-
-	// sessionspb "personal-website-v2/go-apis/logging-manager/sessions"
-
-	"personal-website-v2/api-clients/appmanager"
 	"personal-website-v2/pkg/actions"
 	actionlogging "personal-website-v2/pkg/actions/logging"
 	"personal-website-v2/pkg/app"
 	"personal-website-v2/pkg/app/service"
 	"personal-website-v2/pkg/app/service/config"
+	actionencoding "personal-website-v2/pkg/app/service/helper/loggingerror/encoding/actions"
+	loggingencoding "personal-website-v2/pkg/app/service/helper/loggingerror/encoding/logging"
+	grpcserverencoding "personal-website-v2/pkg/app/service/helper/loggingerror/encoding/net/grpc/server"
+	httpserverencoding "personal-website-v2/pkg/app/service/helper/loggingerror/encoding/net/http/server"
 	applogging "personal-website-v2/pkg/app/service/logging"
 	appcontrollers "personal-website-v2/pkg/app/service/net/http/server/controllers/app"
 	"personal-website-v2/pkg/base/datetime"
@@ -747,11 +741,16 @@ func (a *Application) configureHttpRouting(router *httpserverrouting.Router) err
 		return fmt.Errorf("[app.Application.configureHttpRouting] new application controller: %w", err)
 	}
 
+	loggingSessionController, err := sessioncontrollers.NewLoggingSessionController(a.appSessionId.Value, a.actionManager, a.loggingSessionManager, a.loggerFactory)
+	if err != nil {
+		return fmt.Errorf("[app.Application.configureHttpRouting] new logging session controller: %w", err)
+	}
+
 	// private
 	router.AddPost("App_Stop", "/private/api/app/stop", appController.Stop)
 
 	// public
-
+	router.AddGet("LoggingSessions_GetById", "/api/logging-session", loggingSessionController.GetById)
 	return nil
 }
 
@@ -824,7 +823,12 @@ func (a *Application) configureGrpcServer() error {
 }
 
 func (a *Application) configureGrpcServices(b *grpcserver.GrpcServerBuilder) error {
+	loggingSessionService, err := sessionservices.NewLoggingSessionService(a.appSessionId.Value, a.actionManager, a.loggingSessionManager, a.loggerFactory)
+	if err != nil {
+		return fmt.Errorf("[app.Application.configureGrpcServices] new logging session service: %w", err)
+	}
 
+	b.AddService(&sessionspb.LoggingSessionService_ServiceDesc, loggingSessionService)
 	return nil
 }
 
