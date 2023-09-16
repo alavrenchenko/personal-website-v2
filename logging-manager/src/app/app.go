@@ -372,12 +372,12 @@ func (a *Application) startLoggingSession() (err error) {
 		return fmt.Errorf("[app.Application.startLoggingSession] start a logging session: %w", err)
 	}
 
+	a.loggingSession = ls
 	lsid, err := ls.GetId()
 	if err != nil {
 		return fmt.Errorf("[app.Application.startLoggingSession] get a logging session id: %w", err)
 	}
 
-	a.loggingSession = ls
 	a.loggingSessionId = nullable.NewNullable(lsid)
 	return nil
 }
@@ -394,9 +394,8 @@ func (a *Application) startSession() error {
 		return fmt.Errorf("[app.Application.startSession] init an app manager service: %w", err)
 	}
 
-	succeeded := false
 	defer func() {
-		if !succeeded {
+		if a.session == nil {
 			if err2 := ams.Dispose(); err2 != nil {
 				a.log(logging.LogLevelError, events.ApplicationEvent, err2, "[app.Application.startSession] dispose of the app manager service")
 			}
@@ -405,23 +404,22 @@ func (a *Application) startSession() error {
 
 	s, err := service.NewApplicationSession(a.info.Id(), a.config.UserId, ams.Sessions, a.loggerFactory)
 	if err != nil {
-		return fmt.Errorf("[app.Application.startSession] new app session: %w", err)
+		return fmt.Errorf("[app.Application.startSession] new application session: %w", err)
 	}
 
-	if err = a.session.Start(); err != nil {
+	if err = s.Start(); err != nil {
 		return fmt.Errorf("[app.Application.startSession] start an app session: %w", err)
 	}
 
-	sid, err := a.session.GetId()
+	a.session = s
+	a.appManagerService = ams
+
+	sid, err := s.GetId()
 	if err != nil {
 		return fmt.Errorf("[app.Application.startSession] get an app session id: %w", err)
 	}
 
-	a.session = s
 	a.appSessionId = nullable.NewNullable(sid)
-	a.appManagerService = ams
-
-	succeeded = true
 	return nil
 }
 
