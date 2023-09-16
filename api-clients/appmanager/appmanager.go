@@ -52,6 +52,6 @@ type AppSessions interface {
 	Terminate(id uint64, userId uint64) error
 	// Terminate(ctx *actions.OperationContext, id uint64) error
 
-	// GetById gets an app session info by the specified app session ID.
+	// GetById gets app session info by the specified app session ID.
 	GetById(ctx *actions.OperationContext, id uint64) (*sessionspb.AppSessionInfo, error)
 }
