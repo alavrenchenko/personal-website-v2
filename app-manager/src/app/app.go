@@ -31,6 +31,7 @@ import (
 
 	"google.golang.org/grpc/grpclog"
 
+	"personal-website-v2/api-clients/loggingmanager"
 	amappconfig "personal-website-v2/app-manager/src/app/config"
 	actionencoding "personal-website-v2/app-manager/src/app/internal/loggingerror/encoding/actions"
 	loggingencoding "personal-website-v2/app-manager/src/app/internal/loggingerror/encoding/logging"
@@ -56,6 +57,7 @@ import (
 	"personal-website-v2/pkg/app"
 	"personal-website-v2/pkg/app/service"
 	"personal-website-v2/pkg/app/service/config"
+	applogging "personal-website-v2/pkg/app/service/logging"
 	appcontrollers "personal-website-v2/pkg/app/service/net/http/server/controllers/app"
 	"personal-website-v2/pkg/base/env"
 	"personal-website-v2/pkg/base/nullable"
@@ -92,8 +94,10 @@ var (
 type Application struct {
 	info              *app.ApplicationInfo
 	env               *env.Environment
-	appSessionId      nullable.Nullable[uint64]
 	session           *service.ApplicationSession
+	appSessionId      nullable.Nullable[uint64]
+	loggingSession    *applogging.LoggingSession
+	loggingSessionId  nullable.Nullable[uint64]
 	loggerFactory     logging.LoggerFactory[*context.LogEntryContext]
 	logger            logging.Logger[*context.LogEntryContext]
 	fileLoggerFactory logging.LoggerFactory[*context.LogEntryContext]
@@ -121,6 +125,8 @@ type Application struct {
 	grpcLogger       *grpclogging.Logger
 	grpcServer       *grpcserver.GrpcServer
 	grpcServerLogger *grpcserverlogging.Logger
+
+	loggingManagerService *loggingmanager.LoggingManagerService
 }
 
 var _ app.Application = (*Application)(nil)
@@ -192,7 +198,6 @@ func (a *Application) Start() (err error) {
 	if a.isStarted.Load() {
 		return errors.New("[app.Application.Start] app has already been started")
 	}
-
 	if a.isStopped {
 		return errors.New("[app.Application.Start] app has already been stopped")
 	}
@@ -248,65 +253,62 @@ func (a *Application) Start() (err error) {
 		}
 	}()
 
-	if err := a.loadConfig(); err != nil {
+	if err = a.loadConfig(); err != nil {
 		return fmt.Errorf("[app.Application.Start] load a config: %w", err)
 	}
 
 	a.env = env.NewEnvironment(a.config.Env)
 	a.info = app.NewApplicationInfo(a.config.AppInfo.Id, a.config.AppInfo.GroupId, a.config.AppInfo.Version)
 
-	if err := a.configureLogging(); err != nil {
+	if err = a.startLoggingSession(); err != nil {
+		return fmt.Errorf("[app.Application.Start] start a logging session: %w", err)
+	}
+
+	if err = a.configureLogging(); err != nil {
 		return fmt.Errorf("[app.Application.Start] configure logging: %w", err)
 	}
 
 	a.log(logging.LogLevelInfo, events.ApplicationIsStarting, nil, "[app.Application.Start] starting the app...")
 
-	if err := a.configureGrpcLogging(); err != nil {
+	if err = a.configureGrpcLogging(); err != nil {
 		return fmt.Errorf("[app.Application.Start] configure gRPC logging: %w", err)
 	}
 
-	if err := a.configureDb(); err != nil {
+	if err = a.configureDb(); err != nil {
 		return fmt.Errorf("[app.Application.Start] configure DB: %w", err)
 	}
 
-	if err := a.postgresManager.Init(); err != nil {
+	if err = a.postgresManager.Init(); err != nil {
 		return fmt.Errorf("[app.Application.Start] init a DB manager: %w", err)
 	}
 
-	if err := a.configure(); err != nil {
+	if err = a.configure(); err != nil {
 		return fmt.Errorf("[app.Application.Start] configure: %w", err)
 	}
 
-	if err := a.session.Start(); err != nil {
+	if err = a.startSession(); err != nil {
 		return fmt.Errorf("[app.Application.Start] start an app session: %w", err)
 	}
 
-	sid, err := a.session.GetId()
-
-	if err != nil {
-		return fmt.Errorf("[app.Application.Start] get an app session id: %w", err)
-	}
-
-	a.appSessionId = nullable.NewNullable(sid)
-	a.grpcLogger.SetAppSessionId(sid)
+	a.grpcLogger.SetAppSessionId(a.appSessionId.Value)
 
 	if err = a.configureActions(); err != nil {
 		return fmt.Errorf("[app.Application.Start] configure actions: %w", err)
 	}
 
-	if err := a.configureHttpServer(); err != nil {
+	if err = a.configureHttpServer(); err != nil {
 		return fmt.Errorf("[app.Application.Start] configure an HTTP server: %w", err)
 	}
 
-	if err := a.httpServer.Start(); err != nil {
+	if err = a.httpServer.Start(); err != nil {
 		return fmt.Errorf("[app.Application.Start] start an HTTP server: %w", err)
 	}
 
-	if err := a.configureGrpcServer(); err != nil {
+	if err = a.configureGrpcServer(); err != nil {
 		return fmt.Errorf("[app.Application.Start] configure a gRPC server: %w", err)
 	}
 
-	if err := a.grpcServer.Start(); err != nil {
+	if err = a.grpcServer.Start(); err != nil {
 		return fmt.Errorf("[app.Application.Start] start a gRPC server: %w", err)
 	}
 
@@ -336,9 +338,68 @@ func (a *Application) loadConfig() error {
 	return nil
 }
 
-func (a *Application) configureLogging() error {
-	const loggingSessionId uint64 = 1 // temp
+func (a *Application) startLoggingSession() error {
+	c := &loggingmanager.LoggingManagerServiceClientConfig{
+		ServerAddr:  a.config.Apis.Clients.LoggingManagerService.ServerAddr,
+		DialTimeout: time.Duration(a.config.Apis.Clients.LoggingManagerService.DialTimeout) * time.Millisecond,
+		CallTimeout: time.Duration(a.config.Apis.Clients.LoggingManagerService.CallTimeout) * time.Millisecond,
+	}
+	lms := loggingmanager.NewLoggingManagerService(c)
 
+	if err := lms.Init(); err != nil {
+		return fmt.Errorf("[app.Application.startLoggingSession] init a logging manager service: %w", err)
+	}
+
+	defer func() {
+		if a.loggingSession == nil {
+			if err2 := lms.Dispose(); err2 != nil {
+				a.log(logging.LogLevelError, events.ApplicationEvent, err2, "[app.Application.startLoggingSession] dispose of the logging manager service")
+			}
+		}
+	}()
+
+	ls, err := applogging.NewLoggingSession(a.info.Id(), a.config.UserId, lms.Sessions)
+	if err != nil {
+		return fmt.Errorf("[app.Application.startLoggingSession] new logging session: %w", err)
+	}
+
+	if err = ls.Start(); err != nil {
+		return fmt.Errorf("[app.Application.startLoggingSession] start a logging session: %w", err)
+	}
+
+	a.loggingSession = ls
+	a.loggingManagerService = lms
+
+	lsid, err := ls.GetId()
+	if err != nil {
+		return fmt.Errorf("[app.Application.startLoggingSession] get a logging session id: %w", err)
+	}
+
+	a.loggingSessionId = nullable.NewNullable(lsid)
+	return nil
+}
+
+func (a *Application) startSession() error {
+	s, err := service.NewApplicationSession(a.info.Id(), a.config.UserId, a.appSessionManager, a.loggerFactory)
+	if err != nil {
+		return fmt.Errorf("[app.Application.startSession] new application session: %w", err)
+	}
+
+	if err = s.Start(); err != nil {
+		return fmt.Errorf("[app.Application.startSession] start an app session: %w", err)
+	}
+
+	a.session = s
+	sid, err := s.GetId()
+	if err != nil {
+		return fmt.Errorf("[app.Application.startSession] get an app session id: %w", err)
+	}
+
+	a.appSessionId = nullable.NewNullable(sid)
+	return nil
+}
+
+func (a *Application) configureLogging() error {
 	appInfo := &info.AppInfo{
 		Id:      a.info.Id(),
 		GroupId: a.info.GroupId(),
@@ -351,7 +412,7 @@ func (a *Application) configureLogging() error {
 	}
 
 	if a.config.Logging.FileLog != nil {
-		if err := a.configureFileLogging(appInfo, loggingSessionId, loggerOptions); err != nil {
+		if err := a.configureFileLogging(appInfo, a.loggingSessionId.Value, loggerOptions); err != nil {
 			return fmt.Errorf("[app.Application.configureLogging] configure file logging: %w", err)
 		}
 	}
@@ -373,12 +434,11 @@ func (a *Application) configureLogging() error {
 	}()
 
 	if a.config.Logging.Adapters.Console != nil {
-		b.AddAdapter(a.createConsoleAdapter(appInfo, loggingSessionId))
+		b.AddAdapter(a.createConsoleAdapter(appInfo, a.loggingSessionId.Value))
 	}
 
 	if a.config.Logging.Adapters.Kafka != nil {
-		adapter, err := a.createKafkaAdapter(appInfo, loggingSessionId)
-
+		adapter, err := a.createKafkaAdapter(appInfo, a.loggingSessionId.Value)
 		if err != nil {
 			return fmt.Errorf("[app.Application.configureLogging] create a kafka adapter: %w", err)
 		}
@@ -389,15 +449,14 @@ func (a *Application) configureLogging() error {
 	c := b.SetOptions(loggerOptions).
 		SetLoggingErrorHandler(a.onLoggingError).
 		Build()
-	f, err := logger.NewLoggerFactory(loggingSessionId, c, true)
 
+	f, err := logger.NewLoggerFactory(a.loggingSessionId.Value, c, true)
 	if err != nil {
 		return fmt.Errorf("[app.Application.configureLogging] new logger factory: %w", err)
 	}
 
 	a.loggerFactory = f
 	l, err := f.CreateLogger("app.Application")
-
 	if err != nil {
 		return fmt.Errorf("[app.Application.configureLogging] create a logger: %w", err)
 	}
@@ -408,7 +467,6 @@ func (a *Application) configureLogging() error {
 
 func (a *Application) configureFileLogging(appInfo *info.AppInfo, loggingSessionId uint64, options *logger.LoggerOptions) error {
 	adapter, err := a.createFileLogAdapter(appInfo, loggingSessionId)
-
 	if err != nil {
 		return fmt.Errorf("[app.Application.configureFileLogging] create a file log adapter: %w", err)
 	}
@@ -430,15 +488,14 @@ func (a *Application) configureFileLogging(appInfo *info.AppInfo, loggingSession
 		SetOptions(options).
 		SetLoggingErrorHandler(a.onFileLoggingError).
 		Build()
-	f, err := logger.NewLoggerFactory(loggingSessionId, c, true)
 
+	f, err := logger.NewLoggerFactory(loggingSessionId, c, true)
 	if err != nil {
 		return fmt.Errorf("[app.Application.configureFileLogging] new logger factory: %w", err)
 	}
 
 	a.fileLoggerFactory = f
 	l, err := f.CreateLogger("app.Application")
-
 	if err != nil {
 		return fmt.Errorf("[app.Application.configureFileLogging] create a logger: %w", err)
 	}
@@ -472,8 +529,8 @@ func (a *Application) createKafkaAdapter(appInfo *info.AppInfo, loggingSessionId
 		KafkaTopic:       a.config.Logging.Adapters.Kafka.KafkaTopic,
 		ErrorHandler:     a.onKafkaAdapterError,
 	}
-	adapter, err := kafka.NewKafkaAdapter(c)
 
+	adapter, err := kafka.NewKafkaAdapter(c)
 	if err != nil {
 		return nil, fmt.Errorf("[app.Application.createKafkaAdapter] new kafka adapter: %w", err)
 	}
@@ -492,8 +549,8 @@ func (a *Application) createFileLogAdapter(appInfo *info.AppInfo, loggingSession
 			FilePath: filepath.Join(filepath.Clean(a.config.Logging.FileLog.Writer.FileDir), fmt.Sprintf("%d.log", loggingSessionId)),
 		},
 	}
-	adapter, err := filelogadapter.NewFileLogAdapter(c)
 
+	adapter, err := filelogadapter.NewFileLogAdapter(c)
 	if err != nil {
 		return nil, fmt.Errorf("[app.Application.createFileLogAdapter] new file log adapter: %w", err)
 	}
@@ -530,41 +587,29 @@ func (a *Application) configureDb() error {
 		Configs: dbConfigs,
 		DataMap: dataMap,
 	}
-
 	a.postgresManager = postgres.NewDbManager(ampostgres.NewStores(a.loggerFactory), dbSettings)
 	return nil
 }
 
 func (a *Application) configure() error {
 	appManager, err := appmanager.NewAppManager(a.postgresManager.Stores.AppStore, a.loggerFactory)
-
 	if err != nil {
 		return fmt.Errorf("[app.Application.configure] new app manager: %w", err)
 	}
 
 	appGroupManager, err := groupmanager.NewAppGroupManager(a.postgresManager.Stores.AppGroupStore, a.loggerFactory)
-
 	if err != nil {
 		return fmt.Errorf("[app.Application.configure] new app group manager: %w", err)
 	}
 
 	appSessionManager, err := sessionmanager.NewAppSessionManager(a.postgresManager.Stores.AppSessionStore, a.loggerFactory)
-
 	if err != nil {
 		return fmt.Errorf("[app.Application.configure] new app session manager: %w", err)
-	}
-
-	session, err := service.NewApplicationSession(a.info.Id(), a.config.UserId, appSessionManager, a.loggerFactory)
-
-	if err != nil {
-		return fmt.Errorf("[app.Application.configure] new app session: %w", err)
 	}
 
 	a.appManager = appManager
 	a.appGroupManager = appGroupManager
 	a.appSessionManager = appSessionManager
-	a.session = session
-
 	return nil
 }
 
@@ -586,20 +631,17 @@ func (a *Application) configureActions() error {
 	}
 
 	l, err := actionlogging.NewLogger(a.appSessionId.Value, c)
-
 	if err != nil {
 		return fmt.Errorf("[app.Application.configureActions] new logger: %w", err)
 	}
 
 	a.actionLogger = l
 	tranManager, err := actions.NewTransactionManager(a.appSessionId.Value, l, a.loggerFactory)
-
 	if err != nil {
 		return fmt.Errorf("[app.Application.configureActions] new transaction manager: %w", err)
 	}
 
 	actionManager, err := actions.NewActionManager(a.appSessionId.Value, l, l, a.loggerFactory)
-
 	if err != nil {
 		return fmt.Errorf("[app.Application.configureActions] new action manager: %w", err)
 	}
@@ -611,7 +653,6 @@ func (a *Application) configureActions() error {
 
 func (a *Application) configureHttpServer() error {
 	rpl, err := http.NewRequestPipelineLifetime(a.appSessionId.Value, a.tranManager, a.actionManager, a.loggerFactory)
-
 	if err != nil {
 		return fmt.Errorf("[app.Application.configureHttpServer] new request pipeline lifetime: %w", err)
 	}
@@ -646,7 +687,6 @@ func (a *Application) configureHttpServer() error {
 	}
 
 	l, err := httpserverlogging.NewLogger(a.appSessionId.Value, httpServerId, c)
-
 	if err != nil {
 		return fmt.Errorf("[app.Application.configureHttpServer] new logger: %w", err)
 	}
@@ -662,7 +702,6 @@ func (a *Application) configureHttpServer() error {
 	})
 
 	s, err := hsb.Build()
-
 	if err != nil {
 		return fmt.Errorf("[app.Application.configureHttpServer] build an HTTP server: %w", err)
 	}
@@ -702,7 +741,6 @@ func (a *Application) configureHttpRouting(router *httpserverrouting.Router) err
 	router.AddGet("AppGroups_GetByIdOrName", "/api/app-group", appGroupController.GetByIdOrName)
 
 	router.AddGet("AppSessions_GetById", "/api/app-session", appSessionController.GetById)
-
 	return nil
 }
 
@@ -711,8 +749,8 @@ func (a *Application) configureGrpcLogging() error {
 		MinLogLevel: a.config.Grpc.Logging.MinLogLevel,
 		MaxLogLevel: a.config.Grpc.Logging.MaxLogLevel,
 	}
-	l, err := grpclogging.NewLogger(options, a.loggerFactory)
 
+	l, err := grpclogging.NewLogger(options, a.loggerFactory)
 	if err != nil {
 		return fmt.Errorf("[app.Application.configureGrpcLogging] new logger: %w", err)
 	}
@@ -724,7 +762,6 @@ func (a *Application) configureGrpcLogging() error {
 
 func (a *Application) configureGrpcServer() error {
 	rpl, err := grpc.NewRequestPipelineLifetime(a.appSessionId.Value, a.tranManager, a.actionManager, a.loggerFactory)
-
 	if err != nil {
 		return fmt.Errorf("[app.Application.configureGrpcServer] new request pipeline lifetime: %w", err)
 	}
@@ -751,7 +788,6 @@ func (a *Application) configureGrpcServer() error {
 	}
 
 	l, err := grpcserverlogging.NewLogger(a.appSessionId.Value, grpcServerId, c)
-
 	if err != nil {
 		return fmt.Errorf("[app.Application.configureGrpcServer] new logger: %w", err)
 	}
@@ -768,7 +804,6 @@ func (a *Application) configureGrpcServer() error {
 	}
 
 	s, err := sb.Build()
-
 	if err != nil {
 		return fmt.Errorf("[app.Application.configureGrpcServer] build a gRPC server: %w", err)
 	}
@@ -779,21 +814,18 @@ func (a *Application) configureGrpcServer() error {
 
 func (a *Application) configureGrpcServices(b *grpcserver.GrpcServerBuilder) error {
 	appService, err := appservices.NewAppService(a.appSessionId.Value, a.actionManager, a.appManager, a.loggerFactory)
-
 	if err != nil {
-		return fmt.Errorf("[app.Application.configureGrpcServer] new app service: %w", err)
+		return fmt.Errorf("[app.Application.configureGrpcServices] new app service: %w", err)
 	}
 
 	appGroupService, err := groupservices.NewAppGroupService(a.appSessionId.Value, a.actionManager, a.appGroupManager, a.loggerFactory)
-
 	if err != nil {
-		return fmt.Errorf("[app.Application.configureGrpcServer] new app group service: %w", err)
+		return fmt.Errorf("[app.Application.configureGrpcServices] new app group service: %w", err)
 	}
 
 	appSessionService, err := sessionservices.NewAppSessionService(a.appSessionId.Value, a.actionManager, a.appSessionManager, a.loggerFactory)
-
 	if err != nil {
-		return fmt.Errorf("[app.Application.configureGrpcServer] new app session service: %w", err)
+		return fmt.Errorf("[app.Application.configureGrpcServices] new app session service: %w", err)
 	}
 
 	b.AddService(&appspb.AppService_ServiceDesc, appService).
