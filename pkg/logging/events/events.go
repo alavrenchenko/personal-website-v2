@@ -24,6 +24,7 @@ var (
 	ApplicationIsStopping = logging.NewEvent(3, "ApplicationIsStopping", logging.EventCategoryCommon, logging.EventGroupApplication)
 	ApplicationStopped    = logging.NewEvent(4, "ApplicationStopped", logging.EventCategoryCommon, logging.EventGroupApplication)
 
+	// Application session events (id: 100-119)
 	ApplicationSessionIsStarting = logging.NewEvent(100, "ApplicationSessionIsStarting", logging.EventCategoryCommon, logging.EventGroupApplication)
 	ApplicationSessionStarted    = logging.NewEvent(101, "ApplicationSessionStarted", logging.EventCategoryCommon, logging.EventGroupApplication)
 	ApplicationSessionIsEnding   = logging.NewEvent(102, "ApplicationSessionIsEnding", logging.EventCategoryCommon, logging.EventGroupApplication)
