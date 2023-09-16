@@ -54,7 +54,9 @@ import (
 	"personal-website-v2/pkg/app"
 	"personal-website-v2/pkg/app/service"
 	"personal-website-v2/pkg/app/service/config"
+	applogging "personal-website-v2/pkg/app/service/logging"
 	appcontrollers "personal-website-v2/pkg/app/service/net/http/server/controllers/app"
+	"personal-website-v2/pkg/base/datetime"
 	"personal-website-v2/pkg/base/env"
 	"personal-website-v2/pkg/base/nullable"
 	"personal-website-v2/pkg/db/postgres"
@@ -90,8 +92,10 @@ var (
 type Application struct {
 	info              *app.ApplicationInfo
 	env               *env.Environment
-	appSessionId      nullable.Nullable[uint64]
 	session           *service.ApplicationSession
+	appSessionId      nullable.Nullable[uint64]
+	loggingSession    *applogging.LoggingSession
+	loggingSessionId  nullable.Nullable[uint64]
 	loggerFactory     logging.LoggerFactory[*context.LogEntryContext]
 	logger            logging.Logger[*context.LogEntryContext]
 	fileLoggerFactory logging.LoggerFactory[*context.LogEntryContext]
@@ -243,36 +247,40 @@ func (a *Application) Start() (err error) {
 		}
 	}()
 
-	if err := a.loadConfig(); err != nil {
+	if err = a.loadConfig(); err != nil {
 		return fmt.Errorf("[app.Application.Start] load a config: %w", err)
 	}
 
 	a.env = env.NewEnvironment(a.config.Env)
 	a.info = app.NewApplicationInfo(a.config.AppInfo.Id, a.config.AppInfo.GroupId, a.config.AppInfo.Version)
 
-	if err := a.configureLogging(); err != nil {
+	if err = a.startLoggingSession(); err != nil {
+		return fmt.Errorf("[app.Application.Start] start a logging session: %w", err)
+	}
+
+	if err = a.configureLogging(); err != nil {
 		return fmt.Errorf("[app.Application.Start] configure logging: %w", err)
 	}
 
 	a.log(logging.LogLevelInfo, events.ApplicationIsStarting, nil, "[app.Application.Start] starting the app...")
 
-	if err := a.configureGrpcLogging(); err != nil {
+	if err = a.configureGrpcLogging(); err != nil {
 		return fmt.Errorf("[app.Application.Start] configure gRPC logging: %w", err)
 	}
 
-	if err := a.configureDb(); err != nil {
+	if err = a.configureDb(); err != nil {
 		return fmt.Errorf("[app.Application.Start] configure DB: %w", err)
 	}
 
-	if err := a.postgresManager.Init(); err != nil {
+	if err = a.postgresManager.Init(); err != nil {
 		return fmt.Errorf("[app.Application.Start] init a DB manager: %w", err)
 	}
 
-	if err := a.configure(); err != nil {
+	if err = a.configure(); err != nil {
 		return fmt.Errorf("[app.Application.Start] configure: %w", err)
 	}
 
-	if err := a.session.Start(); err != nil {
+	if err = a.session.Start(); err != nil {
 		return fmt.Errorf("[app.Application.Start] start an app session: %w", err)
 	}
 
@@ -288,19 +296,19 @@ func (a *Application) Start() (err error) {
 		return fmt.Errorf("[app.Application.Start] configure actions: %w", err)
 	}
 
-	if err := a.configureHttpServer(); err != nil {
+	if err = a.configureHttpServer(); err != nil {
 		return fmt.Errorf("[app.Application.Start] configure an HTTP server: %w", err)
 	}
 
-	if err := a.httpServer.Start(); err != nil {
+	if err = a.httpServer.Start(); err != nil {
 		return fmt.Errorf("[app.Application.Start] start an HTTP server: %w", err)
 	}
 
-	if err := a.configureGrpcServer(); err != nil {
+	if err = a.configureGrpcServer(); err != nil {
 		return fmt.Errorf("[app.Application.Start] configure a gRPC server: %w", err)
 	}
 
-	if err := a.grpcServer.Start(); err != nil {
+	if err = a.grpcServer.Start(); err != nil {
 		return fmt.Errorf("[app.Application.Start] start a gRPC server: %w", err)
 	}
 
@@ -329,9 +337,61 @@ func (a *Application) loadConfig() error {
 	return nil
 }
 
-func (a *Application) configureLogging() error {
-	const loggingSessionId uint64 = 1 // temp
+func (a *Application) startLoggingSession() (err error) {
+	if a.config.Logging.FileLog == nil {
+		return errors.New("[app.Application.startLoggingSession] file log config is nil")
+	}
 
+	loggingSessionId := uint64(datetime.Now().UnixMicro())
+	appInfo := &info.AppInfo{
+		Id:      a.info.Id(),
+		GroupId: a.info.GroupId(),
+		Version: a.info.Version(),
+		Env:     a.env.Name(),
+	}
+	loggerOptions := &logger.LoggerOptions{
+		MinLogLevel: a.config.Logging.MinLogLevel,
+		MaxLogLevel: a.config.Logging.MaxLogLevel,
+	}
+
+	f, err := a.createFileLoggerFactory(appInfo, loggingSessionId, fmt.Sprintf("logging-session.%d.log", loggingSessionId), loggerOptions)
+	if err != nil {
+		return fmt.Errorf("[app.Application.startLoggingSession] create a file logger factory: %w", err)
+	}
+
+	defer func() {
+		if err2 := f.Dispose(); err2 != nil && err == nil {
+			err = fmt.Errorf("[app.Application.startLoggingSession] dispose of the logger factory: %w", err2)
+		}
+	}()
+
+	dbm := postgres.NewDbManager(ampostgres.NewLoggingSessionStores(f), a.getDbSettings())
+
+	if err = dbm.Init(); err != nil {
+		return fmt.Errorf("[app.Application.startLoggingSession] init a DB manager: %w", err)
+	}
+	defer dbm.Dispose()
+
+	ls, err := applogging.NewLoggingSession(a.info.Id(), a.config.UserId, dbm.Stores.LoggingSessionStore)
+	if err != nil {
+		return fmt.Errorf("[app.Application.startLoggingSession] new logging session: %w", err)
+	}
+
+	if err = ls.Start(); err != nil {
+		return fmt.Errorf("[app.Application.startLoggingSession] start a logging session: %w", err)
+	}
+
+	lsid, err := ls.GetId()
+	if err != nil {
+		return fmt.Errorf("[app.Application.startLoggingSession] get a logging session id: %w", err)
+	}
+
+	a.loggingSession = ls
+	a.loggingSessionId = nullable.NewNullable(lsid)
+	return nil
+}
+
+func (a *Application) configureLogging() error {
 	appInfo := &info.AppInfo{
 		Id:      a.info.Id(),
 		GroupId: a.info.GroupId(),
@@ -344,7 +404,7 @@ func (a *Application) configureLogging() error {
 	}
 
 	if a.config.Logging.FileLog != nil {
-		if err := a.configureFileLogging(appInfo, loggingSessionId, loggerOptions); err != nil {
+		if err := a.configureFileLogging(appInfo, a.loggingSessionId.Value, loggerOptions); err != nil {
 			return fmt.Errorf("[app.Application.configureLogging] configure file logging: %w", err)
 		}
 	}
@@ -366,11 +426,11 @@ func (a *Application) configureLogging() error {
 	}()
 
 	if a.config.Logging.Adapters.Console != nil {
-		b.AddAdapter(a.createConsoleAdapter(appInfo, loggingSessionId))
+		b.AddAdapter(a.createConsoleAdapter(appInfo, a.loggingSessionId.Value))
 	}
 
 	if a.config.Logging.Adapters.Kafka != nil {
-		adapter, err := a.createKafkaAdapter(appInfo, loggingSessionId)
+		adapter, err := a.createKafkaAdapter(appInfo, a.loggingSessionId.Value)
 		if err != nil {
 			return fmt.Errorf("[app.Application.configureLogging] create a kafka adapter: %w", err)
 		}
@@ -382,7 +442,7 @@ func (a *Application) configureLogging() error {
 		SetLoggingErrorHandler(a.onLoggingError).
 		Build()
 
-	f, err := logger.NewLoggerFactory(loggingSessionId, c, true)
+	f, err := logger.NewLoggerFactory(a.loggingSessionId.Value, c, true)
 	if err != nil {
 		return fmt.Errorf("[app.Application.configureLogging] new logger factory: %w", err)
 	}
@@ -398,9 +458,25 @@ func (a *Application) configureLogging() error {
 }
 
 func (a *Application) configureFileLogging(appInfo *info.AppInfo, loggingSessionId uint64, options *logger.LoggerOptions) error {
-	adapter, err := a.createFileLogAdapter(appInfo, loggingSessionId)
+	f, err := a.createFileLoggerFactory(appInfo, loggingSessionId, fmt.Sprintf("%d.log", loggingSessionId), options)
 	if err != nil {
-		return fmt.Errorf("[app.Application.configureFileLogging] create a file log adapter: %w", err)
+		return fmt.Errorf("[app.Application.configureFileLogging] create a file logger factory: %w", err)
+	}
+
+	a.fileLoggerFactory = f
+	l, err := f.CreateLogger("app.Application")
+	if err != nil {
+		return fmt.Errorf("[app.Application.configureFileLogging] create a logger: %w", err)
+	}
+
+	a.fileLogger = l
+	return nil
+}
+
+func (a *Application) createFileLoggerFactory(appInfo *info.AppInfo, loggingSessionId uint64, fileName string, options *logger.LoggerOptions) (logging.LoggerFactory[*context.LogEntryContext], error) {
+	adapter, err := a.createFileLogAdapter(appInfo, loggingSessionId, fileName)
+	if err != nil {
+		return nil, fmt.Errorf("[app.Application.configureFileLogging] create a file log adapter: %w", err)
 	}
 
 	defer func() {
@@ -423,17 +499,9 @@ func (a *Application) configureFileLogging(appInfo *info.AppInfo, loggingSession
 
 	f, err := logger.NewLoggerFactory(loggingSessionId, c, true)
 	if err != nil {
-		return fmt.Errorf("[app.Application.configureFileLogging] new logger factory: %w", err)
+		return nil, fmt.Errorf("[app.Application.configureFileLogging] new logger factory: %w", err)
 	}
-
-	a.fileLoggerFactory = f
-	l, err := f.CreateLogger("app.Application")
-	if err != nil {
-		return fmt.Errorf("[app.Application.configureFileLogging] create a logger: %w", err)
-	}
-
-	a.fileLogger = l
-	return nil
+	return f, nil
 }
 
 func (a *Application) createConsoleAdapter(appInfo *info.AppInfo, loggingSessionId uint64) *console.ConsoleAdapter {
@@ -469,7 +537,7 @@ func (a *Application) createKafkaAdapter(appInfo *info.AppInfo, loggingSessionId
 	return adapter, nil
 }
 
-func (a *Application) createFileLogAdapter(appInfo *info.AppInfo, loggingSessionId uint64) (*filelogadapter.FileLogAdapter, error) {
+func (a *Application) createFileLogAdapter(appInfo *info.AppInfo, loggingSessionId uint64, fileName string) (*filelogadapter.FileLogAdapter, error) {
 	c := &filelogadapter.FileLogAdapterConfig{
 		AppInfo:          appInfo,
 		LoggingSessionId: loggingSessionId,
@@ -478,7 +546,7 @@ func (a *Application) createFileLogAdapter(appInfo *info.AppInfo, loggingSession
 			MaxLogLevel: a.config.Logging.FileLog.MaxLogLevel,
 		},
 		FileLogWriter: &filelog.WriterConfig{
-			FilePath: filepath.Join(filepath.Clean(a.config.Logging.FileLog.Writer.FileDir), fmt.Sprintf("%d.log", loggingSessionId)),
+			FilePath: filepath.Join(filepath.Clean(a.config.Logging.FileLog.Writer.FileDir), fileName),
 		},
 	}
 
@@ -490,6 +558,11 @@ func (a *Application) createFileLogAdapter(appInfo *info.AppInfo, loggingSession
 }
 
 func (a *Application) configureDb() error {
+	a.postgresManager = postgres.NewDbManager(ampostgres.NewStores(a.loggerFactory), a.getDbSettings())
+	return nil
+}
+
+func (a *Application) getDbSettings() *postgres.DbSettings {
 	dbConfigs := make(map[string]*postgres.DbConfig, len(a.config.Db.Postgres.Configs))
 	dataMap := make(map[string]string, len(a.config.Db.Postgres.DataMap))
 
@@ -515,13 +588,10 @@ func (a *Application) configureDb() error {
 		dataMap[dc] = cn
 	}
 
-	dbSettings := &postgres.DbSettings{
+	return &postgres.DbSettings{
 		Configs: dbConfigs,
 		DataMap: dataMap,
 	}
-
-	a.postgresManager = postgres.NewDbManager(ampostgres.NewStores(a.loggerFactory), dbSettings)
-	return nil
 }
 
 func (a *Application) configure() error {

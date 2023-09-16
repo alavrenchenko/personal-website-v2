@@ -60,3 +60,38 @@ func (s *Stores) Init(databases map[string]*postgres.Database) error {
 	s.isInitialized = true
 	return nil
 }
+
+type LoggingSessionStores struct {
+	LoggingSessionStore *sessionstores.LoggingSessionStore
+	loggerFactory       logging.LoggerFactory[*context.LogEntryContext]
+	isInitialized       bool
+}
+
+var _ postgres.Stores = (*LoggingSessionStores)(nil)
+
+func NewLoggingSessionStores(loggerFactory logging.LoggerFactory[*context.LogEntryContext]) *LoggingSessionStores {
+	return &LoggingSessionStores{
+		loggerFactory: loggerFactory,
+	}
+}
+
+// databases: map[DataCategory]Database
+func (s *LoggingSessionStores) Init(databases map[string]*postgres.Database) error {
+	if s.isInitialized {
+		return errors.New("[postgres.LoggingSessionStores.Init] LoggingSessionStores have already been initialized")
+	}
+
+	database, ok := databases[loggingCategory]
+	if !ok {
+		return fmt.Errorf("[postgres.LoggingSessionStores.Init] database not found for the category '%s'", loggingCategory)
+	}
+
+	loggingSessionStore, err := sessionstores.NewLoggingSessionStore(database, s.loggerFactory)
+	if err != nil {
+		return fmt.Errorf("[postgres.LoggingSessionStores.Init] new logging session store: %w", err)
+	}
+
+	s.LoggingSessionStore = loggingSessionStore
+	s.isInitialized = true
+	return nil
+}
