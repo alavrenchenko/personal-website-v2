@@ -13,3 +13,34 @@
 // limitations under the License.
 
 package converter
+
+import (
+	"google.golang.org/protobuf/types/known/timestamppb"
+	"google.golang.org/protobuf/types/known/wrapperspb"
+
+	sessionspb "personal-website-v2/go-apis/logging-manager/sessions"
+	"personal-website-v2/logging-manager/src/internal/sessions/dbmodels"
+)
+
+func ConvertToApiLoggingSessionInfo(s *dbmodels.LoggingSessionInfo) *sessionspb.LoggingSessionInfo {
+	info := &sessionspb.LoggingSessionInfo{
+		Id:              s.Id,
+		AppId:           s.AppId,
+		CreatedAt:       timestamppb.New(s.CreatedAt),
+		CreatedBy:       s.CreatedBy,
+		UpdatedAt:       timestamppb.New(s.UpdatedAt),
+		UpdatedBy:       s.UpdatedBy,
+		Status:          sessionspb.LoggingSessionStatus(s.Status),
+		StatusUpdatedAt: timestamppb.New(s.StatusUpdatedAt),
+		StatusUpdatedBy: s.StatusUpdatedBy,
+	}
+
+	if s.StatusComment != nil {
+		info.StatusComment = wrapperspb.String(*s.StatusComment)
+	}
+
+	if s.StartTime != nil {
+		info.StartTime = timestamppb.New(*s.StartTime)
+	}
+	return info
+}

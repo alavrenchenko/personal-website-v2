@@ -1,0 +1,68 @@
+// Copyright 2023 Alexey Lavrenchenko. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// 	http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+
+package personalwebsite.loggingmanager.sessions;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/wrappers.proto";
+
+option go_package = "personal-website-v2/go-apis/logging-manager/sessions;sessions";
+
+// Proto file describing the Logging session.
+
+// The logging session info.
+message LoggingSessionInfo {
+    // The unique ID to identify the logging session.
+    uint64 id = 1;
+
+    // The app ID.
+    uint64 app_id = 2;
+
+    // It stores the date and time at which the logging session was created.
+    google.protobuf.Timestamp created_at = 3;
+
+    // The user ID to identify the user who created the logging session.
+    uint64 created_by = 4;
+
+    // It stores the date and time at which the logging session was updated.
+    google.protobuf.Timestamp updated_at = 5;
+
+    // The user ID to identify the user who updated the logging session.
+    uint64 updated_by = 6;
+
+    // The status of the logging session can be New(1) or Started(2).
+    LoggingSessionStatus status = 7;
+
+    // It stores the date and time at which the logging session status was updated.
+    google.protobuf.Timestamp status_updated_at = 8;
+
+    // The user ID to identify the user who updated the logging session status.
+    uint64 status_updated_by = 9;
+
+    // Optional. The logging session status comment.
+    google.protobuf.StringValue status_comment = 10;
+
+    // Optional. The start time of the logging session.
+    google.protobuf.Timestamp start_time = 11;
+}
+
+// The logging session status.
+enum LoggingSessionStatus {
+    // Unspecified. Do not use.
+    LOGGING_SESSION_STATUS_UNSPECIFIED = 0;
+    NEW = 1;
+    STARTED = 2;
+}
