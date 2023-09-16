@@ -32,7 +32,7 @@ service AppSessionService {
     // Terminates an app session by the specified app session ID.
     rpc Terminate(TerminateRequest) returns (google.protobuf.Empty) {}
 
-    // Gets an app session info by the specified app session ID.
+    // Gets app session info by the specified app session ID.
     rpc GetById(GetByIdRequest) returns (GetByIdResponse) {}
 }
 

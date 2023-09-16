@@ -245,7 +245,7 @@ func (s *AppSessionService) Terminate(ctx context.Context, req *sessionspb.Termi
 	return &emptypb.Empty{}, nil
 }
 
-// GetById gets an app session info by the specified app session ID.
+// GetById gets app session info by the specified app session ID.
 func (s *AppSessionService) GetById(ctx context.Context, req *sessionspb.GetByIdRequest) (*sessionspb.GetByIdResponse, error) {
 	grpcCtx, ok := server.GetGrpcContextFromIncomingContext(ctx)
 

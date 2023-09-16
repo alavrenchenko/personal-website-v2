@@ -48,7 +48,7 @@ type AppSessionServiceClient interface {
 	CreateAndStart(ctx context.Context, in *CreateAndStartRequest, opts ...grpc.CallOption) (*CreateAndStartResponse, error)
 	// Terminates an app session by the specified app session ID.
 	Terminate(ctx context.Context, in *TerminateRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	// Gets an app session info by the specified app session ID.
+	// Gets app session info by the specified app session ID.
 	GetById(ctx context.Context, in *GetByIdRequest, opts ...grpc.CallOption) (*GetByIdResponse, error)
 }
 
@@ -96,7 +96,7 @@ type AppSessionServiceServer interface {
 	CreateAndStart(context.Context, *CreateAndStartRequest) (*CreateAndStartResponse, error)
 	// Terminates an app session by the specified app session ID.
 	Terminate(context.Context, *TerminateRequest) (*emptypb.Empty, error)
-	// Gets an app session info by the specified app session ID.
+	// Gets app session info by the specified app session ID.
 	GetById(context.Context, *GetByIdRequest) (*GetByIdResponse, error)
 	mustEmbedUnimplementedAppSessionServiceServer()
 }
