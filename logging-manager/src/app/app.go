@@ -49,6 +49,7 @@ import (
 
 	// sessionspb "personal-website-v2/go-apis/logging-manager/sessions"
 
+	"personal-website-v2/api-clients/appmanager"
 	"personal-website-v2/pkg/actions"
 	actionlogging "personal-website-v2/pkg/actions/logging"
 	"personal-website-v2/pkg/app"
@@ -121,6 +122,8 @@ type Application struct {
 	grpcLogger       *grpclogging.Logger
 	grpcServer       *grpcserver.GrpcServer
 	grpcServerLogger *grpcserverlogging.Logger
+
+	appManagerService *appmanager.AppManagerService
 }
 
 var _ app.Application = (*Application)(nil)
@@ -268,6 +271,16 @@ func (a *Application) Start() (err error) {
 		return fmt.Errorf("[app.Application.Start] configure gRPC logging: %w", err)
 	}
 
+	if err = a.startSession(); err != nil {
+		return fmt.Errorf("[app.Application.Start] start an app session: %w", err)
+	}
+
+	a.grpcLogger.SetAppSessionId(a.appSessionId.Value)
+
+	if err = a.configureActions(); err != nil {
+		return fmt.Errorf("[app.Application.Start] configure actions: %w", err)
+	}
+
 	if err = a.configureDb(); err != nil {
 		return fmt.Errorf("[app.Application.Start] configure DB: %w", err)
 	}
@@ -278,22 +291,6 @@ func (a *Application) Start() (err error) {
 
 	if err = a.configure(); err != nil {
 		return fmt.Errorf("[app.Application.Start] configure: %w", err)
-	}
-
-	if err = a.session.Start(); err != nil {
-		return fmt.Errorf("[app.Application.Start] start an app session: %w", err)
-	}
-
-	sid, err := a.session.GetId()
-	if err != nil {
-		return fmt.Errorf("[app.Application.Start] get an app session id: %w", err)
-	}
-
-	a.appSessionId = nullable.NewNullable(sid)
-	a.grpcLogger.SetAppSessionId(sid)
-
-	if err = a.configureActions(); err != nil {
-		return fmt.Errorf("[app.Application.Start] configure actions: %w", err)
 	}
 
 	if err = a.configureHttpServer(); err != nil {
@@ -388,6 +385,49 @@ func (a *Application) startLoggingSession() (err error) {
 
 	a.loggingSession = ls
 	a.loggingSessionId = nullable.NewNullable(lsid)
+	return nil
+}
+
+func (a *Application) startSession() error {
+	c := &appmanager.AppManagerServiceClientConfig{
+		ServerAddr:  a.config.Apis.Clients.AppManagerService.ServerAddr,
+		DialTimeout: time.Duration(a.config.Apis.Clients.AppManagerService.DialTimeout) * time.Millisecond,
+		CallTimeout: time.Duration(a.config.Apis.Clients.AppManagerService.CallTimeout) * time.Millisecond,
+	}
+	ams := appmanager.NewAppManagerService(c)
+
+	if err := ams.Init(); err != nil {
+		return fmt.Errorf("[app.Application.startSession] init an app manager service: %w", err)
+	}
+
+	succeeded := false
+	defer func() {
+		if !succeeded {
+			if err2 := ams.Dispose(); err2 != nil {
+				a.log(logging.LogLevelError, events.ApplicationEvent, err2, "[app.Application.startSession] dispose of the app manager service")
+			}
+		}
+	}()
+
+	s, err := service.NewApplicationSession(a.info.Id(), a.config.UserId, ams.Sessions, a.loggerFactory)
+	if err != nil {
+		return fmt.Errorf("[app.Application.startSession] new app session: %w", err)
+	}
+
+	if err = a.session.Start(); err != nil {
+		return fmt.Errorf("[app.Application.startSession] start an app session: %w", err)
+	}
+
+	sid, err := a.session.GetId()
+	if err != nil {
+		return fmt.Errorf("[app.Application.startSession] get an app session id: %w", err)
+	}
+
+	a.session = s
+	a.appSessionId = nullable.NewNullable(sid)
+	a.appManagerService = ams
+
+	succeeded = true
 	return nil
 }
 
@@ -557,6 +597,44 @@ func (a *Application) createFileLogAdapter(appInfo *info.AppInfo, loggingSession
 	return adapter, nil
 }
 
+func (a *Application) configureActions() error {
+	c := &actionlogging.LoggerConfig{
+		AppInfo: &info.AppInfo{
+			Id:      a.info.Id(),
+			GroupId: a.info.GroupId(),
+			Version: a.info.Version(),
+			Env:     a.env.Name(),
+		},
+		Kafka: &actionlogging.KafkaConfig{
+			Config:           a.config.Actions.Logging.Kafka.KafkaConfig.Config(),
+			TransactionTopic: a.config.Actions.Logging.Kafka.TransactionTopic,
+			ActionTopic:      a.config.Actions.Logging.Kafka.ActionTopic,
+			OperationTopic:   a.config.Actions.Logging.Kafka.OperationTopic,
+		},
+		ErrorHandler: a.onActionLoggingError,
+	}
+
+	l, err := actionlogging.NewLogger(a.appSessionId.Value, c)
+	if err != nil {
+		return fmt.Errorf("[app.Application.configureActions] new logger: %w", err)
+	}
+
+	a.actionLogger = l
+	tranManager, err := actions.NewTransactionManager(a.appSessionId.Value, l, a.loggerFactory)
+	if err != nil {
+		return fmt.Errorf("[app.Application.configureActions] new transaction manager: %w", err)
+	}
+
+	actionManager, err := actions.NewActionManager(a.appSessionId.Value, l, l, a.loggerFactory)
+	if err != nil {
+		return fmt.Errorf("[app.Application.configureActions] new action manager: %w", err)
+	}
+
+	a.tranManager = tranManager
+	a.actionManager = actionManager
+	return nil
+}
+
 func (a *Application) configureDb() error {
 	a.postgresManager = postgres.NewDbManager(ampostgres.NewStores(a.loggerFactory), a.getDbSettings())
 	return nil
@@ -595,50 +673,12 @@ func (a *Application) getDbSettings() *postgres.DbSettings {
 }
 
 func (a *Application) configure() error {
-	loggingSessionManager, err := sessionmanager.NewLoggingSessionManager(a.postgresManager.Stores.LoggingSessionStore, a.loggerFactory)
+	loggingSessionManager, err := sessionmanager.NewLoggingSessionManager(a.appManagerService.Apps, a.postgresManager.Stores.LoggingSessionStore, a.loggerFactory)
 	if err != nil {
 		return fmt.Errorf("[app.Application.configure] new logging session manager: %w", err)
 	}
 
 	a.loggingSessionManager = loggingSessionManager
-	return nil
-}
-
-func (a *Application) configureActions() error {
-	c := &actionlogging.LoggerConfig{
-		AppInfo: &info.AppInfo{
-			Id:      a.info.Id(),
-			GroupId: a.info.GroupId(),
-			Version: a.info.Version(),
-			Env:     a.env.Name(),
-		},
-		Kafka: &actionlogging.KafkaConfig{
-			Config:           a.config.Actions.Logging.Kafka.KafkaConfig.Config(),
-			TransactionTopic: a.config.Actions.Logging.Kafka.TransactionTopic,
-			ActionTopic:      a.config.Actions.Logging.Kafka.ActionTopic,
-			OperationTopic:   a.config.Actions.Logging.Kafka.OperationTopic,
-		},
-		ErrorHandler: a.onActionLoggingError,
-	}
-
-	l, err := actionlogging.NewLogger(a.appSessionId.Value, c)
-	if err != nil {
-		return fmt.Errorf("[app.Application.configureActions] new logger: %w", err)
-	}
-
-	a.actionLogger = l
-	tranManager, err := actions.NewTransactionManager(a.appSessionId.Value, l, a.loggerFactory)
-	if err != nil {
-		return fmt.Errorf("[app.Application.configureActions] new transaction manager: %w", err)
-	}
-
-	actionManager, err := actions.NewActionManager(a.appSessionId.Value, l, l, a.loggerFactory)
-	if err != nil {
-		return fmt.Errorf("[app.Application.configureActions] new action manager: %w", err)
-	}
-
-	a.tranManager = tranManager
-	a.actionManager = actionManager
 	return nil
 }
 
@@ -913,6 +953,10 @@ func (a *Application) stop(ctx *actions.OperationContext) {
 
 		if err != nil {
 			a.logWithContext(leCtx, logging.LogLevelError, events.ApplicationEvent, err, "[app.Application.stop] terminate a session")
+		}
+
+		if err = a.appManagerService.Dispose(); err != nil {
+			a.logWithContext(leCtx, logging.LogLevelError, events.ApplicationEvent, err, "[app.Application.startSession] dispose of the app manager service")
 		}
 	}
 
