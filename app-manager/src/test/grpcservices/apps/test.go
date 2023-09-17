@@ -201,6 +201,10 @@ func exec(s *grpcserver.GrpcServer) {
 	testApps_GetStatusById(opCtx.UserId.Value)
 	serverhelper.PrintStats(s)
 
+	fmt.Println()
+	testApps_GetStatusByIdWithContext(opCtx)
+	serverhelper.PrintStats(s)
+
 	succeeded = true
 }
 
@@ -223,5 +227,12 @@ func testApps_GetStatusById(userId uint64) {
 	for id := uint64(1); id <= 5; id++ {
 		s, err := appManagerService.Apps.GetStatusById(id, userId)
 		fmt.Printf("[apps.testApps_GetStatusById] appId: %d\nappStatus: %v\nerr: %v\n\n", id, s, err)
+	}
+}
+
+func testApps_GetStatusByIdWithContext(ctx *actions.OperationContext) {
+	for id := uint64(1); id <= 5; id++ {
+		a, err := appManagerService.Apps.GetStatusByIdWithContext(ctx, id)
+		fmt.Printf("[apps.testApps_GetStatusByIdWithContext] appId: %d\nappInfo: %v\nerr: %v\n\n", id, a, err)
 	}
 }

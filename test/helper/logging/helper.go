@@ -41,8 +41,8 @@ var (
 
 func CreateLoggerConfig() *logger.LoggerConfig[*context.LogEntryContext] {
 	loggerOptions := &logger.LoggerOptions{
-		MinLogLevel: logging.LogLevelTrace,
-		// MinLogLevel: logging.LogLevelNone,
+		// MinLogLevel: logging.LogLevelTrace,
+		MinLogLevel: logging.LogLevelNone,
 		MaxLogLevel: logging.LogLevelFatal,
 	}
 	return logger.NewLoggerConfigBuilder[*context.LogEntryContext]().
