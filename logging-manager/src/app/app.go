@@ -78,11 +78,7 @@ const (
 	grpcServerId uint16 = 1
 )
 
-var (
-	errApplicationNotStarted = errors.New("[app] app not started")
-
-	terminationSignals = []os.Signal{syscall.SIGHUP, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM}
-)
+var terminationSignals = []os.Signal{syscall.SIGHUP, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM}
 
 type Application struct {
 	info              *app.ApplicationInfo
@@ -308,7 +304,10 @@ func (a *Application) Start() (err error) {
 	go a.run()
 
 	a.isStarted.Store(true)
-	a.log(logging.LogLevelInfo, events.ApplicationStarted, nil, "[app.Application.Start] app has been started")
+	a.log(logging.LogLevelInfo, events.ApplicationStarted, nil, "[app.Application.Start] app has been started",
+		logging.NewField("appSessionId", a.appSessionId.Value),
+		logging.NewField("loggingSessionId", a.loggingSessionId.Value),
+	)
 	return nil
 }
 
@@ -345,7 +344,7 @@ func (a *Application) startLoggingSession() (err error) {
 		MaxLogLevel: a.config.Logging.MaxLogLevel,
 	}
 
-	f, err := a.createFileLoggerFactory(appInfo, loggingSessionId, fmt.Sprintf("logging-session.%d.log", loggingSessionId), loggerOptions)
+	f, err := a.createFileLoggerFactory(appInfo, loggingSessionId, "logging-session.log", loggerOptions)
 	if err != nil {
 		return fmt.Errorf("[app.Application.startLoggingSession] create a file logger factory: %w", err)
 	}
@@ -396,8 +395,8 @@ func (a *Application) startSession() error {
 
 	defer func() {
 		if a.session == nil {
-			if err2 := ams.Dispose(); err2 != nil {
-				a.log(logging.LogLevelError, events.ApplicationEvent, err2, "[app.Application.startSession] dispose of the app manager service")
+			if err := ams.Dispose(); err != nil {
+				a.log(logging.LogLevelError, events.ApplicationEvent, err, "[app.Application.startSession] dispose of the app manager service")
 			}
 		}
 	}()
@@ -449,10 +448,14 @@ func (a *Application) configureLogging() error {
 		}
 
 		if a.loggerFactory != nil {
-			_ = a.loggerFactory.Dispose()
+			if err := a.loggerFactory.Dispose(); err != nil {
+				log.Println("[ERROR] [app.Application.configureLogging] dispose of the logger factory:", err)
+			}
 		} else {
-			for _, a := range b.Build().Adapters() {
-				_ = a.Dispose()
+			for _, adapter := range b.Build().Adapters() {
+				if err := adapter.Dispose(); err != nil {
+					log.Println("[ERROR] [app.Application.configureLogging] dispose of the adapter:", err)
+				}
 			}
 		}
 	}()
@@ -508,7 +511,7 @@ func (a *Application) configureFileLogging(appInfo *info.AppInfo, loggingSession
 func (a *Application) createFileLoggerFactory(appInfo *info.AppInfo, loggingSessionId uint64, fileName string, options *logger.LoggerOptions) (logging.LoggerFactory[*context.LogEntryContext], error) {
 	adapter, err := a.createFileLogAdapter(appInfo, loggingSessionId, fileName)
 	if err != nil {
-		return nil, fmt.Errorf("[app.Application.configureFileLogging] create a file log adapter: %w", err)
+		return nil, fmt.Errorf("[app.Application.createFileLoggerFactory] create a file log adapter: %w", err)
 	}
 
 	defer func() {
@@ -517,9 +520,13 @@ func (a *Application) createFileLoggerFactory(appInfo *info.AppInfo, loggingSess
 		}
 
 		if a.fileLoggerFactory != nil {
-			_ = a.fileLoggerFactory.Dispose()
+			if err := a.fileLoggerFactory.Dispose(); err != nil {
+				log.Println("[ERROR] [app.Application.createFileLoggerFactory] dispose of the file logger factory:", err)
+			}
 		} else {
-			_ = adapter.Dispose()
+			if err := adapter.Dispose(); err != nil {
+				log.Println("[ERROR] [app.Application.createFileLoggerFactory] dispose of the adapter:", err)
+			}
 		}
 	}()
 
@@ -531,7 +538,7 @@ func (a *Application) createFileLoggerFactory(appInfo *info.AppInfo, loggingSess
 
 	f, err := logger.NewLoggerFactory(loggingSessionId, c, true)
 	if err != nil {
-		return nil, fmt.Errorf("[app.Application.configureFileLogging] new logger factory: %w", err)
+		return nil, fmt.Errorf("[app.Application.createFileLoggerFactory] new logger factory: %w", err)
 	}
 	return f, nil
 }
@@ -617,12 +624,12 @@ func (a *Application) configureActions() error {
 		return fmt.Errorf("[app.Application.configureActions] new transaction manager: %w", err)
 	}
 
+	a.tranManager = tranManager
 	actionManager, err := actions.NewActionManager(a.appSessionId.Value, l, l, a.loggerFactory)
 	if err != nil {
 		return fmt.Errorf("[app.Application.configureActions] new action manager: %w", err)
 	}
 
-	a.tranManager = tranManager
 	a.actionManager = actionManager
 	return nil
 }
@@ -887,7 +894,9 @@ func (a *Application) stop(ctx *actions.OperationContext) {
 		}
 
 		if a.fileLoggerFactory != nil {
-			_ = a.fileLoggerFactory.Dispose()
+			if err := a.fileLoggerFactory.Dispose(); err != nil {
+				log.Println("[ERROR] [app.Application.stop] dispose of the file logger factory:", err)
+			}
 		}
 
 		a.isStopped = true
@@ -975,7 +984,9 @@ func (a *Application) stop(ctx *actions.OperationContext) {
 	}
 
 	if a.fileLoggerFactory != nil {
-		_ = a.fileLoggerFactory.Dispose()
+		if err := a.fileLoggerFactory.Dispose(); err != nil {
+			log.Println("[ERROR] [app.Application.stop] dispose of the file logger factory:", err)
+		}
 	}
 }
 
@@ -983,23 +994,31 @@ func (a *Application) WaitForShutdown() {
 	a.wg.Wait()
 }
 
-func (a *Application) log(level logging.LogLevel, event *logging.Event, err error, msg string) {
+func (a *Application) log(level logging.LogLevel, event *logging.Event, err error, msg string, fields ...*logging.Field) {
 	var ctx *context.LogEntryContext
 
 	if a.appSessionId.HasValue {
 		ctx = &context.LogEntryContext{AppSessionId: a.appSessionId}
 	}
 
-	a.logWithContext(ctx, level, event, err, msg)
+	a.logWithContext(ctx, level, event, err, msg, fields...)
 }
 
-func (a *Application) logWithContext(ctx *context.LogEntryContext, level logging.LogLevel, event *logging.Event, err error, msg string) {
+func (a *Application) logWithContext(ctx *context.LogEntryContext, level logging.LogLevel, event *logging.Event, err error, msg string, fields ...*logging.Field) {
+	logged := false
+
 	if a.logger != nil {
-		a.logger.Log(ctx, level, event, err, msg)
+		a.logger.Log(ctx, level, event, err, msg, fields...)
+		logged = true
 	}
 
 	if a.fileLogger != nil {
-		a.fileLogger.Log(ctx, level, event, err, msg)
+		a.fileLogger.Log(ctx, level, event, err, msg, fields...)
+		logged = true
+	}
+
+	if !logged && (level == logging.LogLevelWarning || level == logging.LogLevelError || level == logging.LogLevelFatal) {
+		log.Printf("[%s] %s: %v\n", level.CapitalString(), msg, err)
 	}
 }
 
@@ -1008,7 +1027,7 @@ func (a *Application) onLoggingError(entry *logging.LogEntry[*context.LogEntryCo
 }
 
 func (a *Application) onFileLoggingError(entry *logging.LogEntry[*context.LogEntryContext], err *logging.LoggingError) {
-	log.Println("[app.Application.onFileLoggingError] an error occurred while logging:", err)
+	log.Println("[ERROR] [app.Application.onFileLoggingError] an error occurred while logging:", err)
 
 	if !a.isStarted.Load() {
 		return
@@ -1016,7 +1035,7 @@ func (a *Application) onFileLoggingError(entry *logging.LogEntry[*context.LogEnt
 
 	go func() {
 		if err2 := a.Stop(); err2 != nil && a.isStarted.Load() {
-			log.Fatalln("[app.Application.onFileLoggingError] stop an app:", err2)
+			log.Fatalln("[FATAL] [app.Application.onFileLoggingError] stop an app:", err2)
 		}
 	}()
 }
@@ -1095,9 +1114,9 @@ func (a *Application) logLoggingError(entry any, err error) {
 				a.fileLogger.ErrorWithEvent(ctx, events.ApplicationEvent, err2, msg)
 			} else {
 				if err2 != nil {
-					log.Printf("%s: %v\n", msg, err2)
+					log.Printf("[ERROR] %s: %v\n", msg, err2)
 				} else {
-					log.Println(msg)
+					log.Println("[ERROR] " + msg)
 				}
 			}
 		} else {
@@ -1108,7 +1127,7 @@ func (a *Application) logLoggingError(entry any, err error) {
 	if a.fileLogger != nil {
 		a.fileLogger.FatalWithEventAndError(ctx, events.ApplicationEvent, err, "[app.Application.logLoggingError] an error occurred while logging", fs...)
 	} else {
-		log.Println("[app.Application.logLoggingError] an error occurred while logging:", err)
+		log.Println("[FATAL] [app.Application.logLoggingError] an error occurred while logging:", err)
 	}
 
 	if !a.isStarted.Load() {
@@ -1121,7 +1140,7 @@ func (a *Application) logLoggingError(entry any, err error) {
 				a.fileLogger.FatalWithEventAndError(ctx, events.ApplicationEvent, err2, "[app.Application.logLoggingError] stop an app")
 				os.Exit(1)
 			} else {
-				log.Fatalln("[app.Application.logLoggingError] stop an app:", err2)
+				log.Fatalln("[FATAL] [app.Application.logLoggingError] stop an app:", err2)
 			}
 		}
 	}()
