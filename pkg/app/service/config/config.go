@@ -20,15 +20,14 @@ import (
 )
 
 type AppConfig[TApis any] struct {
-	AppInfo    *AppInfo    `json:"appInfo"`
-	Env        string      `json:"env"`
-	UserId     uint64      `json:"userId"`
-	Logging    *Logging    `json:"logging"`
-	Actions    *Actions    `json:"actions"`
-	Db         *Db         `json:"db"`
-	HttpServer *HttpServer `json:"httpServer"`
-	Grpc       *Grpc       `json:"grpc"`
-	Apis       TApis       `json:"apis"`
+	AppInfo *AppInfo `json:"appInfo"`
+	Env     string   `json:"env"`
+	UserId  uint64   `json:"userId"`
+	Logging *Logging `json:"logging"`
+	Actions *Actions `json:"actions"`
+	Net     *Net     `json:"net"`
+	Db      *Db      `json:"db"`
+	Apis    TApis    `json:"apis"`
 }
 
 type AppInfo struct {
@@ -86,29 +85,13 @@ type ActionLoggingKafka struct {
 	OperationTopic   string       `json:"operationTopic"`
 }
 
-type Db struct {
-	Postgres *DbSettings `json:"postgres"`
+type Net struct {
+	Http *Http `json:"http"`
+	Grpc *Grpc `json:"grpc"`
 }
 
-type DbSettings struct {
-	Configs map[string]*DbConfig `json:"configs"` // map[DbConfigName]DbConfig
-	DataMap map[string]string    `json:"dataMap"` // map[DataCategory]DbConfigName
-}
-
-type DbConfig struct {
-	ApplicationName   string `json:"applicationName"`
-	Host              string `json:"host"`
-	Port              int    `json:"port"`
-	Database          string `json:"database"`
-	User              string `json:"user"`
-	Password          string `json:"password"`
-	SslMode           string `json:"sslMode"`
-	ConnectTimeout    int64  `json:"connectTimeout"` // in seconds
-	MinConns          int32  `json:"minConns"`
-	MaxConns          int32  `json:"maxConns"`
-	MaxConnLifetime   int64  `json:"maxConnLifetime"`   // in seconds
-	MaxConnIdleTime   int64  `json:"maxConnIdleTime"`   // in seconds
-	HealthCheckPeriod int64  `json:"healthCheckPeriod"` // in seconds
+type Http struct {
+	Server *HttpServer `json:"server"`
 }
 
 type HttpServer struct {
@@ -151,4 +134,29 @@ type GrpcServerLogging struct {
 type GrpcServerLoggingKafka struct {
 	KafkaConfig *KafkaConfig `json:"kafkaConfig"`
 	CallTopic   string       `json:"callTopic"`
+}
+
+type Db struct {
+	Postgres *DbSettings `json:"postgres"`
+}
+
+type DbSettings struct {
+	Configs map[string]*DbConfig `json:"configs"` // map[DbConfigName]DbConfig
+	DataMap map[string]string    `json:"dataMap"` // map[DataCategory]DbConfigName
+}
+
+type DbConfig struct {
+	ApplicationName   string `json:"applicationName"`
+	Host              string `json:"host"`
+	Port              int    `json:"port"`
+	Database          string `json:"database"`
+	User              string `json:"user"`
+	Password          string `json:"password"`
+	SslMode           string `json:"sslMode"`
+	ConnectTimeout    int64  `json:"connectTimeout"` // in seconds
+	MinConns          int32  `json:"minConns"`
+	MaxConns          int32  `json:"maxConns"`
+	MaxConnLifetime   int64  `json:"maxConnLifetime"`   // in seconds
+	MaxConnIdleTime   int64  `json:"maxConnIdleTime"`   // in seconds
+	HealthCheckPeriod int64  `json:"healthCheckPeriod"` // in seconds
 }

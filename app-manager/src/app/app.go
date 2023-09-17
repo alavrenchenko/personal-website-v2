@@ -114,19 +114,19 @@ type Application struct {
 	actionManager *actions.ActionManager
 	actionLogger  *actionlogging.Logger
 
-	postgresManager *postgres.DbManager[*ampostgres.Stores]
-
-	appManager        *appmanager.AppManager
-	appGroupManager   *groupmanager.AppGroupManager
-	appSessionManager *sessionmanager.AppSessionManager
-
 	httpServer       *httpserver.HttpServer
 	httpServerLogger *httpserverlogging.Logger
 	grpcLogger       *grpclogging.Logger
 	grpcServer       *grpcserver.GrpcServer
 	grpcServerLogger *grpcserverlogging.Logger
 
+	postgresManager *postgres.DbManager[*ampostgres.Stores]
+
 	loggingManagerService *loggingmanager.LoggingManagerService
+
+	appManager        *appmanager.AppManager
+	appGroupManager   *groupmanager.AppGroupManager
+	appSessionManager *sessionmanager.AppSessionManager
 }
 
 var _ app.Application = (*Application)(nil)
@@ -679,9 +679,9 @@ func (a *Application) configureHttpServer() error {
 			Env:     a.env.Name(),
 		},
 		Kafka: &httpserverlogging.KafkaConfig{
-			Config:        a.config.HttpServer.Logging.Kafka.KafkaConfig.Config(),
-			RequestTopic:  a.config.HttpServer.Logging.Kafka.RequestTopic,
-			ResponseTopic: a.config.HttpServer.Logging.Kafka.ResponseTopic,
+			Config:        a.config.Net.Http.Server.Logging.Kafka.KafkaConfig.Config(),
+			RequestTopic:  a.config.Net.Http.Server.Logging.Kafka.RequestTopic,
+			ResponseTopic: a.config.Net.Http.Server.Logging.Kafka.ResponseTopic,
 		},
 		ErrorHandler: a.onHttpServerLoggingError,
 	}
@@ -694,10 +694,10 @@ func (a *Application) configureHttpServer() error {
 	a.httpServerLogger = l
 	hsb := httpserver.NewHttpServerBuilder(httpServerId, a.appSessionId.Value, l, a.loggerFactory)
 	hsb.Configure(func(config *httpserver.HttpServerConfig) {
-		config.Addr = a.config.HttpServer.Addr
-		config.ReadTimeout = time.Duration(a.config.HttpServer.ReadTimeout) * time.Millisecond
-		config.WriteTimeout = time.Duration(a.config.HttpServer.WriteTimeout) * time.Millisecond
-		config.IdleTimeout = time.Duration(a.config.HttpServer.IdleTimeout) * time.Millisecond
+		config.Addr = a.config.Net.Http.Server.Addr
+		config.ReadTimeout = time.Duration(a.config.Net.Http.Server.ReadTimeout) * time.Millisecond
+		config.WriteTimeout = time.Duration(a.config.Net.Http.Server.WriteTimeout) * time.Millisecond
+		config.IdleTimeout = time.Duration(a.config.Net.Http.Server.IdleTimeout) * time.Millisecond
 		config.PipelineConfig = rpc
 	})
 
@@ -746,8 +746,8 @@ func (a *Application) configureHttpRouting(router *httpserverrouting.Router) err
 
 func (a *Application) configureGrpcLogging() error {
 	options := &grpclogging.LoggerOptions{
-		MinLogLevel: a.config.Grpc.Logging.MinLogLevel,
-		MaxLogLevel: a.config.Grpc.Logging.MaxLogLevel,
+		MinLogLevel: a.config.Net.Grpc.Logging.MinLogLevel,
+		MaxLogLevel: a.config.Net.Grpc.Logging.MaxLogLevel,
 	}
 
 	l, err := grpclogging.NewLogger(options, a.loggerFactory)
@@ -781,8 +781,8 @@ func (a *Application) configureGrpcServer() error {
 			Env:     a.env.Name(),
 		},
 		Kafka: &grpcserverlogging.KafkaConfig{
-			Config:    a.config.Grpc.Server.Logging.Kafka.KafkaConfig.Config(),
-			CallTopic: a.config.Grpc.Server.Logging.Kafka.CallTopic,
+			Config:    a.config.Net.Grpc.Server.Logging.Kafka.KafkaConfig.Config(),
+			CallTopic: a.config.Net.Grpc.Server.Logging.Kafka.CallTopic,
 		},
 		ErrorHandler: a.onGrpcServerLoggingError,
 	}
@@ -795,7 +795,7 @@ func (a *Application) configureGrpcServer() error {
 	a.grpcServerLogger = l
 	sb := grpcserver.NewGrpcServerBuilder(grpcServerId, a.appSessionId.Value, l, a.loggerFactory)
 	sb.Configure(func(config *grpcserver.GrpcServerConfig) {
-		config.Addr = a.config.Grpc.Server.Addr
+		config.Addr = a.config.Net.Grpc.Server.Addr
 		config.PipelineConfig = rpc
 	})
 
