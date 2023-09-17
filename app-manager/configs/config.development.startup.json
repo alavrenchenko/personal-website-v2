@@ -57,7 +57,7 @@
                     "channelBufferSize": 1024,
                     "version": "3.5.0"
                 },
-                "kafkaTopic":"app_manager_startup.log"
+                "kafkaTopic":"startup_app_manager.log"
             }
         },
         "fileLog": {
@@ -164,8 +164,8 @@
                             "channelBufferSize": 1024,
                             "version": "3.5.0"
                         },
-                        "requestTopic":"app_manager_startup.http_server.requests",
-                        "responseTopic":"app_manager_startup.http_server.responses"
+                        "requestTopic":"startup_app_manager.http_server.requests",
+                        "responseTopic":"startup_app_manager.http_server.responses"
                     }
                 }
             }
@@ -218,7 +218,7 @@
                             "channelBufferSize": 1024,
                             "version": "3.5.0"
                         },
-                        "callTopic":"app_manager_startup.grpc_server.calls"
+                        "callTopic":"startup_app_manager.grpc_server.calls"
                     }
                 }
             }
