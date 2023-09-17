@@ -95,7 +95,7 @@ func Run() {
 		panic(err)
 	}
 
-	appManager, err := manager.NewAppManager(postgresManager.Stores.AppStore, f)
+	appManager, err := manager.NewAppManager(postgresManager.Stores.AppStore(), f)
 	if err != nil {
 		panic(err)
 	}

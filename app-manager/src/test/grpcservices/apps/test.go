@@ -112,7 +112,7 @@ func Run() {
 		panic(err)
 	}
 
-	appManager, err = manager.NewAppManager(postgresManager.Stores.AppStore, f)
+	appManager, err = manager.NewAppManager(postgresManager.Stores.AppStore(), f)
 	if err != nil {
 		panic(err)
 	}
@@ -198,7 +198,7 @@ func exec(s *grpcserver.GrpcServer) {
 	serverhelper.PrintStats(s)
 
 	fmt.Println()
-	testApps_GetStatusById(opCtx)
+	testApps_GetStatusById(opCtx.UserId.Value)
 	serverhelper.PrintStats(s)
 
 	succeeded = true
@@ -219,9 +219,9 @@ func testApps_GetByName(ctx *actions.OperationContext) {
 	}
 }
 
-func testApps_GetStatusById(ctx *actions.OperationContext) {
+func testApps_GetStatusById(userId uint64) {
 	for id := uint64(1); id <= 5; id++ {
-		s, err := appManagerService.Apps.GetStatusById(ctx, id)
+		s, err := appManagerService.Apps.GetStatusById(id, userId)
 		fmt.Printf("[apps.testApps_GetStatusById] appId: %d\nappStatus: %v\nerr: %v\n\n", id, s, err)
 	}
 }

@@ -93,7 +93,7 @@ func Run() {
 		panic(err)
 	}
 
-	appSessionManager, err := manager.NewAppSessionManager(postgresManager.Stores.AppSessionStore, f)
+	appSessionManager, err := manager.NewAppSessionManager(postgresManager.Stores.AppSessionStore(), f)
 	if err != nil {
 		panic(err)
 	}

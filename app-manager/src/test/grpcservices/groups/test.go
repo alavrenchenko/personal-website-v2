@@ -112,7 +112,7 @@ func Run() {
 		panic(err)
 	}
 
-	appGroupManager, err = manager.NewAppGroupManager(postgresManager.Stores.AppGroupStore, f)
+	appGroupManager, err = manager.NewAppGroupManager(postgresManager.Stores.AppGroupStore(), f)
 	if err != nil {
 		panic(err)
 	}
