@@ -6,6 +6,7 @@
     },
     "env": "development",
     "userId": 1,
+    "mode": "startup",
     "logging": {
         "minLogLevel": "trace",
         "maxLogLevel": "fatal",
@@ -56,7 +57,7 @@
                     "channelBufferSize": 1024,
                     "version": "3.5.0"
                 },
-                "kafkaTopic":"app_manager.log"
+                "kafkaTopic":"app_manager_startup.log"
             }
         },
         "fileLog": {
@@ -163,8 +164,8 @@
                             "channelBufferSize": 1024,
                             "version": "3.5.0"
                         },
-                        "requestTopic":"app_manager.http_server.requests",
-                        "responseTopic":"app_manager.http_server.responses"
+                        "requestTopic":"app_manager_startup.http_server.requests",
+                        "responseTopic":"app_manager_startup.http_server.responses"
                     }
                 }
             }
@@ -217,7 +218,7 @@
                             "channelBufferSize": 1024,
                             "version": "3.5.0"
                         },
-                        "callTopic":"app_manager.grpc_server.calls"
+                        "callTopic":"app_manager_startup.grpc_server.calls"
                     }
                 }
             }

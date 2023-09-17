@@ -66,7 +66,7 @@ func (s *LoggingSession) Start() error {
 		return errors.New("[logging.LoggingSession.Start] logging session has already been started")
 	}
 
-	log.Println("[logging.LoggingSession.Start] starting the logging session...")
+	log.Println("[INFO] [logging.LoggingSession.Start] starting the logging session...")
 
 	id, err := s.sessions.CreateAndStart(s.appId, s.userId)
 
@@ -76,6 +76,6 @@ func (s *LoggingSession) Start() error {
 
 	s.id.Store(id)
 	s.isStarted.Store(true)
-	log.Printf("[logging.LoggingSession.Start] logging session has been started (id: %d)\n", id)
+	log.Printf("[INFO] [logging.LoggingSession.Start] logging session has been started (id: %d)\n", id)
 	return nil
 }

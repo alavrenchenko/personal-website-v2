@@ -28,55 +28,126 @@ import (
 
 const appCategory = "Apps"
 
-type Stores struct {
-	AppStore        *appstores.AppStore
-	AppGroupStore   *groupstores.AppGroupStore
-	AppSessionStore *sessionstores.AppSessionStore
+type Stores interface {
+	AppStore() *appstores.AppStore
+	AppGroupStore() *groupstores.AppGroupStore
+	AppSessionStore() *sessionstores.AppSessionStore
+	Init(databases map[string]*postgres.Database) error
+}
+
+var _ postgres.Stores = (Stores)(nil)
+
+type stores struct {
+	appStore        *appstores.AppStore
+	appGroupStore   *groupstores.AppGroupStore
+	appSessionStore *sessionstores.AppSessionStore
 	loggerFactory   logging.LoggerFactory[*context.LogEntryContext]
 	isInitialized   bool
 }
 
-var _ postgres.Stores = (*Stores)(nil)
+var _ Stores = (*stores)(nil)
 
-func NewStores(loggerFactory logging.LoggerFactory[*context.LogEntryContext]) *Stores {
-	return &Stores{
+func NewStores(loggerFactory logging.LoggerFactory[*context.LogEntryContext]) Stores {
+	return &stores{
 		loggerFactory: loggerFactory,
 	}
 }
 
+func (s *stores) AppStore() *appstores.AppStore {
+	return s.appStore
+}
+
+func (s *stores) AppGroupStore() *groupstores.AppGroupStore {
+	return s.appGroupStore
+}
+
+func (s *stores) AppSessionStore() *sessionstores.AppSessionStore {
+	return s.appSessionStore
+}
+
 // databases: map[DataCategory]Database
-func (s *Stores) Init(databases map[string]*postgres.Database) error {
+func (s *stores) Init(databases map[string]*postgres.Database) error {
 	if s.isInitialized {
-		return errors.New("[postgres.Stores.Init] Stores have already been initialized")
+		return errors.New("[postgres.stores.Init] stores have already been initialized")
 	}
 
 	database, ok := databases[appCategory]
-
 	if !ok {
-		return fmt.Errorf("[postgres.Stores.Init] database not found for the category '%s'", appCategory)
+		return fmt.Errorf("[postgres.stores.Init] database not found for the category '%s'", appCategory)
 	}
 
 	appStore, err := appstores.NewAppStore(database, s.loggerFactory)
-
 	if err != nil {
-		return fmt.Errorf("[postgres.Stores.Init] new app store: %w", err)
+		return fmt.Errorf("[postgres.stores.Init] new app store: %w", err)
 	}
 
-	s.AppStore = appStore
+	s.appStore = appStore
 	appGroupStore, err := groupstores.NewAppGroupStore(database, s.loggerFactory)
-
 	if err != nil {
-		return fmt.Errorf("[postgres.Stores.Init] new app group store: %w", err)
+		return fmt.Errorf("[postgres.stores.Init] new app group store: %w", err)
 	}
 
-	s.AppGroupStore = appGroupStore
+	s.appGroupStore = appGroupStore
 	appSessionStore, err := sessionstores.NewAppSessionStore(database, s.loggerFactory)
-
 	if err != nil {
-		return fmt.Errorf("[postgres.Stores.Init] new app session store: %w", err)
+		return fmt.Errorf("[postgres.stores.Init] new app session store: %w", err)
 	}
 
-	s.AppSessionStore = appSessionStore
+	s.appSessionStore = appSessionStore
+	s.isInitialized = true
+	return nil
+}
+
+type startupStores struct {
+	appStore        *appstores.AppStore
+	appSessionStore *sessionstores.AppSessionStore
+	loggerFactory   logging.LoggerFactory[*context.LogEntryContext]
+	isInitialized   bool
+}
+
+var _ Stores = (*startupStores)(nil)
+
+func NewStartupStores(loggerFactory logging.LoggerFactory[*context.LogEntryContext]) Stores {
+	return &startupStores{
+		loggerFactory: loggerFactory,
+	}
+}
+
+func (s *startupStores) AppStore() *appstores.AppStore {
+	return s.appStore
+}
+
+func (s *startupStores) AppGroupStore() *groupstores.AppGroupStore {
+	return nil
+}
+
+func (s *startupStores) AppSessionStore() *sessionstores.AppSessionStore {
+	return s.appSessionStore
+}
+
+// databases: map[DataCategory]Database
+func (s *startupStores) Init(databases map[string]*postgres.Database) error {
+	if s.isInitialized {
+		return errors.New("[postgres.startupStores.Init] startupStores have already been initialized")
+	}
+
+	database, ok := databases[appCategory]
+	if !ok {
+		return fmt.Errorf("[postgres.startupStores.Init] database not found for the category '%s'", appCategory)
+	}
+
+	appStore, err := appstores.NewAppStore(database, s.loggerFactory)
+	if err != nil {
+		return fmt.Errorf("[postgres.startupStores.Init] new app store: %w", err)
+	}
+
+	s.appStore = appStore
+	appSessionStore, err := sessionstores.NewAppSessionStore(database, s.loggerFactory)
+	if err != nil {
+		return fmt.Errorf("[postgres.startupStores.Init] new app session store: %w", err)
+	}
+
+	s.appSessionStore = appSessionStore
 	s.isInitialized = true
 	return nil
 }

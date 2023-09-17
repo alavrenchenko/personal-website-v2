@@ -37,6 +37,7 @@ import (
 	loggingencoding "personal-website-v2/app-manager/src/app/internal/loggingerror/encoding/logging"
 	grpcserverencoding "personal-website-v2/app-manager/src/app/internal/loggingerror/encoding/net/grpc/server"
 	httpserverencoding "personal-website-v2/app-manager/src/app/internal/loggingerror/encoding/net/http/server"
+	amapplogging "personal-website-v2/app-manager/src/app/logging"
 	"personal-website-v2/app-manager/src/app/server/grpc"
 	"personal-website-v2/app-manager/src/app/server/http"
 	appservices "personal-website-v2/app-manager/src/grpcservices/apps"
@@ -56,7 +57,6 @@ import (
 	actionlogging "personal-website-v2/pkg/actions/logging"
 	"personal-website-v2/pkg/app"
 	"personal-website-v2/pkg/app/service"
-	"personal-website-v2/pkg/app/service/config"
 	applogging "personal-website-v2/pkg/app/service/logging"
 	appcontrollers "personal-website-v2/pkg/app/service/net/http/server/controllers/app"
 	"personal-website-v2/pkg/base/env"
@@ -85,25 +85,21 @@ const (
 	grpcServerId uint16 = 1
 )
 
-var (
-	errApplicationNotStarted = errors.New("[app] app not started")
-
-	terminationSignals = []os.Signal{syscall.SIGHUP, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM}
-)
+var terminationSignals = []os.Signal{syscall.SIGHUP, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM}
 
 type Application struct {
 	info              *app.ApplicationInfo
 	env               *env.Environment
 	session           *service.ApplicationSession
 	appSessionId      nullable.Nullable[uint64]
-	loggingSession    *applogging.LoggingSession
+	loggingSession    service.LoggingSession
 	loggingSessionId  nullable.Nullable[uint64]
 	loggerFactory     logging.LoggerFactory[*context.LogEntryContext]
 	logger            logging.Logger[*context.LogEntryContext]
 	fileLoggerFactory logging.LoggerFactory[*context.LogEntryContext]
 	fileLogger        logging.Logger[*context.LogEntryContext]
 	configPath        string
-	config            *config.AppConfig[*amappconfig.Apis]
+	config            *amappconfig.AppConfig
 	isStarted         atomic.Bool
 	isStopped         bool
 	wg                sync.WaitGroup
@@ -120,7 +116,7 @@ type Application struct {
 	grpcServer       *grpcserver.GrpcServer
 	grpcServerLogger *grpcserverlogging.Logger
 
-	postgresManager *postgres.DbManager[*ampostgres.Stores]
+	postgresManager *postgres.DbManager[ampostgres.Stores]
 
 	loggingManagerService *loggingmanager.LoggingManagerService
 
@@ -257,6 +253,10 @@ func (a *Application) Start() (err error) {
 		return fmt.Errorf("[app.Application.Start] load a config: %w", err)
 	}
 
+	if a.config.Mode != amappconfig.AppModeFull && a.config.Mode != amappconfig.AppModeStartup {
+		return fmt.Errorf("[app.Application.Start] '%s' app mode isn't supported", a.config.Mode)
+	}
+
 	a.env = env.NewEnvironment(a.config.Env)
 	a.info = app.NewApplicationInfo(a.config.AppInfo.Id, a.config.AppInfo.GroupId, a.config.AppInfo.Version)
 
@@ -268,7 +268,7 @@ func (a *Application) Start() (err error) {
 		return fmt.Errorf("[app.Application.Start] configure logging: %w", err)
 	}
 
-	a.log(logging.LogLevelInfo, events.ApplicationIsStarting, nil, "[app.Application.Start] starting the app...")
+	a.log(logging.LogLevelInfo, events.ApplicationIsStarting, nil, "[app.Application.Start] starting the app...", logging.NewField("mode", a.config.Mode.String()))
 
 	if err = a.configureGrpcLogging(); err != nil {
 		return fmt.Errorf("[app.Application.Start] configure gRPC logging: %w", err)
@@ -317,18 +317,21 @@ func (a *Application) Start() (err error) {
 	go a.run()
 
 	a.isStarted.Store(true)
-	a.log(logging.LogLevelInfo, events.ApplicationStarted, nil, "[app.Application.Start] app has been started")
+	a.log(logging.LogLevelInfo, events.ApplicationStarted, nil, "[app.Application.Start] app has been started",
+		logging.NewField("mode", a.config.Mode.String()),
+		logging.NewField("appSessionId", a.appSessionId.Value),
+		logging.NewField("loggingSessionId", a.loggingSessionId.Value),
+	)
 	return nil
 }
 
 func (a *Application) loadConfig() error {
 	c, err := os.ReadFile(a.configPath)
-
 	if err != nil {
 		return fmt.Errorf("[app.Application.loadConfig] read a file: %w", err)
 	}
 
-	config := new(config.AppConfig[*amappconfig.Apis])
+	config := new(amappconfig.AppConfig)
 
 	if err = json.Unmarshal(c, config); err != nil {
 		return fmt.Errorf("[app.Application.loadConfig] unmarshal JSON-encoded data (config): %w", err)
@@ -339,28 +342,36 @@ func (a *Application) loadConfig() error {
 }
 
 func (a *Application) startLoggingSession() error {
-	c := &loggingmanager.LoggingManagerServiceClientConfig{
-		ServerAddr:  a.config.Apis.Clients.LoggingManagerService.ServerAddr,
-		DialTimeout: time.Duration(a.config.Apis.Clients.LoggingManagerService.DialTimeout) * time.Millisecond,
-		CallTimeout: time.Duration(a.config.Apis.Clients.LoggingManagerService.CallTimeout) * time.Millisecond,
-	}
-	lms := loggingmanager.NewLoggingManagerService(c)
+	var ls service.LoggingSession
+	var lms *loggingmanager.LoggingManagerService
+	var err error
 
-	if err := lms.Init(); err != nil {
-		return fmt.Errorf("[app.Application.startLoggingSession] init a logging manager service: %w", err)
-	}
-
-	defer func() {
-		if a.loggingSession == nil {
-			if err2 := lms.Dispose(); err2 != nil {
-				a.log(logging.LogLevelError, events.ApplicationEvent, err2, "[app.Application.startLoggingSession] dispose of the logging manager service")
-			}
+	if a.config.Mode == amappconfig.AppModeStartup {
+		ls = amapplogging.NewStartupLoggingSession()
+	} else {
+		c := &loggingmanager.LoggingManagerServiceClientConfig{
+			ServerAddr:  a.config.Apis.Clients.LoggingManagerService.ServerAddr,
+			DialTimeout: time.Duration(a.config.Apis.Clients.LoggingManagerService.DialTimeout) * time.Millisecond,
+			CallTimeout: time.Duration(a.config.Apis.Clients.LoggingManagerService.CallTimeout) * time.Millisecond,
 		}
-	}()
+		lms = loggingmanager.NewLoggingManagerService(c)
 
-	ls, err := applogging.NewLoggingSession(a.info.Id(), a.config.UserId, lms.Sessions)
-	if err != nil {
-		return fmt.Errorf("[app.Application.startLoggingSession] new logging session: %w", err)
+		if err = lms.Init(); err != nil {
+			return fmt.Errorf("[app.Application.startLoggingSession] init a logging manager service: %w", err)
+		}
+
+		defer func() {
+			if a.loggingSession == nil {
+				if err := lms.Dispose(); err != nil {
+					log.Println("[ERROR] [app.Application.startLoggingSession] dispose of the logging manager service:", err)
+				}
+			}
+		}()
+
+		ls, err = applogging.NewLoggingSession(a.info.Id(), a.config.UserId, lms.Sessions)
+		if err != nil {
+			return fmt.Errorf("[app.Application.startLoggingSession] new logging session: %w", err)
+		}
 	}
 
 	if err = ls.Start(); err != nil {
@@ -425,10 +436,14 @@ func (a *Application) configureLogging() error {
 		}
 
 		if a.loggerFactory != nil {
-			_ = a.loggerFactory.Dispose()
+			if err := a.loggerFactory.Dispose(); err != nil {
+				log.Println("[ERROR] [app.Application.configureLogging] dispose of the logger factory:", err)
+			}
 		} else {
-			for _, a := range b.Build().Adapters() {
-				_ = a.Dispose()
+			for _, adapter := range b.Build().Adapters() {
+				if err := adapter.Dispose(); err != nil {
+					log.Println("[ERROR] [app.Application.configureLogging] dispose of the adapter:", err)
+				}
 			}
 		}
 	}()
@@ -477,9 +492,13 @@ func (a *Application) configureFileLogging(appInfo *info.AppInfo, loggingSession
 		}
 
 		if a.fileLoggerFactory != nil {
-			_ = a.fileLoggerFactory.Dispose()
+			if err := a.fileLoggerFactory.Dispose(); err != nil {
+				log.Println("[ERROR] [app.Application.configureFileLogging] dispose of the file logger factory:", err)
+			}
 		} else {
-			_ = adapter.Dispose()
+			if err := adapter.Dispose(); err != nil {
+				log.Println("[ERROR] [app.Application.configureFileLogging] dispose of the adapter:", err)
+			}
 		}
 	}()
 
@@ -538,6 +557,12 @@ func (a *Application) createKafkaAdapter(appInfo *info.AppInfo, loggingSessionId
 }
 
 func (a *Application) createFileLogAdapter(appInfo *info.AppInfo, loggingSessionId uint64) (*filelogadapter.FileLogAdapter, error) {
+	fname := fmt.Sprintf("%d.log", loggingSessionId)
+
+	if a.config.Mode == amappconfig.AppModeStartup {
+		fname = "startup." + fname
+	}
+
 	c := &filelogadapter.FileLogAdapterConfig{
 		AppInfo:          appInfo,
 		LoggingSessionId: loggingSessionId,
@@ -546,7 +571,7 @@ func (a *Application) createFileLogAdapter(appInfo *info.AppInfo, loggingSession
 			MaxLogLevel: a.config.Logging.FileLog.MaxLogLevel,
 		},
 		FileLogWriter: &filelog.WriterConfig{
-			FilePath: filepath.Join(filepath.Clean(a.config.Logging.FileLog.Writer.FileDir), fmt.Sprintf("%d.log", loggingSessionId)),
+			FilePath: filepath.Join(filepath.Clean(a.config.Logging.FileLog.Writer.FileDir), fname),
 		},
 	}
 
@@ -587,29 +612,39 @@ func (a *Application) configureDb() error {
 		Configs: dbConfigs,
 		DataMap: dataMap,
 	}
-	a.postgresManager = postgres.NewDbManager(ampostgres.NewStores(a.loggerFactory), dbSettings)
+
+	if a.config.Mode == amappconfig.AppModeStartup {
+		a.postgresManager = postgres.NewDbManager(ampostgres.NewStartupStores(a.loggerFactory), dbSettings)
+	} else {
+		a.postgresManager = postgres.NewDbManager(ampostgres.NewStores(a.loggerFactory), dbSettings)
+	}
 	return nil
 }
 
 func (a *Application) configure() error {
-	appManager, err := appmanager.NewAppManager(a.postgresManager.Stores.AppStore, a.loggerFactory)
+	appManager, err := appmanager.NewAppManager(a.postgresManager.Stores.AppStore(), a.loggerFactory)
 	if err != nil {
 		return fmt.Errorf("[app.Application.configure] new app manager: %w", err)
 	}
 
-	appGroupManager, err := groupmanager.NewAppGroupManager(a.postgresManager.Stores.AppGroupStore, a.loggerFactory)
-	if err != nil {
-		return fmt.Errorf("[app.Application.configure] new app group manager: %w", err)
-	}
-
-	appSessionManager, err := sessionmanager.NewAppSessionManager(a.postgresManager.Stores.AppSessionStore, a.loggerFactory)
+	a.appManager = appManager
+	appSessionManager, err := sessionmanager.NewAppSessionManager(a.postgresManager.Stores.AppSessionStore(), a.loggerFactory)
 	if err != nil {
 		return fmt.Errorf("[app.Application.configure] new app session manager: %w", err)
 	}
 
-	a.appManager = appManager
-	a.appGroupManager = appGroupManager
 	a.appSessionManager = appSessionManager
+
+	if a.config.Mode == amappconfig.AppModeStartup {
+		return nil
+	}
+
+	appGroupManager, err := groupmanager.NewAppGroupManager(a.postgresManager.Stores.AppGroupStore(), a.loggerFactory)
+	if err != nil {
+		return fmt.Errorf("[app.Application.configure] new app group manager: %w", err)
+	}
+
+	a.appGroupManager = appGroupManager
 	return nil
 }
 
@@ -641,12 +676,12 @@ func (a *Application) configureActions() error {
 		return fmt.Errorf("[app.Application.configureActions] new transaction manager: %w", err)
 	}
 
+	a.tranManager = tranManager
 	actionManager, err := actions.NewActionManager(a.appSessionId.Value, l, l, a.loggerFactory)
 	if err != nil {
 		return fmt.Errorf("[app.Application.configureActions] new action manager: %w", err)
 	}
 
-	a.tranManager = tranManager
 	a.actionManager = actionManager
 	return nil
 }
@@ -721,11 +756,6 @@ func (a *Application) configureHttpRouting(router *httpserverrouting.Router) err
 		return fmt.Errorf("[app.Application.configureHttpRouting] new app controller: %w", err)
 	}
 
-	appGroupController, err := groupcontrollers.NewAppGroupController(a.appSessionId.Value, a.actionManager, a.appGroupManager, a.loggerFactory)
-	if err != nil {
-		return fmt.Errorf("[app.Application.configureHttpRouting] new app group controller: %w", err)
-	}
-
 	appSessionController, err := sessioncontrollers.NewAppSessionController(a.appSessionId.Value, a.actionManager, a.appSessionManager, a.loggerFactory)
 	if err != nil {
 		return fmt.Errorf("[app.Application.configureHttpRouting] new app session controller: %w", err)
@@ -738,9 +768,19 @@ func (a *Application) configureHttpRouting(router *httpserverrouting.Router) err
 	router.AddGet("Apps_GetByIdOrName", "/api/apps", appController.GetByIdOrName)
 	router.AddGet("Apps_GetStatusById", "/api/apps/status", appController.GetStatusById)
 
-	router.AddGet("AppGroups_GetByIdOrName", "/api/app-group", appGroupController.GetByIdOrName)
-
 	router.AddGet("AppSessions_GetById", "/api/app-session", appSessionController.GetById)
+
+	if a.config.Mode == amappconfig.AppModeStartup {
+		return nil
+	}
+
+	appGroupController, err := groupcontrollers.NewAppGroupController(a.appSessionId.Value, a.actionManager, a.appGroupManager, a.loggerFactory)
+	if err != nil {
+		return fmt.Errorf("[app.Application.configureHttpRouting] new app group controller: %w", err)
+	}
+
+	// public
+	router.AddGet("AppGroups_GetByIdOrName", "/api/app-group", appGroupController.GetByIdOrName)
 	return nil
 }
 
@@ -818,20 +858,24 @@ func (a *Application) configureGrpcServices(b *grpcserver.GrpcServerBuilder) err
 		return fmt.Errorf("[app.Application.configureGrpcServices] new app service: %w", err)
 	}
 
-	appGroupService, err := groupservices.NewAppGroupService(a.appSessionId.Value, a.actionManager, a.appGroupManager, a.loggerFactory)
-	if err != nil {
-		return fmt.Errorf("[app.Application.configureGrpcServices] new app group service: %w", err)
-	}
-
 	appSessionService, err := sessionservices.NewAppSessionService(a.appSessionId.Value, a.actionManager, a.appSessionManager, a.loggerFactory)
 	if err != nil {
 		return fmt.Errorf("[app.Application.configureGrpcServices] new app session service: %w", err)
 	}
 
 	b.AddService(&appspb.AppService_ServiceDesc, appService).
-		AddService(&groupspb.AppGroupService_ServiceDesc, appGroupService).
 		AddService(&sessionspb.AppSessionService_ServiceDesc, appSessionService)
 
+	if a.config.Mode == amappconfig.AppModeStartup {
+		return nil
+	}
+
+	appGroupService, err := groupservices.NewAppGroupService(a.appSessionId.Value, a.actionManager, a.appGroupManager, a.loggerFactory)
+	if err != nil {
+		return fmt.Errorf("[app.Application.configureGrpcServices] new app group service: %w", err)
+	}
+
+	b.AddService(&groupspb.AppGroupService_ServiceDesc, appGroupService)
 	return nil
 }
 
@@ -892,7 +936,9 @@ func (a *Application) stop(ctx *actions.OperationContext) {
 		}
 
 		if a.fileLoggerFactory != nil {
-			_ = a.fileLoggerFactory.Dispose()
+			if err := a.fileLoggerFactory.Dispose(); err != nil {
+				log.Println("[ERROR] [app.Application.stop] dispose of the file logger factory:", err)
+			}
 		}
 
 		a.isStopped = true
@@ -976,7 +1022,15 @@ func (a *Application) stop(ctx *actions.OperationContext) {
 	}
 
 	if a.fileLoggerFactory != nil {
-		_ = a.fileLoggerFactory.Dispose()
+		if err := a.fileLoggerFactory.Dispose(); err != nil {
+			log.Println("[ERROR] [app.Application.stop] dispose of the file logger factory:", err)
+		}
+	}
+
+	if a.loggingManagerService != nil {
+		if err := a.loggingManagerService.Dispose(); err != nil {
+			log.Println("[ERROR] [app.Application.stop] dispose of the logging manager service:", err)
+		}
 	}
 }
 
@@ -1038,23 +1092,31 @@ func (a *Application) WaitForShutdown() {
 	a.wg.Wait()
 }
 
-func (a *Application) log(level logging.LogLevel, event *logging.Event, err error, msg string) {
+func (a *Application) log(level logging.LogLevel, event *logging.Event, err error, msg string, fields ...*logging.Field) {
 	var ctx *context.LogEntryContext
 
 	if a.appSessionId.HasValue {
 		ctx = &context.LogEntryContext{AppSessionId: a.appSessionId}
 	}
 
-	a.logWithContext(ctx, level, event, err, msg)
+	a.logWithContext(ctx, level, event, err, msg, fields...)
 }
 
-func (a *Application) logWithContext(ctx *context.LogEntryContext, level logging.LogLevel, event *logging.Event, err error, msg string) {
+func (a *Application) logWithContext(ctx *context.LogEntryContext, level logging.LogLevel, event *logging.Event, err error, msg string, fields ...*logging.Field) {
+	logged := false
+
 	if a.logger != nil {
-		a.logger.Log(ctx, level, event, err, msg)
+		a.logger.Log(ctx, level, event, err, msg, fields...)
+		logged = true
 	}
 
 	if a.fileLogger != nil {
-		a.fileLogger.Log(ctx, level, event, err, msg)
+		a.fileLogger.Log(ctx, level, event, err, msg, fields...)
+		logged = true
+	}
+
+	if !logged && (level == logging.LogLevelWarning || level == logging.LogLevelError || level == logging.LogLevelFatal) {
+		log.Printf("[%s] %s: %v\n", level.CapitalString(), msg, err)
 	}
 }
 
@@ -1089,7 +1151,7 @@ func (a *Application) onLoggingError(entry *logging.LogEntry[*context.LogEntryCo
 }
 
 func (a *Application) onFileLoggingError(entry *logging.LogEntry[*context.LogEntryContext], err *logging.LoggingError) {
-	log.Println("[app.Application.onFileLoggingError] an error occurred while logging:", err)
+	log.Println("[ERROR] [app.Application.onFileLoggingError] an error occurred while logging:", err)
 
 	if !a.isStarted.Load() {
 		return
@@ -1097,7 +1159,7 @@ func (a *Application) onFileLoggingError(entry *logging.LogEntry[*context.LogEnt
 
 	go func() {
 		if err2 := a.Stop(); err2 != nil && a.isStarted.Load() {
-			log.Fatalln("[app.Application.onFileLoggingError] stop an app:", err2)
+			log.Fatalln("[FATAL] [app.Application.onFileLoggingError] stop an app:", err2)
 		}
 	}()
 }
@@ -1288,9 +1350,9 @@ func (a *Application) logLoggingError(entry any, err error) {
 				a.fileLogger.ErrorWithEvent(ctx, events.ApplicationEvent, err2, msg)
 			} else {
 				if err2 != nil {
-					log.Printf("%s: %v\n", msg, err2)
+					log.Printf("[ERROR] %s: %v\n", msg, err2)
 				} else {
-					log.Println(msg)
+					log.Println("[ERROR] " + msg)
 				}
 			}
 		} else {
@@ -1301,7 +1363,7 @@ func (a *Application) logLoggingError(entry any, err error) {
 	if a.fileLogger != nil {
 		a.fileLogger.FatalWithEventAndError(ctx, events.ApplicationEvent, err, "[app.Application.logLoggingError] an error occurred while logging", fs...)
 	} else {
-		log.Println("[app.Application.logLoggingError] an error occurred while logging:", err)
+		log.Println("[FATAL] [app.Application.logLoggingError] an error occurred while logging:", err)
 	}
 
 	if !a.isStarted.Load() {
@@ -1314,7 +1376,7 @@ func (a *Application) logLoggingError(entry any, err error) {
 				a.fileLogger.FatalWithEventAndError(ctx, events.ApplicationEvent, err2, "[app.Application.logLoggingError] stop an app")
 				os.Exit(1)
 			} else {
-				log.Fatalln("[app.Application.logLoggingError] stop an app:", err2)
+				log.Fatalln("[FATAL] [app.Application.logLoggingError] stop an app:", err2)
 			}
 		}
 	}()

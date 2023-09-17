@@ -16,7 +16,20 @@ package config
 
 import (
 	apiclientconfig "personal-website-v2/api-clients/config"
+	"personal-website-v2/pkg/app/service/config"
 )
+
+type AppConfig struct {
+	AppInfo *config.AppInfo `json:"appInfo"`
+	Env     string          `json:"env"`
+	UserId  uint64          `json:"userId"`
+	Mode    AppMode         `json:"mode"`
+	Logging *config.Logging `json:"logging"`
+	Actions *config.Actions `json:"actions"`
+	Net     *config.Net     `json:"net"`
+	Db      *config.Db      `json:"db"`
+	Apis    Apis            `json:"apis"`
+}
 
 type Apis struct {
 	Clients ApiClients `json:"clients"`

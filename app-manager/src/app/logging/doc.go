@@ -12,29 +12,5 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
-
-import (
-	"flag"
-	"log"
-
-	_ "personal-website-v2/cmd/app-manager/init"
-
-	"personal-website-v2/app-manager/src/app"
-)
-
-var (
-	configFile = flag.String("config-file", "", "The path to the app config file")
-)
-
-func main() {
-	flag.Parse()
-
-	if len(*configFile) == 0 {
-		log.Fatalln("[FATAL] [main.main] path to the app config file isn't specified")
-	}
-
-	if err := app.NewApplication(*configFile).Run(); err != nil {
-		log.Fatalln("[FATAL] [main.main] run an app:", err)
-	}
-}
+// Package logging.
+package logging // import "personal-website-v2/app-manager/src/app/logging"
