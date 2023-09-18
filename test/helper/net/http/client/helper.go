@@ -15,9 +15,12 @@
 package client
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
+
+	"personal-website-v2/pkg/api/http/models"
 )
 
 func Exec(method, url, contentType string) {
@@ -42,4 +45,37 @@ func Exec(method, url, contentType string) {
 	}
 
 	fmt.Printf("Url: %s\nMethod: %s\nStatusCode: %d\nBody: %s\n\n", url, method, res.StatusCode, b)
+}
+
+func ExecApiRequest[TResponseData any](method, url, contentType string) (statusCode int, body []byte, res *models.Response[TResponseData]) {
+	req, err := http.NewRequest(method, url, nil)
+	if err != nil {
+		panic(err)
+	}
+
+	if len(contentType) > 0 {
+		req.Header.Set("Content-Type", contentType)
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		panic(err)
+	}
+	defer resp.Body.Close()
+
+	b, err := io.ReadAll(resp.Body)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Printf("Url: %s\nMethod: %s\nStatusCode: %d\nBody: %s\n\n", url, method, resp.StatusCode, b)
+
+	if len(b) > 0 {
+		res = new(models.Response[TResponseData])
+
+		if err = json.Unmarshal(b, res); err != nil {
+			res = nil
+		}
+	}
+	return resp.StatusCode, b, res
 }
