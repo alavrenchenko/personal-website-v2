@@ -255,11 +255,11 @@ func (a *Application) Start() (err error) {
 		return fmt.Errorf("[app.Application.Start] configure logging: %w", err)
 	}
 
-	a.log(logging.LogLevelInfo, events.ApplicationIsStarting, nil, "[app.Application.Start] starting the app...")
-
 	if err = a.configureGrpcLogging(); err != nil {
 		return fmt.Errorf("[app.Application.Start] configure gRPC logging: %w", err)
 	}
+
+	a.log(logging.LogLevelInfo, events.ApplicationIsStarting, nil, "[app.Application.Start] starting the app...")
 
 	if err = a.startSession(); err != nil {
 		return fmt.Errorf("[app.Application.Start] start an app session: %w", err)
@@ -978,6 +978,10 @@ func (a *Application) stop(ctx *actions.OperationContext) {
 	a.isStarted.Store(false)
 	a.isStopped = true
 	a.logWithContext(leCtx, logging.LogLevelInfo, events.ApplicationStopped, nil, "[app.Application.stop] app has been stopped")
+
+	if a.grpcLogger != nil {
+		a.grpcLogger.Disable()
+	}
 
 	if err := a.loggerFactory.Dispose(); err != nil {
 		a.log(logging.LogLevelError, events.ApplicationEvent, err, "[app.Application.stop] dispose of the logger factory")

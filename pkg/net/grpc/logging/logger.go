@@ -19,6 +19,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"sync"
 	"sync/atomic"
 
 	"google.golang.org/grpc/grpclog"
@@ -81,33 +82,43 @@ type Logger struct {
 	appSessionId *uint64
 	options      *LoggerOptions
 	logger       logging.Logger[*context.LogEntryContext]
-	enabled      bool
+	wg           sync.WaitGroup
+	enabled      atomic.Bool
 }
 
 var _ grpclog.LoggerV2 = (*Logger)(nil)
 
 func NewLogger(options *LoggerOptions, loggerFactory logging.LoggerFactory[*context.LogEntryContext]) (*Logger, error) {
 	l, err := loggerFactory.CreateLogger("net.grpc")
-
 	if err != nil {
 		return nil, fmt.Errorf("[logging.NewLogger] create a logger: %w", err)
 	}
 
-	return &Logger{
+	logger := &Logger{
 		appSessionId: new(uint64),
 		options:      options,
 		logger:       l,
-		enabled:      options.MinLogLevel < LogLevelNone && options.MaxLogLevel < LogLevelNone,
-	}, nil
+	}
+	logger.enabled.Store(options.MinLogLevel < LogLevelNone && options.MaxLogLevel < LogLevelNone)
+	return logger, nil
 }
 
 func (l *Logger) SetAppSessionId(appSessionId uint64) {
 	atomic.StoreUint64(l.appSessionId, appSessionId)
 }
 
-func (l *Logger) log(level LogLevel, msg string) error {
+func (l *Logger) log(level LogLevel, msg string) {
+	// In order not to use the lock, 'enabled' is checked 2 times.
+	// This way 'Disable' can be executed faster.
+	if !l.enabled.Load() {
+		return
+	}
+
+	l.wg.Add(1)
+	defer l.wg.Done()
+
 	if !l.isEnabled(level) {
-		return nil
+		return
 	}
 
 	var ctx *context.LogEntryContext
@@ -120,11 +131,11 @@ func (l *Logger) log(level LogLevel, msg string) error {
 	}
 
 	l.logger.Log(ctx, logging.LogLevel(level), events.NetGrpcEvent, nil, msg)
-	return nil
+	return
 }
 
 func (l *Logger) isEnabled(level LogLevel) bool {
-	return l.enabled && level >= l.options.MinLogLevel && level <= l.options.MaxLogLevel
+	return l.enabled.Load() && level >= l.options.MinLogLevel && level <= l.options.MaxLogLevel
 }
 
 func (l *Logger) Info(args ...interface{}) {
@@ -132,7 +143,7 @@ func (l *Logger) Info(args ...interface{}) {
 }
 
 func (l *Logger) Infoln(args ...interface{}) {
-	l.log(LogLevelInfo, fmt.Sprintln(args...))
+	l.log(LogLevelInfo, fmt.Sprint(args...))
 }
 
 func (l *Logger) Infof(format string, args ...interface{}) {
@@ -144,7 +155,7 @@ func (l *Logger) Warning(args ...interface{}) {
 }
 
 func (l *Logger) Warningln(args ...interface{}) {
-	l.log(LogLevelWarning, fmt.Sprintln(args...))
+	l.log(LogLevelWarning, fmt.Sprint(args...))
 }
 
 func (l *Logger) Warningf(format string, args ...interface{}) {
@@ -156,7 +167,7 @@ func (l *Logger) Error(args ...interface{}) {
 }
 
 func (l *Logger) Errorln(args ...interface{}) {
-	l.log(LogLevelError, fmt.Sprintln(args...))
+	l.log(LogLevelError, fmt.Sprint(args...))
 }
 
 func (l *Logger) Errorf(format string, args ...interface{}) {
@@ -169,7 +180,7 @@ func (l *Logger) Fatal(args ...interface{}) {
 }
 
 func (l *Logger) Fatalln(args ...interface{}) {
-	l.log(LogLevelFatal, fmt.Sprintln(args...))
+	l.log(LogLevelFatal, fmt.Sprint(args...))
 	os.Exit(1)
 }
 
@@ -185,4 +196,13 @@ func (l *Logger) Fatalf(format string, args ...interface{}) {
 
 func (l *Logger) V(level int) bool {
 	return l.isEnabled(LogLevel(level))
+}
+
+func (l *Logger) Disable() {
+	if !l.enabled.Load() {
+		return
+	}
+
+	l.enabled.Store(false)
+	l.wg.Wait()
 }
