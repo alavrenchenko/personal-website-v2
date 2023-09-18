@@ -247,14 +247,5 @@
                 "Apps": "AppManagerDb"
             }
         }
-    },
-    "apis": {
-        "clients": {
-            "loggingManagerService": {
-                "serverAddr": "{host}:{port}",
-                "dialTimeout": 10000,
-                "callTimeout": 30000
-            }
-        }
     }
 }
