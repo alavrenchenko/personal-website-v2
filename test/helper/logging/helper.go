@@ -21,13 +21,16 @@ import (
 	"personal-website-v2/pkg/base/env"
 	"personal-website-v2/pkg/logging"
 	"personal-website-v2/pkg/logging/adapters/console"
+	"personal-website-v2/pkg/logging/adapters/kafka"
 	"personal-website-v2/pkg/logging/context"
 	"personal-website-v2/pkg/logging/info"
 	"personal-website-v2/pkg/logging/logger"
+	kafkahelper "personal-website-v2/test/helper/kafka"
 )
 
 const (
 	LoggingSessionId uint64 = 1
+	kafkaTopic              = "testing.log"
 )
 
 var (
@@ -41,12 +44,13 @@ var (
 
 func CreateLoggerConfig() *logger.LoggerConfig[*context.LogEntryContext] {
 	loggerOptions := &logger.LoggerOptions{
-		// MinLogLevel: logging.LogLevelTrace,
-		MinLogLevel: logging.LogLevelNone,
+		MinLogLevel: logging.LogLevelTrace,
+		// MinLogLevel: logging.LogLevelNone,
 		MaxLogLevel: logging.LogLevelFatal,
 	}
 	return logger.NewLoggerConfigBuilder[*context.LogEntryContext]().
-		AddAdapter(createConsoleAdapter()).
+		// AddAdapter(createConsoleAdapter()).
+		AddAdapter(createKafkaAdapter()).
 		SetOptions(loggerOptions).
 		SetLoggingErrorHandler(onLoggingError).
 		Build()
@@ -65,6 +69,29 @@ func createConsoleAdapter() *console.ConsoleAdapter {
 	return console.NewConsoleAdapter(consoleAdapterConfig)
 }
 
+func createKafkaAdapter() *kafka.KafkaAdapter {
+	var (
+		kafkaAdapterOptions = &kafka.KafkaAdapterOptions{
+			MinLogLevel: logging.LogLevelTrace,
+			MaxLogLevel: logging.LogLevelFatal,
+		}
+		kafkaAdapterConfig = &kafka.KafkaAdapterConfig{
+			AppInfo:          appInfo,
+			LoggingSessionId: LoggingSessionId,
+			Options:          kafkaAdapterOptions,
+			Kafka:            kafkahelper.CreateKafkaConfig(),
+			KafkaTopic:       kafkaTopic,
+			ErrorHandler:     onKafkaAdapterError,
+		}
+	)
+
+	a, err := kafka.NewKafkaAdapter(kafkaAdapterConfig)
+	if err != nil {
+		panic(err)
+	}
+	return a
+}
+
 func onLoggingError(entry *logging.LogEntry[*context.LogEntryContext], err *logging.LoggingError) {
 	fmt.Println("onLoggingError:")
 	b, err2 := json.MarshalIndent(entry, "", " ")
@@ -75,4 +102,16 @@ func onLoggingError(entry *logging.LogEntry[*context.LogEntryContext], err *logg
 
 	fmt.Printf("[logging.onLoggingError] entry: %s\n", b)
 	fmt.Printf("[logging.onLoggingError] err: %s\n", err.Error())
+}
+
+func onKafkaAdapterError(entry *logging.LogEntry[*context.LogEntryContext], err error) {
+	fmt.Println("onKafkaAdapterError:")
+	b, err2 := json.MarshalIndent(entry, "", " ")
+
+	if err2 != nil {
+		panic(err2)
+	}
+
+	fmt.Printf("[logging.onKafkaAdapterError] entry: %s\n", b)
+	fmt.Printf("[logging.onKafkaAdapterError] err: %s\n", err.Error())
 }
