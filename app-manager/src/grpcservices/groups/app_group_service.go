@@ -23,6 +23,7 @@ import (
 
 	amapierrors "personal-website-v2/app-manager/src/api/errors"
 	"personal-website-v2/app-manager/src/api/grpc/groups/converter"
+	"personal-website-v2/app-manager/src/api/grpc/groups/validation"
 	amactions "personal-website-v2/app-manager/src/internal/actions"
 	"personal-website-v2/app-manager/src/internal/groups"
 	"personal-website-v2/app-manager/src/internal/logging/events"
@@ -31,6 +32,7 @@ import (
 	apierrors "personal-website-v2/pkg/api/errors"
 	apigrpcerrors "personal-website-v2/pkg/api/grpc/errors"
 	"personal-website-v2/pkg/app"
+	"personal-website-v2/pkg/errors"
 	logginghelper "personal-website-v2/pkg/helpers/logging"
 	"personal-website-v2/pkg/logging"
 	lcontext "personal-website-v2/pkg/logging/context"
@@ -219,10 +221,19 @@ func (s *AppGroupService) GetByName(ctx context.Context, req *groupspb.GetByName
 	opCtx.ClientId = grpcCtx.User.ClientId()
 	leCtx := opCtx.CreateLogEntryContext()
 
+	if err2 := validation.ValidateGetByNameRequest(req); err2 != nil {
+		s.logger.ErrorWithEvent(leCtx, events.GrpcServices_AppGroupServiceEvent, nil, "[groups.AppGroupService.GetByName] "+err2.Message())
+		return nil, apigrpcerrors.CreateGrpcError(codes.InvalidArgument, err2)
+	}
+
 	appGroup, err := s.appGroupManager.FindByName(opCtx, req.Name)
 
 	if err != nil {
 		s.logger.ErrorWithEvent(leCtx, events.GrpcServices_AppGroupServiceEvent, err, "[groups.AppGroupService.GetByName] find an app group by name")
+
+		if err2 := errors.Unwrap(err); err2 != nil && err2.Code() == errors.ErrorCodeInvalidData {
+			return nil, apigrpcerrors.CreateGrpcError(codes.InvalidArgument, apierrors.NewApiError(apierrors.ApiErrorCodeInvalidData, err2.Message()))
+		}
 		return nil, apigrpcerrors.CreateGrpcError(codes.Internal, apierrors.ErrInternal)
 	}
 
