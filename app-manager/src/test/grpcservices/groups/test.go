@@ -16,6 +16,7 @@ package groups
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"time"
@@ -23,6 +24,7 @@ import (
 	"github.com/google/uuid"
 
 	"personal-website-v2/api-clients/appmanager"
+	amerrors "personal-website-v2/api-clients/appmanager/errors"
 	appgrpcserver "personal-website-v2/app-manager/src/app/server/grpc"
 	groupservices "personal-website-v2/app-manager/src/grpcservices/groups"
 	ampostgres "personal-website-v2/app-manager/src/internal/db/postgres"
@@ -30,6 +32,7 @@ import (
 	groupspb "personal-website-v2/go-apis/app-manager/groups"
 	"personal-website-v2/pkg/actions"
 	"personal-website-v2/pkg/actions/logging"
+	"personal-website-v2/pkg/api/errors"
 	"personal-website-v2/pkg/base/nullable"
 	"personal-website-v2/pkg/db/postgres"
 	lcontext "personal-website-v2/pkg/logging/context"
@@ -203,14 +206,42 @@ func exec(s *grpcserver.GrpcServer) {
 func testAppGroups_GetById(ctx *actions.OperationContext) {
 	for id := uint64(1); id <= 5; id++ {
 		g, err := appManagerService.Groups.GetById(ctx, id)
-		fmt.Printf("[groups.testAppGroups_GetById] appGroupId: %d\nappGroup: %v\nerr: %v\n\n", id, g, err)
+
+		if err != nil {
+			if err2 := errors.Unwrap(err); err2 != nil && err2.Code() == amerrors.ApiErrorCodeAppGroupNotFound {
+				fmt.Printf("[groups.testAppGroups_GetById] appGroup[%d], get an app group by id, err: %v\n", id, err)
+				continue
+			}
+			panic(err)
+		}
+
+		b, err := json.Marshal(g)
+		if err != nil {
+			panic(err)
+		}
+
+		fmt.Printf("[groups.testAppGroups_GetById] appGroup[%d]: %s\n", id, b)
 	}
 }
 
 func testAppGroups_GetByName(ctx *actions.OperationContext) {
 	for n := 1; n <= 5; n++ {
 		name := "App Group " + strconv.Itoa(n)
-		a, err := appManagerService.Groups.GetByName(ctx, name)
-		fmt.Printf("[groups.testAppGroups_GetByName] appGroupName: %s\nappGroup: %v\nerr: %v\n\n", name, a, err)
+		g, err := appManagerService.Groups.GetByName(ctx, name)
+
+		if err != nil {
+			if err2 := errors.Unwrap(err); err2 != nil && err2.Code() == amerrors.ApiErrorCodeAppGroupNotFound {
+				fmt.Printf("[groups.testAppGroups_GetByName] appGroup[%s], get an app group by name, err: %v\n", name, err)
+				continue
+			}
+			panic(err)
+		}
+
+		b, err := json.Marshal(g)
+		if err != nil {
+			panic(err)
+		}
+
+		fmt.Printf("[groups.testAppGroups_GetByName] appGroup[%s]: %s\n", name, b)
 	}
 }
