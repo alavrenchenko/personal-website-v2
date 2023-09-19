@@ -29,6 +29,7 @@ import (
 	"personal-website-v2/pkg/actions/logging"
 	"personal-website-v2/pkg/base/nullable"
 	"personal-website-v2/pkg/db/postgres"
+	"personal-website-v2/pkg/errors"
 	"personal-website-v2/pkg/logging/logger"
 	dbhelper "personal-website-v2/test/app-manager/helper/db"
 	actionhelper "personal-website-v2/test/helper/actions"
@@ -188,5 +189,17 @@ func testAppGroupManager_FindByName() {
 		fmt.Printf("[manager.testAppGroupManager_FindByName] appGroup[%s]: %s\n", name, b)
 	}
 
+	emptyNameErr := errors.NewError(errors.ErrorCodeInvalidData, "name is empty")
+
+	_, err = appGroupManager.FindByName(opCtx, "   \n\t   ")
+	if err == nil {
+		panic(fmt.Sprintf("expected: %q; got: nil", emptyNameErr))
+	}
+
+	if err2 := errors.Unwrap(err); err2 == nil || err2.Code() != errors.ErrorCodeInvalidData {
+		panic(fmt.Sprintf("expected: %q; got: %q", emptyNameErr, err))
+	}
+
+	fmt.Printf("[manager.testAppGroupManager_FindByName] find an app group by name, err: %v\n", err)
 	succeeded = true
 }
