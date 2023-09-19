@@ -23,6 +23,7 @@ import (
 
 	amapierrors "personal-website-v2/app-manager/src/api/errors"
 	"personal-website-v2/app-manager/src/api/grpc/apps/converter"
+	"personal-website-v2/app-manager/src/api/grpc/apps/validation"
 	amactions "personal-website-v2/app-manager/src/internal/actions"
 	"personal-website-v2/app-manager/src/internal/apps"
 	amerrors "personal-website-v2/app-manager/src/internal/errors"
@@ -221,10 +222,19 @@ func (s *AppService) GetByName(ctx context.Context, req *appspb.GetByNameRequest
 	opCtx.ClientId = grpcCtx.User.ClientId()
 	leCtx := opCtx.CreateLogEntryContext()
 
+	if err2 := validation.ValidateGetByNameRequest(req); err2 != nil {
+		s.logger.ErrorWithEvent(leCtx, events.GrpcServices_AppServiceEvent, nil, "[apps.AppService.GetByName] "+err2.Message())
+		return nil, apigrpcerrors.CreateGrpcError(codes.InvalidArgument, err2)
+	}
+
 	appInfo, err := s.appManager.FindByName(opCtx, req.Name)
 
 	if err != nil {
 		s.logger.ErrorWithEvent(leCtx, events.GrpcServices_AppServiceEvent, err, "[apps.AppService.GetByName] find an app by name")
+
+		if err2 := errors.Unwrap(err); err2 != nil && err2.Code() == errors.ErrorCodeInvalidData {
+			return nil, apigrpcerrors.CreateGrpcError(codes.InvalidArgument, apierrors.NewApiError(apierrors.ApiErrorCodeInvalidData, err2.Message()))
+		}
 		return nil, apigrpcerrors.CreateGrpcError(codes.Internal, apierrors.ErrInternal)
 	}
 
