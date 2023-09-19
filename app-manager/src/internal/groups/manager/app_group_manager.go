@@ -25,6 +25,8 @@ import (
 	"personal-website-v2/app-manager/src/internal/logging/events"
 	"personal-website-v2/pkg/actions"
 	"personal-website-v2/pkg/app"
+	"personal-website-v2/pkg/base/strings"
+	"personal-website-v2/pkg/errors"
 	"personal-website-v2/pkg/logging"
 	"personal-website-v2/pkg/logging/context"
 )
@@ -117,6 +119,10 @@ func (m *AppGroupManager) FindByName(ctx *actions.OperationContext, name string)
 			}()
 		}
 	}()
+
+	if strings.IsEmptyOrWhitespace(name) {
+		return nil, errors.NewError(errors.ErrorCodeInvalidData, "name is empty")
+	}
 
 	g, err := m.appGroupStore.FindByName(ctx, name)
 	if err != nil {
