@@ -79,32 +79,50 @@ type LoggerOptions struct {
 }
 
 type Logger struct {
-	appSessionId *uint64
-	options      *LoggerOptions
-	logger       logging.Logger[*context.LogEntryContext]
-	wg           sync.WaitGroup
-	enabled      atomic.Bool
+	appSessionId  *uint64
+	options       *LoggerOptions
+	logger        logging.Logger[*context.LogEntryContext]
+	wg            sync.WaitGroup
+	isInitialized bool
+	enabled       atomic.Bool
 }
 
 var _ grpclog.LoggerV2 = (*Logger)(nil)
 
-func NewLogger(options *LoggerOptions, loggerFactory logging.LoggerFactory[*context.LogEntryContext]) (*Logger, error) {
-	l, err := loggerFactory.CreateLogger("net.grpc")
-	if err != nil {
-		return nil, fmt.Errorf("[logging.NewLogger] create a logger: %w", err)
-	}
-
-	logger := &Logger{
+func NewLogger(options *LoggerOptions) *Logger {
+	return &Logger{
 		appSessionId: new(uint64),
 		options:      options,
-		logger:       l,
 	}
-	logger.enabled.Store(options.MinLogLevel < LogLevelNone && options.MaxLogLevel < LogLevelNone)
-	return logger, nil
 }
 
 func (l *Logger) SetAppSessionId(appSessionId uint64) {
 	atomic.StoreUint64(l.appSessionId, appSessionId)
+}
+
+func (l *Logger) Init(loggerFactory logging.LoggerFactory[*context.LogEntryContext]) error {
+	if l.isInitialized {
+		return errors.New("[logging.Logger.Init] Logger has already been initialized")
+	}
+
+	logger, err := loggerFactory.CreateLogger("net.grpc")
+	if err != nil {
+		return fmt.Errorf("[logging.Logger.Init] create a logger: %w", err)
+	}
+
+	l.logger = logger
+	l.enabled.Store(l.options.MinLogLevel < LogLevelNone && l.options.MaxLogLevel < LogLevelNone)
+	l.isInitialized = true
+	return nil
+}
+
+func (l *Logger) Disable() {
+	if !l.enabled.Load() {
+		return
+	}
+
+	l.enabled.Store(false)
+	l.wg.Wait()
 }
 
 func (l *Logger) log(level LogLevel, msg string) {
@@ -196,13 +214,4 @@ func (l *Logger) Fatalf(format string, args ...interface{}) {
 
 func (l *Logger) V(level int) bool {
 	return l.isEnabled(LogLevel(level))
-}
-
-func (l *Logger) Disable() {
-	if !l.enabled.Load() {
-		return
-	}
-
-	l.enabled.Store(false)
-	l.wg.Wait()
 }

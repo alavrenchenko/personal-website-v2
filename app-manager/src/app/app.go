@@ -260,6 +260,10 @@ func (a *Application) Start() (err error) {
 	a.env = env.NewEnvironment(a.config.Env)
 	a.info = app.NewApplicationInfo(a.config.AppInfo.Id, a.config.AppInfo.GroupId, a.config.AppInfo.Version)
 
+	if err = a.configureGrpcLogging(); err != nil {
+		return fmt.Errorf("[app.Application.Start] configure gRPC logging: %w", err)
+	}
+
 	if err = a.startLoggingSession(); err != nil {
 		return fmt.Errorf("[app.Application.Start] start a logging session: %w", err)
 	}
@@ -268,8 +272,8 @@ func (a *Application) Start() (err error) {
 		return fmt.Errorf("[app.Application.Start] configure logging: %w", err)
 	}
 
-	if err = a.configureGrpcLogging(); err != nil {
-		return fmt.Errorf("[app.Application.Start] configure gRPC logging: %w", err)
+	if err = a.grpcLogger.Init(a.loggerFactory); err != nil {
+		return fmt.Errorf("[app.Application.Start] init a gRPC logger: %w", err)
 	}
 
 	a.log(logging.LogLevelInfo, events.ApplicationIsStarting, nil, "[app.Application.Start] starting the app...", logging.NewField("mode", a.config.Mode.String()))
@@ -784,16 +788,14 @@ func (a *Application) configureHttpRouting(router *httpserverrouting.Router) err
 	return nil
 }
 
+// configureGrpcLogging must be called before any gRPC functions.
+// See ../google.golang.org/grpc/grpclog/loggerv2.go:/^func.SetLoggerV2.
 func (a *Application) configureGrpcLogging() error {
 	options := &grpclogging.LoggerOptions{
 		MinLogLevel: a.config.Net.Grpc.Logging.MinLogLevel,
 		MaxLogLevel: a.config.Net.Grpc.Logging.MaxLogLevel,
 	}
-
-	l, err := grpclogging.NewLogger(options, a.loggerFactory)
-	if err != nil {
-		return fmt.Errorf("[app.Application.configureGrpcLogging] new logger: %w", err)
-	}
+	l := grpclogging.NewLogger(options)
 
 	grpclog.SetLoggerV2(l)
 	a.grpcLogger = l
