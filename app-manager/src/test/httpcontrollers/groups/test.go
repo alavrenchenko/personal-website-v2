@@ -20,6 +20,8 @@ import (
 	"net/url"
 	"strconv"
 
+	amerrors "personal-website-v2/api-clients/appmanager/errors"
+	apimodels "personal-website-v2/app-manager/src/api/http/groups/models"
 	apphttpserver "personal-website-v2/app-manager/src/app/server/http"
 	groupcontrollers "personal-website-v2/app-manager/src/httpcontrollers/groups"
 	ampostgres "personal-website-v2/app-manager/src/internal/db/postgres"
@@ -134,19 +136,41 @@ func configureHttpRouting(r *routing.Router, actionManager *actions.ActionManage
 		panic(err)
 	}
 
-	// see ../app-manager/src/app:/^func.Application.configureHttpRouting
+	// see ../app-manager/src/app/app.go:/^func.Application.configureHttpRouting
 	r.AddGet("AppGroups_GetByIdOrName", "/api/app-group", appGroupController.GetByIdOrName)
 }
 
 func testAppGroups_GetById() {
 	for id := 1; id <= 5; id++ {
-		clienthelper.Exec(http.MethodGet, fmt.Sprintf("http://%s/api/app-group?id=%d", httpServerAddr, id), "")
+		statusCode, body, res := clienthelper.ExecApiRequest[*apimodels.AppGroup](http.MethodGet, fmt.Sprintf("http://%s/api/app-group?id=%d", httpServerAddr, id), "")
+
+		if res != nil {
+			if statusCode == http.StatusOK && res.Data != nil && res.Err == nil {
+				fmt.Printf("[groups.testAppGroups_GetById] appGroup[%d]: %s\n\n", id, body)
+				continue
+			} else if statusCode == http.StatusNotFound && res.Err != nil && res.Err.Code == amerrors.ApiErrorCodeAppGroupNotFound {
+				fmt.Printf("[groups.testAppGroups_GetById] appGroup[%d], get an app group by id, err: code=%d, msg=%q\n\n", id, res.Err.Code, res.Err.Message)
+				continue
+			}
+		}
+		panic(fmt.Sprintf("StatusCode: %d, Body: %s", statusCode, body))
 	}
 }
 
 func testAppGroups_GetByName() {
 	for n := 1; n <= 5; n++ {
 		name := "App Group " + strconv.Itoa(n)
-		clienthelper.Exec(http.MethodGet, fmt.Sprintf("http://%s/api/app-group?name=%s", httpServerAddr, url.QueryEscape(name)), "")
+		statusCode, body, res := clienthelper.ExecApiRequest[*apimodels.AppGroup](http.MethodGet, fmt.Sprintf("http://%s/api/app-group?name=%s", httpServerAddr, url.QueryEscape(name)), "")
+
+		if res != nil {
+			if statusCode == http.StatusOK && res.Data != nil && res.Err == nil {
+				fmt.Printf("[groups.testAppGroups_GetByName] appGroup[%s]: %s\n\n", name, body)
+				continue
+			} else if statusCode == http.StatusNotFound && res.Err != nil && res.Err.Code == amerrors.ApiErrorCodeAppGroupNotFound {
+				fmt.Printf("[groups.testAppGroups_GetByName] appGroup[%s], get an app group by name, err: code=%d, msg=%q\n\n", name, res.Err.Code, res.Err.Message)
+				continue
+			}
+		}
+		panic(fmt.Sprintf("StatusCode: %d, Body: %s", statusCode, body))
 	}
 }
