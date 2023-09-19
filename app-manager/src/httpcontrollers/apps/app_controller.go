@@ -25,6 +25,7 @@ import (
 	amapierrors "personal-website-v2/app-manager/src/api/errors"
 	"personal-website-v2/app-manager/src/api/http/apps/converter"
 	apiappmodels "personal-website-v2/app-manager/src/api/http/apps/models"
+	"personal-website-v2/app-manager/src/api/http/apps/models/requests"
 	amactions "personal-website-v2/app-manager/src/internal/actions"
 	"personal-website-v2/app-manager/src/internal/apps"
 	"personal-website-v2/app-manager/src/internal/apps/dbmodels"
@@ -201,24 +202,30 @@ func (c *AppController) GetByIdOrName(ctx *server.HttpContext) {
 			return
 		}
 	} else if nameVs, ok := vs["name"]; ok && len(nameVs) > 0 {
-		name := nameVs[0]
+		req := &requests.GetByNameRequest{
+			Name: nameVs[0],
+		}
 
-		if len(name) == 0 {
-			c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppControllerEvent, nil, "[apps.AppController.GetByIdOrName] invalid name")
+		if err2 := req.Validate(); err2 != nil {
+			c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppControllerEvent, nil, "[apps.AppController.GetByIdOrName] "+err2.Message())
 
-			if err = apihttp.BadRequest(ctx, apierrors.NewApiError(apierrors.ApiErrorCodeInvalidData, "invalid name")); err != nil {
+			if err = apihttp.BadRequest(ctx, err2); err != nil {
 				c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppControllerEvent, err, "[apps.AppController.GetByIdOrName] write BadRequest")
 			}
 			return
 		}
 
-		appInfo, err = c.appManager.FindByName(opCtx, name)
+		appInfo, err = c.appManager.FindByName(opCtx, req.Name)
 
 		if err != nil {
 			c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppControllerEvent, err, "[apps.AppController.GetByIdOrName] find an app by name")
 
-			if err = apihttp.InternalServerError(ctx); err != nil {
-				c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppControllerEvent, err, "[apps.AppController.GetByIdOrName] write an error (InternalServerError)")
+			if err2 := errors.Unwrap(err); err2 != nil && err2.Code() == errors.ErrorCodeInvalidData {
+				if err = apihttp.BadRequest(ctx, apierrors.NewApiError(apierrors.ApiErrorCodeInvalidData, err2.Message())); err != nil {
+					c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppControllerEvent, err, "[apps.AppController.GetByIdOrName] write BadRequest")
+				}
+			} else if err = apihttp.InternalServerError(ctx); err != nil {
+				c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppControllerEvent, err, "[apps.AppController.GetStatusById] write an error (InternalServerError)")
 			}
 			return
 		}
