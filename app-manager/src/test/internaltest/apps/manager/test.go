@@ -193,6 +193,18 @@ func testAppManager_FindByName() {
 		fmt.Printf("[manager.testAppManager_FindByName] appInfo[%s]: %s\n", name, b)
 	}
 
+	emptyNameErr := errors.NewError(errors.ErrorCodeInvalidData, "name is empty")
+
+	_, err = appManager.FindByName(opCtx, "   \n\t   ")
+	if err == nil {
+		panic(fmt.Sprintf("expected: %q; got: nil", emptyNameErr))
+	}
+
+	if err2 := errors.Unwrap(err); err2 == nil || err2.Code() != errors.ErrorCodeInvalidData {
+		panic(fmt.Sprintf("expected: %q; got: %q", emptyNameErr, err))
+	}
+
+	fmt.Printf("[manager.testAppManager_FindByName] find an app by name, err: %v\n", err)
 	succeeded = true
 }
 
