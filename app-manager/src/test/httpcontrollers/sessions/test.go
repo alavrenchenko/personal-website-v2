@@ -18,6 +18,8 @@ import (
 	"fmt"
 	"net/http"
 
+	amerrors "personal-website-v2/api-clients/appmanager/errors"
+	apimodels "personal-website-v2/app-manager/src/api/http/sessions/models"
 	apphttpserver "personal-website-v2/app-manager/src/app/server/http"
 	sessioncontrollers "personal-website-v2/app-manager/src/httpcontrollers/sessions"
 	ampostgres "personal-website-v2/app-manager/src/internal/db/postgres"
@@ -128,13 +130,23 @@ func configureHttpRouting(r *routing.Router, actionManager *actions.ActionManage
 		panic(err)
 	}
 
-	// see ../app-manager/src/app:/^func.Application.configureHttpRouting
+	// see ../app-manager/src/app/app.go:/^func.Application.configureHttpRouting
 	r.AddGet("AppSessions_GetById", "/api/app-session", appSessionController.GetById)
-
 }
 
 func testAppSessions_GetById() {
 	for id := 1; id <= 5; id++ {
-		clienthelper.Exec(http.MethodGet, fmt.Sprintf("http://%s/api/app-session?id=%d", httpServerAddr, id), "")
+		statusCode, body, res := clienthelper.ExecApiRequest[*apimodels.AppSessionInfo](http.MethodGet, fmt.Sprintf("http://%s/api/app-session?id=%d", httpServerAddr, id), "")
+
+		if res != nil {
+			if statusCode == http.StatusOK && res.Data != nil && res.Err == nil {
+				fmt.Printf("[sessions.testAppSessions_GetById] appSessionInfo[%d]: %s\n\n", id, body)
+				continue
+			} else if statusCode == http.StatusNotFound && res.Err != nil && res.Err.Code == amerrors.ApiErrorCodeAppSessionNotFound {
+				fmt.Printf("[sessions.testAppSessions_GetById] appSession[%d], get an app session by id, err: code=%d, msg=%q\n\n", id, res.Err.Code, res.Err.Message)
+				continue
+			}
+		}
+		panic(fmt.Sprintf("StatusCode: %d, Body: %s", statusCode, body))
 	}
 }
