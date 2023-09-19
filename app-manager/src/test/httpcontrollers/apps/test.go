@@ -20,6 +20,8 @@ import (
 	"net/url"
 	"strconv"
 
+	amerrors "personal-website-v2/api-clients/appmanager/errors"
+	apimodels "personal-website-v2/app-manager/src/api/http/apps/models"
 	apphttpserver "personal-website-v2/app-manager/src/app/server/http"
 	appcontrollers "personal-website-v2/app-manager/src/httpcontrollers/apps"
 	"personal-website-v2/app-manager/src/internal/apps/manager"
@@ -29,6 +31,7 @@ import (
 	"personal-website-v2/pkg/db/postgres"
 	lcontext "personal-website-v2/pkg/logging/context"
 	"personal-website-v2/pkg/logging/logger"
+	httpserver "personal-website-v2/pkg/net/http/server"
 	httpserverlogging "personal-website-v2/pkg/net/http/server/logging"
 	"personal-website-v2/pkg/net/http/server/routing"
 	dbhelper "personal-website-v2/test/app-manager/helper/db"
@@ -120,6 +123,21 @@ func Run() {
 		}
 	}()
 
+	exec(s)
+}
+
+func configureHttpRouting(r *routing.Router, actionManager *actions.ActionManager, appManager *manager.AppManager, f *logger.LoggerFactory[*lcontext.LogEntryContext]) {
+	appController, err := appcontrollers.NewAppController(appSessionId, actionManager, appManager, f)
+	if err != nil {
+		panic(err)
+	}
+
+	// see ../app-manager/src/app/app.go:/^func.Application.configureHttpRouting
+	r.AddGet("Apps_GetByIdOrName", "/api/apps", appController.GetByIdOrName)
+	r.AddGet("Apps_GetStatusById", "/api/apps/status", appController.GetStatusById)
+}
+
+func exec(s *httpserver.HttpServer) {
 	testApps_GetById()
 	serverhelper.PrintStats(s)
 
@@ -132,32 +150,54 @@ func Run() {
 	serverhelper.PrintStats(s)
 }
 
-func configureHttpRouting(r *routing.Router, actionManager *actions.ActionManager, appManager *manager.AppManager, f *logger.LoggerFactory[*lcontext.LogEntryContext]) {
-	appController, err := appcontrollers.NewAppController(appSessionId, actionManager, appManager, f)
-	if err != nil {
-		panic(err)
-	}
-
-	// see ../app-manager/src/app:/^func.Application.configureHttpRouting
-	r.AddGet("Apps_GetByIdOrName", "/api/apps", appController.GetByIdOrName)
-	r.AddGet("Apps_GetStatusById", "/api/apps/status", appController.GetStatusById)
-}
-
 func testApps_GetById() {
 	for id := 1; id <= 5; id++ {
-		clienthelper.Exec(http.MethodGet, fmt.Sprintf("http://%s/api/apps?id=%d", httpServerAddr, id), "")
+		statusCode, body, res := clienthelper.ExecApiRequest[*apimodels.AppInfo](http.MethodGet, fmt.Sprintf("http://%s/api/apps?id=%d", httpServerAddr, id), "")
+
+		if res != nil {
+			if statusCode == http.StatusOK && res.Data != nil && res.Err == nil {
+				fmt.Printf("[apps.testApps_GetById] appInfo[%d]: %s\n\n", id, body)
+				continue
+			} else if statusCode == http.StatusNotFound && res.Err != nil && res.Err.Code == amerrors.ApiErrorCodeAppNotFound {
+				fmt.Printf("[apps.testApps_GetById] app[%d], get an app by id, err: code=%d, msg=%q\n\n", id, res.Err.Code, res.Err.Message)
+				continue
+			}
+		}
+		panic(fmt.Sprintf("StatusCode: %d, Body: %s", statusCode, body))
 	}
 }
 
 func testApps_GetByName() {
 	for n := 1; n <= 5; n++ {
 		name := "App " + strconv.Itoa(n)
-		clienthelper.Exec(http.MethodGet, fmt.Sprintf("http://%s/api/apps?name=%s", httpServerAddr, url.QueryEscape(name)), "")
+		statusCode, body, res := clienthelper.ExecApiRequest[*apimodels.AppInfo](http.MethodGet, fmt.Sprintf("http://%s/api/apps?name=%s", httpServerAddr, url.QueryEscape(name)), "")
+
+		if res != nil {
+			if statusCode == http.StatusOK && res.Data != nil && res.Err == nil {
+				fmt.Printf("[apps.testApps_GetByName] appInfo[%s]: %s\n\n", name, body)
+				continue
+			} else if statusCode == http.StatusNotFound && res.Err != nil && res.Err.Code == amerrors.ApiErrorCodeAppNotFound {
+				fmt.Printf("[apps.testApps_GetByName] app[%s], get an app by name, err: code=%d, msg=%q\n\n", name, res.Err.Code, res.Err.Message)
+				continue
+			}
+		}
+		panic(fmt.Sprintf("StatusCode: %d, Body: %s", statusCode, body))
 	}
 }
 
 func testApps_GetStatusById() {
 	for id := 1; id <= 5; id++ {
-		clienthelper.Exec(http.MethodGet, fmt.Sprintf("http://%s/api/apps/status?id=%d", httpServerAddr, id), "")
+		statusCode, body, res := clienthelper.ExecApiRequest[*apimodels.AppStatus](http.MethodGet, fmt.Sprintf("http://%s/api/apps/status?id=%d", httpServerAddr, id), "")
+
+		if res != nil {
+			if statusCode == http.StatusOK && res.Data != nil && res.Err == nil {
+				fmt.Printf("[apps.testApps_GetStatusById] appStatus[%d]: %s\n\n", id, body)
+				continue
+			} else if statusCode == http.StatusNotFound && res.Err != nil && res.Err.Code == amerrors.ApiErrorCodeAppNotFound {
+				fmt.Printf("[apps.testApps_GetStatusById] app[%d], get an app status by id, err: code=%d, msg=%q\n\n", id, res.Err.Code, res.Err.Message)
+				continue
+			}
+		}
+		panic(fmt.Sprintf("StatusCode: %d, Body: %s", statusCode, body))
 	}
 }
