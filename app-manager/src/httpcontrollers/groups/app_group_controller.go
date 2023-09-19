@@ -24,6 +24,7 @@ import (
 
 	amapierrors "personal-website-v2/app-manager/src/api/errors"
 	"personal-website-v2/app-manager/src/api/http/groups/converter"
+	"personal-website-v2/app-manager/src/api/http/groups/models/requests"
 	amactions "personal-website-v2/app-manager/src/internal/actions"
 	"personal-website-v2/app-manager/src/internal/groups"
 	"personal-website-v2/app-manager/src/internal/groups/dbmodels"
@@ -32,6 +33,7 @@ import (
 	apierrors "personal-website-v2/pkg/api/errors"
 	apihttp "personal-website-v2/pkg/api/http"
 	"personal-website-v2/pkg/app"
+	"personal-website-v2/pkg/errors"
 	logginghelper "personal-website-v2/pkg/helpers/logging"
 	"personal-website-v2/pkg/logging"
 	lcontext "personal-website-v2/pkg/logging/context"
@@ -200,23 +202,29 @@ func (c *AppGroupController) GetByIdOrName(ctx *server.HttpContext) {
 			return
 		}
 	} else if nameVs, ok := vs["name"]; ok && len(nameVs) > 0 {
-		name := nameVs[0]
+		req := &requests.GetByNameRequest{
+			Name: nameVs[0],
+		}
 
-		if len(name) == 0 {
-			c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppGroupControllerEvent, nil, "[groups.AppGroupController.GetByIdOrName] invalid name")
+		if err2 := req.Validate(); err2 != nil {
+			c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppGroupControllerEvent, nil, "[groups.AppGroupController.GetByIdOrName] "+err2.Message())
 
-			if err = apihttp.BadRequest(ctx, apierrors.NewApiError(apierrors.ApiErrorCodeInvalidData, "invalid name")); err != nil {
+			if err = apihttp.BadRequest(ctx, err2); err != nil {
 				c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppGroupControllerEvent, err, "[groups.AppGroupController.GetByIdOrName] write BadRequest")
 			}
 			return
 		}
 
-		appGroup, err = c.appGroupManager.FindByName(opCtx, name)
+		appGroup, err = c.appGroupManager.FindByName(opCtx, req.Name)
 
 		if err != nil {
 			c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppGroupControllerEvent, err, "[groups.AppGroupController.GetByIdOrName] find an app group by name")
 
-			if err = apihttp.InternalServerError(ctx); err != nil {
+			if err2 := errors.Unwrap(err); err2 != nil && err2.Code() == errors.ErrorCodeInvalidData {
+				if err = apihttp.BadRequest(ctx, apierrors.NewApiError(apierrors.ApiErrorCodeInvalidData, err2.Message())); err != nil {
+					c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppGroupControllerEvent, err, "[groups.AppGroupController.GetByIdOrName] write BadRequest")
+				}
+			} else if err = apihttp.InternalServerError(ctx); err != nil {
 				c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppGroupControllerEvent, err, "[groups.AppGroupController.GetByIdOrName] write an error (InternalServerError)")
 			}
 			return
