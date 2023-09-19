@@ -16,6 +16,7 @@ package apps
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"time"
@@ -23,6 +24,7 @@ import (
 	"github.com/google/uuid"
 
 	"personal-website-v2/api-clients/appmanager"
+	amerrors "personal-website-v2/api-clients/appmanager/errors"
 	appgrpcserver "personal-website-v2/app-manager/src/app/server/grpc"
 	appservices "personal-website-v2/app-manager/src/grpcservices/apps"
 	"personal-website-v2/app-manager/src/internal/apps/manager"
@@ -30,6 +32,7 @@ import (
 	appspb "personal-website-v2/go-apis/app-manager/apps"
 	"personal-website-v2/pkg/actions"
 	"personal-website-v2/pkg/actions/logging"
+	"personal-website-v2/pkg/api/errors"
 	"personal-website-v2/pkg/base/nullable"
 	"personal-website-v2/pkg/db/postgres"
 	lcontext "personal-website-v2/pkg/logging/context"
@@ -211,7 +214,21 @@ func exec(s *grpcserver.GrpcServer) {
 func testApps_GetById(ctx *actions.OperationContext) {
 	for id := uint64(1); id <= 5; id++ {
 		a, err := appManagerService.Apps.GetById(ctx, id)
-		fmt.Printf("[apps.testApps_GetById] appId: %d\nappInfo: %v\nerr: %v\n\n", id, a, err)
+
+		if err != nil {
+			if err2 := errors.Unwrap(err); err2 != nil && err2.Code() == amerrors.ApiErrorCodeAppNotFound {
+				fmt.Printf("[apps.testApps_GetById] app[%d], get an app by id, err: %v\n", id, err)
+				continue
+			}
+			panic(err)
+		}
+
+		b, err := json.Marshal(a)
+		if err != nil {
+			panic(err)
+		}
+
+		fmt.Printf("[apps.testApps_GetById] appInfo[%d]: %s\n", id, b)
 	}
 }
 
@@ -219,20 +236,62 @@ func testApps_GetByName(ctx *actions.OperationContext) {
 	for n := 1; n <= 5; n++ {
 		name := "App " + strconv.Itoa(n)
 		a, err := appManagerService.Apps.GetByName(ctx, name)
-		fmt.Printf("[apps.testApps_GetByName] appName: %s\nappInfo: %v\nerr: %v\n\n", name, a, err)
+
+		if err != nil {
+			if err2 := errors.Unwrap(err); err2 != nil && err2.Code() == amerrors.ApiErrorCodeAppNotFound {
+				fmt.Printf("[apps.testApps_GetByName] app[%s], get an app by name, err: %v\n", name, err)
+				continue
+			}
+			panic(err)
+		}
+
+		b, err := json.Marshal(a)
+		if err != nil {
+			panic(err)
+		}
+
+		fmt.Printf("[apps.testApps_GetByName] appInfo[%s]: %s\n", name, b)
 	}
 }
 
 func testApps_GetStatusById(userId uint64) {
 	for id := uint64(1); id <= 5; id++ {
 		s, err := appManagerService.Apps.GetStatusById(id, userId)
-		fmt.Printf("[apps.testApps_GetStatusById] appId: %d\nappStatus: %v\nerr: %v\n\n", id, s, err)
+
+		if err != nil {
+			if err2 := errors.Unwrap(err); err2 != nil && err2.Code() == amerrors.ApiErrorCodeAppNotFound {
+				fmt.Printf("[apps.testApps_GetStatusById] app[%d], get an app status by id, err: %v\n", id, err)
+				continue
+			}
+			panic(err)
+		}
+
+		b, err := json.Marshal(s)
+		if err != nil {
+			panic(err)
+		}
+
+		fmt.Printf("[apps.testApps_GetStatusById] appStatus[%d]: %s\n", id, b)
 	}
 }
 
 func testApps_GetStatusByIdWithContext(ctx *actions.OperationContext) {
 	for id := uint64(1); id <= 5; id++ {
-		a, err := appManagerService.Apps.GetStatusByIdWithContext(ctx, id)
-		fmt.Printf("[apps.testApps_GetStatusByIdWithContext] appId: %d\nappInfo: %v\nerr: %v\n\n", id, a, err)
+		s, err := appManagerService.Apps.GetStatusByIdWithContext(ctx, id)
+
+		if err != nil {
+			if err2 := errors.Unwrap(err); err2 != nil && err2.Code() == amerrors.ApiErrorCodeAppNotFound {
+				fmt.Printf("[apps.testApps_GetStatusByIdWithContext] app[%d], get an app status by id, err: %v\n", id, err)
+				continue
+			}
+			panic(err)
+		}
+
+		b, err := json.Marshal(s)
+		if err != nil {
+			panic(err)
+		}
+
+		fmt.Printf("[apps.testApps_GetStatusByIdWithContext] appStatus[%d]: %s\n", id, b)
 	}
 }
