@@ -16,12 +16,14 @@ package sessions
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"time"
 
 	"github.com/google/uuid"
 
 	"personal-website-v2/api-clients/appmanager"
+	amerrors "personal-website-v2/api-clients/appmanager/errors"
 	appgrpcserver "personal-website-v2/app-manager/src/app/server/grpc"
 	sessionservices "personal-website-v2/app-manager/src/grpcservices/sessions"
 	ampostgres "personal-website-v2/app-manager/src/internal/db/postgres"
@@ -29,6 +31,7 @@ import (
 	sessionspb "personal-website-v2/go-apis/app-manager/sessions"
 	"personal-website-v2/pkg/actions"
 	"personal-website-v2/pkg/actions/logging"
+	"personal-website-v2/pkg/api/errors"
 	"personal-website-v2/pkg/base/nullable"
 	"personal-website-v2/pkg/db/postgres"
 	lcontext "personal-website-v2/pkg/logging/context"
@@ -206,14 +209,32 @@ func exec(s *grpcserver.GrpcServer) {
 func testAppSessions_CreateAndStart(userId uint64) {
 	for appId := uint64(1); appId <= 5; appId++ {
 		id, err := appManagerService.Sessions.CreateAndStart(appId, userId)
-		fmt.Printf("[sessions.testAppSessions_CreateAndStart] appId: %d\nappSessionId: %d\nerr: %v\n\n", appId, id, err)
+
+		if err != nil {
+			if err2 := errors.Unwrap(err); err2 != nil &&
+				(err2.Code() == amerrors.ApiErrorCodeAppNotFound || err2.Code() == errors.ApiErrorCodeInvalidOperation) {
+				fmt.Printf("[sessions.testAppSessions_CreateAndStart] app[%d], create and start an app session, err: %v\n", appId, err)
+				continue
+			}
+			panic(err)
+		}
+
+		fmt.Printf("[sessions.testAppSessions_CreateAndStart] app[%d], appSessionId: %d\n", appId, id)
 	}
 }
 
 func testAppSessions_Terminate(userId uint64) {
 	for id := uint64(1); id <= 5; id++ {
-		err := appManagerService.Sessions.Terminate(id, userId)
-		fmt.Printf("[sessions.testAppSessions_Terminate] appSessionId: %d\nerr: %v\n\n", id, err)
+		if err := appManagerService.Sessions.Terminate(id, userId); err != nil {
+			if err2 := errors.Unwrap(err); err2 != nil &&
+				(err2.Code() == amerrors.ApiErrorCodeAppSessionNotFound || err2.Code() == errors.ApiErrorCodeInvalidOperation) {
+				fmt.Printf("[sessions.testAppSessions_Terminate] appSession[%d], terminate an app session, err: %v\n", id, err)
+				continue
+			}
+			panic(err)
+		}
+
+		fmt.Printf("[sessions.testAppSessions_Terminate] appSession[%d], app session has been ended\n", id)
 	}
 }
 
@@ -228,6 +249,20 @@ func testAppSessions_Terminate(userId uint64) {
 func testAppSessions_GetById(ctx *actions.OperationContext) {
 	for id := uint64(1); id <= 5; id++ {
 		s, err := appManagerService.Sessions.GetById(ctx, id)
-		fmt.Printf("[sessions.testAppSessions_GetById] appSessionId: %d\nappSession: %v\nerr: %v\n\n", id, s, err)
+
+		if err != nil {
+			if err2 := errors.Unwrap(err); err2 != nil && err2.Code() == amerrors.ApiErrorCodeAppSessionNotFound {
+				fmt.Printf("[sessions.testAppSessions_GetById] appSession[%d], get an app session by id, err: %v\n", id, err)
+				continue
+			}
+			panic(err)
+		}
+
+		b, err := json.Marshal(s)
+		if err != nil {
+			panic(err)
+		}
+
+		fmt.Printf("[sessions.testAppSessions_GetById] appSessionInfo[%d]: %s\n", id, b)
 	}
 }
