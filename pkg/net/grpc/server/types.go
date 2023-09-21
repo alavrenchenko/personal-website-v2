@@ -56,5 +56,5 @@ func (c *CallInfo) String() string {
 	if c.StatusCode.HasValue {
 		args[9] = c.StatusCode.Value
 	}
-	return fmt.Sprintf("{id: %s, status: %v, startTime: %v, endTime: %v, elapsedTime: %v, fullMethod: %s, contentType: %q, userAgent: %q, isOperationSuccessful: %v, statusCode: %v}", args...)
+	return fmt.Sprintf("{id: %s, status: %v, startTime: %v, endTime: %v, elapsedTime: %v, fullMethod: %q, contentType: %q, userAgent: %q, isOperationSuccessful: %v, statusCode: %v}", args...)
 }
