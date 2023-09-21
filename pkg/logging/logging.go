@@ -69,11 +69,11 @@ type LogEntry[TContext any] struct {
 
 func (entry *LogEntry[TContext]) String() string {
 	if entry.Err != nil {
-		return fmt.Sprintf("{id: %s, timestamp: %v, level: %s, category: %s, event: %v, error: %q, message: %q, fields: %v}",
+		return fmt.Sprintf("{id: %s, timestamp: %v, level: %s, category: %q, event: %v, error: %q, message: %q, fields: %v}",
 			entry.Id, entry.Timestamp, entry.Level, entry.Category, entry.Event, entry.Err, entry.Message, entry.Fields,
 		)
 	}
-	return fmt.Sprintf("{id: %s, timestamp: %v, level: %s, category: %s, event: %v, message: %q, fields: %v}",
+	return fmt.Sprintf("{id: %s, timestamp: %v, level: %s, category: %q, event: %v, message: %q, fields: %v}",
 		entry.Id, entry.Timestamp, entry.Level, entry.Category, entry.Event, entry.Message, entry.Fields,
 	)
 }
