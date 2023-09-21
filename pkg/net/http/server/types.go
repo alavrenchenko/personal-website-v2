@@ -80,7 +80,7 @@ func NewRequestInfo(r *http.Request) *RequestInfo {
 }
 
 func (r *RequestInfo) String() string {
-	return fmt.Sprintf("{id: %s, status: %v, startTime: %v, endTime: %v, elapsedTime: %v, url: %s, method: %s, protocol: %s, host: %s, remoteAddr: %s, requestURI: %s, contentLength: %d, contentType: %s, userAgent: %s}",
+	return fmt.Sprintf("{id: %s, status: %v, startTime: %v, endTime: %v, elapsedTime: %v, url: %q, method: %s, protocol: %q, host: %q, remoteAddr: %q, requestURI: %q, contentLength: %d, contentType: %q, userAgent: %q}",
 		r.Id, r.Status, r.StartTime, r.EndTime.Ptr(), r.ElapsedTime.Ptr(), r.Url, r.Method, r.Protocol, r.Host, r.RemoteAddr, r.RequestURI, r.ContentLength, r.ContentType, r.UserAgent,
 	)
 }
@@ -95,5 +95,5 @@ type ResponseInfo struct {
 }
 
 func (r *ResponseInfo) String() string {
-	return fmt.Sprintf("{id: %s, requestId: %s, timestamp: %v, statusCode: %d, bodySize: %d, contentType: %s}", r.Id, r.RequestId, r.Timestamp, r.StatusCode, r.BodySize, r.ContentType)
+	return fmt.Sprintf("{id: %s, requestId: %s, timestamp: %v, statusCode: %d, bodySize: %d, contentType: %q}", r.Id, r.RequestId, r.Timestamp, r.StatusCode, r.BodySize, r.ContentType)
 }
