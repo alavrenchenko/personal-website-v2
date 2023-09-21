@@ -1157,11 +1157,13 @@ func (a *Application) onLoggingError(entry *logging.LogEntry[*context.LogEntryCo
 }
 
 func (a *Application) onFileLoggingError(entry *logging.LogEntry[*context.LogEntryContext], err *logging.LoggingError) {
-	log.Println("[ERROR] [app.Application.onFileLoggingError] an error occurred while logging:", err)
-
-	if !a.isStarted.Load() {
-		return
+	es, err2 := loggingencoding.EncodeLogEntryToString(entry)
+	if err2 != nil {
+		log.Println("[ERROR] [app.Application.onFileLoggingError] encode a log entry to string:", err2)
+		es = entry.String()
 	}
+
+	log.Printf("[FATAL] [app.Application.onFileLoggingError] an error occurred while logging: %v (entry: %s)\n", err, es)
 
 	go func() {
 		if err2 := a.Stop(); err2 != nil && a.isStarted.Load() {
@@ -1301,7 +1303,8 @@ func (a *Application) logLoggingError(err error, fields []*logging.Field) {
 func (a *Application) logLoggingError(entry any, err error) {
 	var (
 		fs   []*logging.Field
-		s    string
+		ek   string
+		es   string
 		err2 error
 		msg  string
 		ctx  *context.LogEntryContext
@@ -1314,32 +1317,53 @@ func (a *Application) logLoggingError(entry any, err error) {
 	if entry != nil {
 		switch e := entry.(type) {
 		case *logging.LogEntry[*context.LogEntryContext]:
-			if s, err2 = loggingencoding.EncodeLogEntryToString(e); err2 != nil {
+			ek = "entry"
+
+			if es, err2 = loggingencoding.EncodeLogEntryToString(e); err2 != nil {
 				msg = "[app.Application.logLoggingError] encode a log entry to string"
+				es = e.String()
 			}
 		case *actions.Transaction:
-			if s, err2 = actionencoding.EncodeTransactionToString(e); err2 != nil {
+			ek = "tran"
+
+			if es, err2 = actionencoding.EncodeTransactionToString(e); err2 != nil {
 				msg = "[app.Application.logLoggingError] encode a transaction to string"
+				es = e.String()
 			}
 		case *actions.Action:
-			if s, err2 = actionencoding.EncodeActionToString(e); err2 != nil {
+			ek = "action"
+
+			if es, err2 = actionencoding.EncodeActionToString(e); err2 != nil {
 				msg = "[app.Application.logLoggingError] encode an action to string"
+				es = e.String()
 			}
 		case *actions.Operation:
-			if s, err2 = actionencoding.EncodeOperationToString(e); err2 != nil {
+			ek = "operation"
+
+			if es, err2 = actionencoding.EncodeOperationToString(e); err2 != nil {
 				msg = "[app.Application.logLoggingError] encode an operation to string"
+				es = e.String()
 			}
 		case *httpserver.RequestInfo:
-			if s, err2 = httpserverencoding.EncodeRequestToString(e); err2 != nil {
+			ek = "request"
+
+			if es, err2 = httpserverencoding.EncodeRequestToString(e); err2 != nil {
 				msg = "[app.Application.logLoggingError] encode a request to string"
+				es = e.String()
 			}
 		case *httpserver.ResponseInfo:
-			if s, err2 = httpserverencoding.EncodeResponseToString(e); err2 != nil {
+			ek = "response"
+
+			if es, err2 = httpserverencoding.EncodeResponseToString(e); err2 != nil {
 				msg = "[app.Application.logLoggingError] encode a response to string"
+				es = e.String()
 			}
 		case *grpcserver.CallInfo:
-			if s, err2 = grpcserverencoding.EncodeCallToString(e); err2 != nil {
+			ek = "call"
+
+			if es, err2 = grpcserverencoding.EncodeCallToString(e); err2 != nil {
 				msg = "[app.Application.logLoggingError] encode a call to string"
+				es = e.String()
 			}
 		default:
 			t := reflect.TypeOf(entry)
@@ -1354,35 +1378,37 @@ func (a *Application) logLoggingError(entry any, err error) {
 		if len(msg) > 0 {
 			if a.fileLogger != nil {
 				a.fileLogger.ErrorWithEvent(ctx, events.ApplicationEvent, err2, msg)
+			} else if err2 != nil {
+				log.Printf("[ERROR] %s: %v\n", msg, err2)
 			} else {
-				if err2 != nil {
-					log.Printf("[ERROR] %s: %v\n", msg, err2)
-				} else {
-					log.Println("[ERROR] " + msg)
-				}
+				log.Println("[ERROR] " + msg)
 			}
-		} else {
-			fs = []*logging.Field{{Key: "entry", Value: s}}
+		}
+
+		if len(ek) > 0 {
+			fs = []*logging.Field{{Key: ek, Value: es}}
 		}
 	}
 
-	if a.fileLogger != nil {
-		a.fileLogger.FatalWithEventAndError(ctx, events.ApplicationEvent, err, "[app.Application.logLoggingError] an error occurred while logging", fs...)
-	} else {
-		log.Println("[FATAL] [app.Application.logLoggingError] an error occurred while logging:", err)
-	}
+	msg = "[app.Application.logLoggingError] an error occurred while logging"
 
-	if !a.isStarted.Load() {
-		return
+	if a.fileLogger != nil {
+		a.fileLogger.FatalWithEventAndError(ctx, events.ApplicationEvent, err, msg, fs...)
+	} else if len(ek) > 0 {
+		log.Printf("[FATAL] %s: %v (%s: %s)\n", msg, err, ek, es)
+	} else {
+		log.Printf("[FATAL] %s: %v\n", msg, err)
 	}
 
 	go func() {
 		if err2 := a.Stop(); err2 != nil && a.isStarted.Load() {
+			msg := "[app.Application.logLoggingError] stop an app"
+
 			if a.fileLogger != nil {
-				a.fileLogger.FatalWithEventAndError(ctx, events.ApplicationEvent, err2, "[app.Application.logLoggingError] stop an app")
+				a.fileLogger.FatalWithEventAndError(ctx, events.ApplicationEvent, err2, msg)
 				os.Exit(1)
 			} else {
-				log.Fatalln("[FATAL] [app.Application.logLoggingError] stop an app:", err2)
+				log.Fatalf("[FATAL] %s: %v\n", msg, err2)
 			}
 		}
 	}()
