@@ -943,6 +943,12 @@ func (a *Application) stop(ctx *actions.OperationContext) {
 			}
 		}
 
+		if a.loggingManagerService != nil {
+			if err := a.loggingManagerService.Dispose(); err != nil {
+				log.Println("[ERROR] [app.Application.stop] dispose of the logging manager service:", err)
+			}
+		}
+
 		a.isStopped = true
 		return
 	}
