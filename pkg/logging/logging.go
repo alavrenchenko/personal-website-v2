@@ -15,6 +15,7 @@
 package logging
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -30,6 +31,10 @@ func NewField(key string, value any) *Field {
 		Key:   key,
 		Value: value,
 	}
+}
+
+func (f *Field) String() string {
+	return fmt.Sprintf("{%s: %v}", f.Key, f.Value)
 }
 
 // A log entry.
@@ -60,6 +65,17 @@ type LogEntry[TContext any] struct {
 
 	// The fields related to this entry.
 	Fields []*Field
+}
+
+func (entry *LogEntry[TContext]) String() string {
+	if entry.Err != nil {
+		return fmt.Sprintf("{id: %s, timestamp: %v, level: %s, category: %s, event: %v, error: %q, message: %q, fields: %v}",
+			entry.Id, entry.Timestamp, entry.Level, entry.Category, entry.Event, entry.Err, entry.Message, entry.Fields,
+		)
+	}
+	return fmt.Sprintf("{id: %s, timestamp: %v, level: %s, category: %s, event: %v, message: %q, fields: %v}",
+		entry.Id, entry.Timestamp, entry.Level, entry.Category, entry.Event, entry.Message, entry.Fields,
+	)
 }
 
 // Logger represents a type used to perform logging.

@@ -209,5 +209,7 @@ func (a *Action) complete(succeeded bool) error {
 }
 
 func (a *Action) String() string {
-	return fmt.Sprintf("action(id: %s, type: %d, category: %d, group: %d)", a.id, a.atype, a.category, a.group)
+	return fmt.Sprintf("{id: %s, tranId: %s, type: %v, category: %v, group: %v, parentActionId: %v, isBackground: %v, createdAt: %v, status: %v, startTime: %v, endTime: %v, elapsedTime: %v}",
+		a.id, a.tran.id, a.atype, a.category, a.group, a.parentActionId, a.isBackground, a.createdAt, a.Status(), a.startTime, a.endTime.Ptr(), a.elapsedTime.Ptr(),
+	)
 }

@@ -15,6 +15,7 @@
 package server
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -44,4 +45,16 @@ type CallInfo struct {
 	UserAgent             []string
 	IsOperationSuccessful nullable.Nullable[bool]
 	StatusCode            nullable.Nullable[uint32] // gRPC status code (error code)
+}
+
+func (c *CallInfo) String() string {
+	args := []any{c.Id, c.Status, c.StartTime, c.EndTime.Ptr(), c.ElapsedTime.Ptr(), c.FullMethod, c.ContentType, c.UserAgent, nil, nil}
+
+	if c.IsOperationSuccessful.HasValue {
+		args[8] = c.IsOperationSuccessful.Value
+	}
+	if c.StatusCode.HasValue {
+		args[9] = c.StatusCode.Value
+	}
+	return fmt.Sprintf("{id: %s, status: %v, startTime: %v, endTime: %v, elapsedTime: %v, fullMethod: %s, contentType: %q, userAgent: %q, isOperationSuccessful: %v, statusCode: %v}", args...)
 }

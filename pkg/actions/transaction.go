@@ -61,5 +61,5 @@ func (t *Transaction) start() error {
 }
 
 func (t *Transaction) String() string {
-	return fmt.Sprintf("transaction(id: %s)", t.id)
+	return fmt.Sprintf("{id: %s, createdAt: %v, startTime: %v}", t.id, t.createdAt, t.startTime)
 }

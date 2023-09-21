@@ -15,6 +15,7 @@
 package server
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
@@ -78,6 +79,12 @@ func NewRequestInfo(r *http.Request) *RequestInfo {
 	}
 }
 
+func (r *RequestInfo) String() string {
+	return fmt.Sprintf("{id: %s, status: %v, startTime: %v, endTime: %v, elapsedTime: %v, url: %s, method: %s, protocol: %s, host: %s, remoteAddr: %s, requestURI: %s, contentLength: %d, contentType: %s, userAgent: %s}",
+		r.Id, r.Status, r.StartTime, r.EndTime.Ptr(), r.ElapsedTime.Ptr(), r.Url, r.Method, r.Protocol, r.Host, r.RemoteAddr, r.RequestURI, r.ContentLength, r.ContentType, r.UserAgent,
+	)
+}
+
 type ResponseInfo struct {
 	Id          uuid.UUID
 	RequestId   uuid.UUID
@@ -85,4 +92,8 @@ type ResponseInfo struct {
 	StatusCode  int
 	BodySize    int64 // size of the response body (number of bytes written in the body); contentLength
 	ContentType string
+}
+
+func (r *ResponseInfo) String() string {
+	return fmt.Sprintf("{id: %s, requestId: %s, timestamp: %v, statusCode: %d, bodySize: %d, contentType: %s}", r.Id, r.RequestId, r.Timestamp, r.StatusCode, r.BodySize, r.ContentType)
 }

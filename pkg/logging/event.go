@@ -14,7 +14,10 @@
 
 package logging
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"fmt"
+)
 
 type EventCategory uint16
 
@@ -75,6 +78,10 @@ func (e *Event) Category() EventCategory {
 // Group returns the group of this event.
 func (e *Event) Group() EventGroup {
 	return e.group
+}
+
+func (e *Event) String() string {
+	return fmt.Sprintf("{id: %d, name: %s, category: %v, group: %v}", e.id, e.name, e.category, e.group)
 }
 
 func (e *Event) MarshalJSON() ([]byte, error) {

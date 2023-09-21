@@ -67,6 +67,10 @@ func NewOperationParam(name string, value any) *OperationParam {
 	}
 }
 
+func (p *OperationParam) String() string {
+	return fmt.Sprintf("{%s: %v}", p.Name, p.Value)
+}
+
 type Operation struct {
 	id                uuid.UUID
 	action            *Action
@@ -197,5 +201,7 @@ func (o *Operation) complete(succeeded bool) error {
 }
 
 func (o *Operation) String() string {
-	return fmt.Sprintf("operation(id: %s, type: %d, category: %d, group: %d)", o.id, o.otype, o.category, o.group)
+	return fmt.Sprintf("{id: %s, tranId: %s, actionId: %s, type: %v, category: %v, group: %v, parentOperationId: %v, params: %v, createdAt: %v, status: %v, startTime: %v, endTime: %v, elapsedTime: %v}",
+		o.id, o.action.tran.id, o.action.id, o.otype, o.category, o.group, o.parentOperationId, o.params, o.createdAt, o.Status(), o.startTime, o.endTime.Ptr(), o.elapsedTime.Ptr(),
+	)
 }
