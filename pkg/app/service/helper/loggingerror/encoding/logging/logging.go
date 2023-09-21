@@ -53,8 +53,11 @@ func serializeLogEntry(entry *logging.LogEntry[*context.LogEntryContext]) ([]byt
 			Category: entry.Event.Category(),
 			Group:    entry.Event.Group(),
 		},
-		Err:     entry.Err,
 		Message: entry.Message,
+	}
+
+	if entry.Err != nil {
+		e.Err = entry.Err.Error()
 	}
 
 	ctxFLen := 0

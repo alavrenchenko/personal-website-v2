@@ -33,7 +33,7 @@ type logEntry struct {
 	Level        logging.LogLevel       `json:"level"`
 	Category     string                 `json:"category"`
 	Event        *event                 `json:"event"`
-	Err          error                  `json:"error,omitempty"`
+	Err          string                 `json:"error,omitempty"`
 	Message      string                 `json:"message"`
 	Fields       map[string]interface{} `json:"fields,omitempty"`
 }
