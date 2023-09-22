@@ -435,15 +435,7 @@ func (a *Application) configureLogging() error {
 	b := logger.NewLoggerConfigBuilder[*context.LogEntryContext]()
 
 	defer func() {
-		if a.logger != nil {
-			return
-		}
-
-		if a.loggerFactory != nil {
-			if err := a.loggerFactory.Dispose(); err != nil {
-				log.Println("[ERROR] [app.Application.configureLogging] dispose of the logger factory:", err)
-			}
-		} else {
+		if a.loggerFactory == nil {
 			for _, adapter := range b.Build().Adapters() {
 				if err := adapter.Dispose(); err != nil {
 					log.Println("[ERROR] [app.Application.configureLogging] dispose of the adapter:", err)
@@ -491,15 +483,7 @@ func (a *Application) configureFileLogging(appInfo *info.AppInfo, loggingSession
 	}
 
 	defer func() {
-		if a.fileLogger != nil {
-			return
-		}
-
-		if a.fileLoggerFactory != nil {
-			if err := a.fileLoggerFactory.Dispose(); err != nil {
-				log.Println("[ERROR] [app.Application.configureFileLogging] dispose of the file logger factory:", err)
-			}
-		} else {
+		if a.fileLoggerFactory == nil {
 			if err := adapter.Dispose(); err != nil {
 				log.Println("[ERROR] [app.Application.configureFileLogging] dispose of the adapter:", err)
 			}
