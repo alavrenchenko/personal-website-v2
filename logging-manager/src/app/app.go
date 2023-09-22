@@ -354,8 +354,12 @@ func (a *Application) startLoggingSession() (err error) {
 	}
 
 	defer func() {
-		if err2 := f.Dispose(); err2 != nil && err == nil {
-			err = fmt.Errorf("[app.Application.startLoggingSession] dispose of the logger factory: %w", err2)
+		if err2 := f.Dispose(); err2 != nil {
+			if err != nil {
+				log.Println("[ERROR] [app.Application.startLoggingSession] dispose of the logger factory:", err2)
+			} else {
+				err = fmt.Errorf("[app.Application.startLoggingSession] dispose of the logger factory: %w", err2)
+			}
 		}
 	}()
 
@@ -447,15 +451,7 @@ func (a *Application) configureLogging() error {
 	b := logger.NewLoggerConfigBuilder[*context.LogEntryContext]()
 
 	defer func() {
-		if a.logger != nil {
-			return
-		}
-
-		if a.loggerFactory != nil {
-			if err := a.loggerFactory.Dispose(); err != nil {
-				log.Println("[ERROR] [app.Application.configureLogging] dispose of the logger factory:", err)
-			}
-		} else {
+		if a.loggerFactory == nil {
 			for _, adapter := range b.Build().Adapters() {
 				if err := adapter.Dispose(); err != nil {
 					log.Println("[ERROR] [app.Application.configureLogging] dispose of the adapter:", err)
@@ -518,16 +514,9 @@ func (a *Application) createFileLoggerFactory(appInfo *info.AppInfo, loggingSess
 		return nil, fmt.Errorf("[app.Application.createFileLoggerFactory] create a file log adapter: %w", err)
 	}
 
+	succeeded := false
 	defer func() {
-		if a.fileLogger != nil {
-			return
-		}
-
-		if a.fileLoggerFactory != nil {
-			if err := a.fileLoggerFactory.Dispose(); err != nil {
-				log.Println("[ERROR] [app.Application.createFileLoggerFactory] dispose of the file logger factory:", err)
-			}
-		} else {
+		if !succeeded {
 			if err := adapter.Dispose(); err != nil {
 				log.Println("[ERROR] [app.Application.createFileLoggerFactory] dispose of the adapter:", err)
 			}
@@ -544,6 +533,8 @@ func (a *Application) createFileLoggerFactory(appInfo *info.AppInfo, loggingSess
 	if err != nil {
 		return nil, fmt.Errorf("[app.Application.createFileLoggerFactory] new logger factory: %w", err)
 	}
+
+	succeeded = true
 	return f, nil
 }
 
