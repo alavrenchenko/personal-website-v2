@@ -13,3 +13,30 @@
 // limitations under the License.
 
 package models
+
+// The user group.
+type UserGroup uint8
+
+const (
+	// Unspecified = 0 // Do not use.
+
+	UserGroupAnonymousUsers UserGroup = 1
+	UserGroupSystemUsers    UserGroup = 2
+	UserGroupAdministrators UserGroup = 3
+	UserGroupStandardUsers  UserGroup = 4
+)
+
+// The user status.
+type UserStatus uint16
+
+const (
+	// Unspecified = 0 // Do not use.
+
+	UserStatusNew                  UserStatus = 1
+	UserStatusPendingApproval      UserStatus = 2
+	UserStatusActive               UserStatus = 3
+	UserStatusLockedOut            UserStatus = 4
+	UserStatusTemporarilyLockedOut UserStatus = 5
+	UserStatusDisabled             UserStatus = 6
+	UserStatusDeleted              UserStatus = 7
+)
