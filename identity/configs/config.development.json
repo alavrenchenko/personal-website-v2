@@ -226,6 +226,21 @@
     "db": {
         "postgres": {
             "configs": {
+                "AccountDb": {
+                    "applicationName": "Identity",
+                    "host": "{host}",
+                    "port": 0,
+                    "database": "accountdb",
+                    "user": "{user}",
+                    "password": "{password}",
+                    "sslMode": "disable",
+                    "connectTimeout": 10,
+                    "minConns": 10,
+                    "maxConns": 100,
+                    "maxConnLifetime": 86400,
+                    "maxConnIdleTime": 30,
+                    "healthCheckPeriod": 5
+                },
                 "UserDb": {
                     "applicationName": "Identity",
                     "host": "{host}",
@@ -258,6 +273,7 @@
                 }
             },
             "dataMap": {
+                "Account": "AccountDb",
                 "User": "UserDb",
                 "Client": "ClientDb"
             }

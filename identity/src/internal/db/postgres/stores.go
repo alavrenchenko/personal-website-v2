@@ -17,6 +17,7 @@ package postgres
 import (
 	"errors"
 
+	// accountstores "personal-website-v2/identity/src/internal/accounts/stores"
 	// userstores "personal-website-v2/identity/src/internal/users/stores"
 	// clientstores "personal-website-v2/identity/src/internal/clients/stores"
 	"personal-website-v2/pkg/db/postgres"
@@ -25,8 +26,9 @@ import (
 )
 
 const (
-	userCategory   = "User"
-	clientCategory = "Client"
+	accountCategory = "Account"
+	userCategory    = "User"
+	clientCategory  = "Client"
 )
 
 type Stores interface {
