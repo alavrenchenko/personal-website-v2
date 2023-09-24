@@ -25,8 +25,11 @@ type User struct {
 	// The unique ID to identify the user.
 	Id uint64 `db:"id"`
 
-	// The main (personal) account ID.
-	AccountId uint64 `db:"id"`
+	// The account ID.
+	AccountId uint64 `db:"account_id"`
+
+	// The main (personal) account profile ID.
+	AccountProfileId uint64 `db:"account_profile_id"`
 
 	// The unique name to identify the user.
 	Name string `db:"name"`
@@ -60,6 +63,57 @@ type User struct {
 
 	// The user email.
 	Email *string `db:"email"`
+
+	// rowversion
+	VersionStamp uint64 `db:"_version_stamp"`
+
+	// row timestamp
+	Timestamp time.Time `db:"_timestamp"`
+}
+
+// The user's personal info.
+type PersonalInfo struct {
+	// The unique ID to identify the personal info.
+	Id uint64 `db:"id"`
+
+	// The user ID who owns this personal info.
+	UserId uint64 `db:"user_id"`
+
+	// It stores the date and time at which the personal info was created.
+	CreatedAt time.Time `db:"created_at"`
+
+	// The user ID to identify the user who created the personal info.
+	CreatedBy uint64 `db:"created_by"`
+
+	// It stores the date and time at which the personal info was updated.
+	UpdatedAt time.Time `db:"updated_at"`
+
+	// The user ID to identify the user who updated the personal info.
+	UpdatedBy uint64 `db:"updated_by"`
+
+	// The first name.
+	FirstName string `db:"first_name"`
+
+	// The last name.
+	LastName string `db:"last_name"`
+
+	// The display name.
+	DisplayName string `db:"display_name"`
+
+	// The user's date of birth.
+	BirthDate *time.Time `db:"birth_date"`
+
+	// The user's gender.
+	Gender models.Gender `db:"gender"`
+
+	// It indicates whether personal info has been deleted.
+	IsDeleted bool `db:"is_deleted"`
+
+	// It stores the date and time at which the personal info was deleted.
+	DeletedAt *time.Time `db:"deleted_at"`
+
+	// The user ID to identify the user who deleted the personal info.
+	DeletedBy *uint64 `db:"deleted_by"`
 
 	// rowversion
 	VersionStamp uint64 `db:"_version_stamp"`

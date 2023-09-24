@@ -27,7 +27,7 @@ const (
 )
 
 // The user status.
-type UserStatus uint16
+type UserStatus uint8
 
 const (
 	// Unspecified = 0 // Do not use.
@@ -39,4 +39,15 @@ const (
 	UserStatusTemporarilyLockedOut UserStatus = 5
 	UserStatusDisabled             UserStatus = 6
 	UserStatusDeleted              UserStatus = 7
+)
+
+// The user's gender.
+type Gender uint8
+
+const (
+	GenderUnspecified Gender = 0
+	GenderUnknown     Gender = 1
+	GenderFemale      Gender = 2
+	GenderMale        Gender = 3
+	GenderOther       Gender = 4
 )
