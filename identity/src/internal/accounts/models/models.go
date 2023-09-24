@@ -14,19 +14,8 @@
 
 package models
 
-// The account type.
-type AccountType uint8
-
-const (
-	// Unspecified = 0 // Do not use.
-
-	// The main (personal) account.
-	AccountTypeMain         AccountType = 1
-	AccountTypeProfessional AccountType = 2
-)
-
 // The account status.
-type AccountStatus uint16
+type AccountStatus uint8
 
 const (
 	// Unspecified = 0 // Do not use.
@@ -38,4 +27,30 @@ const (
 	AccountStatusTemporarilyLockedOut AccountStatus = 5
 	AccountStatusDisabled             AccountStatus = 6
 	AccountStatusDeleted              AccountStatus = 7
+)
+
+// The account profile type.
+type ProfileType uint8
+
+const (
+	// Unspecified = 0 // Do not use.
+
+	// The main (personal) account profile.
+	ProfileTypeMain         ProfileType = 1
+	ProfileTypeProfessional ProfileType = 2
+)
+
+// The account profile status.
+type ProfileStatus uint8
+
+const (
+	// Unspecified = 0 // Do not use.
+
+	ProfileStatusNew                  ProfileStatus = 1
+	ProfileStatusPendingApproval      ProfileStatus = 2
+	ProfileStatusActive               ProfileStatus = 3
+	ProfileStatusLockedOut            ProfileStatus = 4
+	ProfileStatusTemporarilyLockedOut ProfileStatus = 5
+	ProfileStatusDisabled             ProfileStatus = 6
+	ProfileStatusDeleted              ProfileStatus = 7
 )
