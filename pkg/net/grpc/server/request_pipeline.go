@@ -16,6 +16,7 @@ package server
 
 import (
 	"context"
+	"encoding/binary"
 	"fmt"
 	"math"
 	"runtime"
@@ -31,7 +32,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"personal-website-v2/pkg/base/datetime"
-	"personal-website-v2/pkg/base/encoding/binary"
+	binaryencoding "personal-website-v2/pkg/base/encoding/binary"
 	"personal-website-v2/pkg/base/nullable"
 	"personal-website-v2/pkg/base/sequence"
 	"personal-website-v2/pkg/errors"
@@ -508,17 +509,15 @@ func (g *idGenerator) get() (uuid.UUID, error) {
 	*/
 	var id uuid.UUID
 	// the byte order (endianness) must be taken into account
-	if binary.IsLittleEndian() {
+	if binaryencoding.IsLittleEndian() {
 		p := unsafe.Pointer(&id[0])
 		*(*uint64)(p) = g.appSessionId
 		*(*uint16)(unsafe.Pointer(uintptr(p) + uintptr(6))) = g.grpcServerId
 		*(*uint64)(unsafe.Pointer(uintptr(p) + uintptr(8))) = seqv
 	} else {
-		endian := binary.Endian()
-		endian.PutUint64(id[:8], g.appSessionId)
-		endian.PutUint16(id[6:8], g.grpcServerId)
-		endian.PutUint64(id[8:], seqv)
+		binary.LittleEndian.PutUint64(id[:8], g.appSessionId)
+		binary.LittleEndian.PutUint16(id[6:8], g.grpcServerId)
+		binary.LittleEndian.PutUint64(id[8:], seqv)
 	}
-
 	return id, nil
 }

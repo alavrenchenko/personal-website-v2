@@ -15,6 +15,7 @@
 package server
 
 import (
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"math"
@@ -25,7 +26,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"personal-website-v2/pkg/base/encoding/binary"
+	binaryencoding "personal-website-v2/pkg/base/encoding/binary"
 )
 
 var (
@@ -364,17 +365,15 @@ func getId() (uuid.UUID, error) {
 
 	var id uuid.UUID
 
-	if binary.IsLittleEndian() {
+	if binaryencoding.IsLittleEndian() {
 		p := unsafe.Pointer(&id[0])
 		*(*uint64)(p) = test_appSessionId
 		*(*uint16)(unsafe.Pointer(uintptr(p) + uintptr(6))) = test_httpServerId
 		*(*uint64)(unsafe.Pointer(uintptr(p) + uintptr(8))) = c
 	} else {
-		endian := binary.Endian()
-		endian.PutUint64(id[:8], test_appSessionId)
-		endian.PutUint16(id[6:8], test_httpServerId)
-		endian.PutUint64(id[8:], c)
+		binary.LittleEndian.PutUint64(id[:8], test_appSessionId)
+		binary.LittleEndian.PutUint16(id[6:8], test_httpServerId)
+		binary.LittleEndian.PutUint64(id[8:], c)
 	}
-
 	return id, nil
 }

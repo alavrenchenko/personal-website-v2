@@ -15,6 +15,7 @@
 package actions
 
 import (
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"math"
@@ -24,7 +25,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"personal-website-v2/pkg/base/encoding/binary"
+	binaryencoding "personal-website-v2/pkg/base/encoding/binary"
 	"personal-website-v2/pkg/base/nullable"
 	"personal-website-v2/pkg/base/sequence"
 	"personal-website-v2/pkg/logging"
@@ -286,19 +287,17 @@ func (g *operationIdGenerator) get() (uuid.UUID, error) {
 	*/
 	var id uuid.UUID
 	// the byte order (endianness) must be taken into account
-	if binary.IsLittleEndian() {
+	if binaryencoding.IsLittleEndian() {
 		p := unsafe.Pointer(&id[0])
 		*(*uint64)(p) = g.appSessionId
 		*(*uint64)(unsafe.Pointer(uintptr(p) + uintptr(6))) = *(*uint64)(unsafe.Pointer(&g.actionId[8]))
 		*(*uint16)(unsafe.Pointer(uintptr(p) + uintptr(14))) = seqv
 	} else {
-		endian := binary.Endian()
-		endian.PutUint64(id[:8], g.appSessionId)
+		binary.LittleEndian.PutUint64(id[:8], g.appSessionId)
 		copy(id[6:], g.actionId[8:])
 		// or
 		// *(*uint64)(unsafe.Pointer(&id[6])) = *(*uint64)(unsafe.Pointer(&g.actionId[8]))
-		endian.PutUint16(id[14:], seqv)
+		binary.LittleEndian.PutUint16(id[14:], seqv)
 	}
-
 	return id, nil
 }
