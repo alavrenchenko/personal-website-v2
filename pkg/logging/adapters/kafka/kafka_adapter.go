@@ -15,11 +15,11 @@
 package kafka
 
 import (
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"sync/atomic"
 
-	"personal-website-v2/pkg/base/encoding/binary"
 	"personal-website-v2/pkg/components/kafka"
 	"personal-website-v2/pkg/logging"
 	"personal-website-v2/pkg/logging/adapters"
@@ -85,7 +85,7 @@ func NewKafkaAdapter(config *KafkaAdapterConfig) (*KafkaAdapter, error) {
 	}
 
 	a.producer = p
-	binary.Endian().PutUint64(a.defaultKafkaMsgKey[:], config.LoggingSessionId)
+	binary.LittleEndian.PutUint64(a.defaultKafkaMsgKey[:], config.LoggingSessionId)
 	return a, nil
 }
 
