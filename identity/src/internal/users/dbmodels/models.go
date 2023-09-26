@@ -28,7 +28,7 @@ type User struct {
 	// The unique name to identify the user.
 	Name string `db:"name"`
 
-	// The user group.
+	// The user's group.
 	Group models.UserGroup `db:"group"`
 
 	// It stores the date and time at which the user was created.
@@ -43,19 +43,19 @@ type User struct {
 	// The user ID to identify the user who updated this user.
 	UpdatedBy uint64 `db:"updated_by"`
 
-	// The status of the user can be New(1), PendingApproval(2), Active(3), LockedOut(4), TemporarilyLockedOut(5), Disabled(6), or Deleted(7).
+	// The user's status can be New(1), PendingApproval(2), Active(3), LockedOut(4), TemporarilyLockedOut(5), Disabled(6), or Deleted(7).
 	Status models.UserStatus `db:"status"`
 
-	// It stores the date and time at which the user status was updated.
+	// It stores the date and time at which the user's status was updated.
 	StatusUpdatedAt time.Time `db:"status_updated_at"`
 
-	// The user ID to identify the user who updated this user status.
+	// The user ID to identify the user who updated this user's status.
 	StatusUpdatedBy uint64 `db:"status_updated_by"`
 
-	// The user status comment.
+	// The user's status comment.
 	StatusComment *string `db:"status_comment"`
 
-	// The user email.
+	// The user's email.
 	Email *string `db:"email"`
 
 	// The last sign-in time.
