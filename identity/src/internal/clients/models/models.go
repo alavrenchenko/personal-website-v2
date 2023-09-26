@@ -13,3 +13,30 @@
 // limitations under the License.
 
 package models
+
+// The client type.
+type ClientType uint8
+
+const (
+	// Unspecified = 0 // Do not use.
+
+	ClientTypeWeb ClientType = 1
+
+	// For mobile apps.
+	ClientTypeMobile ClientType = 2
+)
+
+// The client status.
+type ClientStatus uint8
+
+const (
+	// Unspecified = 0 // Do not use.
+
+	ClientStatusNew                  ClientStatus = 1
+	ClientStatusPendingApproval      ClientStatus = 2
+	ClientStatusActive               ClientStatus = 3
+	ClientStatusLockedOut            ClientStatus = 4
+	ClientStatusTemporarilyLockedOut ClientStatus = 5
+	ClientStatusDisabled             ClientStatus = 6
+	ClientStatusDeleted              ClientStatus = 7
+)
