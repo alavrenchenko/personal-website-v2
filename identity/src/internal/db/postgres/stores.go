@@ -26,9 +26,8 @@ import (
 )
 
 const (
-	accountCategory = "Account"
-	userCategory    = "User"
-	clientCategory  = "Client"
+	userCategory   = "User"
+	clientCategory = "Client"
 )
 
 type Stores interface {
