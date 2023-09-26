@@ -45,7 +45,7 @@ var _ sessions.LoggingSessionManager = (*LoggingSessionManager)(nil)
 func NewLoggingSessionManager(apps appmanager.Apps, loggingSessionStore sessions.LoggingSessionStore, loggerFactory logging.LoggerFactory[*context.LogEntryContext]) (*LoggingSessionManager, error) {
 	l, err := loggerFactory.CreateLogger("internal.sessions.manager.LoggingSessionManager")
 	if err != nil {
-		return nil, fmt.Errorf("[sessions.NewLoggingSessionManager] create a logger: %w", err)
+		return nil, fmt.Errorf("[manager.NewLoggingSessionManager] create a logger: %w", err)
 	}
 
 	return &LoggingSessionManager{
@@ -57,15 +57,15 @@ func NewLoggingSessionManager(apps appmanager.Apps, loggingSessionStore sessions
 
 func (m *LoggingSessionManager) CreateAndStart(appId uint64, userId uint64) (uint64, error) {
 	if err := m.checkApp(nil, appId, userId); err != nil {
-		return 0, fmt.Errorf("[sessions.LoggingSessionManager.CreateAndStart] check an app: %w", err)
+		return 0, fmt.Errorf("[manager.LoggingSessionManager.CreateAndStart] check an app: %w", err)
 	}
 
 	id, err := m.loggingSessionStore.CreateAndStart(appId, userId)
 	if err != nil {
-		return 0, fmt.Errorf("[sessions.LoggingSessionManager.CreateAndStart] create and start a logging session: %w", err)
+		return 0, fmt.Errorf("[manager.LoggingSessionManager.CreateAndStart] create and start a logging session: %w", err)
 	}
 
-	m.logger.InfoWithEvent(nil, events.LoggingSessionEvent, "[sessions.LoggingSessionManager.CreateAndStart] logging session has been created and started", logging.NewField("id", id))
+	m.logger.InfoWithEvent(nil, events.LoggingSessionEvent, "[manager.LoggingSessionManager.CreateAndStart] logging session has been created and started", logging.NewField("id", id))
 	return id, nil
 }
 
@@ -78,7 +78,7 @@ func (m *LoggingSessionManager) CreateAndStartWithContext(ctx *actions.Operation
 		actions.NewOperationParam("appId", appId),
 	)
 	if err != nil {
-		return 0, fmt.Errorf("[sessions.LoggingSessionManager.CreateAndStartWithContext] create and start an operation: %w", err)
+		return 0, fmt.Errorf("[manager.LoggingSessionManager.CreateAndStartWithContext] create and start an operation: %w", err)
 	}
 
 	succeeded := false
@@ -88,30 +88,30 @@ func (m *LoggingSessionManager) CreateAndStartWithContext(ctx *actions.Operation
 	defer func() {
 		if err := ctx.Action.Operations.Complete(op, succeeded); err != nil {
 			leCtx := ctx2.CreateLogEntryContext()
-			m.logger.FatalWithEventAndError(leCtx, events.LoggingSessionEvent, err, "[sessions.LoggingSessionManager.CreateAndStartWithContext] complete an operation")
+			m.logger.FatalWithEventAndError(leCtx, events.LoggingSessionEvent, err, "[manager.LoggingSessionManager.CreateAndStartWithContext] complete an operation")
 
 			go func() {
 				if err := app.Stop(); err != nil {
-					m.logger.ErrorWithEvent(leCtx, events.LoggingSessionEvent, err, "[sessions.LoggingSessionManager.CreateAndStartWithContext] stop an app")
+					m.logger.ErrorWithEvent(leCtx, events.LoggingSessionEvent, err, "[manager.LoggingSessionManager.CreateAndStartWithContext] stop an app")
 				}
 			}()
 		}
 	}()
 
 	if err = m.checkApp(ctx2, appId, ctx2.UserId.Value); err != nil {
-		return 0, fmt.Errorf("[sessions.LoggingSessionManager.CreateAndStartWithContext] check an app: %w", err)
+		return 0, fmt.Errorf("[manager.LoggingSessionManager.CreateAndStartWithContext] check an app: %w", err)
 	}
 
 	id, err := m.loggingSessionStore.CreateAndStartWithContext(ctx2, appId)
 	if err != nil {
-		return 0, fmt.Errorf("[sessions.LoggingSessionManager.CreateAndStartWithContext] create and start a logging session: %w", err)
+		return 0, fmt.Errorf("[manager.LoggingSessionManager.CreateAndStartWithContext] create and start a logging session: %w", err)
 	}
 
 	succeeded = true
 	m.logger.InfoWithEvent(
 		ctx2.CreateLogEntryContext(),
 		events.LoggingSessionEvent,
-		"[sessions.LoggingSessionManager.CreateAndStartWithContext] logging session has been created and started",
+		"[manager.LoggingSessionManager.CreateAndStartWithContext] logging session has been created and started",
 		logging.NewField("id", id),
 	)
 	return id, nil
@@ -132,15 +132,15 @@ func (m *LoggingSessionManager) checkApp(ctx *actions.OperationContext, appId ui
 
 	if err != nil {
 		if err2 := apierrors.Unwrap(err); err2 != nil && err2.Code() == amerrors.ApiErrorCodeAppNotFound {
-			m.logger.WarningWithEventAndError(leCtx, events.LoggingSessionEvent, err2, "[sessions.LoggingSessionManager.checkApp] get an app status by id", logging.NewField("appId", appId))
+			m.logger.WarningWithEventAndError(leCtx, events.LoggingSessionEvent, err2, "[manager.LoggingSessionManager.checkApp] get an app status by id", logging.NewField("appId", appId))
 			return errors.NewError(errors.ErrorCodeInvalidOperation, err2.Message())
 		}
-		return fmt.Errorf("[sessions.LoggingSessionManager.checkApp] get an app status by id: %w", err)
+		return fmt.Errorf("[manager.LoggingSessionManager.checkApp] get an app status by id: %w", err)
 	}
 
 	if as != appspb.AppStatus_ACTIVE {
 		msg := fmt.Sprintf("invalid app status (%d)", as)
-		m.logger.WarningWithEvent(leCtx, events.LoggingSessionEvent, "[sessions.LoggingSessionManager.checkApp] "+msg, logging.NewField("appId", appId))
+		m.logger.WarningWithEvent(leCtx, events.LoggingSessionEvent, "[manager.LoggingSessionManager.checkApp] "+msg, logging.NewField("appId", appId))
 		return errors.NewError(errors.ErrorCodeInvalidOperation, msg)
 	}
 	return nil
@@ -155,7 +155,7 @@ func (m *LoggingSessionManager) FindById(ctx *actions.OperationContext, id uint6
 		actions.NewOperationParam("id", id),
 	)
 	if err != nil {
-		return nil, fmt.Errorf("[sessions.LoggingSessionManager.FindById] create and start an operation: %w", err)
+		return nil, fmt.Errorf("[manager.LoggingSessionManager.FindById] create and start an operation: %w", err)
 	}
 
 	succeeded := false
@@ -165,11 +165,11 @@ func (m *LoggingSessionManager) FindById(ctx *actions.OperationContext, id uint6
 	defer func() {
 		if err := ctx.Action.Operations.Complete(op, succeeded); err != nil {
 			leCtx := ctx2.CreateLogEntryContext()
-			m.logger.FatalWithEventAndError(leCtx, events.LoggingSessionEvent, err, "[sessions.LoggingSessionManager.FindById] complete an operation")
+			m.logger.FatalWithEventAndError(leCtx, events.LoggingSessionEvent, err, "[manager.LoggingSessionManager.FindById] complete an operation")
 
 			go func() {
 				if err := app.Stop(); err != nil {
-					m.logger.ErrorWithEvent(leCtx, events.LoggingSessionEvent, err, "[sessions.LoggingSessionManager.FindById] stop an app")
+					m.logger.ErrorWithEvent(leCtx, events.LoggingSessionEvent, err, "[manager.LoggingSessionManager.FindById] stop an app")
 				}
 			}()
 		}
@@ -177,7 +177,7 @@ func (m *LoggingSessionManager) FindById(ctx *actions.OperationContext, id uint6
 
 	s, err := m.loggingSessionStore.FindById(ctx2, id)
 	if err != nil {
-		return nil, fmt.Errorf("[sessions.LoggingSessionManager.FindById] find a logging session by id: %w", err)
+		return nil, fmt.Errorf("[manager.LoggingSessionManager.FindById] find a logging session by id: %w", err)
 	}
 
 	succeeded = true

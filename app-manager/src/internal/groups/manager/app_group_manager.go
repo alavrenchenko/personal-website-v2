@@ -42,7 +42,7 @@ func NewAppGroupManager(appGroupStore groups.AppGroupStore, loggerFactory loggin
 	l, err := loggerFactory.CreateLogger("internal.groups.manager.AppGroupManager")
 
 	if err != nil {
-		return nil, fmt.Errorf("[groups.NewAppGroupManager] create a logger: %w", err)
+		return nil, fmt.Errorf("[manager.NewAppGroupManager] create a logger: %w", err)
 	}
 
 	return &AppGroupManager{
@@ -61,7 +61,7 @@ func (m *AppGroupManager) FindById(ctx *actions.OperationContext, id uint64) (*d
 	)
 
 	if err != nil {
-		return nil, fmt.Errorf("[groups.AppGroupManager.FindById] create and start an operation: %w", err)
+		return nil, fmt.Errorf("[manager.AppGroupManager.FindById] create and start an operation: %w", err)
 	}
 
 	succeeded := false
@@ -71,11 +71,11 @@ func (m *AppGroupManager) FindById(ctx *actions.OperationContext, id uint64) (*d
 	defer func() {
 		if err := ctx.Action.Operations.Complete(op, succeeded); err != nil {
 			leCtx := ctx2.CreateLogEntryContext()
-			m.logger.FatalWithEventAndError(leCtx, events.AppGroupEvent, err, "[groups.AppGroupManager.FindById] complete an operation")
+			m.logger.FatalWithEventAndError(leCtx, events.AppGroupEvent, err, "[manager.AppGroupManager.FindById] complete an operation")
 
 			go func() {
 				if err := app.Stop(); err != nil {
-					m.logger.ErrorWithEvent(leCtx, events.AppGroupEvent, err, "[groups.AppGroupManager.FindById] stop an app")
+					m.logger.ErrorWithEvent(leCtx, events.AppGroupEvent, err, "[manager.AppGroupManager.FindById] stop an app")
 				}
 			}()
 		}
@@ -83,7 +83,7 @@ func (m *AppGroupManager) FindById(ctx *actions.OperationContext, id uint64) (*d
 
 	g, err := m.appGroupStore.FindById(ctx, id)
 	if err != nil {
-		return nil, fmt.Errorf("[groups.AppGroupManager.FindById] find an app group by id: %w", err)
+		return nil, fmt.Errorf("[manager.AppGroupManager.FindById] find an app group by id: %w", err)
 	}
 
 	succeeded = true
@@ -100,7 +100,7 @@ func (m *AppGroupManager) FindByName(ctx *actions.OperationContext, name string)
 	)
 
 	if err != nil {
-		return nil, fmt.Errorf("[groups.AppGroupManager.FindById] create and start an operation: %w", err)
+		return nil, fmt.Errorf("[manager.AppGroupManager.FindById] create and start an operation: %w", err)
 	}
 
 	succeeded := false
@@ -110,11 +110,11 @@ func (m *AppGroupManager) FindByName(ctx *actions.OperationContext, name string)
 	defer func() {
 		if err := ctx.Action.Operations.Complete(op, succeeded); err != nil {
 			leCtx := ctx2.CreateLogEntryContext()
-			m.logger.FatalWithEventAndError(leCtx, events.AppGroupEvent, err, "[groups.AppGroupManager.FindByName] complete an operation")
+			m.logger.FatalWithEventAndError(leCtx, events.AppGroupEvent, err, "[manager.AppGroupManager.FindByName] complete an operation")
 
 			go func() {
 				if err := app.Stop(); err != nil {
-					m.logger.ErrorWithEvent(leCtx, events.AppGroupEvent, err, "[groups.AppGroupManager.FindByName] stop an app")
+					m.logger.ErrorWithEvent(leCtx, events.AppGroupEvent, err, "[manager.AppGroupManager.FindByName] stop an app")
 				}
 			}()
 		}
@@ -126,7 +126,7 @@ func (m *AppGroupManager) FindByName(ctx *actions.OperationContext, name string)
 
 	g, err := m.appGroupStore.FindByName(ctx, name)
 	if err != nil {
-		return nil, fmt.Errorf("[groups.AppGroupManager.FindByName] find an app group by name: %w", err)
+		return nil, fmt.Errorf("[manager.AppGroupManager.FindByName] find an app group by name: %w", err)
 	}
 
 	succeeded = true

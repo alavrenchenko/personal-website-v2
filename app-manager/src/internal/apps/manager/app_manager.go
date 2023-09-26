@@ -43,7 +43,7 @@ func NewAppManager(appStore apps.AppStore, loggerFactory logging.LoggerFactory[*
 	l, err := loggerFactory.CreateLogger("internal.apps.manager.AppManager")
 
 	if err != nil {
-		return nil, fmt.Errorf("[apps.NewAppManager] create a logger: %w", err)
+		return nil, fmt.Errorf("[manager.NewAppManager] create a logger: %w", err)
 	}
 
 	return &AppManager{
@@ -62,7 +62,7 @@ func (m *AppManager) FindById(ctx *actions.OperationContext, id uint64) (*dbmode
 	)
 
 	if err != nil {
-		return nil, fmt.Errorf("[apps.AppManager.FindById] create and start an operation: %w", err)
+		return nil, fmt.Errorf("[manager.AppManager.FindById] create and start an operation: %w", err)
 	}
 
 	succeeded := false
@@ -72,11 +72,11 @@ func (m *AppManager) FindById(ctx *actions.OperationContext, id uint64) (*dbmode
 	defer func() {
 		if err := ctx.Action.Operations.Complete(op, succeeded); err != nil {
 			leCtx := ctx2.CreateLogEntryContext()
-			m.logger.FatalWithEventAndError(leCtx, events.AppEvent, err, "[apps.AppManager.FindById] complete an operation")
+			m.logger.FatalWithEventAndError(leCtx, events.AppEvent, err, "[manager.AppManager.FindById] complete an operation")
 
 			go func() {
 				if err := app.Stop(); err != nil {
-					m.logger.ErrorWithEvent(leCtx, events.AppEvent, err, "[apps.AppManager.FindById] stop an app")
+					m.logger.ErrorWithEvent(leCtx, events.AppEvent, err, "[manager.AppManager.FindById] stop an app")
 				}
 			}()
 		}
@@ -84,7 +84,7 @@ func (m *AppManager) FindById(ctx *actions.OperationContext, id uint64) (*dbmode
 
 	a, err := m.appStore.FindById(ctx, id)
 	if err != nil {
-		return nil, fmt.Errorf("[apps.AppManager.FindById] find an app by id: %w", err)
+		return nil, fmt.Errorf("[manager.AppManager.FindById] find an app by id: %w", err)
 	}
 
 	succeeded = true
@@ -101,7 +101,7 @@ func (m *AppManager) FindByName(ctx *actions.OperationContext, name string) (*db
 	)
 
 	if err != nil {
-		return nil, fmt.Errorf("[apps.AppManager.FindByName] create and start an operation: %w", err)
+		return nil, fmt.Errorf("[manager.AppManager.FindByName] create and start an operation: %w", err)
 	}
 
 	succeeded := false
@@ -111,11 +111,11 @@ func (m *AppManager) FindByName(ctx *actions.OperationContext, name string) (*db
 	defer func() {
 		if err := ctx.Action.Operations.Complete(op, succeeded); err != nil {
 			leCtx := ctx2.CreateLogEntryContext()
-			m.logger.FatalWithEventAndError(leCtx, events.AppEvent, err, "[apps.AppManager.FindByName] complete an operation")
+			m.logger.FatalWithEventAndError(leCtx, events.AppEvent, err, "[manager.AppManager.FindByName] complete an operation")
 
 			go func() {
 				if err := app.Stop(); err != nil {
-					m.logger.ErrorWithEvent(leCtx, events.AppEvent, err, "[apps.AppManager.FindByName] stop an app")
+					m.logger.ErrorWithEvent(leCtx, events.AppEvent, err, "[manager.AppManager.FindByName] stop an app")
 				}
 			}()
 		}
@@ -127,7 +127,7 @@ func (m *AppManager) FindByName(ctx *actions.OperationContext, name string) (*db
 
 	a, err := m.appStore.FindByName(ctx, name)
 	if err != nil {
-		return nil, fmt.Errorf("[apps.AppManager.FindByName] find an app by name: %w", err)
+		return nil, fmt.Errorf("[manager.AppManager.FindByName] find an app by name: %w", err)
 	}
 
 	succeeded = true
@@ -144,7 +144,7 @@ func (m *AppManager) GetStatusById(ctx *actions.OperationContext, id uint64) (mo
 	)
 
 	if err != nil {
-		return models.AppStatusNew, fmt.Errorf("[apps.AppManager.GetStatusById] create and start an operation: %w", err)
+		return models.AppStatusNew, fmt.Errorf("[manager.AppManager.GetStatusById] create and start an operation: %w", err)
 	}
 
 	succeeded := false
@@ -154,11 +154,11 @@ func (m *AppManager) GetStatusById(ctx *actions.OperationContext, id uint64) (mo
 	defer func() {
 		if err := ctx.Action.Operations.Complete(op, succeeded); err != nil {
 			leCtx := ctx2.CreateLogEntryContext()
-			m.logger.FatalWithEventAndError(leCtx, events.AppEvent, err, "[apps.AppManager.GetStatusById] complete an operation")
+			m.logger.FatalWithEventAndError(leCtx, events.AppEvent, err, "[manager.AppManager.GetStatusById] complete an operation")
 
 			go func() {
 				if err := app.Stop(); err != nil {
-					m.logger.ErrorWithEvent(leCtx, events.AppEvent, err, "[apps.AppManager.GetStatusById] stop an app")
+					m.logger.ErrorWithEvent(leCtx, events.AppEvent, err, "[manager.AppManager.GetStatusById] stop an app")
 				}
 			}()
 		}
@@ -166,7 +166,7 @@ func (m *AppManager) GetStatusById(ctx *actions.OperationContext, id uint64) (mo
 
 	s, err := m.appStore.GetStatusById(ctx, id)
 	if err != nil {
-		return models.AppStatusNew, fmt.Errorf("[apps.AppManager.GetStatusById] get an app status by id: %w", err)
+		return models.AppStatusNew, fmt.Errorf("[manager.AppManager.GetStatusById] get an app status by id: %w", err)
 	}
 
 	succeeded = true
