@@ -41,7 +41,6 @@ var _ apps.AppManager = (*AppManager)(nil)
 
 func NewAppManager(appStore apps.AppStore, loggerFactory logging.LoggerFactory[*context.LogEntryContext]) (*AppManager, error) {
 	l, err := loggerFactory.CreateLogger("internal.apps.manager.AppManager")
-
 	if err != nil {
 		return nil, fmt.Errorf("[manager.NewAppManager] create a logger: %w", err)
 	}
@@ -60,7 +59,6 @@ func (m *AppManager) FindById(ctx *actions.OperationContext, id uint64) (*dbmode
 		uuid.NullUUID{UUID: ctx.Operation.Id(), Valid: true},
 		actions.NewOperationParam("id", id),
 	)
-
 	if err != nil {
 		return nil, fmt.Errorf("[manager.AppManager.FindById] create and start an operation: %w", err)
 	}
@@ -82,7 +80,7 @@ func (m *AppManager) FindById(ctx *actions.OperationContext, id uint64) (*dbmode
 		}
 	}()
 
-	a, err := m.appStore.FindById(ctx, id)
+	a, err := m.appStore.FindById(ctx2, id)
 	if err != nil {
 		return nil, fmt.Errorf("[manager.AppManager.FindById] find an app by id: %w", err)
 	}
@@ -99,7 +97,6 @@ func (m *AppManager) FindByName(ctx *actions.OperationContext, name string) (*db
 		uuid.NullUUID{UUID: ctx.Operation.Id(), Valid: true},
 		actions.NewOperationParam("name", name),
 	)
-
 	if err != nil {
 		return nil, fmt.Errorf("[manager.AppManager.FindByName] create and start an operation: %w", err)
 	}
@@ -125,7 +122,7 @@ func (m *AppManager) FindByName(ctx *actions.OperationContext, name string) (*db
 		return nil, errors.NewError(errors.ErrorCodeInvalidData, "name is empty")
 	}
 
-	a, err := m.appStore.FindByName(ctx, name)
+	a, err := m.appStore.FindByName(ctx2, name)
 	if err != nil {
 		return nil, fmt.Errorf("[manager.AppManager.FindByName] find an app by name: %w", err)
 	}
@@ -142,7 +139,6 @@ func (m *AppManager) GetStatusById(ctx *actions.OperationContext, id uint64) (mo
 		uuid.NullUUID{UUID: ctx.Operation.Id(), Valid: true},
 		actions.NewOperationParam("id", id),
 	)
-
 	if err != nil {
 		return models.AppStatusNew, fmt.Errorf("[manager.AppManager.GetStatusById] create and start an operation: %w", err)
 	}
@@ -164,7 +160,7 @@ func (m *AppManager) GetStatusById(ctx *actions.OperationContext, id uint64) (mo
 		}
 	}()
 
-	s, err := m.appStore.GetStatusById(ctx, id)
+	s, err := m.appStore.GetStatusById(ctx2, id)
 	if err != nil {
 		return models.AppStatusNew, fmt.Errorf("[manager.AppManager.GetStatusById] get an app status by id: %w", err)
 	}

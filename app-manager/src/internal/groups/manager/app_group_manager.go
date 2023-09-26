@@ -40,7 +40,6 @@ var _ groups.AppGroupManager = (*AppGroupManager)(nil)
 
 func NewAppGroupManager(appGroupStore groups.AppGroupStore, loggerFactory logging.LoggerFactory[*context.LogEntryContext]) (*AppGroupManager, error) {
 	l, err := loggerFactory.CreateLogger("internal.groups.manager.AppGroupManager")
-
 	if err != nil {
 		return nil, fmt.Errorf("[manager.NewAppGroupManager] create a logger: %w", err)
 	}
@@ -59,7 +58,6 @@ func (m *AppGroupManager) FindById(ctx *actions.OperationContext, id uint64) (*d
 		uuid.NullUUID{UUID: ctx.Operation.Id(), Valid: true},
 		actions.NewOperationParam("id", id),
 	)
-
 	if err != nil {
 		return nil, fmt.Errorf("[manager.AppGroupManager.FindById] create and start an operation: %w", err)
 	}
@@ -81,7 +79,7 @@ func (m *AppGroupManager) FindById(ctx *actions.OperationContext, id uint64) (*d
 		}
 	}()
 
-	g, err := m.appGroupStore.FindById(ctx, id)
+	g, err := m.appGroupStore.FindById(ctx2, id)
 	if err != nil {
 		return nil, fmt.Errorf("[manager.AppGroupManager.FindById] find an app group by id: %w", err)
 	}
@@ -98,7 +96,6 @@ func (m *AppGroupManager) FindByName(ctx *actions.OperationContext, name string)
 		uuid.NullUUID{UUID: ctx.Operation.Id(), Valid: true},
 		actions.NewOperationParam("name", name),
 	)
-
 	if err != nil {
 		return nil, fmt.Errorf("[manager.AppGroupManager.FindById] create and start an operation: %w", err)
 	}
@@ -124,7 +121,7 @@ func (m *AppGroupManager) FindByName(ctx *actions.OperationContext, name string)
 		return nil, errors.NewError(errors.ErrorCodeInvalidData, "name is empty")
 	}
 
-	g, err := m.appGroupStore.FindByName(ctx, name)
+	g, err := m.appGroupStore.FindByName(ctx2, name)
 	if err != nil {
 		return nil, fmt.Errorf("[manager.AppGroupManager.FindByName] find an app group by name: %w", err)
 	}
