@@ -25,12 +25,6 @@ type User struct {
 	// The unique ID to identify the user.
 	Id uint64 `db:"id"`
 
-	// The account ID.
-	AccountId uint64 `db:"account_id"`
-
-	// The main (personal) account profile ID.
-	AccountProfileId uint64 `db:"account_profile_id"`
-
 	// The unique name to identify the user.
 	Name string `db:"name"`
 
@@ -63,6 +57,21 @@ type User struct {
 
 	// The user email.
 	Email *string `db:"email"`
+
+	// The last sign-in time.
+	LastSignInTime time.Time `db:"last_sign_in_time"`
+
+	// The last sign-in IP address.
+	LastSignInIP string `db:"last_sign_in_ip"`
+
+	// The last sign-out time.
+	LastSignOutTime time.Time `db:"last_sign_out_time"`
+
+	// The last activity time.
+	LastActivityTime time.Time `db:"last_activity_time"`
+
+	// The last activity IP address.
+	LastActivityIP string `db:"last_activity_ip"`
 
 	// rowversion
 	VersionStamp uint64 `db:"_version_stamp"`
