@@ -23,9 +23,16 @@ const (
 	// Application action types (10000-10099)
 	ActionTypeApplication actions.ActionType = 10000
 
-	// User action types (10100-10199)
-	ActionTypeUser_GetById actions.ActionType = 10100
+	// User action types (10100-10299)
+	ActionTypeUser_GetById               actions.ActionType = 10100
+	ActionTypeUser_GetByName             actions.ActionType = 10101
+	ActionTypeUser_GetByEmail            actions.ActionType = 10102
+	ActionTypeUser_GetByIdOrNameOrEmail  actions.ActionType = 10103
+	ActionTypeUser_GetGroupById          actions.ActionType = 10104
+	ActionTypeUser_GetStatusById         actions.ActionType = 10105
+	ActionTypeUser_GetGroupAndStatusById actions.ActionType = 10106
+	ActionTypeUser_GetPersonalInfoById   actions.ActionType = 10107
 
-	// Client action types (10200-10399)
-	ActionTypeClient_GetById actions.ActionType = 10200
+	// Client action types (10300-10499)
+	ActionTypeClient_GetById actions.ActionType = 10300
 )

@@ -24,7 +24,13 @@ const (
 	OperationTypeApplication actions.OperationType = 10000
 
 	// UserManager operation types (11000-11499)
-	OperationTypeUserManager_FindById actions.OperationType = 11000
+	OperationTypeUserManager_FindById              actions.OperationType = 11000
+	OperationTypeUserManager_FindByName            actions.OperationType = 11001
+	OperationTypeUserManager_FindByEmail           actions.OperationType = 11002
+	OperationTypeUserManager_GetGroupById          actions.OperationType = 11003
+	OperationTypeUserManager_GetStatusById         actions.OperationType = 11004
+	OperationTypeUserManager_GetGroupAndStatusById actions.OperationType = 11005
+	OperationTypeUserManager_GetPersonalInfoById   actions.OperationType = 11006
 
 	// ClientManager operation types (11500-11999)
 	OperationTypeClientManager_FindById actions.OperationType = 11500
