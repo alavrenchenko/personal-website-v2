@@ -33,7 +33,8 @@ const (
 	OperationTypeUserManager_GetPersonalInfoById   actions.OperationType = 11006
 
 	// ClientManager operation types (11500-11999)
-	OperationTypeClientManager_FindById actions.OperationType = 11500
+	OperationTypeClientManager_FindById      actions.OperationType = 11500
+	OperationTypeClientManager_GetStatusById actions.OperationType = 11501
 
 	// UserStore operation types (21000-21499)
 	OperationTypeUserStore_FindById actions.OperationType = 21000

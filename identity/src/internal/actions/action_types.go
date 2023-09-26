@@ -34,5 +34,6 @@ const (
 	ActionTypeUser_GetPersonalInfoById   actions.ActionType = 10107
 
 	// Client action types (10300-10499)
-	ActionTypeClient_GetById actions.ActionType = 10300
+	ActionTypeClient_GetById       actions.ActionType = 10300
+	ActionTypeClient_GetStatusById actions.ActionType = 10301
 )
