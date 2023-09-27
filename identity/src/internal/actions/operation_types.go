@@ -37,10 +37,16 @@ const (
 	OperationTypeClientManager_GetStatusById actions.OperationType = 11501
 
 	// UserStore operation types (21000-21499)
-	OperationTypeUserStore_FindById actions.OperationType = 21000
+	OperationTypeUserStore_FindById              actions.OperationType = 21000
+	OperationTypeUserStore_FindByName            actions.OperationType = 21001
+	OperationTypeUserStore_FindByEmail           actions.OperationType = 21002
+	OperationTypeUserStore_GetGroupById          actions.OperationType = 21003
+	OperationTypeUserStore_GetStatusById         actions.OperationType = 21004
+	OperationTypeUserStore_GetGroupAndStatusById actions.OperationType = 21005
+	OperationTypeUserStore_GetPersonalInfoById   actions.OperationType = 21006
 
 	// ClientStore operation types (21500-21999)
-	OperationTypeClientStore_FindById actions.OperationType = 21000
+	OperationTypeClientStore_FindById actions.OperationType = 21500
 
 	// caching (30000-39999)
 
