@@ -23,11 +23,11 @@ const (
 	// Application action types (10000-10099)
 	ActionTypeApplication actions.ActionType = 10000
 
-	// Log action types (10100-10199)
+	// Log action types (10100-10299)
 
-	// Log group action types (10200-10399)
+	// Log group action types (10300-10499)
 
-	// Logging session action types (10400-10599)
-	ActionTypeLoggingSession_CreateAndStart actions.ActionType = 10400
-	ActionTypeLoggingSession_GetById        actions.ActionType = 10401
+	// Logging session action types (10500-10699)
+	ActionTypeLoggingSession_CreateAndStart actions.ActionType = 10500
+	ActionTypeLoggingSession_GetById        actions.ActionType = 10501
 )
