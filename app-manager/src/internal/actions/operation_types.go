@@ -47,8 +47,8 @@ const (
 	OperationTypeAppStore_GetStatusById actions.OperationType = 21002
 
 	// AppGroupStore operation types (21500-21999)
-	OperationTypeAppGroupStore_FindById   actions.OperationType = 21000
-	OperationTypeAppGroupStore_FindByName actions.OperationType = 21001
+	OperationTypeAppGroupStore_FindById   actions.OperationType = 21500
+	OperationTypeAppGroupStore_FindByName actions.OperationType = 21501
 
 	// AppSessionStore operation types (22000-22499)
 	OperationTypeAppSessionStore_Create         actions.OperationType = 22000

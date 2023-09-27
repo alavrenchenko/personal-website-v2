@@ -23,19 +23,19 @@ const (
 	// Application action types (10000-10099)
 	ActionTypeApplication actions.ActionType = 10000
 
-	// Action types of Apps (10100-10199)
+	// Action types of Apps (10100-10299)
 	ActionTypeApps_GetById       actions.ActionType = 10100
 	ActionTypeApps_GetByName     actions.ActionType = 10101
 	ActionTypeApps_GetByIdOrName actions.ActionType = 10102
 	ActionTypeApps_GetStatusById actions.ActionType = 10103
 
-	// App group action types (10200-10399)
-	ActionTypeAppGroup_GetById       actions.ActionType = 10200
-	ActionTypeAppGroup_GetByName     actions.ActionType = 10201
-	ActionTypeAppGroup_GetByIdOrName actions.ActionType = 10202
+	// App group action types (10300-10499)
+	ActionTypeAppGroup_GetById       actions.ActionType = 10300
+	ActionTypeAppGroup_GetByName     actions.ActionType = 10301
+	ActionTypeAppGroup_GetByIdOrName actions.ActionType = 10302
 
-	// App session action types (10400-10599)
-	ActionTypeAppSession_CreateAndStart actions.ActionType = 10400
-	ActionTypeAppSession_Terminate      actions.ActionType = 10401
-	ActionTypeAppSession_GetById        actions.ActionType = 10402
+	// App session action types (10500-10699)
+	ActionTypeAppSession_CreateAndStart actions.ActionType = 10500
+	ActionTypeAppSession_Terminate      actions.ActionType = 10501
+	ActionTypeAppSession_GetById        actions.ActionType = 10502
 )
