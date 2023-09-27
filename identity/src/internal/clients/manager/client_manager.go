@@ -92,13 +92,11 @@ func (m *ClientManager) FindById(ctx *actions.OperationContext, id uint64) (*dbm
 
 	switch t {
 	case models.ClientTypeWeb:
-		c, err = m.webClientStore.FindById(ctx2, id)
-		if err != nil {
+		if c, err = m.webClientStore.FindById(ctx2, id); err != nil {
 			return nil, fmt.Errorf("[manager.ClientManager.FindById] find a web client by id: %w", err)
 		}
 	case models.ClientTypeMobile:
-		c, err = m.mobileClientStore.FindById(ctx2, id)
-		if err != nil {
+		if c, err = m.mobileClientStore.FindById(ctx2, id); err != nil {
 			return nil, fmt.Errorf("[manager.ClientManager.FindById] find a mobile client by id: %w", err)
 		}
 	default:
@@ -157,13 +155,11 @@ func (m *ClientManager) GetStatusById(ctx *actions.OperationContext, id uint64) 
 
 	switch t {
 	case models.ClientTypeWeb:
-		s, err = m.webClientStore.GetStatusById(ctx2, id)
-		if err != nil {
+		if s, err = m.webClientStore.GetStatusById(ctx2, id); err != nil {
 			return models.ClientStatusNew, fmt.Errorf("[manager.ClientManager.GetStatusById] get a web client status by id: %w", err)
 		}
 	case models.ClientTypeMobile:
-		s, err = m.mobileClientStore.GetStatusById(ctx2, id)
-		if err != nil {
+		if s, err = m.mobileClientStore.GetStatusById(ctx2, id); err != nil {
 			return models.ClientStatusNew, fmt.Errorf("[manager.ClientManager.GetStatusById] get a mobile client status by id: %w", err)
 		}
 	default:
