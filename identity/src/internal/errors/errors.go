@@ -23,7 +23,8 @@ import "personal-website-v2/pkg/errors"
 
 const (
 	// User error codes (31000-31199).
-	ErrorCodeUserNotFound errors.ErrorCode = 31000
+	ErrorCodeUserNotFound             errors.ErrorCode = 31000
+	ErrorCodeUserPersonalInfoNotFound errors.ErrorCode = 31001
 
 	// Client error codes (31200-31399).
 	ErrorCodeClientNotFound  errors.ErrorCode = 31200
@@ -32,7 +33,8 @@ const (
 
 var (
 	// User errors.
-	ErrUserNotFound = errors.NewError(ErrorCodeUserNotFound, "user not found")
+	ErrUserNotFound             = errors.NewError(ErrorCodeUserNotFound, "user not found")
+	ErrUserPersonalInfoNotFound = errors.NewError(ErrorCodeUserPersonalInfoNotFound, "user's personal info not found")
 
 	// Client errors.
 	ErrClientNotFound  = errors.NewError(ErrorCodeClientNotFound, "client not found")
