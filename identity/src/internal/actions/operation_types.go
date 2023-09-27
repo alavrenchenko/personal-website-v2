@@ -46,7 +46,12 @@ const (
 	OperationTypeUserStore_GetPersonalInfoById   actions.OperationType = 21006
 
 	// ClientStore operation types (21500-21999)
-	OperationTypeClientStore_FindById actions.OperationType = 21500
+	OperationTypeClientStore_FindById                  actions.OperationType = 21500
+	OperationTypeClientStore_FindWebClientById         actions.OperationType = 21501
+	OperationTypeClientStore_FindMobileClientById      actions.OperationType = 21502
+	OperationTypeClientStore_GetStatusById             actions.OperationType = 21503
+	OperationTypeClientStore_GetWebClientStatusById    actions.OperationType = 21504
+	OperationTypeClientStore_GetMobileClientStatusById actions.OperationType = 21505
 
 	// caching (30000-39999)
 
