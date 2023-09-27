@@ -14,6 +14,8 @@
 
 package models
 
+import "fmt"
+
 // The client type.
 type ClientType uint8
 
@@ -25,6 +27,20 @@ const (
 	// For mobile apps.
 	ClientTypeMobile ClientType = 2
 )
+
+func (t ClientType) IsValid() bool {
+	return t == ClientTypeWeb || t == ClientTypeMobile
+}
+
+func (t ClientType) String() string {
+	switch t {
+	case ClientTypeWeb:
+		return "web"
+	case ClientTypeMobile:
+		return "mobile"
+	}
+	return fmt.Sprintf("ClientType(%d)", t)
+}
 
 // The client status.
 type ClientStatus uint8

@@ -14,5 +14,16 @@
 
 package clients
 
+import (
+	"personal-website-v2/identity/src/internal/clients/dbmodels"
+	"personal-website-v2/identity/src/internal/clients/models"
+	"personal-website-v2/pkg/actions"
+)
+
 type ClientStore interface {
+	// FindById finds and returns a client, if any, by the specified client ID.
+	FindById(ctx *actions.OperationContext, id uint64) (*dbmodels.Client, error)
+
+	// GetStatusById gets a client status by the specified client ID.
+	GetStatusById(ctx *actions.OperationContext, id uint64) (models.ClientStatus, error)
 }

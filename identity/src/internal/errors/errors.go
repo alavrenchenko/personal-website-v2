@@ -26,7 +26,8 @@ const (
 	ErrorCodeUserNotFound errors.ErrorCode = 31000
 
 	// Client error codes (31200-31399).
-	ErrorCodeClientNotFound errors.ErrorCode = 31200
+	ErrorCodeClientNotFound  errors.ErrorCode = 31200
+	ErrorCodeInvalidClientId errors.ErrorCode = 31201
 )
 
 var (
@@ -34,5 +35,6 @@ var (
 	ErrUserNotFound = errors.NewError(ErrorCodeUserNotFound, "user not found")
 
 	// Client errors.
-	ErrClientNotFound = errors.NewError(ErrorCodeClientNotFound, "client not found")
+	ErrClientNotFound  = errors.NewError(ErrorCodeClientNotFound, "client not found")
+	ErrInvalidClientId = errors.NewError(ErrorCodeInvalidClientId, "invalid client id")
 )
