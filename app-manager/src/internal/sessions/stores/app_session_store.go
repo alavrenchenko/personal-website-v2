@@ -122,8 +122,8 @@ func (s *AppSessionStore) createAndStart(ctx context.Context, appId uint64, user
 	// public.create_and_start_app_session(IN _app_id, IN _created_by, IN _status_comment, OUT _id, OUT err_code, OUT err_msg)
 	const query = "CALL public.create_and_start_app_session($1, $2, NULL, NULL, NULL, NULL)"
 
-	err := s.txManager.ExecWithSerializableLevel(ctx, func(ctx context.Context, tx pgx.Tx) error {
-		if err := tx.QueryRow(ctx, query, appId, userId).Scan(&id, &errCode, &errMsg); err != nil {
+	err := s.txManager.ExecWithSerializableLevel(ctx, func(txCtx context.Context, tx pgx.Tx) error {
+		if err := tx.QueryRow(txCtx, query, appId, userId).Scan(&id, &errCode, &errMsg); err != nil {
 			return fmt.Errorf("[stores.AppSessionStore.createAndStart] execute a query (create_and_start_app_session): %w", err)
 		}
 		return nil
@@ -197,8 +197,8 @@ func (s *AppSessionStore) terminate(ctx context.Context, id uint64, userId uint6
 	// public.terminate_app_session(IN _id, IN _updated_by, IN _status_comment, OUT err_code, OUT err_msg)
 	const query = "CALL public.terminate_app_session($1, $2, 'termination', NULL, NULL)"
 
-	err := s.txManager.ExecWithSerializableLevel(ctx, func(ctx context.Context, tx pgx.Tx) error {
-		if err := tx.QueryRow(ctx, query, id, userId).Scan(&errCode, &errMsg); err != nil {
+	err := s.txManager.ExecWithSerializableLevel(ctx, func(txCtx context.Context, tx pgx.Tx) error {
+		if err := tx.QueryRow(txCtx, query, id, userId).Scan(&errCode, &errMsg); err != nil {
 			return fmt.Errorf("[stores.AppSessionStore.terminate] execute a query (terminate_app_session): %w", err)
 		}
 		return nil
