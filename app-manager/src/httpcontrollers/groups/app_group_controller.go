@@ -34,7 +34,7 @@ import (
 	apihttp "personal-website-v2/pkg/api/http"
 	"personal-website-v2/pkg/app"
 	"personal-website-v2/pkg/errors"
-	logginghelper "personal-website-v2/pkg/helpers/logging"
+	logginghelper "personal-website-v2/pkg/helper/logging"
 	"personal-website-v2/pkg/logging"
 	lcontext "personal-website-v2/pkg/logging/context"
 	"personal-website-v2/pkg/net/http/server"

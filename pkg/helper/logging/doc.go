@@ -13,4 +13,4 @@
 // limitations under the License.
 
 // Package logging.
-package logging // import "personal-website-v2/pkg/helpers/logging"
+package logging // import "personal-website-v2/pkg/helper/logging"
