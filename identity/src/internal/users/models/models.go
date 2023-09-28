@@ -14,8 +14,6 @@
 
 package models
 
-import "fmt"
-
 // The user's group.
 type UserGroup uint8
 
@@ -52,45 +50,4 @@ const (
 	GenderFemale      Gender = 2
 	GenderMale        Gender = 3
 	GenderOther       Gender = 4
-)
-
-// The user's agent type.
-type UserAgentType uint8
-
-const (
-	// Unspecified = 0 // Do not use.
-
-	UserAgentTypeWeb UserAgentType = 1
-
-	// For mobile apps.
-	UserAgentTypeMobile UserAgentType = 2
-)
-
-func (t UserAgentType) IsValid() bool {
-	return t == UserAgentTypeWeb || t == UserAgentTypeMobile
-}
-
-func (t UserAgentType) String() string {
-	switch t {
-	case UserAgentTypeWeb:
-		return "web"
-	case UserAgentTypeMobile:
-		return "mobile"
-	}
-	return fmt.Sprintf("UserAgentType(%d)", t)
-}
-
-// The user's agent status.
-type UserAgentStatus uint8
-
-const (
-	// Unspecified = 0 // Do not use.
-
-	UserAgentStatusNew                  UserAgentStatus = 1
-	UserAgentStatusPendingApproval      UserAgentStatus = 2
-	UserAgentStatusActive               UserAgentStatus = 3
-	UserAgentStatusLockedOut            UserAgentStatus = 4
-	UserAgentStatusTemporarilyLockedOut UserAgentStatus = 5
-	UserAgentStatusDisabled             UserAgentStatus = 6
-	UserAgentStatusDeleted              UserAgentStatus = 7
 )
