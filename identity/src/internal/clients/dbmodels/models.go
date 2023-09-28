@@ -58,6 +58,12 @@ type Client struct {
 	// The last activity IP address.
 	LastActivityIP string `db:"last_activity_ip"`
 
+	// The first User-Agent.
+	FirstUserAgent *string `db:"first_user_agent"`
+
+	// The last User-Agent.
+	LastUserAgent *string `db:"last_user_agent"`
+
 	// rowversion
 	VersionStamp uint64 `db:"_version_stamp"`
 
