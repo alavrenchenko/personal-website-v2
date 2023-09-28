@@ -52,17 +52,20 @@ type Client struct {
 	// The client status comment.
 	StatusComment *string `db:"status_comment"`
 
-	// The last activity time.
-	LastActivityTime time.Time `db:"last_activity_time"`
-
-	// The last activity IP address.
-	LastActivityIP string `db:"last_activity_ip"`
+	// The app ID.
+	AppId *uint64 `db:"app_id"`
 
 	// The first User-Agent.
 	FirstUserAgent *string `db:"first_user_agent"`
 
 	// The last User-Agent.
 	LastUserAgent *string `db:"last_user_agent"`
+
+	// The last activity time.
+	LastActivityTime time.Time `db:"last_activity_time"`
+
+	// The last activity IP address.
+	LastActivityIP string `db:"last_activity_ip"`
 
 	// rowversion
 	VersionStamp uint64 `db:"_version_stamp"`
