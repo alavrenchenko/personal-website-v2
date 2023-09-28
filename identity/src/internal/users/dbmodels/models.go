@@ -169,6 +169,15 @@ type UserAgent struct {
 	// The user's agent status comment.
 	StatusComment *string `db:"status_comment"`
 
+	// The app ID.
+	AppId *uint64 `db:"app_id"`
+
+	// The first User-Agent.
+	FirstUserAgent *string `db:"first_user_agent"`
+
+	// The last User-Agent.
+	LastUserAgent *string `db:"last_user_agent"`
+
 	// The last sign-in time.
 	LastSignInTime time.Time `db:"last_sign_in_time"`
 
