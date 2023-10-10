@@ -32,8 +32,8 @@ import (
 type IdGenerator struct {
 	loggingSessionId uint64
 	seqs             []*sequence.Sequence[uint64] // sequences
-	numSeqs          uint32                       // number of sequences
-	idx              *uint32
+	numSeqs          uint64                       // number of sequences
+	idx              *uint64
 }
 
 func NewIdGenerator(loggingSessionId uint64, concurrencyLevel uint32) (*IdGenerator, error) {
@@ -56,13 +56,13 @@ func NewIdGenerator(loggingSessionId uint64, concurrencyLevel uint32) (*IdGenera
 	return &IdGenerator{
 		loggingSessionId: loggingSessionId,
 		seqs:             seqs,
-		numSeqs:          concurrencyLevel,
-		idx:              new(uint32),
+		numSeqs:          uint64(concurrencyLevel),
+		idx:              new(uint64),
 	}, nil
 }
 
 func (g *IdGenerator) Get() (uuid.UUID, error) {
-	i := (atomic.AddUint32(g.idx, 1) - 1) % g.numSeqs
+	i := (atomic.AddUint64(g.idx, 1) - 1) % g.numSeqs
 	seqv, err := g.seqs[i].Next()
 
 	if err != nil {

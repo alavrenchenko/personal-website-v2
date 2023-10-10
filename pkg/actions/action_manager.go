@@ -231,8 +231,8 @@ func (m *ActionManager) createLogEntryContext(a *Action) *context.LogEntryContex
 type actionIdGenerator struct {
 	appSessionId uint64
 	seqs         []*sequence.Sequence[uint64] // sequences
-	numSeqs      uint32                       // number of sequences
-	idx          *uint32
+	numSeqs      uint64                       // number of sequences
+	idx          *uint64
 }
 
 func newActionIdGenerator(appSessionId uint64, concurrencyLevel uint32) (*actionIdGenerator, error) {
@@ -255,13 +255,13 @@ func newActionIdGenerator(appSessionId uint64, concurrencyLevel uint32) (*action
 	return &actionIdGenerator{
 		appSessionId: appSessionId,
 		seqs:         seqs,
-		numSeqs:      concurrencyLevel,
-		idx:          new(uint32),
+		numSeqs:      uint64(concurrencyLevel),
+		idx:          new(uint64),
 	}, nil
 }
 
 func (g *actionIdGenerator) get() (uuid.UUID, error) {
-	i := (atomic.AddUint32(g.idx, 1) - 1) % g.numSeqs
+	i := (atomic.AddUint64(g.idx, 1) - 1) % g.numSeqs
 	seqv, err := g.seqs[i].Next()
 
 	if err != nil {
