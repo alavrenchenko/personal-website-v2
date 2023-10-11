@@ -18,7 +18,6 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 
 	iactions "personal-website-v2/identity/src/internal/actions"
@@ -91,7 +90,7 @@ func NewClientStore(ctype models.ClientType, db *postgres.Database, loggerFactor
 // FindById finds and returns a client, if any, by the specified client ID.
 func (s *ClientStore) FindById(ctx *actions.OperationContext, id uint64) (*dbmodels.Client, error) {
 	var c *dbmodels.Client
-	err := s.opExecutor.Exec(ctx, s.findByIdOpType, uuid.NullUUID{UUID: ctx.Operation.Id(), Valid: true},
+	err := s.opExecutor.Exec(ctx, s.findByIdOpType,
 		[]*actions.OperationParam{actions.NewOperationParam("id", id)},
 		func(opCtx *actions.OperationContext) error {
 			const query = "SELECT * FROM " + clientsTable + " WHERE id = $1 LIMIT 1"
@@ -111,7 +110,7 @@ func (s *ClientStore) FindById(ctx *actions.OperationContext, id uint64) (*dbmod
 // GetStatusById gets a client status by the specified client ID.
 func (s *ClientStore) GetStatusById(ctx *actions.OperationContext, id uint64) (models.ClientStatus, error) {
 	var status models.ClientStatus
-	err := s.opExecutor.Exec(ctx, s.getStatusByIdOpType, uuid.NullUUID{UUID: ctx.Operation.Id(), Valid: true},
+	err := s.opExecutor.Exec(ctx, s.getStatusByIdOpType,
 		[]*actions.OperationParam{actions.NewOperationParam("id", id)},
 		func(opCtx *actions.OperationContext) error {
 			conn, err := s.db.ConnPool.Acquire(opCtx.Ctx)
