@@ -15,12 +15,11 @@
 package postgres
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
 	"github.com/jackc/pgx/v5"
-
-	"personal-website-v2/pkg/actions"
 )
 
 // T must be a struct.
@@ -35,22 +34,20 @@ func NewStore[T any](db *Database) *Store[T] {
 	}
 }
 
-func (s *Store[T]) Find(ctx *actions.OperationContext, query string, args ...any) (*T, error) {
-	conn, err := s.db.ConnPool.Acquire(ctx.Ctx)
+func (s *Store[T]) Find(ctx context.Context, query string, args ...any) (*T, error) {
+	conn, err := s.db.ConnPool.Acquire(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("[postgres.Store.Find] acquire a connection: %w", err)
 	}
-
 	defer conn.Release()
-	rows, err := conn.Query(ctx.Ctx, query, args...)
 
+	rows, err := conn.Query(ctx, query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("[postgres.Store.Find] execute a query: %w", err)
 	}
-
 	defer rows.Close()
-	v, err := pgx.CollectOneRow(rows, pgx.RowToAddrOfStructByName[T])
 
+	v, err := pgx.CollectOneRow(rows, pgx.RowToAddrOfStructByName[T])
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, nil
@@ -59,4 +56,24 @@ func (s *Store[T]) Find(ctx *actions.OperationContext, query string, args ...any
 		}
 	}
 	return v, nil
+}
+
+func (s *Store[T]) FindAll(ctx context.Context, query string, args ...any) ([]*T, error) {
+	conn, err := s.db.ConnPool.Acquire(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("[postgres.Store.FindAll] acquire a connection: %w", err)
+	}
+	defer conn.Release()
+
+	rows, err := conn.Query(ctx, query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("[postgres.Store.FindAll] execute a query: %w", err)
+	}
+	defer rows.Close()
+
+	items, err := pgx.CollectRows(rows, pgx.RowToAddrOfStructByName[T])
+	if err != nil {
+		return nil, fmt.Errorf("[postgres.Store.FindAll] collect rows: %w", err)
+	}
+	return items, nil
 }
