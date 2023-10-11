@@ -73,6 +73,21 @@ const (
 	OperationTypeClientStore_GetWebClientStatusById    actions.OperationType = 31504
 	OperationTypeClientStore_GetMobileClientStatusById actions.OperationType = 31505
 
+	// UserAgentStore operation types (32000-32499)
+	OperationTypeUserAgentStore_FindById                actions.OperationType = 32000
+	OperationTypeUserAgentStore_FindByUserIdAndClientId actions.OperationType = 32001
+	OperationTypeUserAgentStore_GetStatusById           actions.OperationType = 32002
+
+	// AuthenticationStore operation types (32500-32999)
+
+	// Authentication TokenEncryptionKeyStore operation types (33000-33499)
+	OperationTypeAuthTokenEncryptionKeyStore_FindById                         actions.OperationType = 33000
+	OperationTypeAuthTokenEncryptionKeyStore_GetAll                           actions.OperationType = 33001
+	OperationTypeAuthTokenEncryptionKeyStore_FindUserTokenEncryptionKeyById   actions.OperationType = 33002
+	OperationTypeAuthTokenEncryptionKeyStore_GetAllUserTokenEncryptionKeys    actions.OperationType = 33003
+	OperationTypeAuthTokenEncryptionKeyStore_FindClientTokenEncryptionKeyById actions.OperationType = 33004
+	OperationTypeAuthTokenEncryptionKeyStore_GetAllClientTokenEncryptionKeys  actions.OperationType = 33005
+
 	// caching (50000-59999)
 
 	// [HTTP] UserController operation types (100500-100999)
