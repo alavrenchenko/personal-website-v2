@@ -32,7 +32,7 @@ type AppSessionManager interface {
 	// Terminate terminates an app session by the specified app session ID.
 	Terminate(id uint64, userId uint64) error
 
-	// Terminate terminates an app session by the specified app session ID.
+	// TerminateWithContext terminates an app session by the specified app session ID.
 	TerminateWithContext(ctx *actions.OperationContext, id uint64) error
 
 	// FindById finds and returns app session info, if any, by the specified app session ID.
