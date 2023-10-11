@@ -33,6 +33,27 @@ var (
 	// Client events (id: 0, 10200-10399)
 	ClientEvent = logging.NewEvent(0, "Client", logging.EventCategoryCommon, amlogging.EventGroupClient)
 
+	// UserAgent events (id: 0, 10400-10599)
+	UserAgentEvent = logging.NewEvent(0, "UserAgent", logging.EventCategoryCommon, amlogging.EventGroupUserAgent)
+
+	// Authentication events (id: 0, 10600-10799)
+	AuthenticationEvent = logging.NewEvent(0, "Authentication", logging.EventCategoryCommon, amlogging.EventGroupAuthentication)
+
+	// Authorization events (id: 0, 10800-10999)
+	AuthorizationEvent = logging.NewEvent(0, "Authorization", logging.EventCategoryCommon, amlogging.EventGroupAuthorization)
+
+	// Permission events (id: 0, 11000-11199)
+	PermissionEvent = logging.NewEvent(0, "Permission", logging.EventCategoryCommon, amlogging.EventGroupPermission)
+
+	// UserSession events (id: 0, 11200-11399)
+	UserSessionEvent = logging.NewEvent(0, "UserSession", logging.EventCategoryCommon, amlogging.EventGroupUserSession)
+
+	// UserAgentSession events (id: 0, 11400-11599)
+	UserAgentSessionEvent = logging.NewEvent(0, "UserAgentSession", logging.EventCategoryCommon, amlogging.EventGroupUserAgentSession)
+
+	// Authentication token encryption key events (id: 0, 11600-11799)
+	AuthTokenEncryptionKeyEvent = logging.NewEvent(0, "AuthTokenEncryptionKey", logging.EventCategoryCommon, amlogging.EventGroupAuthTokenEncryptionKey)
+
 	// UserStore events (id: 0, 20200-20399)
 	UserStoreEvent = logging.NewEvent(0, "UserStore", logging.EventCategoryDatabase, amlogging.EventGroupUserStore)
 

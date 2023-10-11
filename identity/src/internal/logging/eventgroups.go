@@ -20,8 +20,17 @@ import "personal-website-v2/pkg/logging"
 // Event groups: 0-999
 
 const (
-	EventGroupUser   logging.EventGroup = 1000
-	EventGroupClient logging.EventGroup = 1001
+	EventGroupUser             logging.EventGroup = 1000
+	EventGroupClient           logging.EventGroup = 1001
+	EventGroupUserAgent        logging.EventGroup = 1002
+	EventGroupAuthentication   logging.EventGroup = 1003
+	EventGroupAuthorization    logging.EventGroup = 1004
+	EventGroupPermission       logging.EventGroup = 1005
+	EventGroupUserSession      logging.EventGroup = 1006
+	EventGroupUserAgentSession logging.EventGroup = 1007
+
+	// Authentication token encryption key event group.
+	EventGroupAuthTokenEncryptionKey logging.EventGroup = 1008
 
 	EventGroupUserStore   logging.EventGroup = 1050
 	EventGroupClientStore logging.EventGroup = 1051
