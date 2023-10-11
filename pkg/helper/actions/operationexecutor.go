@@ -52,14 +52,13 @@ func NewOperationExecutor(config *OperationExecutorConfig, loggerFactory logging
 func (e *OperationExecutor) Exec(
 	ctx *actions.OperationContext,
 	otype actions.OperationType,
-	parentOperationId uuid.NullUUID,
 	params []*actions.OperationParam,
 	f func(ctx *actions.OperationContext) error,
 ) error {
-	// if err := e.exec(ctx, otype, e.config.DefaultCategory, e.config.DefaultGroup, parentOperationId, params, f); err != nil {
+	// if err := e.exec(ctx, otype, e.config.DefaultCategory, e.config.DefaultGroup, params, f); err != nil {
 	// 	return fmt.Errorf("[actions.OperationExecutor.Exec] execute an operation: %w", err)
 	// }
-	return e.exec(ctx, otype, e.config.DefaultCategory, e.config.DefaultGroup, parentOperationId, params, f)
+	return e.exec(ctx, otype, e.config.DefaultCategory, e.config.DefaultGroup, params, f)
 }
 
 func (e *OperationExecutor) ExecWithCategoryAndGroup(
@@ -67,14 +66,13 @@ func (e *OperationExecutor) ExecWithCategoryAndGroup(
 	otype actions.OperationType,
 	category actions.OperationCategory,
 	group actions.OperationGroup,
-	parentOperationId uuid.NullUUID,
 	params []*actions.OperationParam,
 	f func(ctx *actions.OperationContext) error,
 ) error {
-	// if err := e.exec(ctx, otype, category, group, parentOperationId, params, f); err != nil {
+	// if err := e.exec(ctx, otype, category, group, params, f); err != nil {
 	// 	return fmt.Errorf("[actions.OperationExecutor.ExecWithCategoryAndGroup] execute an operation: %w", err)
 	// }
-	return e.exec(ctx, otype, category, group, parentOperationId, params, f)
+	return e.exec(ctx, otype, category, group, params, f)
 }
 
 func (e *OperationExecutor) exec(
@@ -82,11 +80,10 @@ func (e *OperationExecutor) exec(
 	otype actions.OperationType,
 	category actions.OperationCategory,
 	group actions.OperationGroup,
-	parentOperationId uuid.NullUUID,
 	params []*actions.OperationParam,
 	f func(ctx *actions.OperationContext) error,
 ) error {
-	op, err := ctx.Action.Operations.CreateAndStart(otype, category, group, parentOperationId, params...)
+	op, err := ctx.Action.Operations.CreateAndStart(otype, category, group, uuid.NullUUID{UUID: ctx.Operation.Id(), Valid: true}, params...)
 	if err != nil {
 		return fmt.Errorf("[actions.OperationExecutor.exec] create and start an operation: %w", err)
 	}
