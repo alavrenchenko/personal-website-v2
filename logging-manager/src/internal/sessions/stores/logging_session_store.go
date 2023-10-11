@@ -167,7 +167,7 @@ func (s *LoggingSessionStore) FindById(ctx *actions.OperationContext, id uint64)
 	}()
 
 	const query = "SELECT * FROM " + loggingSessionsTable + " WHERE id = $1 LIMIT 1"
-	ls, err := s.store.Find(ctx, query, id)
+	ls, err := s.store.Find(opCtx.Ctx, query, id)
 	if err != nil {
 		return nil, fmt.Errorf("[stores.LoggingSessionStore.FindById] find a logging session by id: %w", err)
 	}
