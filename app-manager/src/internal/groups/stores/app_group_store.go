@@ -87,7 +87,7 @@ func (s *AppGroupStore) FindById(ctx *actions.OperationContext, id uint64) (*dbm
 
 	const query = "SELECT * FROM " + appGroupsTable + " WHERE id = $1 LIMIT 1"
 	// g, err := s.findBy(ctx, query, id)
-	g, err := s.store.Find(ctx, query, id)
+	g, err := s.store.Find(opCtx.Ctx, query, id)
 
 	if err != nil {
 		return nil, fmt.Errorf("[stores.AppGroupStore.FindById] find an app group by id: %w", err)
@@ -129,7 +129,7 @@ func (s *AppGroupStore) FindByName(ctx *actions.OperationContext, name string) (
 
 	const query = "SELECT * FROM " + appGroupsTable + " WHERE name = $1 LIMIT 1"
 	// g, err := s.findBy(ctx, query, name)
-	g, err := s.store.Find(ctx, query, name)
+	g, err := s.store.Find(opCtx.Ctx, query, name)
 
 	if err != nil {
 		return nil, fmt.Errorf("[stores.AppGroupStore.FindByName] find an app group by name: %w", err)

@@ -90,7 +90,7 @@ func (s *AppStore) FindById(ctx *actions.OperationContext, id uint64) (*dbmodels
 	}()
 
 	const query = "SELECT * FROM " + appsTable + " WHERE id = $1 LIMIT 1"
-	a, err := s.store.Find(ctx, query, id)
+	a, err := s.store.Find(opCtx.Ctx, query, id)
 
 	if err != nil {
 		return nil, fmt.Errorf("[stores.AppStore.FindById] find an app by id: %w", err)
@@ -131,7 +131,7 @@ func (s *AppStore) FindByName(ctx *actions.OperationContext, name string) (*dbmo
 	}()
 
 	const query = "SELECT * FROM " + appsTable + " WHERE name = $1 LIMIT 1"
-	a, err := s.store.Find(ctx, query, name)
+	a, err := s.store.Find(opCtx.Ctx, query, name)
 
 	if err != nil {
 		return nil, fmt.Errorf("[stores.AppStore.FindByName] find an app by name: %w", err)
