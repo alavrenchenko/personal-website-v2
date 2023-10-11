@@ -36,24 +36,42 @@ const (
 	OperationTypeClientManager_FindById      actions.OperationType = 11500
 	OperationTypeClientManager_GetStatusById actions.OperationType = 11501
 
-	// UserStore operation types (21000-21499)
-	OperationTypeUserStore_FindById              actions.OperationType = 21000
-	OperationTypeUserStore_FindByName            actions.OperationType = 21001
-	OperationTypeUserStore_FindByEmail           actions.OperationType = 21002
-	OperationTypeUserStore_GetGroupById          actions.OperationType = 21003
-	OperationTypeUserStore_GetStatusById         actions.OperationType = 21004
-	OperationTypeUserStore_GetGroupAndStatusById actions.OperationType = 21005
-	OperationTypeUserStore_GetPersonalInfoById   actions.OperationType = 21006
+	// UserAgentManager operation types (12000-12499)
+	OperationTypeUserAgentManager_FindById                actions.OperationType = 12000
+	OperationTypeUserAgentManager_FindByUserIdAndClientId actions.OperationType = 12001
+	OperationTypeUserAgentManager_GetStatusById           actions.OperationType = 12002
 
-	// ClientStore operation types (21500-21999)
-	OperationTypeClientStore_FindById                  actions.OperationType = 21500
-	OperationTypeClientStore_FindWebClientById         actions.OperationType = 21501
-	OperationTypeClientStore_FindMobileClientById      actions.OperationType = 21502
-	OperationTypeClientStore_GetStatusById             actions.OperationType = 21503
-	OperationTypeClientStore_GetWebClientStatusById    actions.OperationType = 21504
-	OperationTypeClientStore_GetMobileClientStatusById actions.OperationType = 21505
+	// AuthenticationManager operation types (12500-12999)
+	OperationTypeAuthenticationManager_Authenticate       actions.OperationType = 12500
+	OperationTypeAuthenticationManager_AuthenticateUser   actions.OperationType = 12501
+	OperationTypeAuthenticationManager_AuthenticateClient actions.OperationType = 12502
 
-	// caching (30000-39999)
+	// Authentication TokenEncryptionKeyManager operation types (13000-13499)
+	OperationTypeAuthTokenEncryptionKeyManager_FindById                         actions.OperationType = 13000
+	OperationTypeAuthTokenEncryptionKeyManager_GetAll                           actions.OperationType = 13001
+	OperationTypeAuthTokenEncryptionKeyManager_FindUserTokenEncryptionKeyById   actions.OperationType = 13002
+	OperationTypeAuthTokenEncryptionKeyManager_GetAllUserTokenEncryptionKeys    actions.OperationType = 13003
+	OperationTypeAuthTokenEncryptionKeyManager_FindClientTokenEncryptionKeyById actions.OperationType = 13004
+	OperationTypeAuthTokenEncryptionKeyManager_GetAllClientTokenEncryptionKeys  actions.OperationType = 13005
+
+	// UserStore operation types (31000-31499)
+	OperationTypeUserStore_FindById              actions.OperationType = 31000
+	OperationTypeUserStore_FindByName            actions.OperationType = 31001
+	OperationTypeUserStore_FindByEmail           actions.OperationType = 31002
+	OperationTypeUserStore_GetGroupById          actions.OperationType = 31003
+	OperationTypeUserStore_GetStatusById         actions.OperationType = 31004
+	OperationTypeUserStore_GetGroupAndStatusById actions.OperationType = 31005
+	OperationTypeUserStore_GetPersonalInfoById   actions.OperationType = 31006
+
+	// ClientStore operation types (31500-31999)
+	OperationTypeClientStore_FindById                  actions.OperationType = 31500
+	OperationTypeClientStore_FindWebClientById         actions.OperationType = 31501
+	OperationTypeClientStore_FindMobileClientById      actions.OperationType = 31502
+	OperationTypeClientStore_GetStatusById             actions.OperationType = 31503
+	OperationTypeClientStore_GetWebClientStatusById    actions.OperationType = 31504
+	OperationTypeClientStore_GetMobileClientStatusById actions.OperationType = 31505
+
+	// caching (50000-59999)
 
 	// [HTTP] UserController operation types (100500-100999)
 	OperationTypeUserController_GetById actions.OperationType = 100500

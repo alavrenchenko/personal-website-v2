@@ -20,6 +20,15 @@ import "personal-website-v2/pkg/actions"
 // Action groups: 0-999
 
 const (
-	ActionGroupUser   actions.ActionGroup = 1000
-	ActionGroupClient actions.ActionGroup = 1001
+	ActionGroupUser             actions.ActionGroup = 1000
+	ActionGroupClient           actions.ActionGroup = 1001
+	ActionGroupUserAgent        actions.ActionGroup = 1002
+	ActionGroupAuthentication   actions.ActionGroup = 1003
+	ActionGroupAuthorization    actions.ActionGroup = 1004
+	ActionGroupPermission       actions.ActionGroup = 1005
+	ActionGroupUserSession      actions.ActionGroup = 1006
+	ActionGroupUserAgentSession actions.ActionGroup = 1007
+
+	// Authentication token encryption key action group.
+	ActionGroupAuthTokenEncryptionKey actions.ActionGroup = 1008
 )

@@ -36,4 +36,22 @@ const (
 	// Client action types (10300-10499)
 	ActionTypeClient_GetById       actions.ActionType = 10300
 	ActionTypeClient_GetStatusById actions.ActionType = 10301
+
+	// User agent action types (10500-10699)
+	ActionTypeUserAgent_GetById                actions.ActionType = 10500
+	ActionTypeUserAgent_GetByUserIdAndClientId actions.ActionType = 10501
+	ActionTypeUserAgent_GetStatusById          actions.ActionType = 10502
+
+	// Authentication action types (10700-10899)
+	ActionTypeAuthentication_Authenticate       actions.ActionType = 10700
+	ActionTypeAuthentication_AuthenticateUser   actions.ActionType = 10701
+	ActionTypeAuthentication_AuthenticateClient actions.ActionType = 10702
+
+	// Authentication token encryption key action types (10900-11099)
+	ActionTypeAuthTokenEncryptionKey_GetById                         actions.ActionType = 10900
+	ActionTypeAuthTokenEncryptionKey_GetAll                          actions.ActionType = 10901
+	ActionTypeAuthTokenEncryptionKey_GetUserTokenEncryptionKeyById   actions.ActionType = 10902
+	ActionTypeAuthTokenEncryptionKey_GetAllUserTokenEncryptionKeys   actions.ActionType = 10903
+	ActionTypeAuthTokenEncryptionKey_GetClientTokenEncryptionKeyById actions.ActionType = 10904
+	ActionTypeAuthTokenEncryptionKey_GetAllClientTokenEncryptionKeys actions.ActionType = 10905
 )

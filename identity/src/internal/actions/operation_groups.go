@@ -20,6 +20,15 @@ import "personal-website-v2/pkg/actions"
 // Operation groups: 0-999
 
 const (
-	OperationGroupUser   actions.OperationGroup = 1000
-	OperationGroupClient actions.OperationGroup = 1001
+	OperationGroupUser             actions.OperationGroup = 1000
+	OperationGroupClient           actions.OperationGroup = 1001
+	OperationGroupUserAgent        actions.OperationGroup = 1002
+	OperationGroupAuthentication   actions.OperationGroup = 1003
+	OperationGroupAuthorization    actions.OperationGroup = 1004
+	OperationGroupPermission       actions.OperationGroup = 1005
+	OperationGroupUserSession      actions.OperationGroup = 1006
+	OperationGroupUserAgentSession actions.OperationGroup = 1007
+
+	// Authentication token encryption key operation group.
+	OperationGroupAuthTokenEncryptionKey actions.OperationGroup = 1008
 )
