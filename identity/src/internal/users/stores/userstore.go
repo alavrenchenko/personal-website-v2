@@ -81,7 +81,7 @@ func (s *UserStore) FindById(ctx *actions.OperationContext, id uint64) (*dbmodel
 		func(opCtx *actions.OperationContext) error {
 			const query = "SELECT * FROM " + usersTable + " WHERE id = $1 LIMIT 1"
 			var err error
-			if u, err = s.uStore.Find(opCtx, query, id); err != nil {
+			if u, err = s.uStore.Find(opCtx.Ctx, query, id); err != nil {
 				return fmt.Errorf("[stores.UserStore.FindById] find a user by id: %w", err)
 			}
 			return nil
@@ -101,7 +101,7 @@ func (s *UserStore) FindByName(ctx *actions.OperationContext, name string) (*dbm
 		func(opCtx *actions.OperationContext) error {
 			const query = "SELECT * FROM " + usersTable + " WHERE name = $1 LIMIT 1"
 			var err error
-			if u, err = s.uStore.Find(opCtx, query, name); err != nil {
+			if u, err = s.uStore.Find(opCtx.Ctx, query, name); err != nil {
 				return fmt.Errorf("[stores.UserStore.FindByName] find a user by name: %w", err)
 			}
 			return nil
@@ -121,7 +121,7 @@ func (s *UserStore) FindByEmail(ctx *actions.OperationContext, email string) (*d
 		func(opCtx *actions.OperationContext) error {
 			const query = "SELECT * FROM " + usersTable + " WHERE email = $1 LIMIT 1"
 			var err error
-			if u, err = s.uStore.Find(opCtx, query, email); err != nil {
+			if u, err = s.uStore.Find(opCtx.Ctx, query, email); err != nil {
 				return fmt.Errorf("[stores.UserStore.FindByEmail] find a user by email: %w", err)
 			}
 			return nil
@@ -229,7 +229,7 @@ func (s *UserStore) GetPersonalInfoById(ctx *actions.OperationContext, id uint64
 		func(opCtx *actions.OperationContext) error {
 			const query = "SELECT * FROM " + personalInfoTable + " WHERE id = $1 LIMIT 1"
 			var err error
-			pi, err = s.piStore.Find(opCtx, query, id)
+			pi, err = s.piStore.Find(opCtx.Ctx, query, id)
 			if err != nil {
 				return fmt.Errorf("[stores.UserStore.GetPersonalInfoById] find user's personal info by id: %w", err)
 			}

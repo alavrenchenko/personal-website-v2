@@ -95,7 +95,7 @@ func (s *ClientStore) FindById(ctx *actions.OperationContext, id uint64) (*dbmod
 		func(opCtx *actions.OperationContext) error {
 			const query = "SELECT * FROM " + clientsTable + " WHERE id = $1 LIMIT 1"
 			var err error
-			if c, err = s.store.Find(opCtx, query, id); err != nil {
+			if c, err = s.store.Find(opCtx.Ctx, query, id); err != nil {
 				return fmt.Errorf("[stores.ClientStore.FindById] find a client by id: %w", err)
 			}
 			return nil
