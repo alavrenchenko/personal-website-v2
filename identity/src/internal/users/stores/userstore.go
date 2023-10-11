@@ -18,7 +18,6 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 
 	iactions "personal-website-v2/identity/src/internal/actions"
@@ -77,7 +76,7 @@ func NewUserStore(db *postgres.Database, loggerFactory logging.LoggerFactory[*co
 // FindById finds and returns a user, if any, by the specified user ID.
 func (s *UserStore) FindById(ctx *actions.OperationContext, id uint64) (*dbmodels.User, error) {
 	var u *dbmodels.User
-	err := s.opExecutor.Exec(ctx, iactions.OperationTypeUserStore_FindById, uuid.NullUUID{UUID: ctx.Operation.Id(), Valid: true},
+	err := s.opExecutor.Exec(ctx, iactions.OperationTypeUserStore_FindById,
 		[]*actions.OperationParam{actions.NewOperationParam("id", id)},
 		func(opCtx *actions.OperationContext) error {
 			const query = "SELECT * FROM " + usersTable + " WHERE id = $1 LIMIT 1"
@@ -97,7 +96,7 @@ func (s *UserStore) FindById(ctx *actions.OperationContext, id uint64) (*dbmodel
 // FindByName finds and returns a user, if any, by the specified user name.
 func (s *UserStore) FindByName(ctx *actions.OperationContext, name string) (*dbmodels.User, error) {
 	var u *dbmodels.User
-	err := s.opExecutor.Exec(ctx, iactions.OperationTypeUserStore_FindByName, uuid.NullUUID{UUID: ctx.Operation.Id(), Valid: true},
+	err := s.opExecutor.Exec(ctx, iactions.OperationTypeUserStore_FindByName,
 		[]*actions.OperationParam{actions.NewOperationParam("name", name)},
 		func(opCtx *actions.OperationContext) error {
 			const query = "SELECT * FROM " + usersTable + " WHERE name = $1 LIMIT 1"
@@ -117,7 +116,7 @@ func (s *UserStore) FindByName(ctx *actions.OperationContext, name string) (*dbm
 // FindByEmail finds and returns a user, if any, by the specified user's email.
 func (s *UserStore) FindByEmail(ctx *actions.OperationContext, email string) (*dbmodels.User, error) {
 	var u *dbmodels.User
-	err := s.opExecutor.Exec(ctx, iactions.OperationTypeUserStore_FindByEmail, uuid.NullUUID{UUID: ctx.Operation.Id(), Valid: true},
+	err := s.opExecutor.Exec(ctx, iactions.OperationTypeUserStore_FindByEmail,
 		[]*actions.OperationParam{actions.NewOperationParam("email", email)},
 		func(opCtx *actions.OperationContext) error {
 			const query = "SELECT * FROM " + usersTable + " WHERE email = $1 LIMIT 1"
@@ -137,7 +136,7 @@ func (s *UserStore) FindByEmail(ctx *actions.OperationContext, email string) (*d
 // GetGroupById gets a user's group by the specified user ID.
 func (s *UserStore) GetGroupById(ctx *actions.OperationContext, id uint64) (models.UserGroup, error) {
 	var g models.UserGroup
-	err := s.opExecutor.Exec(ctx, iactions.OperationTypeUserStore_GetGroupById, uuid.NullUUID{UUID: ctx.Operation.Id(), Valid: true},
+	err := s.opExecutor.Exec(ctx, iactions.OperationTypeUserStore_GetGroupById,
 		[]*actions.OperationParam{actions.NewOperationParam("id", id)},
 		func(opCtx *actions.OperationContext) error {
 			conn, err := s.db.ConnPool.Acquire(opCtx.Ctx)
@@ -166,7 +165,7 @@ func (s *UserStore) GetGroupById(ctx *actions.OperationContext, id uint64) (mode
 // GetStatusById gets a user's status by the specified user ID.
 func (s *UserStore) GetStatusById(ctx *actions.OperationContext, id uint64) (models.UserStatus, error) {
 	var status models.UserStatus
-	err := s.opExecutor.Exec(ctx, iactions.OperationTypeUserStore_GetStatusById, uuid.NullUUID{UUID: ctx.Operation.Id(), Valid: true},
+	err := s.opExecutor.Exec(ctx, iactions.OperationTypeUserStore_GetStatusById,
 		[]*actions.OperationParam{actions.NewOperationParam("id", id)},
 		func(opCtx *actions.OperationContext) error {
 			conn, err := s.db.ConnPool.Acquire(opCtx.Ctx)
@@ -196,7 +195,7 @@ func (s *UserStore) GetStatusById(ctx *actions.OperationContext, id uint64) (mod
 func (s *UserStore) GetGroupAndStatusById(ctx *actions.OperationContext, id uint64) (models.UserGroup, models.UserStatus, error) {
 	var g models.UserGroup
 	var status models.UserStatus
-	err := s.opExecutor.Exec(ctx, iactions.OperationTypeUserStore_GetGroupAndStatusById, uuid.NullUUID{UUID: ctx.Operation.Id(), Valid: true},
+	err := s.opExecutor.Exec(ctx, iactions.OperationTypeUserStore_GetGroupAndStatusById,
 		[]*actions.OperationParam{actions.NewOperationParam("id", id)},
 		func(opCtx *actions.OperationContext) error {
 			conn, err := s.db.ConnPool.Acquire(opCtx.Ctx)
@@ -225,7 +224,7 @@ func (s *UserStore) GetGroupAndStatusById(ctx *actions.OperationContext, id uint
 // GetPersonalInfoById gets user's personal info by the specified user ID.
 func (s *UserStore) GetPersonalInfoById(ctx *actions.OperationContext, id uint64) (*dbmodels.PersonalInfo, error) {
 	var pi *dbmodels.PersonalInfo
-	err := s.opExecutor.Exec(ctx, iactions.OperationTypeUserStore_GetPersonalInfoById, uuid.NullUUID{UUID: ctx.Operation.Id(), Valid: true},
+	err := s.opExecutor.Exec(ctx, iactions.OperationTypeUserStore_GetPersonalInfoById,
 		[]*actions.OperationParam{actions.NewOperationParam("id", id)},
 		func(opCtx *actions.OperationContext) error {
 			const query = "SELECT * FROM " + personalInfoTable + " WHERE id = $1 LIMIT 1"
