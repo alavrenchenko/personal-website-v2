@@ -42,9 +42,11 @@ const (
 	OperationTypeUserAgentManager_GetStatusById           actions.OperationType = 12002
 
 	// AuthenticationManager operation types (12500-12999)
-	OperationTypeAuthenticationManager_Authenticate       actions.OperationType = 12500
-	OperationTypeAuthenticationManager_AuthenticateUser   actions.OperationType = 12501
-	OperationTypeAuthenticationManager_AuthenticateClient actions.OperationType = 12502
+	OperationTypeAuthenticationManager_CreateUserToken    actions.OperationType = 12500
+	OperationTypeAuthenticationManager_CreateClientToken  actions.OperationType = 12501
+	OperationTypeAuthenticationManager_Authenticate       actions.OperationType = 12502
+	OperationTypeAuthenticationManager_AuthenticateUser   actions.OperationType = 12503
+	OperationTypeAuthenticationManager_AuthenticateClient actions.OperationType = 12504
 
 	// Authentication TokenEncryptionKeyManager operation types (13000-13499)
 	OperationTypeAuthTokenEncryptionKeyManager_FindById                         actions.OperationType = 13000
