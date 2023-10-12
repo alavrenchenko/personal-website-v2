@@ -49,11 +49,23 @@ const (
 	ActionTypeAuthentication_AuthenticateUser   actions.ActionType = 10703
 	ActionTypeAuthentication_AuthenticateClient actions.ActionType = 10704
 
-	// Authentication token encryption key action types (10900-11099)
-	ActionTypeAuthTokenEncryptionKey_GetById                         actions.ActionType = 10900
-	ActionTypeAuthTokenEncryptionKey_GetAll                          actions.ActionType = 10901
-	ActionTypeAuthTokenEncryptionKey_GetUserTokenEncryptionKeyById   actions.ActionType = 10902
-	ActionTypeAuthTokenEncryptionKey_GetAllUserTokenEncryptionKeys   actions.ActionType = 10903
-	ActionTypeAuthTokenEncryptionKey_GetClientTokenEncryptionKeyById actions.ActionType = 10904
-	ActionTypeAuthTokenEncryptionKey_GetAllClientTokenEncryptionKeys actions.ActionType = 10905
+	// Authorization action types (10900-11099)
+	// Permission action types (11100-11299)
+
+	// UserSession action types (11300-11499)
+	ActionTypeUserSession_CreateAndStart              actions.ActionType = 11300
+	ActionTypeUserSession_CreateAndStartWebSession    actions.ActionType = 11301
+	ActionTypeUserSession_CreateAndStartMobileSession actions.ActionType = 11302
+	ActionTypeUserSession_Terminate                   actions.ActionType = 11303
+	ActionTypeUserSession_FindById                    actions.ActionType = 11304
+
+	// UserAgentSession action types (11500-11699)
+
+	// Authentication token encryption key action types (11700-11899)
+	ActionTypeAuthTokenEncryptionKey_GetById                         actions.ActionType = 11700
+	ActionTypeAuthTokenEncryptionKey_GetAll                          actions.ActionType = 11701
+	ActionTypeAuthTokenEncryptionKey_GetUserTokenEncryptionKeyById   actions.ActionType = 11702
+	ActionTypeAuthTokenEncryptionKey_GetAllUserTokenEncryptionKeys   actions.ActionType = 11703
+	ActionTypeAuthTokenEncryptionKey_GetClientTokenEncryptionKeyById actions.ActionType = 11704
+	ActionTypeAuthTokenEncryptionKey_GetAllClientTokenEncryptionKeys actions.ActionType = 11705
 )
