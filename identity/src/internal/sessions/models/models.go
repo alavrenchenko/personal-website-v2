@@ -43,7 +43,7 @@ func (t UserSessionType) String() string {
 }
 
 // The user's session status.
-type UserSessionStatus uint16
+type UserSessionStatus uint8
 
 const (
 	// Unspecified = 0 // Do not use.
@@ -80,7 +80,7 @@ func (t UserAgentSessionType) String() string {
 }
 
 // The user's agent session status.
-type UserAgentSessionStatus uint16
+type UserAgentSessionStatus uint8
 
 const (
 	// Unspecified = 0 // Do not use.
