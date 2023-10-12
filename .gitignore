@@ -12,6 +12,7 @@ bin/
 
 /identity/**/authentication/
 /identity/**/authorization/
+/identity/**/permissions/
 
 /api-clients/emailnotifier/
 /api-clients/identity/
