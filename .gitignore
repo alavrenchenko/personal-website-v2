@@ -24,6 +24,8 @@ bin/
 /web/
 /website/
 
+/db/postgres/identity/**/private/
+
 /docs/
 **/_docs/
 
