@@ -226,11 +226,11 @@
     "db": {
         "postgres": {
             "configs": {
-                "UserDb": {
+                "IdentityDb": {
                     "applicationName": "Identity",
                     "host": "{host}",
                     "port": 0,
-                    "database": "userdb",
+                    "database": "identity",
                     "user": "{user}",
                     "password": "{password}",
                     "sslMode": "disable",
@@ -241,11 +241,131 @@
                     "maxConnIdleTime": 30,
                     "healthCheckPeriod": 5
                 },
-                "ClientDb": {
+                "UserDb": {
                     "applicationName": "Identity",
                     "host": "{host}",
                     "port": 0,
-                    "database": "clientdb",
+                    "database": "identity_users",
+                    "user": "{user}",
+                    "password": "{password}",
+                    "sslMode": "disable",
+                    "connectTimeout": 10,
+                    "minConns": 10,
+                    "maxConns": 100,
+                    "maxConnLifetime": 86400,
+                    "maxConnIdleTime": 30,
+                    "healthCheckPeriod": 5
+                },
+                "WebClientDb": {
+                    "applicationName": "Identity",
+                    "host": "{host}",
+                    "port": 0,
+                    "database": "identity_web_clients",
+                    "user": "{user}",
+                    "password": "{password}",
+                    "sslMode": "disable",
+                    "connectTimeout": 10,
+                    "minConns": 10,
+                    "maxConns": 100,
+                    "maxConnLifetime": 86400,
+                    "maxConnIdleTime": 30,
+                    "healthCheckPeriod": 5
+                },
+                "MobileClientDb": {
+                    "applicationName": "Identity",
+                    "host": "{host}",
+                    "port": 0,
+                    "database": "identity_mobile_clients",
+                    "user": "{user}",
+                    "password": "{password}",
+                    "sslMode": "disable",
+                    "connectTimeout": 10,
+                    "minConns": 10,
+                    "maxConns": 100,
+                    "maxConnLifetime": 86400,
+                    "maxConnIdleTime": 30,
+                    "healthCheckPeriod": 5
+                },
+                "WebUserAgentDb": {
+                    "applicationName": "Identity",
+                    "host": "{host}",
+                    "port": 0,
+                    "database": "identity_web_user_agents",
+                    "user": "{user}",
+                    "password": "{password}",
+                    "sslMode": "disable",
+                    "connectTimeout": 10,
+                    "minConns": 10,
+                    "maxConns": 100,
+                    "maxConnLifetime": 86400,
+                    "maxConnIdleTime": 30,
+                    "healthCheckPeriod": 5
+                },
+                "MobileUserAgentDb": {
+                    "applicationName": "Identity",
+                    "host": "{host}",
+                    "port": 0,
+                    "database": "identity_mobile_user_agents",
+                    "user": "{user}",
+                    "password": "{password}",
+                    "sslMode": "disable",
+                    "connectTimeout": 10,
+                    "minConns": 10,
+                    "maxConns": 100,
+                    "maxConnLifetime": 86400,
+                    "maxConnIdleTime": 30,
+                    "healthCheckPeriod": 5
+                },
+                "User_WebSessionDb": {
+                    "applicationName": "Identity",
+                    "host": "{host}",
+                    "port": 0,
+                    "database": "identity_user_web_sessions",
+                    "user": "{user}",
+                    "password": "{password}",
+                    "sslMode": "disable",
+                    "connectTimeout": 10,
+                    "minConns": 10,
+                    "maxConns": 100,
+                    "maxConnLifetime": 86400,
+                    "maxConnIdleTime": 30,
+                    "healthCheckPeriod": 5
+                },
+                "User_MobileSessionDb": {
+                    "applicationName": "Identity",
+                    "host": "{host}",
+                    "port": 0,
+                    "database": "identity_user_mobile_sessions",
+                    "user": "{user}",
+                    "password": "{password}",
+                    "sslMode": "disable",
+                    "connectTimeout": 10,
+                    "minConns": 10,
+                    "maxConns": 100,
+                    "maxConnLifetime": 86400,
+                    "maxConnIdleTime": 30,
+                    "healthCheckPeriod": 5
+                },
+                "WebUserAgentSessionDb": {
+                    "applicationName": "Identity",
+                    "host": "{host}",
+                    "port": 0,
+                    "database": "identity_web_user_agent_sessions",
+                    "user": "{user}",
+                    "password": "{password}",
+                    "sslMode": "disable",
+                    "connectTimeout": 10,
+                    "minConns": 10,
+                    "maxConns": 100,
+                    "maxConnLifetime": 86400,
+                    "maxConnIdleTime": 30,
+                    "healthCheckPeriod": 5
+                },
+                "MobileUserAgentSessionDb": {
+                    "applicationName": "Identity",
+                    "host": "{host}",
+                    "port": 0,
+                    "database": "identity_mobile_user_agent_sessions",
                     "user": "{user}",
                     "password": "{password}",
                     "sslMode": "disable",
@@ -258,8 +378,16 @@
                 }
             },
             "dataMap": {
+                "Identity": "IdentityDb",
                 "User": "UserDb",
-                "Client": "ClientDb"
+                "WebClient": "WebClientDb",
+                "MobileClient": "MobileClientDb",
+                "WebUserAgent": "WebUserAgentDb",
+                "MobileUserAgent": "MobileUserAgentDb",
+                "User_WebSession": "User_WebSessionDb",
+                "User_MobileSession": "User_MobileSessionDb",
+                "WebUserAgentSession": "WebUserAgentSessionDb",
+                "MobileUserAgentSession": "MobileUserAgentSessionDb"
             }
         }
     },
