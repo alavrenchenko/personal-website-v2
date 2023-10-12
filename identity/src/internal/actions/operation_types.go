@@ -48,13 +48,25 @@ const (
 	OperationTypeAuthenticationManager_AuthenticateUser   actions.OperationType = 12503
 	OperationTypeAuthenticationManager_AuthenticateClient actions.OperationType = 12504
 
-	// Authentication TokenEncryptionKeyManager operation types (13000-13499)
-	OperationTypeAuthTokenEncryptionKeyManager_FindById                         actions.OperationType = 13000
-	OperationTypeAuthTokenEncryptionKeyManager_GetAll                           actions.OperationType = 13001
-	OperationTypeAuthTokenEncryptionKeyManager_FindUserTokenEncryptionKeyById   actions.OperationType = 13002
-	OperationTypeAuthTokenEncryptionKeyManager_GetAllUserTokenEncryptionKeys    actions.OperationType = 13003
-	OperationTypeAuthTokenEncryptionKeyManager_FindClientTokenEncryptionKeyById actions.OperationType = 13004
-	OperationTypeAuthTokenEncryptionKeyManager_GetAllClientTokenEncryptionKeys  actions.OperationType = 13005
+	// AuthorizationManager operation types (13000-13499)
+	// PermissionManager operation types (13500-13999)
+
+	// UserSessionManager operation types (14000-14499)
+	OperationTypeUserSessionManager_CreateAndStart              actions.OperationType = 14000
+	OperationTypeUserSessionManager_CreateAndStartWebSession    actions.OperationType = 14001
+	OperationTypeUserSessionManager_CreateAndStartMobileSession actions.OperationType = 14002
+	OperationTypeUserSessionManager_Terminate                   actions.OperationType = 14003
+	OperationTypeUserSessionManager_FindById                    actions.OperationType = 14004
+
+	// UserAgentSessionManager operation types (14500-14999)
+
+	// Authentication TokenEncryptionKeyManager operation types (15000-15499)
+	OperationTypeAuthTokenEncryptionKeyManager_FindById                         actions.OperationType = 15000
+	OperationTypeAuthTokenEncryptionKeyManager_GetAll                           actions.OperationType = 15001
+	OperationTypeAuthTokenEncryptionKeyManager_FindUserTokenEncryptionKeyById   actions.OperationType = 15002
+	OperationTypeAuthTokenEncryptionKeyManager_GetAllUserTokenEncryptionKeys    actions.OperationType = 15003
+	OperationTypeAuthTokenEncryptionKeyManager_FindClientTokenEncryptionKeyById actions.OperationType = 15004
+	OperationTypeAuthTokenEncryptionKeyManager_GetAllClientTokenEncryptionKeys  actions.OperationType = 15005
 
 	// UserStore operation types (31000-31499)
 	OperationTypeUserStore_FindById              actions.OperationType = 31000
