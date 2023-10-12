@@ -31,7 +31,8 @@ const (
 	ErrorCodeInvalidClientId errors.ErrorCode = 31201
 
 	// User session error codes (31400-31599).
-	ErrorCodeUserSessionNotFound errors.ErrorCode = 31400
+	ErrorCodeUserSessionNotFound  errors.ErrorCode = 31400
+	ErrorCodeInvalidUserSessionId errors.ErrorCode = 31401
 )
 
 var (
@@ -44,5 +45,6 @@ var (
 	ErrInvalidClientId = errors.NewError(ErrorCodeInvalidClientId, "invalid client id")
 
 	// User session errors.
-	ErrUserSessionNotFound = errors.NewError(ErrorCodeUserSessionNotFound, "user's session not found")
+	ErrUserSessionNotFound  = errors.NewError(ErrorCodeUserSessionNotFound, "user's session not found")
+	ErrInvalidUserSessionId = errors.NewError(ErrorCodeInvalidUserSessionId, "invalid user session id")
 )
