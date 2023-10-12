@@ -12,7 +12,6 @@ bin/
 
 /identity/**/authentication/
 /identity/**/authorization/
-/identity/**/sessions/manager/
 
 /api-clients/emailnotifier/
 /api-clients/identity/
