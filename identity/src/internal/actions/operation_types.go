@@ -57,6 +57,7 @@ const (
 	OperationTypeUserSessionManager_CreateAndStartMobileSession actions.OperationType = 14002
 	OperationTypeUserSessionManager_Terminate                   actions.OperationType = 14003
 	OperationTypeUserSessionManager_FindById                    actions.OperationType = 14004
+	OperationTypeUserSessionManager_GetStatusById               actions.OperationType = 14005
 
 	// UserAgentSessionManager operation types (14500-14999)
 
@@ -92,13 +93,30 @@ const (
 
 	// AuthenticationStore operation types (32500-32999)
 
-	// Authentication TokenEncryptionKeyStore operation types (33000-33499)
-	OperationTypeAuthTokenEncryptionKeyStore_FindById                         actions.OperationType = 33000
-	OperationTypeAuthTokenEncryptionKeyStore_GetAll                           actions.OperationType = 33001
-	OperationTypeAuthTokenEncryptionKeyStore_FindUserTokenEncryptionKeyById   actions.OperationType = 33002
-	OperationTypeAuthTokenEncryptionKeyStore_GetAllUserTokenEncryptionKeys    actions.OperationType = 33003
-	OperationTypeAuthTokenEncryptionKeyStore_FindClientTokenEncryptionKeyById actions.OperationType = 33004
-	OperationTypeAuthTokenEncryptionKeyStore_GetAllClientTokenEncryptionKeys  actions.OperationType = 33005
+	// AuthorizationStore operation types (33000-33499)
+	// PermissionStore operation types (33500-33999)
+
+	// UserSessionStore operation types (34000-34499)
+	OperationTypeUserSessionStore_CreateAndStart              actions.OperationType = 34000
+	OperationTypeUserSessionStore_CreateAndStartWebSession    actions.OperationType = 34001
+	OperationTypeUserSessionStore_CreateAndStartMobileSession actions.OperationType = 34002
+	OperationTypeUserSessionStore_Terminate                   actions.OperationType = 34003
+	OperationTypeUserSessionStore_FindById                    actions.OperationType = 34004
+	OperationTypeUserSessionStore_FindWebSessionById          actions.OperationType = 34005
+	OperationTypeUserSessionStore_FindMobileSessionById       actions.OperationType = 34006
+	OperationTypeUserSessionStore_GetStatusById               actions.OperationType = 34007
+	OperationTypeUserSessionStore_GetWebSessionStatusById     actions.OperationType = 34008
+	OperationTypeUserSessionStore_GetMobileSessionStatusById  actions.OperationType = 34009
+
+	// UserAgentSessionStore operation types (34500-34999)
+
+	// Authentication TokenEncryptionKeyStore operation types (35000-35499)
+	OperationTypeAuthTokenEncryptionKeyStore_FindById                         actions.OperationType = 35000
+	OperationTypeAuthTokenEncryptionKeyStore_GetAll                           actions.OperationType = 35001
+	OperationTypeAuthTokenEncryptionKeyStore_FindUserTokenEncryptionKeyById   actions.OperationType = 35002
+	OperationTypeAuthTokenEncryptionKeyStore_GetAllUserTokenEncryptionKeys    actions.OperationType = 35003
+	OperationTypeAuthTokenEncryptionKeyStore_FindClientTokenEncryptionKeyById actions.OperationType = 35004
+	OperationTypeAuthTokenEncryptionKeyStore_GetAllClientTokenEncryptionKeys  actions.OperationType = 35005
 
 	// caching (50000-59999)
 
