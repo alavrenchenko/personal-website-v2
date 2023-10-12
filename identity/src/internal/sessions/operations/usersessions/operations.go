@@ -12,7 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package sessions
+package usersessions
+
+import (
+	"personal-website-v2/pkg/base/strings"
+	"personal-website-v2/pkg/errors"
+)
 
 type CreateAndStartOperationData struct {
 	// The user ID who owns the session.
@@ -26,4 +31,11 @@ type CreateAndStartOperationData struct {
 
 	// The first IP address (sign-in IP address).
 	FirstIP string `json:"firstIP"`
+}
+
+func (d *CreateAndStartOperationData) Validate() *errors.Error {
+	if strings.IsEmptyOrWhitespace(d.FirstIP) {
+		return errors.NewError(errors.ErrorCodeInvalidData, "firstIP is empty")
+	}
+	return nil
 }
