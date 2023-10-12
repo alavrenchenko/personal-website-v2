@@ -16,6 +16,8 @@ package sessions
 
 import (
 	"personal-website-v2/identity/src/internal/sessions/dbmodels"
+	"personal-website-v2/identity/src/internal/sessions/models"
+	"personal-website-v2/identity/src/internal/sessions/operations/usersessions"
 	"personal-website-v2/pkg/actions"
 )
 
@@ -23,17 +25,23 @@ import (
 type UserSessionManager interface {
 	// CreateAndStart creates and starts a user's web session for the specified user
 	// and returns user's session ID if the operation is successful.
-	CreateAndStartWebSession(ctx *actions.OperationContext, data *CreateAndStartOperationData) (uint64, error)
+	CreateAndStartWebSession(ctx *actions.OperationContext, data *usersessions.CreateAndStartOperationData) (uint64, error)
 
 	// CreateAndStart creates and starts a user's mobile session for the specified user
 	// and returns user's session ID if the operation is successful.
-	CreateAndStartMobileSession(ctx *actions.OperationContext, data *CreateAndStartOperationData) (uint64, error)
+	CreateAndStartMobileSession(ctx *actions.OperationContext, data *usersessions.CreateAndStartOperationData) (uint64, error)
 
 	// Terminate terminates a user's session by the specified user session ID.
 	Terminate(ctx *actions.OperationContext, id uint64) error
 
 	// FindById finds and returns user's session info, if any, by the specified user session ID.
 	FindById(ctx *actions.OperationContext, id uint64) (*dbmodels.UserSessionInfo, error)
+
+	// GetTypeById gets a user's session type by the specified user session ID.
+	GetTypeById(id uint64) (models.UserSessionType, error)
+
+	// GetStatusById gets a user's session status by the specified user session ID.
+	GetStatusById(ctx *actions.OperationContext, id uint64) (models.UserSessionStatus, error)
 }
 
 // UserAgentSessionManager is a user's agent session manager.
