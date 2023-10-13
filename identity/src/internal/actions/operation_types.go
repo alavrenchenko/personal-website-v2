@@ -107,12 +107,14 @@ const (
 	OperationTypeUserSessionStore_CreateAndStartWebSession    actions.OperationType = 34001
 	OperationTypeUserSessionStore_CreateAndStartMobileSession actions.OperationType = 34002
 	OperationTypeUserSessionStore_Terminate                   actions.OperationType = 34003
-	OperationTypeUserSessionStore_FindById                    actions.OperationType = 34004
-	OperationTypeUserSessionStore_FindWebSessionById          actions.OperationType = 34005
-	OperationTypeUserSessionStore_FindMobileSessionById       actions.OperationType = 34006
-	OperationTypeUserSessionStore_GetStatusById               actions.OperationType = 34007
-	OperationTypeUserSessionStore_GetWebSessionStatusById     actions.OperationType = 34008
-	OperationTypeUserSessionStore_GetMobileSessionStatusById  actions.OperationType = 34009
+	OperationTypeUserSessionStore_TerminateWebSession         actions.OperationType = 34004
+	OperationTypeUserSessionStore_TerminateMobileSession      actions.OperationType = 34005
+	OperationTypeUserSessionStore_FindById                    actions.OperationType = 34006
+	OperationTypeUserSessionStore_FindWebSessionById          actions.OperationType = 34007
+	OperationTypeUserSessionStore_FindMobileSessionById       actions.OperationType = 34008
+	OperationTypeUserSessionStore_GetStatusById               actions.OperationType = 34009
+	OperationTypeUserSessionStore_GetWebSessionStatusById     actions.OperationType = 34010
+	OperationTypeUserSessionStore_GetMobileSessionStatusById  actions.OperationType = 34011
 
 	// UserAgentSessionStore operation types (34500-34999)
 
