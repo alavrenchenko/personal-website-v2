@@ -17,10 +17,14 @@ package clients
 import (
 	"personal-website-v2/identity/src/internal/clients/dbmodels"
 	"personal-website-v2/identity/src/internal/clients/models"
+	"personal-website-v2/identity/src/internal/clients/operations/clients"
 	"personal-website-v2/pkg/actions"
 )
 
 type ClientStore interface {
+	// Create creates a client and returns the client ID if the operation is successful.
+	Create(ctx *actions.OperationContext, data *clients.CreateOperationData) (uint64, error)
+
 	// FindById finds and returns a client, if any, by the specified client ID.
 	FindById(ctx *actions.OperationContext, id uint64) (*dbmodels.Client, error)
 

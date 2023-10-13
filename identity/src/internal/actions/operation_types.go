@@ -82,12 +82,15 @@ const (
 	OperationTypeUserStore_GetPersonalInfoById   actions.OperationType = 31006
 
 	// ClientStore operation types (31500-31999)
-	OperationTypeClientStore_FindById                  actions.OperationType = 31500
-	OperationTypeClientStore_FindWebClientById         actions.OperationType = 31501
-	OperationTypeClientStore_FindMobileClientById      actions.OperationType = 31502
-	OperationTypeClientStore_GetStatusById             actions.OperationType = 31503
-	OperationTypeClientStore_GetWebClientStatusById    actions.OperationType = 31504
-	OperationTypeClientStore_GetMobileClientStatusById actions.OperationType = 31505
+	OperationTypeClientStore_Create                    actions.OperationType = 31500
+	OperationTypeClientStore_CreateWebClient           actions.OperationType = 31501
+	OperationTypeClientStore_CreateMobileClient        actions.OperationType = 31502
+	OperationTypeClientStore_FindById                  actions.OperationType = 31503
+	OperationTypeClientStore_FindWebClientById         actions.OperationType = 31504
+	OperationTypeClientStore_FindMobileClientById      actions.OperationType = 31505
+	OperationTypeClientStore_GetStatusById             actions.OperationType = 31506
+	OperationTypeClientStore_GetWebClientStatusById    actions.OperationType = 31507
+	OperationTypeClientStore_GetMobileClientStatusById actions.OperationType = 31508
 
 	// UserAgentStore operation types (32000-32499)
 	OperationTypeUserAgentStore_FindById                actions.OperationType = 32000
