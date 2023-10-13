@@ -22,8 +22,25 @@ import "personal-website-v2/pkg/db/errors"
 
 const (
 	// User error codes (11000-11199).
-	DbErrorCodeUserNotFound errors.DbErrorCode = 11000
+	DbErrorCodeUserNotFound             errors.DbErrorCode = 11000
+	DbErrorCodeUserPersonalInfoNotFound errors.DbErrorCode = 11001
 
 	// Client error codes (11200-11399).
 	DbErrorCodeClientNotFound errors.DbErrorCode = 11200
+
+	// User agent error codes (11400-11599).
+	DbErrorCodeUserAgentNotFound errors.DbErrorCode = 11400
+
+	// Authentication error codes (11600-11799).
+	// Authorization error codes (11800-11999).
+	// Permission error codes (12000-12199).
+
+	// User session error codes (12200-12399).
+	DbErrorCodeUserSessionNotFound errors.DbErrorCode = 12200
+
+	// User agent session error codes (12400-12599).
+	DbErrorCodeUserAgentSessionNotFound errors.DbErrorCode = 12400
+
+	// Authentication token encryption key error codes (12600-12799).
+	DbErrorCodeAuthTokenEncryptionKeyNotFound errors.DbErrorCode = 12600
 )
