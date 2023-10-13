@@ -179,11 +179,11 @@ func (m *UserSessionManager) FindById(ctx *actions.OperationContext, id uint64) 
 			switch t {
 			case models.UserSessionTypeWeb:
 				if s, err = m.webSessionStore.FindById(opCtx, id); err != nil {
-					return fmt.Errorf("[manager.UserSessionManager.FindById] find a user's web session: %w", err)
+					return fmt.Errorf("[manager.UserSessionManager.FindById] find a user's web session by id: %w", err)
 				}
 			case models.UserSessionTypeMobile:
 				if s, err = m.mobileSessionStore.FindById(opCtx, id); err != nil {
-					return fmt.Errorf("[manager.UserSessionManager.FindById] find a user's mobile session: %w", err)
+					return fmt.Errorf("[manager.UserSessionManager.FindById] find a user's mobile session by id: %w", err)
 				}
 			default:
 				return fmt.Errorf("[manager.UserSessionManager.FindById] user's '%s' session type isn't supported", t)
@@ -220,11 +220,11 @@ func (m *UserSessionManager) GetStatusById(ctx *actions.OperationContext, id uin
 			switch t {
 			case models.UserSessionTypeWeb:
 				if s, err = m.webSessionStore.GetStatusById(opCtx, id); err != nil {
-					return fmt.Errorf("[manager.UserSessionManager.GetStatusById] get a user's web session status: %w", err)
+					return fmt.Errorf("[manager.UserSessionManager.GetStatusById] get a user's web session status by id: %w", err)
 				}
 			case models.UserSessionTypeMobile:
 				if s, err = m.mobileSessionStore.GetStatusById(opCtx, id); err != nil {
-					return fmt.Errorf("[manager.UserSessionManager.GetStatusById] get a user's mobile session status: %w", err)
+					return fmt.Errorf("[manager.UserSessionManager.GetStatusById] get a user's mobile session status by id: %w", err)
 				}
 			default:
 				return fmt.Errorf("[manager.UserSessionManager.GetStatusById] user's '%s' session type isn't supported", t)
