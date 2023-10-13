@@ -23,16 +23,20 @@ import (
 	"personal-website-v2/identity/src/internal/clients"
 	"personal-website-v2/identity/src/internal/clients/dbmodels"
 	"personal-website-v2/identity/src/internal/clients/models"
+	clientoperations "personal-website-v2/identity/src/internal/clients/operations/clients"
 	"personal-website-v2/identity/src/internal/errors"
 	"personal-website-v2/identity/src/internal/logging/events"
 	"personal-website-v2/pkg/actions"
 	"personal-website-v2/pkg/app"
+	"personal-website-v2/pkg/base/nullable"
+	actionhelper "personal-website-v2/pkg/helper/actions"
 	"personal-website-v2/pkg/logging"
 	"personal-website-v2/pkg/logging/context"
 )
 
 // ClientManager is a client manager.
 type ClientManager struct {
+	opExecutor        *actionhelper.OperationExecutor
 	webClientStore    clients.ClientStore
 	mobileClientStore clients.ClientStore
 	logger            logging.Logger[*context.LogEntryContext]
@@ -46,11 +50,97 @@ func NewClientManager(webClientStore clients.ClientStore, mobileClientStore clie
 		return nil, fmt.Errorf("[manager.NewClientManager] create a logger: %w", err)
 	}
 
+	c := &actionhelper.OperationExecutorConfig{
+		DefaultCategory: actions.OperationCategoryCommon,
+		DefaultGroup:    iactions.OperationGroupClient,
+		StopAppIfError:  true,
+	}
+
+	e, err := actionhelper.NewOperationExecutor(c, loggerFactory)
+	if err != nil {
+		return nil, fmt.Errorf("[manager.NewUserSessionManager] new operation executor: %w", err)
+	}
+
 	return &ClientManager{
+		opExecutor:        e,
 		webClientStore:    webClientStore,
 		mobileClientStore: mobileClientStore,
 		logger:            l,
 	}, nil
+}
+
+// CreateWebClient creates a web client and returns the client ID if the operation is successful.
+func (m *ClientManager) CreateWebClient(ctx *actions.OperationContext, data *clientoperations.CreateWebClientOperationData) (uint64, error) {
+	var id uint64
+	err := m.opExecutor.Exec(ctx, iactions.OperationTypeClientManager_CreateWebClient,
+		[]*actions.OperationParam{actions.NewOperationParam("data", data)},
+		func(opCtx *actions.OperationContext) error {
+			if err := data.Validate(); err != nil {
+				return fmt.Errorf("[manager.ClientManager.CreateWebClient] validate data: %w", err)
+			}
+
+			d := &clientoperations.CreateOperationData{
+				Status:    models.ClientStatusActive,
+				AppId:     data.AppId,
+				UserAgent: nullable.NewNullable(data.UserAgent),
+				IP:        data.IP,
+			}
+
+			var err error
+			if id, err = m.webClientStore.Create(opCtx, d); err != nil {
+				return fmt.Errorf("[manager.ClientManager.CreateWebClient] create a web client: %w", err)
+			}
+
+			m.logger.InfoWithEvent(
+				opCtx.CreateLogEntryContext(),
+				events.ClientEvent,
+				"[manager.ClientManager.CreateWebClient] web client has been created",
+				logging.NewField("id", id),
+			)
+			return nil
+		},
+	)
+	if err != nil {
+		return 0, fmt.Errorf("[manager.ClientManager.CreateWebClient] execute an operation: %w", err)
+	}
+	return id, nil
+}
+
+// CreateMobileClient creates a mobile client and returns the client ID if the operation is successful.
+func (m *ClientManager) CreateMobileClient(ctx *actions.OperationContext, data *clientoperations.CreateMobileClientOperationData) (uint64, error) {
+	var id uint64
+	err := m.opExecutor.Exec(ctx, iactions.OperationTypeClientManager_CreateMobileClient,
+		[]*actions.OperationParam{actions.NewOperationParam("data", data)},
+		func(opCtx *actions.OperationContext) error {
+			if err := data.Validate(); err != nil {
+				return fmt.Errorf("[manager.ClientManager.CreateMobileClient] validate data: %w", err)
+			}
+
+			d := &clientoperations.CreateOperationData{
+				Status:    models.ClientStatusActive,
+				AppId:     nullable.NewNullable(data.AppId),
+				UserAgent: data.UserAgent,
+				IP:        data.IP,
+			}
+
+			var err error
+			if id, err = m.mobileClientStore.Create(opCtx, d); err != nil {
+				return fmt.Errorf("[manager.ClientManager.CreateMobileClient] create a mobile client: %w", err)
+			}
+
+			m.logger.InfoWithEvent(
+				opCtx.CreateLogEntryContext(),
+				events.ClientEvent,
+				"[manager.ClientManager.CreateMobileClient] mobile client has been created",
+				logging.NewField("id", id),
+			)
+			return nil
+		},
+	)
+	if err != nil {
+		return 0, fmt.Errorf("[manager.ClientManager.CreateMobileClient] execute an operation: %w", err)
+	}
+	return id, nil
 }
 
 // FindById finds and returns a client, if any, by the specified client ID.
@@ -73,11 +163,11 @@ func (m *ClientManager) FindById(ctx *actions.OperationContext, id uint64) (*dbm
 	defer func() {
 		if err := ctx.Action.Operations.Complete(op, succeeded); err != nil {
 			leCtx := ctx2.CreateLogEntryContext()
-			m.logger.FatalWithEventAndError(leCtx, events.UserEvent, err, "[manager.ClientManager.FindById] complete an operation")
+			m.logger.FatalWithEventAndError(leCtx, events.ClientEvent, err, "[manager.ClientManager.FindById] complete an operation")
 
 			go func() {
 				if err := app.Stop(); err != nil {
-					m.logger.ErrorWithEvent(leCtx, events.UserEvent, err, "[manager.ClientManager.FindById] stop an app")
+					m.logger.ErrorWithEvent(leCtx, events.ClientEvent, err, "[manager.ClientManager.FindById] stop an app")
 				}
 			}()
 		}
@@ -136,11 +226,11 @@ func (m *ClientManager) GetStatusById(ctx *actions.OperationContext, id uint64) 
 	defer func() {
 		if err := ctx.Action.Operations.Complete(op, succeeded); err != nil {
 			leCtx := ctx2.CreateLogEntryContext()
-			m.logger.FatalWithEventAndError(leCtx, events.UserEvent, err, "[manager.ClientManager.GetStatusById] complete an operation")
+			m.logger.FatalWithEventAndError(leCtx, events.ClientEvent, err, "[manager.ClientManager.GetStatusById] complete an operation")
 
 			go func() {
 				if err := app.Stop(); err != nil {
-					m.logger.ErrorWithEvent(leCtx, events.UserEvent, err, "[manager.ClientManager.GetStatusById] stop an app")
+					m.logger.ErrorWithEvent(leCtx, events.ClientEvent, err, "[manager.ClientManager.GetStatusById] stop an app")
 				}
 			}()
 		}

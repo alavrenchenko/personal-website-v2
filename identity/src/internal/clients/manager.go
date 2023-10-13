@@ -17,11 +17,18 @@ package clients
 import (
 	"personal-website-v2/identity/src/internal/clients/dbmodels"
 	"personal-website-v2/identity/src/internal/clients/models"
+	"personal-website-v2/identity/src/internal/clients/operations/clients"
 	"personal-website-v2/pkg/actions"
 )
 
 // ClientManager is a client manager.
 type ClientManager interface {
+	// CreateWebClient creates a web client and returns the client ID if the operation is successful.
+	CreateWebClient(ctx *actions.OperationContext, data *clients.CreateWebClientOperationData) (uint64, error)
+
+	// CreateMobileClient creates a mobile client and returns the client ID if the operation is successful.
+	CreateMobileClient(ctx *actions.OperationContext, data *clients.CreateMobileClientOperationData) (uint64, error)
+
 	// FindById finds and returns a client, if any, by the specified client ID.
 	FindById(ctx *actions.OperationContext, id uint64) (*dbmodels.Client, error)
 
