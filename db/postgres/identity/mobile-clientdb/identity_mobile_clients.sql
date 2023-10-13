@@ -12,6 +12,8 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
+-- ../db/postgres/common/clientdb/identity_clients.sql
+
 -- Database: identity_mobile_clients
 
 CREATE DATABASE identity_mobile_clients
@@ -48,6 +50,7 @@ start: (1<<8)+2 = 258 // 00000001 00000010(Mobile), 2(00000010): Mobile Client
 min_value: (1<<8)+2 = 258
 max_value: (1<<63)-1 = 9223372036854775807 // ((256^8)/2)−1
 max_count: (1<<55)-1 = 36028797018963967   // ((256^7)/2)−1, 9223372036854775807>>8
+exact_max_value: (36028797018963967*256)+2 = 9223372036854775554 // ((9223372036854775807>>8)<<8)+2, 2: Mobile Client
 
 id examples:
 258       // 00000001 00000010

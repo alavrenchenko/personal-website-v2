@@ -12,6 +12,8 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
+-- ../db/postgres/common/user-agentdb/identity_user_agents.sql
+
 -- Database: identity_web_user_agents
 
 CREATE DATABASE identity_web_user_agents
@@ -25,7 +27,7 @@ CREATE DATABASE identity_web_user_agents
     IS_TEMPLATE = False;
 
 
--- Table: public.users
+-- Table: public.user_agents
 /*
 User agent types:
     Unspecified = 0
@@ -48,6 +50,7 @@ start: (1<<8)+1 = 257 // 00000001 00000001(Web), 1(00000001): Web User Agent
 min_value: (1<<8)+1 = 257
 max_value: (1<<63)-1 = 9223372036854775807 // ((256^8)/2)−1
 max_count: (1<<55)-1 = 36028797018963967   // ((256^7)/2)−1, 9223372036854775807>>8
+exact_max_value: (36028797018963967*256)+1 = 9223372036854775553 // ((9223372036854775807>>8)<<8)+1, 1: Web User Agent
 
 id examples:
 257       // 00000001 00000001
