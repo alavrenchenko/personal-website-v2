@@ -23,12 +23,12 @@ import (
 
 // UserSessionManager is a user's session manager.
 type UserSessionManager interface {
-	// CreateAndStart creates and starts a user's web session for the specified user
-	// and returns user's session ID if the operation is successful.
+	// CreateAndStartWebSession creates and starts a user's web session and returns user's session ID
+	// if the operation is successful.
 	CreateAndStartWebSession(ctx *actions.OperationContext, data *usersessions.CreateAndStartOperationData) (uint64, error)
 
-	// CreateAndStart creates and starts a user's mobile session for the specified user
-	// and returns user's session ID if the operation is successful.
+	// CreateAndStartMobileSession creates and starts a user's mobile session and returns user's session ID
+	// if the operation is successful.
 	CreateAndStartMobileSession(ctx *actions.OperationContext, data *usersessions.CreateAndStartOperationData) (uint64, error)
 
 	// Terminate terminates a user's session by the specified user session ID.

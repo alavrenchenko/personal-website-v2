@@ -22,8 +22,8 @@ import (
 )
 
 type UserSessionStore interface {
-	// CreateAndStart creates and starts a user's session for the specified user
-	// and returns user's session ID if the operation is successful.
+	// CreateAndStart creates and starts a user's session and returns user's session ID
+	// if the operation is successful.
 	CreateAndStart(ctx *actions.OperationContext, data *usersessions.CreateAndStartOperationData) (uint64, error)
 
 	// Terminate terminates a user's session by the specified user session ID.

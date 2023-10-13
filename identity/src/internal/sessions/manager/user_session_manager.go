@@ -65,8 +65,8 @@ func NewUserSessionManager(webSessionStore sessions.UserSessionStore, mobileSess
 	}, nil
 }
 
-// CreateAndStart creates and starts a user's web session for the specified user
-// and returns user's session ID if the operation is successful.
+// CreateAndStartWebSession creates and starts a user's web session and returns user's session ID
+// if the operation is successful.
 func (m *UserSessionManager) CreateAndStartWebSession(ctx *actions.OperationContext, data *usersessions.CreateAndStartOperationData) (uint64, error) {
 	var id uint64
 	err := m.opExecutor.Exec(ctx, iactions.OperationTypeUserSessionManager_CreateAndStartWebSession,
@@ -96,8 +96,8 @@ func (m *UserSessionManager) CreateAndStartWebSession(ctx *actions.OperationCont
 	return id, nil
 }
 
-// CreateAndStart creates and starts a user's mobile session for the specified user
-// and returns user's session ID if the operation is successful.
+// CreateAndStartMobileSession creates and starts a user's mobile session and returns user's session ID
+// if the operation is successful.
 func (m *UserSessionManager) CreateAndStartMobileSession(ctx *actions.OperationContext, data *usersessions.CreateAndStartOperationData) (uint64, error) {
 	var id uint64
 	err := m.opExecutor.Exec(ctx, iactions.OperationTypeUserSessionManager_CreateAndStartMobileSession,
