@@ -41,11 +41,24 @@ Client statuses:
     TemporarilyLockedOut = 5
     Disabled             = 6
     Deleted              = 7
+
+id:
+increment: 1<<8 = 256
+start: (1<<8)+1 = 257 // 00000001 00000001(Web), 1(00000001): Web Client
+min_value: (1<<8)+1 = 257
+max_value: (1<<63)-1 = 9223372036854775807 // ((256^8)/2)−1
+max_count: (1<<55)-1 = 36028797018963967   // ((256^7)/2)−1, 9223372036854775807>>8
+
+id examples:
+257       // 00000001 00000001
++256: 513 // 00000010 00000001
++256: 769 // 00000011 00000001
+and so on
 */
 CREATE TABLE IF NOT EXISTS public.clients
 (
-    id bigint NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 9223372036854775807 CACHE 1 ),
-    type smallint NOT NULL,
+    id bigint NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 256 START 257 MINVALUE 257 MAXVALUE 9223372036854775807 CACHE 1 ),
+    type smallint NOT NULL GENERATED ALWAYS AS (1) STORED,
     created_at timestamp(6) without time zone NOT NULL,
     created_by bigint NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL DEFAULT (clock_timestamp() AT TIME ZONE 'UTC'::text),
