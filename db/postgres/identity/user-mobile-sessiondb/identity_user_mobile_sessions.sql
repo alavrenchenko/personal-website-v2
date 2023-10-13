@@ -44,8 +44,8 @@ id:
 increment: 1<<8 = 256
 start: (1<<8)+2 = 258 // 00000001 00000010(Mobile), 2(00000010): User's Mobile Session
 min_value: (1<<8)+2 = 258
-max_value: (1<<63)-1 = 9223372036854775807 // ((256^8)/2)−1
-max_count: (1<<55)-1 = 36028797018963967   // ((256^7)/2)−1, 9223372036854775807>>8
+max_value: (1<<63)-1 = 9223372036854775807 // ((256^8)/2)-1
+max_count: (1<<55)-1 = 36028797018963967   // ((256^7)/2)-1, 9223372036854775807>>8
 exact_max_value: (36028797018963967*256)+2 = 9223372036854775554 // ((9223372036854775807>>8)<<8)+2, 2: User's Mobile Session
 
 id examples:
@@ -76,6 +76,6 @@ CREATE TABLE IF NOT EXISTS public.user_sessions
     last_activity_ip character varying(64) COLLATE pg_catalog."default" NOT NULL,
     _version_stamp bigint NOT NULL,
     _timestamp timestamp(6) without time zone NOT NULL DEFAULT (clock_timestamp() AT TIME ZONE 'UTC'::text),
-    CONSTRAINT clients_pkey PRIMARY KEY (id)
+    CONSTRAINT user_sessions_pkey PRIMARY KEY (id)
 )
 TABLESPACE pg_default;
