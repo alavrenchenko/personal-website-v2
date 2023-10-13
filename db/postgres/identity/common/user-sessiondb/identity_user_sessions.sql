@@ -60,6 +60,6 @@ CREATE TABLE IF NOT EXISTS public.user_sessions
     last_activity_ip character varying(64) COLLATE pg_catalog."default" NOT NULL,
     _version_stamp bigint NOT NULL,
     _timestamp timestamp(6) without time zone NOT NULL DEFAULT (clock_timestamp() AT TIME ZONE 'UTC'::text),
-    CONSTRAINT clients_pkey PRIMARY KEY (id)
+    CONSTRAINT user_sessions_pkey PRIMARY KEY (id)
 )
 TABLESPACE pg_default;
