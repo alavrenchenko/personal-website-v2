@@ -66,6 +66,12 @@ const (
 	OperationTypeUserSessionManager_GetStatusById               actions.OperationType = 14005
 
 	// UserAgentSessionManager operation types (14500-14999)
+	OperationTypeUserAgentSessionManager_CreateAndStart              actions.OperationType = 14500
+	OperationTypeUserAgentSessionManager_CreateAndStartWebSession    actions.OperationType = 14501
+	OperationTypeUserAgentSessionManager_CreateAndStartMobileSession actions.OperationType = 14502
+	OperationTypeUserAgentSessionManager_Terminate                   actions.OperationType = 14503
+	OperationTypeUserAgentSessionManager_FindById                    actions.OperationType = 14504
+	OperationTypeUserAgentSessionManager_GetStatusById               actions.OperationType = 14505
 
 	// Authentication TokenEncryptionKeyManager operation types (15000-15499)
 	OperationTypeAuthTokenEncryptionKeyManager_FindById                         actions.OperationType = 15000
@@ -129,6 +135,18 @@ const (
 	OperationTypeUserSessionStore_GetMobileSessionStatusById  actions.OperationType = 34011
 
 	// UserAgentSessionStore operation types (34500-34999)
+	OperationTypeUserAgentSessionStore_CreateAndStart              actions.OperationType = 34500
+	OperationTypeUserAgentSessionStore_CreateAndStartWebSession    actions.OperationType = 34501
+	OperationTypeUserAgentSessionStore_CreateAndStartMobileSession actions.OperationType = 34502
+	OperationTypeUserAgentSessionStore_Terminate                   actions.OperationType = 34503
+	OperationTypeUserAgentSessionStore_TerminateWebSession         actions.OperationType = 34504
+	OperationTypeUserAgentSessionStore_TerminateMobileSession      actions.OperationType = 34505
+	OperationTypeUserAgentSessionStore_FindById                    actions.OperationType = 34506
+	OperationTypeUserAgentSessionStore_FindWebSessionById          actions.OperationType = 34507
+	OperationTypeUserAgentSessionStore_FindMobileSessionById       actions.OperationType = 34508
+	OperationTypeUserAgentSessionStore_GetStatusById               actions.OperationType = 34509
+	OperationTypeUserAgentSessionStore_GetWebSessionStatusById     actions.OperationType = 34510
+	OperationTypeUserAgentSessionStore_GetMobileSessionStatusById  actions.OperationType = 34511
 
 	// Authentication TokenEncryptionKeyStore operation types (35000-35499)
 	OperationTypeAuthTokenEncryptionKeyStore_FindById                         actions.OperationType = 35000
