@@ -17,20 +17,30 @@ package useragents
 import (
 	"personal-website-v2/identity/src/internal/useragents/dbmodels"
 	"personal-website-v2/identity/src/internal/useragents/models"
+	"personal-website-v2/identity/src/internal/useragents/operations/useragents"
 	"personal-website-v2/pkg/actions"
 )
 
 // UserAgentManager is a user agent manager.
 type UserAgentManager interface {
-	// FindById finds and returns a user's agent, if any, by the specified user's agent ID.
+	// CreateWebUserAgent creates a web user agent and returns the user agent ID if the operation is successful.
+	CreateWebUserAgent(ctx *actions.OperationContext, data *useragents.CreateWebUserAgentOperationData) (uint64, error)
+
+	// CreateMobileUserAgent creates a mobile user agent and returns the user agent ID if the operation is successful.
+	CreateMobileUserAgent(ctx *actions.OperationContext, data *useragents.CreateMobileUserAgentOperationData) (uint64, error)
+
+	// FindById finds and returns a user agent, if any, by the specified user agent ID.
 	FindById(ctx *actions.OperationContext, id uint64) (*dbmodels.UserAgent, error)
 
-	// FindById finds and returns a user's agent, if any, by the specified user ID and client ID.
+	// FindByUserIdAndClientId finds and returns a user agent, if any, by the specified user ID and client ID.
 	FindByUserIdAndClientId(ctx *actions.OperationContext, userId, clientId uint64) (*dbmodels.UserAgent, error)
 
-	// GetStatusById gets a user's agent status by the specified user's agent ID.
+	// GetTypeById gets a user agent type by the specified user agent ID.
+	GetTypeById(id uint64) (models.UserAgentType, error)
+
+	// GetStatusById gets a user agent status by the specified user agent ID.
 	GetStatusById(ctx *actions.OperationContext, id uint64) (models.UserAgentStatus, error)
 
 	// IsSignInAllowed determines whether sign-in is allowed for the specified user and client.
-	IsSignInAllowed(ctx *actions.OperationContext, userId, clientId uint64) (bool, error)
+	// IsSignInAllowed(ctx *actions.OperationContext, userId, clientId uint64) (bool, error)
 }

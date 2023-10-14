@@ -17,16 +17,20 @@ package useragents
 import (
 	"personal-website-v2/identity/src/internal/useragents/dbmodels"
 	"personal-website-v2/identity/src/internal/useragents/models"
+	"personal-website-v2/identity/src/internal/useragents/operations/useragents"
 	"personal-website-v2/pkg/actions"
 )
 
 type UserAgentStore interface {
-	// FindById finds and returns a user's agent, if any, by the specified user's agent ID.
+	// Create creates a user agent and returns the user agent ID if the operation is successful.
+	Create(ctx *actions.OperationContext, data *useragents.CreateOperationData) (uint64, error)
+
+	// FindById finds and returns a user agent, if any, by the specified user agent ID.
 	FindById(ctx *actions.OperationContext, id uint64) (*dbmodels.UserAgent, error)
 
-	// FindById finds and returns a user's agent, if any, by the specified user ID and client ID.
+	// FindByUserIdAndClientId finds and returns a user agent, if any, by the specified user ID and client ID.
 	FindByUserIdAndClientId(ctx *actions.OperationContext, userId, clientId uint64) (*dbmodels.UserAgent, error)
 
-	// GetStatusById gets a user's agent status by the specified user's agent ID.
+	// GetStatusById gets a user agent status by the specified user agent ID.
 	GetStatusById(ctx *actions.OperationContext, id uint64) (models.UserAgentStatus, error)
 }

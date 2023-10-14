@@ -20,9 +20,9 @@ import (
 	"personal-website-v2/identity/src/internal/useragents/models"
 )
 
-// The user's agent.
+// The user agent.
 type UserAgent struct {
-	// The unique ID to identify the user's agent.
+	// The unique ID to identify the user agent.
 	Id uint64 `db:"id"`
 
 	// The user ID.
@@ -31,31 +31,31 @@ type UserAgent struct {
 	// The client ID (web and mobile).
 	ClientId uint64 `db:"client_id"`
 
-	// The user's agent type.
+	// The user agent type.
 	Type models.UserAgentType `db:"type"`
 
-	// It stores the date and time at which the user's agent was created.
+	// It stores the date and time at which the user agent was created.
 	CreatedAt time.Time `db:"created_at"`
 
-	// The user ID to identify the user who created the user's agent.
+	// The user ID to identify the user who created the user agent.
 	CreatedBy uint64 `db:"created_by"`
 
-	// It stores the date and time at which the user's agent was updated.
+	// It stores the date and time at which the user agent was updated.
 	UpdatedAt time.Time `db:"updated_at"`
 
-	// The user ID to identify the user who updated the user's agent.
+	// The user ID to identify the user who updated the user agent.
 	UpdatedBy uint64 `db:"updated_by"`
 
-	// The user's agent status can be New(1), PendingApproval(2), Active(3), LockedOut(4), TemporarilyLockedOut(5), Disabled(6), or Deleted(7).
+	// The user agent status can be New(1), PendingApproval(2), Active(3), LockedOut(4), TemporarilyLockedOut(5), Disabled(6), or Deleted(7).
 	Status models.UserAgentStatus `db:"status"`
 
-	// It stores the date and time at which the user's agent status was updated.
+	// It stores the date and time at which the user agent status was updated.
 	StatusUpdatedAt time.Time `db:"status_updated_at"`
 
-	// The user ID to identify the user who updated the user's agent status.
+	// The user ID to identify the user who updated the user agent status.
 	StatusUpdatedBy uint64 `db:"status_updated_by"`
 
-	// The user's agent status comment.
+	// The user agent status comment.
 	StatusComment *string `db:"status_comment"`
 
 	// The app ID.
@@ -66,6 +66,12 @@ type UserAgent struct {
 
 	// The last User-Agent.
 	LastUserAgent *string `db:"last_user_agent"`
+
+	// The first sign-in time.
+	FirstSignInTime time.Time `db:"first_sign_in_time"`
+
+	// The first sign-in IP address.
+	FirstSignInIP string `db:"first_sign_in_ip"`
 
 	// The last sign-in time.
 	LastSignInTime time.Time `db:"last_sign_in_time"`

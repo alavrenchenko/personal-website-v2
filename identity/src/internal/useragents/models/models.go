@@ -16,7 +16,7 @@ package models
 
 import "fmt"
 
-// The user's agent type.
+// The user agent type.
 type UserAgentType uint8
 
 const (
@@ -42,7 +42,7 @@ func (t UserAgentType) String() string {
 	return fmt.Sprintf("UserAgentType(%d)", t)
 }
 
-// The user's agent status.
+// The user agent status.
 type UserAgentStatus uint8
 
 const (
