@@ -88,8 +88,9 @@ const (
 	UserAgentSessionStatusNew                  UserAgentSessionStatus = 1
 	UserAgentSessionStatusActive               UserAgentSessionStatus = 2
 	UserAgentSessionStatusSignedOut            UserAgentSessionStatus = 3
-	UserAgentSessionStatusLockedOut            UserAgentSessionStatus = 4
-	UserAgentSessionStatusTemporarilyLockedOut UserAgentSessionStatus = 5
-	UserAgentSessionStatusDisabled             UserAgentSessionStatus = 6
-	UserAgentSessionStatusEnded                UserAgentSessionStatus = 7
+	UserAgentSessionStatusEnded                UserAgentSessionStatus = 4
+	UserAgentSessionStatusLockedOut            UserAgentSessionStatus = 5
+	UserAgentSessionStatusTemporarilyLockedOut UserAgentSessionStatus = 6
+	UserAgentSessionStatusDisabled             UserAgentSessionStatus = 7
+	UserAgentSessionStatusDeleted              UserAgentSessionStatus = 8
 )

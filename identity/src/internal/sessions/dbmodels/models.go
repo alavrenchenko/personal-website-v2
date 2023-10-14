@@ -127,12 +127,6 @@ type UserAgentSessionInfo struct {
 	// The session status comment.
 	StatusComment *string `db:"status_comment"`
 
-	// The start time of the user agent session.
-	StartTime *time.Time `db:"start_time"`
-
-	// The end time of the user agent session.
-	EndTime *time.Time `db:"end_time"`
-
 	// The first sign-in time.
 	FirstSignInTime time.Time `db:"first_sign_in_time"`
 
@@ -146,7 +140,7 @@ type UserAgentSessionInfo struct {
 	LastSignInIP string `db:"last_sign_in_ip"`
 
 	// The last sign-out time.
-	LastSignOutTime time.Time `db:"last_sign_out_time"`
+	LastSignOutTime *time.Time `db:"last_sign_out_time"`
 
 	// The last activity time.
 	LastActivityTime time.Time `db:"last_activity_time"`
