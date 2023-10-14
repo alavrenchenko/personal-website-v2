@@ -104,7 +104,7 @@ func NewClientStore(ctype models.ClientType, db *postgres.Database, loggerFactor
 // Create creates a client and returns the client ID if the operation is successful.
 func (s *ClientStore) Create(ctx *actions.OperationContext, data *clientoperations.CreateOperationData) (uint64, error) {
 	var id uint64
-	err := s.opExecutor.Exec(ctx, s.findByIdOpType, []*actions.OperationParam{actions.NewOperationParam("data", data)},
+	err := s.opExecutor.Exec(ctx, s.createOpType, []*actions.OperationParam{actions.NewOperationParam("data", data)},
 		func(opCtx *actions.OperationContext) error {
 			var errCode dberrors.DbErrorCode
 			var errMsg string
