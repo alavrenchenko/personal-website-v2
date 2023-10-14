@@ -44,6 +44,6 @@ type UserSessionManager interface {
 	GetStatusById(ctx *actions.OperationContext, id uint64) (models.UserSessionStatus, error)
 }
 
-// UserAgentSessionManager is a user's agent session manager.
+// UserAgentSessionManager is a user agent session manager.
 type UserAgentSessionManager interface {
 }

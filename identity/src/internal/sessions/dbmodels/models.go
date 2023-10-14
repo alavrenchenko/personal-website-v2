@@ -31,7 +31,7 @@ type UserSessionInfo struct {
 	// The client ID.
 	ClientId uint64 `db:"client_id"`
 
-	// The user's agent ID.
+	// The user agent ID.
 	UserAgentId uint64 `db:"user_agent_id"`
 
 	// The user's session type.
@@ -83,9 +83,9 @@ type UserSessionInfo struct {
 	Timestamp time.Time `db:"_timestamp"`
 }
 
-// The user's agent session info.
+// The user agent session info.
 type UserAgentSessionInfo struct {
-	// The unique ID to identify the user's agent session.
+	// The unique ID to identify the user agent session.
 	Id uint64 `db:"id"`
 
 	// The user ID who owns the session.
@@ -94,10 +94,10 @@ type UserAgentSessionInfo struct {
 	// The client ID.
 	ClientId uint64 `db:"client_id"`
 
-	// The user's agent ID.
+	// The user agent ID.
 	UserAgentId uint64 `db:"user_agent_id"`
 
-	// The user's agent session type.
+	// The user agent session type.
 	Type models.UserAgentSessionType `db:"type"`
 
 	// The user's session ID.
@@ -115,7 +115,7 @@ type UserAgentSessionInfo struct {
 	// The user ID to identify the user who updated the session.
 	UpdatedBy uint64 `db:"updated_by"`
 
-	// The user's agent session status.
+	// The user agent session status.
 	Status models.UserAgentSessionStatus `db:"status"`
 
 	// It stores the date and time at which the session status was updated.
@@ -127,10 +127,10 @@ type UserAgentSessionInfo struct {
 	// The session status comment.
 	StatusComment *string `db:"status_comment"`
 
-	// The start time of the user's agent session.
+	// The start time of the user agent session.
 	StartTime *time.Time `db:"start_time"`
 
-	// The end time of the user's agent session.
+	// The end time of the user agent session.
 	EndTime *time.Time `db:"end_time"`
 
 	// The first sign-in time.

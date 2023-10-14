@@ -53,7 +53,7 @@ const (
 	UserSessionStatusEnded  UserSessionStatus = 3
 )
 
-// The user's agent session type.
+// The user agent session type.
 type UserAgentSessionType uint8
 
 const (
@@ -79,7 +79,7 @@ func (t UserAgentSessionType) String() string {
 	return fmt.Sprintf("UserAgentSessionType(%d)", t)
 }
 
-// The user's agent session status.
+// The user agent session status.
 type UserAgentSessionStatus uint8
 
 const (

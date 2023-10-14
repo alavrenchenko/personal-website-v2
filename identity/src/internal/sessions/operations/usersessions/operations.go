@@ -26,7 +26,7 @@ type CreateAndStartOperationData struct {
 	// The client ID.
 	ClientId uint64 `json:"clientId"`
 
-	// The user's agent ID.
+	// The user agent ID.
 	UserAgentId uint64 `json:"userAgentId"`
 
 	// The first IP address (sign-in IP address).
