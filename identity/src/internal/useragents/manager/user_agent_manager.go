@@ -58,7 +58,7 @@ func NewUserAgentManager(
 
 	c := &actionhelper.OperationExecutorConfig{
 		DefaultCategory: actions.OperationCategoryCommon,
-		DefaultGroup:    iactions.OperationGroupUserSession,
+		DefaultGroup:    iactions.OperationGroupUserAgent,
 		StopAppIfError:  true,
 	}
 
