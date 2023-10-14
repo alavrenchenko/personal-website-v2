@@ -56,9 +56,6 @@ func (d *CreateWebUserAgentOperationData) Validate() *errors.Error {
 	if strings.IsEmptyOrWhitespace(d.UserAgent) {
 		return errors.NewError(errors.ErrorCodeInvalidData, "userAgent is empty")
 	}
-	if strings.IsEmptyOrWhitespace(d.IP) {
-		return errors.NewError(errors.ErrorCodeInvalidData, "ip is empty")
-	}
 	return nil
 }
 
