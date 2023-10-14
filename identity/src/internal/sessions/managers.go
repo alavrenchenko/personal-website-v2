@@ -17,17 +17,18 @@ package sessions
 import (
 	"personal-website-v2/identity/src/internal/sessions/dbmodels"
 	"personal-website-v2/identity/src/internal/sessions/models"
+	"personal-website-v2/identity/src/internal/sessions/operations/useragentsessions"
 	"personal-website-v2/identity/src/internal/sessions/operations/usersessions"
 	"personal-website-v2/pkg/actions"
 )
 
 // UserSessionManager is a user's session manager.
 type UserSessionManager interface {
-	// CreateAndStartWebSession creates and starts a user's web session and returns user's session ID
+	// CreateAndStartWebSession creates and starts a user's web session and returns the user's session ID
 	// if the operation is successful.
 	CreateAndStartWebSession(ctx *actions.OperationContext, data *usersessions.CreateAndStartOperationData) (uint64, error)
 
-	// CreateAndStartMobileSession creates and starts a user's mobile session and returns user's session ID
+	// CreateAndStartMobileSession creates and starts a user's mobile session and returns the user's session ID
 	// if the operation is successful.
 	CreateAndStartMobileSession(ctx *actions.OperationContext, data *usersessions.CreateAndStartOperationData) (uint64, error)
 
@@ -46,4 +47,23 @@ type UserSessionManager interface {
 
 // UserAgentSessionManager is a user agent session manager.
 type UserAgentSessionManager interface {
+	// CreateAndStartWebSession creates and starts a web session of the user agent (web)
+	// and returns the user agent session ID if the operation is successful.
+	CreateAndStartWebSession(ctx *actions.OperationContext, data *useragentsessions.CreateAndStartOperationData) (uint64, error)
+
+	// CreateAndStartMobileSession creates and starts a mobile session of the user agent (mobile)
+	// and returns the user agent session ID if the operation is successful.
+	CreateAndStartMobileSession(ctx *actions.OperationContext, data *useragentsessions.CreateAndStartOperationData) (uint64, error)
+
+	// Terminate terminates a user agent session by the specified user agent session ID.
+	Terminate(ctx *actions.OperationContext, id uint64) error
+
+	// FindById finds and returns user agent session info, if any, by the specified user agent session ID.
+	FindById(ctx *actions.OperationContext, id uint64) (*dbmodels.UserAgentSessionInfo, error)
+
+	// GetTypeById gets a user agent session type by the specified user agent session ID.
+	GetTypeById(id uint64) (models.UserAgentSessionType, error)
+
+	// GetStatusById gets a user agent session status by the specified user agent session ID.
+	GetStatusById(ctx *actions.OperationContext, id uint64) (models.UserAgentSessionStatus, error)
 }
