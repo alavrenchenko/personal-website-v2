@@ -97,7 +97,6 @@ func (m *UserAgentManager) CreateWebUserAgent(ctx *actions.OperationContext, dat
 				Status:    models.UserAgentStatusActive,
 				AppId:     data.AppId,
 				UserAgent: nullable.NewNullable(data.UserAgent),
-				IP:        data.IP,
 			}
 
 			var err error
@@ -125,10 +124,6 @@ func (m *UserAgentManager) CreateMobileUserAgent(ctx *actions.OperationContext, 
 	var id uint64
 	err := m.opExecutor.Exec(ctx, iactions.OperationTypeUserAgentManager_CreateMobileUserAgent, []*actions.OperationParam{actions.NewOperationParam("data", data)},
 		func(opCtx *actions.OperationContext) error {
-			if err := data.Validate(); err != nil {
-				return fmt.Errorf("[manager.UserAgentManager.CreateMobileUserAgent] validate data: %w", err)
-			}
-
 			if t, err := m.clientManager.GetTypeById(data.ClientId); err != nil {
 				return fmt.Errorf("[manager.UserAgentManager.CreateMobileUserAgent] get a client type by id: %w", err)
 			} else if t != clientmodels.ClientTypeMobile {
@@ -141,7 +136,6 @@ func (m *UserAgentManager) CreateMobileUserAgent(ctx *actions.OperationContext, 
 				Status:    models.UserAgentStatusActive,
 				AppId:     nullable.NewNullable(data.AppId),
 				UserAgent: data.UserAgent,
-				IP:        data.IP,
 			}
 
 			var err error

@@ -36,9 +36,6 @@ type CreateOperationData struct {
 
 	// The User-Agent.
 	UserAgent nullable.Nullable[string] `json:"userAgent"`
-
-	// The IP address.
-	IP string `json:"ip"`
 }
 
 type CreateWebUserAgentOperationData struct {
@@ -53,9 +50,6 @@ type CreateWebUserAgentOperationData struct {
 
 	// The User-Agent.
 	UserAgent string `json:"userAgent"`
-
-	// The IP address.
-	IP string `json:"ip"`
 }
 
 func (d *CreateWebUserAgentOperationData) Validate() *errors.Error {
@@ -80,14 +74,4 @@ type CreateMobileUserAgentOperationData struct {
 
 	// The User-Agent.
 	UserAgent nullable.Nullable[string] `json:"userAgent"`
-
-	// The IP address.
-	IP string `json:"ip"`
-}
-
-func (d *CreateMobileUserAgentOperationData) Validate() *errors.Error {
-	if strings.IsEmptyOrWhitespace(d.IP) {
-		return errors.NewError(errors.ErrorCodeInvalidData, "ip is empty")
-	}
-	return nil
 }
