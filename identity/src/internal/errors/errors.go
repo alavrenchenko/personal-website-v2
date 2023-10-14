@@ -60,7 +60,7 @@ var (
 	ErrInvalidClientId = errors.NewError(ErrorCodeInvalidClientId, "invalid client id")
 
 	// User agent errors.
-	ErrUserAgentNotFound  = errors.NewError(ErrorCodeUserAgentNotFound, "user's agent not found")
+	ErrUserAgentNotFound  = errors.NewError(ErrorCodeUserAgentNotFound, "user agent not found")
 	ErrInvalidUserAgentId = errors.NewError(ErrorCodeInvalidUserAgentId, "invalid user agent id")
 
 	// Authentication errors.
@@ -72,7 +72,7 @@ var (
 	ErrInvalidUserSessionId = errors.NewError(ErrorCodeInvalidUserSessionId, "invalid user session id")
 
 	// User agent session errors.
-	ErrUserAgentSessionNotFound  = errors.NewError(ErrorCodeUserAgentSessionNotFound, "user's agent session not found")
+	ErrUserAgentSessionNotFound  = errors.NewError(ErrorCodeUserAgentSessionNotFound, "user agent session not found")
 	ErrInvalidUserAgentSessionId = errors.NewError(ErrorCodeInvalidUserAgentSessionId, "invalid user agent session id")
 
 	// Authentication token encryption key errors.
