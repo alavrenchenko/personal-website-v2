@@ -40,6 +40,9 @@ const (
 	OperationTypeClientManager_GetStatusById      actions.OperationType = 11504
 
 	// UserAgentManager operation types (12000-12499)
+	OperationTypeUserAgentManager_Create                  actions.OperationType = 12000
+	OperationTypeUserAgentManager_CreateWebUserAgent      actions.OperationType = 12000
+	OperationTypeUserAgentManager_CreateMobileUserAgent   actions.OperationType = 12000
 	OperationTypeUserAgentManager_FindById                actions.OperationType = 12000
 	OperationTypeUserAgentManager_FindByUserIdAndClientId actions.OperationType = 12001
 	OperationTypeUserAgentManager_GetStatusById           actions.OperationType = 12002
@@ -93,9 +96,18 @@ const (
 	OperationTypeClientStore_GetMobileClientStatusById actions.OperationType = 31508
 
 	// UserAgentStore operation types (32000-32499)
-	OperationTypeUserAgentStore_FindById                actions.OperationType = 32000
-	OperationTypeUserAgentStore_FindByUserIdAndClientId actions.OperationType = 32001
-	OperationTypeUserAgentStore_GetStatusById           actions.OperationType = 32002
+	OperationTypeUserAgentStore_Create                                 actions.OperationType = 32000
+	OperationTypeUserAgentStore_CreateWebUserAgent                     actions.OperationType = 32001
+	OperationTypeUserAgentStore_CreateMobileUserAgent                  actions.OperationType = 32002
+	OperationTypeUserAgentStore_FindById                               actions.OperationType = 32003
+	OperationTypeUserAgentStore_FindWebUserAgentById                   actions.OperationType = 32004
+	OperationTypeUserAgentStore_FindMobileUserAgentById                actions.OperationType = 32005
+	OperationTypeUserAgentStore_FindByUserIdAndClientId                actions.OperationType = 32006
+	OperationTypeUserAgentStore_FindWebUserAgentByUserIdAndClientId    actions.OperationType = 32007
+	OperationTypeUserAgentStore_FindMobileUserAgentByUserIdAndClientId actions.OperationType = 32008
+	OperationTypeUserAgentStore_GetStatusById                          actions.OperationType = 32009
+	OperationTypeUserAgentStore_GetWebUserAgentStatusById              actions.OperationType = 32010
+	OperationTypeUserAgentStore_GetMobileUserAgentStatusById           actions.OperationType = 32011
 
 	// AuthenticationStore operation types (32500-32999)
 
