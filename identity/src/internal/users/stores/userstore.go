@@ -15,6 +15,7 @@
 package stores
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
@@ -25,11 +26,13 @@ import (
 	"personal-website-v2/identity/src/internal/users"
 	"personal-website-v2/identity/src/internal/users/dbmodels"
 	"personal-website-v2/identity/src/internal/users/models"
+	useroperations "personal-website-v2/identity/src/internal/users/operations/users"
 	"personal-website-v2/pkg/actions"
+	dberrors "personal-website-v2/pkg/db/errors"
 	"personal-website-v2/pkg/db/postgres"
 	actionhelper "personal-website-v2/pkg/helper/actions"
 	"personal-website-v2/pkg/logging"
-	"personal-website-v2/pkg/logging/context"
+	lcontext "personal-website-v2/pkg/logging/context"
 )
 
 const (
@@ -42,12 +45,13 @@ type UserStore struct {
 	opExecutor *actionhelper.OperationExecutor
 	uStore     *postgres.Store[dbmodels.User]
 	piStore    *postgres.Store[dbmodels.PersonalInfo]
-	logger     logging.Logger[*context.LogEntryContext]
+	txManager  *postgres.TxManager
+	logger     logging.Logger[*lcontext.LogEntryContext]
 }
 
 var _ users.UserStore = (*UserStore)(nil)
 
-func NewUserStore(db *postgres.Database, loggerFactory logging.LoggerFactory[*context.LogEntryContext]) (*UserStore, error) {
+func NewUserStore(db *postgres.Database, loggerFactory logging.LoggerFactory[*lcontext.LogEntryContext]) (*UserStore, error) {
 	l, err := loggerFactory.CreateLogger("internal.users.stores.UserStore")
 	if err != nil {
 		return nil, fmt.Errorf("[stores.NewUserStore] create a logger: %w", err)
@@ -64,13 +68,57 @@ func NewUserStore(db *postgres.Database, loggerFactory logging.LoggerFactory[*co
 		return nil, fmt.Errorf("[stores.NewUserStore] new operation executor: %w", err)
 	}
 
+	txm, err := postgres.NewTxManager(db, &postgres.TxManagerConfig{MaxRetriesWhenSerializationFailureErr: 5}, loggerFactory)
+	if err != nil {
+		return nil, fmt.Errorf("[stores.NewUserStore] new TxManager: %w", err)
+	}
+
 	return &UserStore{
 		db:         db,
 		opExecutor: e,
 		uStore:     postgres.NewStore[dbmodels.User](db),
 		piStore:    postgres.NewStore[dbmodels.PersonalInfo](db),
+		txManager:  txm,
 		logger:     l,
 	}, nil
+}
+
+// Create creates a user and returns the user ID if the operation is successful.
+func (s *UserStore) Create(ctx *actions.OperationContext, data *useroperations.CreateOperationData) (uint64, error) {
+	var id uint64
+	err := s.opExecutor.Exec(ctx, iactions.OperationTypeUserStore_Create, []*actions.OperationParam{actions.NewOperationParam("data", data)},
+		func(opCtx *actions.OperationContext) error {
+			var errCode dberrors.DbErrorCode
+			var errMsg string
+			// public.create_user(IN _group, IN _created_by, IN _status, IN _status_comment, IN _email, IN _first_name, IN _last_name,
+			// IN _display_name, IN _birth_date, IN _gender, OUT _id, OUT err_code, OUT err_msg)
+			const query = "CALL public.create_user($1, $2, $3, NULL, $4, $5, $6, $7, $8, $9, NULL, NULL, NULL)"
+
+			err := s.txManager.ExecWithReadCommittedLevel(opCtx.Ctx, func(txCtx context.Context, tx pgx.Tx) error {
+				r := tx.QueryRow(txCtx, query, data.Group, opCtx.UserId.Value, data.Status, data.Email.Ptr(), data.FirstName, data.LastName,
+					data.DisplayName, data.BirthDate.Ptr(), data.Gender,
+				)
+
+				if err := r.Scan(&id, &errCode, &errMsg); err != nil {
+					return fmt.Errorf("[stores.UserStore.Create] execute a query (create_user): %w", err)
+				}
+				return nil
+			})
+			if err != nil {
+				return fmt.Errorf("[stores.UserStore.Create] execute a transaction with the 'read committed' isolation level: %w", err)
+			}
+
+			if errCode != dberrors.DbErrorCodeNoError {
+				// unknown error
+				return fmt.Errorf("[stores.UserStore.Create] invalid operation: %w", dberrors.NewDbError(errCode, errMsg))
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return 0, fmt.Errorf("[stores.UserStore.Create] execute an operation: %w", err)
+	}
+	return id, nil
 }
 
 // FindById finds and returns a user, if any, by the specified user ID.
