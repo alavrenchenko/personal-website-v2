@@ -47,7 +47,7 @@ User statuses:
 CREATE TABLE IF NOT EXISTS public.users
 (
     id bigint NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 9223372036854775807 CACHE 1 ),
-    name character varying(256) COLLATE pg_catalog."default" NOT NULL,
+    name character varying(256) COLLATE pg_catalog."default",
     "group" smallint NOT NULL,
     created_at timestamp(6) without time zone NOT NULL,
     created_by bigint NOT NULL,
