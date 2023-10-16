@@ -30,7 +30,7 @@ type CreateAndStartOperationData struct {
 	UserAgentId uint64 `json:"userAgentId"`
 
 	// The user's session ID.
-	UserSessionId uint64 `db:"user_agent_id"`
+	UserSessionId uint64 `json:"userSessionId"`
 
 	// The IP address (sign-in IP address).
 	IP string `json:"ip"`

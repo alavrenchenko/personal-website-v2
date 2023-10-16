@@ -101,7 +101,7 @@ type UserAgentSessionInfo struct {
 	Type models.UserAgentSessionType `db:"type"`
 
 	// The user's session ID.
-	UserSessionId uint64 `db:"user_agent_id"`
+	UserSessionId uint64 `db:"user_session_id"`
 
 	// It stores the date and time at which the session was created.
 	CreatedAt time.Time `db:"created_at"`
