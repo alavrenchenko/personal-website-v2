@@ -166,7 +166,7 @@ func (s *UserAgentStore) FindByUserIdAndClientId(ctx *actions.OperationContext, 
 	err := s.opExecutor.Exec(ctx, s.findByUserIdAndClientIdOpType,
 		[]*actions.OperationParam{actions.NewOperationParam("userId", userId), actions.NewOperationParam("clientId", clientId)},
 		func(opCtx *actions.OperationContext) error {
-			const query = "SELECT * FROM " + userAgentsTable + " WHERE user_id = $1, client_id = $2 LIMIT 1"
+			const query = "SELECT * FROM " + userAgentsTable + " WHERE user_id = $1 AND client_id = $2 LIMIT 1"
 			var err error
 			if ua, err = s.store.Find(opCtx.Ctx, query, userId, clientId); err != nil {
 				return fmt.Errorf("[stores.UserAgentStore.FindByUserIdAndClientId] find a user agent by user id and client id: %w", err)
