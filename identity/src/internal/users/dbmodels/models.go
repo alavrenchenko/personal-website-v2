@@ -26,7 +26,7 @@ type User struct {
 	Id uint64 `db:"id"`
 
 	// The unique name to identify the user.
-	Name string `db:"name"`
+	Name *string `db:"name"`
 
 	// The user's group.
 	Group models.UserGroup `db:"group"`
