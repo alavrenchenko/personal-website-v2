@@ -17,11 +17,15 @@ package users
 import (
 	"personal-website-v2/identity/src/internal/users/dbmodels"
 	"personal-website-v2/identity/src/internal/users/models"
+	"personal-website-v2/identity/src/internal/users/operations/users"
 	"personal-website-v2/pkg/actions"
 )
 
 // UserManager is a user manager.
 type UserManager interface {
+	// Create creates a user and returns the user ID if the operation is successful.
+	Create(ctx *actions.OperationContext, data *users.CreateOperationData) (uint64, error)
+
 	// FindById finds and returns a user, if any, by the specified user ID.
 	FindById(ctx *actions.OperationContext, id uint64) (*dbmodels.User, error)
 

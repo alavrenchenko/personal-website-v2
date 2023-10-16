@@ -24,18 +24,21 @@ import (
 	"personal-website-v2/identity/src/internal/users"
 	"personal-website-v2/identity/src/internal/users/dbmodels"
 	"personal-website-v2/identity/src/internal/users/models"
+	useroperations "personal-website-v2/identity/src/internal/users/operations/users"
 	"personal-website-v2/pkg/actions"
 	"personal-website-v2/pkg/app"
 	"personal-website-v2/pkg/base/strings"
 	"personal-website-v2/pkg/errors"
+	actionhelper "personal-website-v2/pkg/helper/actions"
 	"personal-website-v2/pkg/logging"
 	"personal-website-v2/pkg/logging/context"
 )
 
 // UserManager is a user manager.
 type UserManager struct {
-	userStore users.UserStore
-	logger    logging.Logger[*context.LogEntryContext]
+	opExecutor *actionhelper.OperationExecutor
+	userStore  users.UserStore
+	logger     logging.Logger[*context.LogEntryContext]
 }
 
 var _ users.UserManager = (*UserManager)(nil)
@@ -46,10 +49,56 @@ func NewUserManager(userStore users.UserStore, loggerFactory logging.LoggerFacto
 		return nil, fmt.Errorf("[manager.NewUserManager] create a logger: %w", err)
 	}
 
+	c := &actionhelper.OperationExecutorConfig{
+		DefaultCategory: actions.OperationCategoryCommon,
+		DefaultGroup:    iactions.OperationGroupUser,
+		StopAppIfError:  true,
+	}
+
+	e, err := actionhelper.NewOperationExecutor(c, loggerFactory)
+	if err != nil {
+		return nil, fmt.Errorf("[manager.NewUserManager] new operation executor: %w", err)
+	}
+
 	return &UserManager{
-		userStore: userStore,
-		logger:    l,
+		opExecutor: e,
+		userStore:  userStore,
+		logger:     l,
 	}, nil
+}
+
+// Create creates a user and returns the user ID if the operation is successful.
+func (m *UserManager) Create(ctx *actions.OperationContext, data *useroperations.CreateOperationData) (uint64, error) {
+	var id uint64
+	err := m.opExecutor.Exec(ctx, iactions.OperationTypeUserManager_Create,
+		[]*actions.OperationParam{actions.NewOperationParam("data", data)},
+		func(opCtx *actions.OperationContext) error {
+			if err := data.Validate(); err != nil {
+				return fmt.Errorf("[manager.UserManager.Create] validate data: %w", err)
+			}
+
+			if strings.IsEmptyOrWhitespace(data.DisplayName) {
+				data.DisplayName = data.FirstName + " " + data.LastName
+			}
+
+			var err error
+			if id, err = m.userStore.Create(opCtx, data); err != nil {
+				return fmt.Errorf("[manager.UserManager.Create] create a user: %w", err)
+			}
+
+			m.logger.InfoWithEvent(
+				opCtx.CreateLogEntryContext(),
+				events.UserEvent,
+				"[manager.UserManager.Create] user has been created",
+				logging.NewField("id", id),
+			)
+			return nil
+		},
+	)
+	if err != nil {
+		return 0, fmt.Errorf("[manager.UserManager.Create] execute an operation: %w", err)
+	}
+	return id, nil
 }
 
 // FindById finds and returns a user, if any, by the specified user ID.
