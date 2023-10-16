@@ -84,10 +84,11 @@ User agent session statuses:
     New                  = 1
     Active               = 2
     SignedOut            = 3
-    LockedOut            = 4
-    TemporarilyLockedOut = 5
-    Disabled             = 6
-    Ended                = 7
+    Ended                = 4
+    LockedOut            = 5
+    TemporarilyLockedOut = 6
+    Disabled             = 7
+    Deleted              = 8
 */
 CREATE TABLE IF NOT EXISTS public.user_agent_sessions
 (
@@ -96,6 +97,7 @@ CREATE TABLE IF NOT EXISTS public.user_agent_sessions
     client_id bigint NOT NULL,
     user_agent_id bigint NOT NULL,
     type smallint NOT NULL GENERATED ALWAYS AS ({type}) STORED,
+    user_session_id bigint NOT NULL,
     created_at timestamp(6) without time zone NOT NULL,
     created_by bigint NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL DEFAULT (clock_timestamp() AT TIME ZONE 'UTC'::text),
