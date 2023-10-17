@@ -80,7 +80,7 @@ User agent session statuses:
 Error codes:
     NoError                  = 0
     InvalidOperation         = 3
-    UserAgentSessionNotFound = 12400
+    UserAgentSessionNotFound = 12600
 */
 CREATE OR REPLACE PROCEDURE public.terminate_user_agent_session(
     IN _id public.user_agent_sessions.id%TYPE,
@@ -97,7 +97,7 @@ BEGIN
 
     SELECT status INTO _status FROM public.user_agent_sessions WHERE id = _id LIMIT 1 FOR UPDATE;
     IF NOT FOUND THEN
-        err_code := 12400; -- UserAgentSessionNotFound
+        err_code := 12600; -- UserAgentSessionNotFound
         err_msg := 'user agent session not found';
         RETURN;
     END IF;

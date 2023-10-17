@@ -55,7 +55,7 @@ User session statuses:
 Error codes:
     NoError            = 0
     InvalidOperation   = 3
-    UserSessionNotFound = 12200
+    UserSessionNotFound = 12400
 */
 CREATE OR REPLACE PROCEDURE public.terminate_user_session(
     IN _id public.user_sessions.id%TYPE,
@@ -72,7 +72,7 @@ BEGIN
 
     SELECT status INTO _status FROM public.user_sessions WHERE id = _id LIMIT 1 FOR UPDATE;
     IF NOT FOUND THEN
-        err_code := 12200; -- UserSessionNotFound
+        err_code := 12400; -- UserSessionNotFound
         err_msg := 'user''s session not found';
         RETURN;
     END IF;
