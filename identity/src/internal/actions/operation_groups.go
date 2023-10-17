@@ -26,9 +26,10 @@ const (
 	OperationGroupAuthentication   actions.OperationGroup = 1003
 	OperationGroupAuthorization    actions.OperationGroup = 1004
 	OperationGroupPermission       actions.OperationGroup = 1005
-	OperationGroupUserSession      actions.OperationGroup = 1006
-	OperationGroupUserAgentSession actions.OperationGroup = 1007
+	OperationGroupPermissionGroup  actions.OperationGroup = 1006
+	OperationGroupUserSession      actions.OperationGroup = 1007
+	OperationGroupUserAgentSession actions.OperationGroup = 1008
 
 	// Authentication token encryption key operation group.
-	OperationGroupAuthTokenEncryptionKey actions.OperationGroup = 1008
+	OperationGroupAuthTokenEncryptionKey actions.OperationGroup = 1009
 )
