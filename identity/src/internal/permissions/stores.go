@@ -14,5 +14,23 @@
 
 package permissions
 
+import (
+	"personal-website-v2/identity/src/internal/permissions/dbmodels"
+	"personal-website-v2/identity/src/internal/permissions/models"
+	"personal-website-v2/identity/src/internal/permissions/operations/permissions"
+	"personal-website-v2/pkg/actions"
+)
+
 type PermissionStore interface {
+	// Create creates a permission and returns the permission ID if the operation is successful.
+	Create(ctx *actions.OperationContext, data *permissions.CreateOperationData) (uint64, error)
+
+	// FindById finds and returns a permission, if any, by the specified permission ID.
+	FindById(ctx *actions.OperationContext, id uint64) (*dbmodels.Permission, error)
+
+	// FindByName finds and returns a permission, if any, by the specified permission name.
+	FindByName(ctx *actions.OperationContext, name string) (*dbmodels.Permission, error)
+
+	// GetStatusById gets a permission status by the specified permission ID.
+	GetStatusById(ctx *actions.OperationContext, id uint64) (models.PermissionStatus, error)
 }
