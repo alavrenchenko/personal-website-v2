@@ -15,6 +15,7 @@
 package groups
 
 import (
+	"personal-website-v2/pkg/base/nullable"
 	"personal-website-v2/pkg/base/strings"
 	"personal-website-v2/pkg/errors"
 )
@@ -24,7 +25,7 @@ type CreateOperationData struct {
 	Name string `json:"name"`
 
 	// The app ID.
-	AppId *uint64 `json:"appId"`
+	AppId nullable.Nullable[uint64] `json:"appId"`
 
 	// The permission group description.
 	Description string `json:"description"`
