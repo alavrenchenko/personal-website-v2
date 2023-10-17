@@ -33,14 +33,19 @@ const (
 
 	// Authentication error codes (11600-11799).
 	// Authorization error codes (11800-11999).
+
 	// Permission error codes (12000-12199).
+	DbErrorCodePermissionNotFound errors.DbErrorCode = 12000
 
-	// User session error codes (12200-12399).
-	DbErrorCodeUserSessionNotFound errors.DbErrorCode = 12200
+	// Permission group error codes (12200-12399).
+	DbErrorCodePermissionGroupNotFound errors.DbErrorCode = 12200
 
-	// User agent session error codes (12400-12599).
-	DbErrorCodeUserAgentSessionNotFound errors.DbErrorCode = 12400
+	// User session error codes (12400-12599).
+	DbErrorCodeUserSessionNotFound errors.DbErrorCode = 12400
 
-	// Authentication token encryption key error codes (12600-12799).
-	DbErrorCodeAuthTokenEncryptionKeyNotFound errors.DbErrorCode = 12600
+	// User agent session error codes (12600-12799).
+	DbErrorCodeUserAgentSessionNotFound errors.DbErrorCode = 12600
+
+	// Authentication token encryption key error codes (12800-12999).
+	DbErrorCodeAuthTokenEncryptionKeyNotFound errors.DbErrorCode = 12800
 )
