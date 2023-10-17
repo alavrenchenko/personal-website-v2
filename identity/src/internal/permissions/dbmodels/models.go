@@ -56,7 +56,7 @@ type Permission struct {
 	StatusComment *string `db:"status_comment"`
 
 	// The permission description.
-	Description *string `db:"description"`
+	Description string `db:"description"`
 
 	// rowversion
 	VersionStamp uint64 `db:"_version_stamp"`
@@ -101,7 +101,7 @@ type PermissionGroup struct {
 	AppId *uint64 `db:"app_id"`
 
 	// The permission group description.
-	Description *string `db:"description"`
+	Description string `db:"description"`
 
 	// rowversion
 	VersionStamp uint64 `db:"_version_stamp"`
