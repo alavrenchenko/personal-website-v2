@@ -17,6 +17,7 @@ package permissions
 import (
 	"personal-website-v2/identity/src/internal/permissions/dbmodels"
 	"personal-website-v2/identity/src/internal/permissions/models"
+	"personal-website-v2/identity/src/internal/permissions/operations/groups"
 	"personal-website-v2/identity/src/internal/permissions/operations/permissions"
 	"personal-website-v2/pkg/actions"
 )
@@ -33,4 +34,18 @@ type PermissionStore interface {
 
 	// GetStatusById gets a permission status by the specified permission ID.
 	GetStatusById(ctx *actions.OperationContext, id uint64) (models.PermissionStatus, error)
+}
+
+type PermissionGroupStore interface {
+	// Create creates a permission group and returns the permission group ID if the operation is successful.
+	Create(ctx *actions.OperationContext, data *groups.CreateOperationData) (uint64, error)
+
+	// FindById finds and returns a permission group, if any, by the specified permission group ID.
+	FindById(ctx *actions.OperationContext, id uint64) (*dbmodels.PermissionGroup, error)
+
+	// FindByName finds and returns a permission group, if any, by the specified permission group name.
+	FindByName(ctx *actions.OperationContext, name string) (*dbmodels.PermissionGroup, error)
+
+	// GetStatusById gets a permission group status by the specified permission group ID.
+	GetStatusById(ctx *actions.OperationContext, id uint64) (models.PermissionGroupStatus, error)
 }
