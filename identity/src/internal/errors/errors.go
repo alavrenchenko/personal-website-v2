@@ -36,18 +36,23 @@ const (
 
 	// Authentication error codes (31600-31799).
 	// Authorization error codes (31800-31999).
+
 	// Permission error codes (32000-32199).
+	ErrorCodePermissionNotFound errors.ErrorCode = 32000
 
-	// User session error codes (32200-32399).
-	ErrorCodeUserSessionNotFound  errors.ErrorCode = 32200
-	ErrorCodeInvalidUserSessionId errors.ErrorCode = 32201
+	// Permission group error codes (32200-32399).
+	ErrorCodePermissionGroupNotFound errors.ErrorCode = 32200
 
-	// User agent session error codes (32400-32599).
-	ErrorCodeUserAgentSessionNotFound  errors.ErrorCode = 32400
-	ErrorCodeInvalidUserAgentSessionId errors.ErrorCode = 32401
+	// User session error codes (32400-32599).
+	ErrorCodeUserSessionNotFound  errors.ErrorCode = 32400
+	ErrorCodeInvalidUserSessionId errors.ErrorCode = 32401
 
-	// Authentication token encryption key error codes (32600-32799).
-	ErrorCodeAuthTokenEncryptionKeyNotFound errors.ErrorCode = 32600
+	// User agent session error codes (32600-32799).
+	ErrorCodeUserAgentSessionNotFound  errors.ErrorCode = 32600
+	ErrorCodeInvalidUserAgentSessionId errors.ErrorCode = 32601
+
+	// Authentication token encryption key error codes (32800-32999).
+	ErrorCodeAuthTokenEncryptionKeyNotFound errors.ErrorCode = 32800
 )
 
 var (
@@ -65,7 +70,12 @@ var (
 
 	// Authentication errors.
 	// Authorization errors.
+
 	// Permission errors.
+	ErrPermissionNotFound = errors.NewError(ErrorCodePermissionNotFound, "permission not found")
+
+	// Permission group errors.
+	ErrPermissionGroupNotFound = errors.NewError(ErrorCodePermissionGroupNotFound, "permission group not found")
 
 	// User session errors.
 	ErrUserSessionNotFound  = errors.NewError(ErrorCodeUserSessionNotFound, "user's session not found")
