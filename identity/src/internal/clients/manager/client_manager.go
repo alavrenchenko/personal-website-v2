@@ -58,7 +58,7 @@ func NewClientManager(webClientStore clients.ClientStore, mobileClientStore clie
 
 	e, err := actionhelper.NewOperationExecutor(c, loggerFactory)
 	if err != nil {
-		return nil, fmt.Errorf("[manager.NewUserSessionManager] new operation executor: %w", err)
+		return nil, fmt.Errorf("[manager.NewClientManager] new operation executor: %w", err)
 	}
 
 	return &ClientManager{
