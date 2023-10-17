@@ -26,7 +26,7 @@ type CreateOperationData struct {
 	// The user's group.
 	Group models.UserGroup `json:"group"`
 
-	// The client status.
+	// The user's status.
 	Status models.UserStatus `json:"status"`
 
 	// The user's email.
