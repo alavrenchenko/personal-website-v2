@@ -26,11 +26,12 @@ const (
 	EventGroupAuthentication   logging.EventGroup = 1003
 	EventGroupAuthorization    logging.EventGroup = 1004
 	EventGroupPermission       logging.EventGroup = 1005
-	EventGroupUserSession      logging.EventGroup = 1006
-	EventGroupUserAgentSession logging.EventGroup = 1007
+	EventGroupPermissionGroup  logging.EventGroup = 1006
+	EventGroupUserSession      logging.EventGroup = 1007
+	EventGroupUserAgentSession logging.EventGroup = 1008
 
 	// Authentication token encryption key event group.
-	EventGroupAuthTokenEncryptionKey logging.EventGroup = 1008
+	EventGroupAuthTokenEncryptionKey logging.EventGroup = 1009
 
 	EventGroupUserStore   logging.EventGroup = 1050
 	EventGroupClientStore logging.EventGroup = 1051

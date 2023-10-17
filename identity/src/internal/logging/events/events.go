@@ -45,13 +45,16 @@ var (
 	// Permission events (id: 0, 11000-11199)
 	PermissionEvent = logging.NewEvent(0, "Permission", logging.EventCategoryCommon, amlogging.EventGroupPermission)
 
-	// UserSession events (id: 0, 11200-11399)
+	// PermissionGroup events (id: 0, 11200-11399)
+	PermissionGroupEvent = logging.NewEvent(0, "PermissionGroup", logging.EventCategoryCommon, amlogging.EventGroupPermissionGroup)
+
+	// UserSession events (id: 0, 11400-11599)
 	UserSessionEvent = logging.NewEvent(0, "UserSession", logging.EventCategoryCommon, amlogging.EventGroupUserSession)
 
-	// UserAgentSession events (id: 0, 11400-11599)
+	// UserAgentSession events (id: 0, 11600-11799)
 	UserAgentSessionEvent = logging.NewEvent(0, "UserAgentSession", logging.EventCategoryCommon, amlogging.EventGroupUserAgentSession)
 
-	// Authentication token encryption key events (id: 0, 11600-11799)
+	// Authentication token encryption key events (id: 0, 11800-11999)
 	AuthTokenEncryptionKeyEvent = logging.NewEvent(0, "AuthTokenEncryptionKey", logging.EventCategoryCommon, amlogging.EventGroupAuthTokenEncryptionKey)
 
 	// UserStore events (id: 0, 20200-20399)
