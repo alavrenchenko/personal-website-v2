@@ -56,7 +56,12 @@ const (
 	OperationTypeAuthenticationManager_AuthenticateClient actions.OperationType = 12504
 
 	// AuthorizationManager operation types (13000-13499)
+
 	// PermissionManager operation types (13500-13999)
+	OperationTypePermissionManager_Create        actions.OperationType = 13500
+	OperationTypePermissionManager_FindById      actions.OperationType = 13501
+	OperationTypePermissionManager_FindByName    actions.OperationType = 13502
+	OperationTypePermissionManager_GetStatusById actions.OperationType = 13503
 
 	// UserSessionManager operation types (14000-14499)
 	OperationTypeUserSessionManager_CreateAndStart              actions.OperationType = 14000
@@ -120,7 +125,12 @@ const (
 	// AuthenticationStore operation types (32500-32999)
 
 	// AuthorizationStore operation types (33000-33499)
+
 	// PermissionStore operation types (33500-33999)
+	OperationTypePermissionStore_Create        actions.OperationType = 33500
+	OperationTypePermissionStore_FindById      actions.OperationType = 33501
+	OperationTypePermissionStore_FindByName    actions.OperationType = 33502
+	OperationTypePermissionStore_GetStatusById actions.OperationType = 33503
 
 	// UserSessionStore operation types (34000-34499)
 	OperationTypeUserSessionStore_CreateAndStart              actions.OperationType = 34000
