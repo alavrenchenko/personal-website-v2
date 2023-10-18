@@ -22,19 +22,33 @@ import "personal-website-v2/pkg/logging"
 const (
 	EventGroupUser             logging.EventGroup = 1000
 	EventGroupClient           logging.EventGroup = 1001
-	EventGroupUserAgent        logging.EventGroup = 1002
-	EventGroupAuthentication   logging.EventGroup = 1003
-	EventGroupAuthorization    logging.EventGroup = 1004
-	EventGroupPermission       logging.EventGroup = 1005
-	EventGroupPermissionGroup  logging.EventGroup = 1006
+	EventGroupUserGroup        logging.EventGroup = 1002
+	EventGroupRole             logging.EventGroup = 1003
+	EventGroupPermission       logging.EventGroup = 1004
+	EventGroupPermissionGroup  logging.EventGroup = 1005
+	EventGroupUserAgent        logging.EventGroup = 1006
 	EventGroupUserSession      logging.EventGroup = 1007
 	EventGroupUserAgentSession logging.EventGroup = 1008
+	EventGroupAuthentication   logging.EventGroup = 1009
+	EventGroupAuthorization    logging.EventGroup = 1010
 
 	// Authentication token encryption key event group.
-	EventGroupAuthTokenEncryptionKey logging.EventGroup = 1009
+	EventGroupAuthTokenEncryptionKey logging.EventGroup = 1011
 
-	EventGroupUserStore   logging.EventGroup = 1050
-	EventGroupClientStore logging.EventGroup = 1051
+	EventGroupUserStore             logging.EventGroup = 1050
+	EventGroupClientStore           logging.EventGroup = 1051
+	EventGroupUserGroupStore        logging.EventGroup = 1052
+	EventGroupRoleStore             logging.EventGroup = 1053
+	EventGroupPermissionStore       logging.EventGroup = 1054
+	EventGroupPermissionGroupStore  logging.EventGroup = 1055
+	EventGroupUserAgentStore        logging.EventGroup = 1056
+	EventGroupUserSessionStore      logging.EventGroup = 1057
+	EventGroupUserAgentSessionStore logging.EventGroup = 1058
+	EventGroupAuthenticationStore   logging.EventGroup = 1059
+	EventGroupAuthorizationStore    logging.EventGroup = 1060
+
+	// Authentication TokenEncryptionKeyStore event group.
+	EventGroupAuthTokenEncryptionKeyStore logging.EventGroup = 1061
 
 	EventGroupHttpControllers_UserController   logging.EventGroup = 2000
 	EventGroupHttpControllers_ClientController logging.EventGroup = 2001

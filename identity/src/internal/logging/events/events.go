@@ -27,51 +27,85 @@ import (
 // Event ids: 0-9999
 
 var (
-	// User events (id: 0, 10000-10199)
+	// User events (id: 0, 10000-10199).
 	UserEvent = logging.NewEvent(0, "User", logging.EventCategoryCommon, amlogging.EventGroupUser)
 
-	// Client events (id: 0, 10200-10399)
+	// Client events (id: 0, 10200-10399).
 	ClientEvent = logging.NewEvent(0, "Client", logging.EventCategoryCommon, amlogging.EventGroupClient)
 
-	// UserAgent events (id: 0, 10400-10599)
-	UserAgentEvent = logging.NewEvent(0, "UserAgent", logging.EventCategoryCommon, amlogging.EventGroupUserAgent)
+	// UserGroup events (id: 0, 10400-10599).
 
-	// Authentication events (id: 0, 10600-10799)
-	AuthenticationEvent = logging.NewEvent(0, "Authentication", logging.EventCategoryCommon, amlogging.EventGroupAuthentication)
+	// Role events (id: 0, 10600-10799).
+	RoleEvent = logging.NewEvent(0, "Role", logging.EventCategoryCommon, amlogging.EventGroupRole)
 
-	// Authorization events (id: 0, 10800-10999)
-	AuthorizationEvent = logging.NewEvent(0, "Authorization", logging.EventCategoryCommon, amlogging.EventGroupAuthorization)
-
-	// Permission events (id: 0, 11000-11199)
+	// Permission events (id: 0, 10800-10999).
 	PermissionEvent = logging.NewEvent(0, "Permission", logging.EventCategoryCommon, amlogging.EventGroupPermission)
 
-	// PermissionGroup events (id: 0, 11200-11399)
+	// PermissionGroup events (id: 0, 11000-11199).
 	PermissionGroupEvent = logging.NewEvent(0, "PermissionGroup", logging.EventCategoryCommon, amlogging.EventGroupPermissionGroup)
 
-	// UserSession events (id: 0, 11400-11599)
+	// UserAgent events (id: 0, 11200-11399).
+	UserAgentEvent = logging.NewEvent(0, "UserAgent", logging.EventCategoryCommon, amlogging.EventGroupUserAgent)
+
+	// UserSession events (id: 0, 11400-11599).
 	UserSessionEvent = logging.NewEvent(0, "UserSession", logging.EventCategoryCommon, amlogging.EventGroupUserSession)
 
-	// UserAgentSession events (id: 0, 11600-11799)
+	// UserAgentSession events (id: 0, 11600-11799).
 	UserAgentSessionEvent = logging.NewEvent(0, "UserAgentSession", logging.EventCategoryCommon, amlogging.EventGroupUserAgentSession)
 
-	// Authentication token encryption key events (id: 0, 11800-11999)
+	// Authentication events (id: 0, 11800-11999).
+	AuthenticationEvent = logging.NewEvent(0, "Authentication", logging.EventCategoryCommon, amlogging.EventGroupAuthentication)
+
+	// Authorization events (id: 0, 12000-12199).
+	AuthorizationEvent = logging.NewEvent(0, "Authorization", logging.EventCategoryCommon, amlogging.EventGroupAuthorization)
+
+	// Authentication token encryption key events (id: 0, 12200-12399).
 	AuthTokenEncryptionKeyEvent = logging.NewEvent(0, "AuthTokenEncryptionKey", logging.EventCategoryCommon, amlogging.EventGroupAuthTokenEncryptionKey)
 
-	// UserStore events (id: 0, 20200-20399)
+	// UserStore events (id: 0, 20200-20399).
 	UserStoreEvent = logging.NewEvent(0, "UserStore", logging.EventCategoryDatabase, amlogging.EventGroupUserStore)
 
-	// ClientStore events (id: 0, 20400-20599)
+	// ClientStore events (id: 0, 20400-20599).
 	ClientStoreEvent = logging.NewEvent(0, "ClientStore", logging.EventCategoryDatabase, amlogging.EventGroupClientStore)
 
-	// HttpControllers_UserController events (id: 0, 100000-100199)
+	// UserGroup events (id: 0, 20600-20799).
+
+	// RoleStore events (id: 0, 20800-20999).
+	RoleStoreEvent = logging.NewEvent(0, "RoleStore", logging.EventCategoryCommon, amlogging.EventGroupRoleStore)
+
+	// PermissionStore events (id: 0, 21000-21199).
+	PermissionStoreEvent = logging.NewEvent(0, "PermissionStore", logging.EventCategoryCommon, amlogging.EventGroupPermissionStore)
+
+	// PermissionGroupStore events (id: 0, 21200-21399).
+	PermissionGroupStoreEvent = logging.NewEvent(0, "PermissionGroupStore", logging.EventCategoryCommon, amlogging.EventGroupPermissionGroupStore)
+
+	// UserAgentStore events (id: 0, 21400-21599).
+	UserAgentStoreEvent = logging.NewEvent(0, "UserAgentStore", logging.EventCategoryCommon, amlogging.EventGroupUserAgentStore)
+
+	// UserSessionStore events (id: 0, 21600-21799).
+	UserSessionStoreEvent = logging.NewEvent(0, "UserSessionStore", logging.EventCategoryCommon, amlogging.EventGroupUserSessionStore)
+
+	// UserAgentSessionStore events (id: 0, 21800-21999).
+	UserAgentSessionStoreEvent = logging.NewEvent(0, "UserAgentSessionStore", logging.EventCategoryCommon, amlogging.EventGroupUserAgentSessionStore)
+
+	// AuthenticationStore events (id: 0, 22000-22199).
+	AuthenticationStoreEvent = logging.NewEvent(0, "AuthenticationStore", logging.EventCategoryCommon, amlogging.EventGroupAuthenticationStore)
+
+	// AuthorizationStore events (id: 0, 22200-22399).
+	AuthorizationStoreEvent = logging.NewEvent(0, "AuthorizationStore", logging.EventCategoryCommon, amlogging.EventGroupAuthorizationStore)
+
+	// Authentication TokenEncryptionKeyStore events (id: 0, 22400-22599).
+	AuthTokenEncryptionKeyStoreEvent = logging.NewEvent(0, "AuthTokenEncryptionKeyStore", logging.EventCategoryCommon, amlogging.EventGroupAuthTokenEncryptionKeyStore)
+
+	// HttpControllers_UserController events (id: 0, 100000-100199).
 	HttpControllers_UserControllerEvent = logging.NewEvent(0, "HttpControllers_UserController", logging.EventCategoryCommon, amlogging.EventGroupHttpControllers_UserController)
 
-	// HttpControllers_ClientController events (id: 0, 100200-100399)
+	// HttpControllers_ClientController events (id: 0, 100200-100399).
 	HttpControllers_ClientControllerEvent = logging.NewEvent(0, "HttpControllers_ClientController", logging.EventCategoryCommon, amlogging.EventGroupHttpControllers_ClientController)
 
-	// GrpcServices_UserService events (id: 0, 200000-200199)
+	// GrpcServices_UserService events (id: 0, 200000-200199).
 	GrpcServices_UserServiceEvent = logging.NewEvent(0, "GrpcServices_UserService", logging.EventCategoryCommon, amlogging.EventGroupGrpcServices_UserService)
 
-	// GrpcServices_ClientService events (id: 0, 200200-200399)
+	// GrpcServices_ClientService events (id: 0, 200200-200399).
 	GrpcServices_ClientServiceEvent = logging.NewEvent(0, "GrpcServices_ClientService", logging.EventCategoryCommon, amlogging.EventGroupGrpcServices_ClientService)
 )
