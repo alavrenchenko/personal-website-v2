@@ -30,18 +30,20 @@ const (
 	ErrorCodeClientNotFound  errors.ErrorCode = 31200
 	ErrorCodeInvalidClientId errors.ErrorCode = 31201
 
-	// User agent error codes (31400-31599).
-	ErrorCodeUserAgentNotFound  errors.ErrorCode = 31400
-	ErrorCodeInvalidUserAgentId errors.ErrorCode = 31401
+	// User group error codes (31400-31599).
 
-	// Authentication error codes (31600-31799).
-	// Authorization error codes (31800-31999).
+	// Role error codes (31600-31799).
+	ErrorCodeRoleNotFound errors.ErrorCode = 31600
 
-	// Permission error codes (32000-32199).
-	ErrorCodePermissionNotFound errors.ErrorCode = 32000
+	// Permission error codes (31800-31999).
+	ErrorCodePermissionNotFound errors.ErrorCode = 31800
 
-	// Permission group error codes (32200-32399).
-	ErrorCodePermissionGroupNotFound errors.ErrorCode = 32200
+	// Permission group error codes (32000-32199).
+	ErrorCodePermissionGroupNotFound errors.ErrorCode = 32000
+
+	// User agent error codes (32200-32399).
+	ErrorCodeUserAgentNotFound  errors.ErrorCode = 32200
+	ErrorCodeInvalidUserAgentId errors.ErrorCode = 32201
 
 	// User session error codes (32400-32599).
 	ErrorCodeUserSessionNotFound  errors.ErrorCode = 32400
@@ -51,8 +53,11 @@ const (
 	ErrorCodeUserAgentSessionNotFound  errors.ErrorCode = 32600
 	ErrorCodeInvalidUserAgentSessionId errors.ErrorCode = 32601
 
-	// Authentication token encryption key error codes (32800-32999).
-	ErrorCodeAuthTokenEncryptionKeyNotFound errors.ErrorCode = 32800
+	// Authentication error codes (32800-32999).
+	// Authorization error codes (33000-33199).
+
+	// Authentication token encryption key error codes (33200-33399).
+	ErrorCodeAuthTokenEncryptionKeyNotFound errors.ErrorCode = 33200
 )
 
 var (
@@ -64,18 +69,20 @@ var (
 	ErrClientNotFound  = errors.NewError(ErrorCodeClientNotFound, "client not found")
 	ErrInvalidClientId = errors.NewError(ErrorCodeInvalidClientId, "invalid client id")
 
-	// User agent errors.
-	ErrUserAgentNotFound  = errors.NewError(ErrorCodeUserAgentNotFound, "user agent not found")
-	ErrInvalidUserAgentId = errors.NewError(ErrorCodeInvalidUserAgentId, "invalid user agent id")
+	// User group errors.
 
-	// Authentication errors.
-	// Authorization errors.
+	// Role errors.
+	ErrRoleNotFound = errors.NewError(ErrorCodeRoleNotFound, "role not found")
 
 	// Permission errors.
 	ErrPermissionNotFound = errors.NewError(ErrorCodePermissionNotFound, "permission not found")
 
 	// Permission group errors.
 	ErrPermissionGroupNotFound = errors.NewError(ErrorCodePermissionGroupNotFound, "permission group not found")
+
+	// User agent errors.
+	ErrUserAgentNotFound  = errors.NewError(ErrorCodeUserAgentNotFound, "user agent not found")
+	ErrInvalidUserAgentId = errors.NewError(ErrorCodeInvalidUserAgentId, "invalid user agent id")
 
 	// User session errors.
 	ErrUserSessionNotFound  = errors.NewError(ErrorCodeUserSessionNotFound, "user's session not found")
@@ -84,6 +91,9 @@ var (
 	// User agent session errors.
 	ErrUserAgentSessionNotFound  = errors.NewError(ErrorCodeUserAgentSessionNotFound, "user agent session not found")
 	ErrInvalidUserAgentSessionId = errors.NewError(ErrorCodeInvalidUserAgentSessionId, "invalid user agent session id")
+
+	// Authentication errors.
+	// Authorization errors.
 
 	// Authentication token encryption key errors.
 	ErrAuthTokenEncryptionKeyNotFound = errors.NewError(ErrorCodeAuthTokenEncryptionKeyNotFound, "authentication token encryption key not found")
