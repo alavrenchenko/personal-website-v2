@@ -66,6 +66,9 @@ type Role struct {
 	// The app ID.
 	AppId *uint64 `db:"app_id"`
 
+	// The app group ID.
+	AppGroupId *uint64 `db:"app_group_id"`
+
 	// The role description.
 	Description string `db:"description"`
 
