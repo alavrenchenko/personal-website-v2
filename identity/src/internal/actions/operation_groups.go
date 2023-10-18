@@ -22,14 +22,16 @@ import "personal-website-v2/pkg/actions"
 const (
 	OperationGroupUser             actions.OperationGroup = 1000
 	OperationGroupClient           actions.OperationGroup = 1001
-	OperationGroupUserAgent        actions.OperationGroup = 1002
-	OperationGroupAuthentication   actions.OperationGroup = 1003
-	OperationGroupAuthorization    actions.OperationGroup = 1004
-	OperationGroupPermission       actions.OperationGroup = 1005
-	OperationGroupPermissionGroup  actions.OperationGroup = 1006
+	OperationGroupUserGroup        actions.OperationGroup = 1002
+	OperationGroupRole             actions.OperationGroup = 1003
+	OperationGroupPermission       actions.OperationGroup = 1004
+	OperationGroupPermissionGroup  actions.OperationGroup = 1005
+	OperationGroupUserAgent        actions.OperationGroup = 1006
 	OperationGroupUserSession      actions.OperationGroup = 1007
 	OperationGroupUserAgentSession actions.OperationGroup = 1008
+	OperationGroupAuthentication   actions.OperationGroup = 1009
+	OperationGroupAuthorization    actions.OperationGroup = 1010
 
 	// Authentication token encryption key operation group.
-	OperationGroupAuthTokenEncryptionKey actions.OperationGroup = 1009
+	OperationGroupAuthTokenEncryptionKey actions.OperationGroup = 1011
 )

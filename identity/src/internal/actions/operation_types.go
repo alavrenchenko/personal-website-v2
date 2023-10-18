@@ -20,10 +20,10 @@ import "personal-website-v2/pkg/actions"
 // Common (system) operation types (1-9999)
 
 const (
-	// Application operation types (10000-10999)
+	// Application operation types (10000-10999).
 	OperationTypeApplication actions.OperationType = 10000
 
-	// UserManager operation types (11000-11499)
+	// UserManager operation types (11000-11499).
 	OperationTypeUserManager_Create                actions.OperationType = 11000
 	OperationTypeUserManager_FindById              actions.OperationType = 11001
 	OperationTypeUserManager_FindByName            actions.OperationType = 11002
@@ -33,43 +33,43 @@ const (
 	OperationTypeUserManager_GetGroupAndStatusById actions.OperationType = 11006
 	OperationTypeUserManager_GetPersonalInfoById   actions.OperationType = 11007
 
-	// ClientManager operation types (11500-11999)
+	// ClientManager operation types (11500-11999).
 	OperationTypeClientManager_Create             actions.OperationType = 11500
 	OperationTypeClientManager_CreateWebClient    actions.OperationType = 11501
 	OperationTypeClientManager_CreateMobileClient actions.OperationType = 11502
 	OperationTypeClientManager_FindById           actions.OperationType = 11503
 	OperationTypeClientManager_GetStatusById      actions.OperationType = 11504
 
-	// UserAgentManager operation types (12000-12499)
-	OperationTypeUserAgentManager_Create                  actions.OperationType = 12000
-	OperationTypeUserAgentManager_CreateWebUserAgent      actions.OperationType = 12000
-	OperationTypeUserAgentManager_CreateMobileUserAgent   actions.OperationType = 12000
-	OperationTypeUserAgentManager_FindById                actions.OperationType = 12000
-	OperationTypeUserAgentManager_FindByUserIdAndClientId actions.OperationType = 12001
-	OperationTypeUserAgentManager_GetStatusById           actions.OperationType = 12002
+	// UserGroupManager operation types (12000-12499).
 
-	// AuthenticationManager operation types (12500-12999)
-	OperationTypeAuthenticationManager_CreateUserToken    actions.OperationType = 12500
-	OperationTypeAuthenticationManager_CreateClientToken  actions.OperationType = 12501
-	OperationTypeAuthenticationManager_Authenticate       actions.OperationType = 12502
-	OperationTypeAuthenticationManager_AuthenticateUser   actions.OperationType = 12503
-	OperationTypeAuthenticationManager_AuthenticateClient actions.OperationType = 12504
+	// RoleManager operation types (12500-12999).
+	OperationTypeRoleManager_Create        actions.OperationType = 12500
+	OperationTypeRoleManager_FindById      actions.OperationType = 12501
+	OperationTypeRoleManager_FindByName    actions.OperationType = 12502
+	OperationTypeRoleManager_GetTypeById   actions.OperationType = 12503
+	OperationTypeRoleManager_GetStatusById actions.OperationType = 12504
 
-	// AuthorizationManager operation types (13000-13499)
+	// PermissionManager operation types (13000-13499).
+	OperationTypePermissionManager_Create        actions.OperationType = 13000
+	OperationTypePermissionManager_FindById      actions.OperationType = 13001
+	OperationTypePermissionManager_FindByName    actions.OperationType = 13002
+	OperationTypePermissionManager_GetStatusById actions.OperationType = 13003
 
-	// PermissionManager operation types (13500-13999)
-	OperationTypePermissionManager_Create        actions.OperationType = 13500
-	OperationTypePermissionManager_FindById      actions.OperationType = 13501
-	OperationTypePermissionManager_FindByName    actions.OperationType = 13502
-	OperationTypePermissionManager_GetStatusById actions.OperationType = 13503
+	// PermissionGroupManager operation types (13500-13999).
+	OperationTypePermissionGroupManager_Create        actions.OperationType = 13500
+	OperationTypePermissionGroupManager_FindById      actions.OperationType = 13501
+	OperationTypePermissionGroupManager_FindByName    actions.OperationType = 13502
+	OperationTypePermissionGroupManager_GetStatusById actions.OperationType = 13503
 
-	// PermissionGroupManager operation types (14000-14499)
-	OperationTypePermissionGroupManager_Create        actions.OperationType = 14000
-	OperationTypePermissionGroupManager_FindById      actions.OperationType = 14001
-	OperationTypePermissionGroupManager_FindByName    actions.OperationType = 14002
-	OperationTypePermissionGroupManager_GetStatusById actions.OperationType = 14003
+	// UserAgentManager operation types (14000-14499).
+	OperationTypeUserAgentManager_Create                  actions.OperationType = 14000
+	OperationTypeUserAgentManager_CreateWebUserAgent      actions.OperationType = 14001
+	OperationTypeUserAgentManager_CreateMobileUserAgent   actions.OperationType = 14002
+	OperationTypeUserAgentManager_FindById                actions.OperationType = 14003
+	OperationTypeUserAgentManager_FindByUserIdAndClientId actions.OperationType = 14004
+	OperationTypeUserAgentManager_GetStatusById           actions.OperationType = 14005
 
-	// UserSessionManager operation types (14500-14999)
+	// UserSessionManager operation types (14500-14999).
 	OperationTypeUserSessionManager_CreateAndStart              actions.OperationType = 14500
 	OperationTypeUserSessionManager_CreateAndStartWebSession    actions.OperationType = 14501
 	OperationTypeUserSessionManager_CreateAndStartMobileSession actions.OperationType = 14502
@@ -77,7 +77,7 @@ const (
 	OperationTypeUserSessionManager_FindById                    actions.OperationType = 14504
 	OperationTypeUserSessionManager_GetStatusById               actions.OperationType = 14505
 
-	// UserAgentSessionManager operation types (15000-15499)
+	// UserAgentSessionManager operation types (15000-15499).
 	OperationTypeUserAgentSessionManager_CreateAndStart              actions.OperationType = 15000
 	OperationTypeUserAgentSessionManager_CreateAndStartWebSession    actions.OperationType = 15001
 	OperationTypeUserAgentSessionManager_CreateAndStartMobileSession actions.OperationType = 15002
@@ -85,15 +85,24 @@ const (
 	OperationTypeUserAgentSessionManager_FindById                    actions.OperationType = 15004
 	OperationTypeUserAgentSessionManager_GetStatusById               actions.OperationType = 15005
 
-	// Authentication TokenEncryptionKeyManager operation types (15500-15999)
-	OperationTypeAuthTokenEncryptionKeyManager_FindById                         actions.OperationType = 15500
-	OperationTypeAuthTokenEncryptionKeyManager_GetAll                           actions.OperationType = 15501
-	OperationTypeAuthTokenEncryptionKeyManager_FindUserTokenEncryptionKeyById   actions.OperationType = 15502
-	OperationTypeAuthTokenEncryptionKeyManager_GetAllUserTokenEncryptionKeys    actions.OperationType = 15503
-	OperationTypeAuthTokenEncryptionKeyManager_FindClientTokenEncryptionKeyById actions.OperationType = 15504
-	OperationTypeAuthTokenEncryptionKeyManager_GetAllClientTokenEncryptionKeys  actions.OperationType = 15505
+	// AuthenticationManager operation types (15500-15999).
+	OperationTypeAuthenticationManager_CreateUserToken    actions.OperationType = 15500
+	OperationTypeAuthenticationManager_CreateClientToken  actions.OperationType = 15501
+	OperationTypeAuthenticationManager_Authenticate       actions.OperationType = 15502
+	OperationTypeAuthenticationManager_AuthenticateUser   actions.OperationType = 15503
+	OperationTypeAuthenticationManager_AuthenticateClient actions.OperationType = 15504
 
-	// UserStore operation types (31000-31499)
+	// AuthorizationManager operation types (16000-16499).
+
+	// Authentication TokenEncryptionKeyManager operation types (16500-16999).
+	OperationTypeAuthTokenEncryptionKeyManager_FindById                         actions.OperationType = 16500
+	OperationTypeAuthTokenEncryptionKeyManager_GetAll                           actions.OperationType = 16501
+	OperationTypeAuthTokenEncryptionKeyManager_FindUserTokenEncryptionKeyById   actions.OperationType = 16502
+	OperationTypeAuthTokenEncryptionKeyManager_GetAllUserTokenEncryptionKeys    actions.OperationType = 16503
+	OperationTypeAuthTokenEncryptionKeyManager_FindClientTokenEncryptionKeyById actions.OperationType = 16504
+	OperationTypeAuthTokenEncryptionKeyManager_GetAllClientTokenEncryptionKeys  actions.OperationType = 16505
+
+	// UserStore operation types (31000-31499).
 	OperationTypeUserStore_Create                actions.OperationType = 31000
 	OperationTypeUserStore_FindById              actions.OperationType = 31001
 	OperationTypeUserStore_FindByName            actions.OperationType = 31002
@@ -103,7 +112,7 @@ const (
 	OperationTypeUserStore_GetGroupAndStatusById actions.OperationType = 31006
 	OperationTypeUserStore_GetPersonalInfoById   actions.OperationType = 31007
 
-	// ClientStore operation types (31500-31999)
+	// ClientStore operation types (31500-31999).
 	OperationTypeClientStore_Create                    actions.OperationType = 31500
 	OperationTypeClientStore_CreateWebClient           actions.OperationType = 31501
 	OperationTypeClientStore_CreateMobileClient        actions.OperationType = 31502
@@ -114,37 +123,42 @@ const (
 	OperationTypeClientStore_GetWebClientStatusById    actions.OperationType = 31507
 	OperationTypeClientStore_GetMobileClientStatusById actions.OperationType = 31508
 
-	// UserAgentStore operation types (32000-32499)
-	OperationTypeUserAgentStore_Create                                 actions.OperationType = 32000
-	OperationTypeUserAgentStore_CreateWebUserAgent                     actions.OperationType = 32001
-	OperationTypeUserAgentStore_CreateMobileUserAgent                  actions.OperationType = 32002
-	OperationTypeUserAgentStore_FindById                               actions.OperationType = 32003
-	OperationTypeUserAgentStore_FindWebUserAgentById                   actions.OperationType = 32004
-	OperationTypeUserAgentStore_FindMobileUserAgentById                actions.OperationType = 32005
-	OperationTypeUserAgentStore_FindByUserIdAndClientId                actions.OperationType = 32006
-	OperationTypeUserAgentStore_FindWebUserAgentByUserIdAndClientId    actions.OperationType = 32007
-	OperationTypeUserAgentStore_FindMobileUserAgentByUserIdAndClientId actions.OperationType = 32008
-	OperationTypeUserAgentStore_GetStatusById                          actions.OperationType = 32009
-	OperationTypeUserAgentStore_GetWebUserAgentStatusById              actions.OperationType = 32010
-	OperationTypeUserAgentStore_GetMobileUserAgentStatusById           actions.OperationType = 32011
+	// UserGroupStore operation types (32000-32499).
 
-	// AuthenticationStore operation types (32500-32999)
+	// RoleStore operation types (32500-32999).
+	OperationTypeRoleStore_Create        actions.OperationType = 32500
+	OperationTypeRoleStore_FindById      actions.OperationType = 32501
+	OperationTypeRoleStore_FindByName    actions.OperationType = 32502
+	OperationTypeRoleStore_GetTypeById   actions.OperationType = 32503
+	OperationTypeRoleStore_GetStatusById actions.OperationType = 32504
 
-	// AuthorizationStore operation types (33000-33499)
+	// PermissionStore operation types (33000-33499).
+	OperationTypePermissionStore_Create        actions.OperationType = 33000
+	OperationTypePermissionStore_FindById      actions.OperationType = 33001
+	OperationTypePermissionStore_FindByName    actions.OperationType = 33002
+	OperationTypePermissionStore_GetStatusById actions.OperationType = 33003
 
-	// PermissionStore operation types (33500-33999)
-	OperationTypePermissionStore_Create        actions.OperationType = 33500
-	OperationTypePermissionStore_FindById      actions.OperationType = 33501
-	OperationTypePermissionStore_FindByName    actions.OperationType = 33502
-	OperationTypePermissionStore_GetStatusById actions.OperationType = 33503
+	// PermissionGroupStore operation types (33500-33999).
+	OperationTypePermissionGroupStore_Create        actions.OperationType = 33500
+	OperationTypePermissionGroupStore_FindById      actions.OperationType = 33501
+	OperationTypePermissionGroupStore_FindByName    actions.OperationType = 33502
+	OperationTypePermissionGroupStore_GetStatusById actions.OperationType = 33503
 
-	// PermissionGroupStore operation types (34000-34499)
-	OperationTypePermissionGroupStore_Create        actions.OperationType = 34000
-	OperationTypePermissionGroupStore_FindById      actions.OperationType = 34001
-	OperationTypePermissionGroupStore_FindByName    actions.OperationType = 34002
-	OperationTypePermissionGroupStore_GetStatusById actions.OperationType = 34003
+	// UserAgentStore operation types (34000-34499).
+	OperationTypeUserAgentStore_Create                                 actions.OperationType = 34000
+	OperationTypeUserAgentStore_CreateWebUserAgent                     actions.OperationType = 34001
+	OperationTypeUserAgentStore_CreateMobileUserAgent                  actions.OperationType = 34002
+	OperationTypeUserAgentStore_FindById                               actions.OperationType = 34003
+	OperationTypeUserAgentStore_FindWebUserAgentById                   actions.OperationType = 34004
+	OperationTypeUserAgentStore_FindMobileUserAgentById                actions.OperationType = 34005
+	OperationTypeUserAgentStore_FindByUserIdAndClientId                actions.OperationType = 34006
+	OperationTypeUserAgentStore_FindWebUserAgentByUserIdAndClientId    actions.OperationType = 34007
+	OperationTypeUserAgentStore_FindMobileUserAgentByUserIdAndClientId actions.OperationType = 34008
+	OperationTypeUserAgentStore_GetStatusById                          actions.OperationType = 34009
+	OperationTypeUserAgentStore_GetWebUserAgentStatusById              actions.OperationType = 34010
+	OperationTypeUserAgentStore_GetMobileUserAgentStatusById           actions.OperationType = 34011
 
-	// UserSessionStore operation types (34500-34999)
+	// UserSessionStore operation types (34500-34999).
 	OperationTypeUserSessionStore_CreateAndStart              actions.OperationType = 34500
 	OperationTypeUserSessionStore_CreateAndStartWebSession    actions.OperationType = 34501
 	OperationTypeUserSessionStore_CreateAndStartMobileSession actions.OperationType = 34502
@@ -158,7 +172,7 @@ const (
 	OperationTypeUserSessionStore_GetWebSessionStatusById     actions.OperationType = 34510
 	OperationTypeUserSessionStore_GetMobileSessionStatusById  actions.OperationType = 34511
 
-	// UserAgentSessionStore operation types (35000-35499)
+	// UserAgentSessionStore operation types (35000-35499).
 	OperationTypeUserAgentSessionStore_CreateAndStart              actions.OperationType = 35000
 	OperationTypeUserAgentSessionStore_CreateAndStartWebSession    actions.OperationType = 35001
 	OperationTypeUserAgentSessionStore_CreateAndStartMobileSession actions.OperationType = 35002
@@ -172,25 +186,29 @@ const (
 	OperationTypeUserAgentSessionStore_GetWebSessionStatusById     actions.OperationType = 35010
 	OperationTypeUserAgentSessionStore_GetMobileSessionStatusById  actions.OperationType = 35011
 
-	// Authentication TokenEncryptionKeyStore operation types (35500-35999)
-	OperationTypeAuthTokenEncryptionKeyStore_FindById                         actions.OperationType = 35500
-	OperationTypeAuthTokenEncryptionKeyStore_GetAll                           actions.OperationType = 35501
-	OperationTypeAuthTokenEncryptionKeyStore_FindUserTokenEncryptionKeyById   actions.OperationType = 35502
-	OperationTypeAuthTokenEncryptionKeyStore_GetAllUserTokenEncryptionKeys    actions.OperationType = 35503
-	OperationTypeAuthTokenEncryptionKeyStore_FindClientTokenEncryptionKeyById actions.OperationType = 35504
-	OperationTypeAuthTokenEncryptionKeyStore_GetAllClientTokenEncryptionKeys  actions.OperationType = 35505
+	// AuthenticationStore operation types (35500-35999).
+
+	// AuthorizationStore operation types (36000-36499).
+
+	// Authentication TokenEncryptionKeyStore operation types (36500-36999).
+	OperationTypeAuthTokenEncryptionKeyStore_FindById                         actions.OperationType = 36500
+	OperationTypeAuthTokenEncryptionKeyStore_GetAll                           actions.OperationType = 36501
+	OperationTypeAuthTokenEncryptionKeyStore_FindUserTokenEncryptionKeyById   actions.OperationType = 36502
+	OperationTypeAuthTokenEncryptionKeyStore_GetAllUserTokenEncryptionKeys    actions.OperationType = 36503
+	OperationTypeAuthTokenEncryptionKeyStore_FindClientTokenEncryptionKeyById actions.OperationType = 36504
+	OperationTypeAuthTokenEncryptionKeyStore_GetAllClientTokenEncryptionKeys  actions.OperationType = 36505
 
 	// caching (50000-59999)
 
-	// [HTTP] UserController operation types (100500-100999)
+	// [HTTP] UserController operation types (100500-100999).
 	OperationTypeUserController_GetById actions.OperationType = 100500
 
-	// [HTTP] ClientController operation types (101000-101499)
+	// [HTTP] ClientController operation types (101000-101499).
 	OperationTypeClientController_GetById actions.OperationType = 101000
 
-	// [gRPC] UserService operation types (200500-20999)
+	// [gRPC] UserService operation types (200500-20999).
 	OperationTypeUserService_GetById actions.OperationType = 200500
 
-	// [gRPC] ClientService operation types (201000-201499)
+	// [gRPC] ClientService operation types (201000-201499).
 	OperationTypeClientService_GetById actions.OperationType = 201000
 )
