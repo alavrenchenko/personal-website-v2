@@ -20,6 +20,10 @@ import (
 	"personal-website-v2/identity/src/internal/permissions/models"
 )
 
+// Permission names have the following format:
+// SERVICE.RESOURCE_TYPE.ACTION
+// For example, appmanager.groups.get, identity.userAgents.getStatus, loggingmanager.sessions.createAndStart.
+
 // The permission.
 type Permission struct {
 	// The unique ID to identify the permission.
@@ -64,6 +68,10 @@ type Permission struct {
 	// row timestamp
 	Timestamp time.Time `db:"_timestamp"`
 }
+
+// Permission group names have the following format:
+// SERVICE.RESOURCE_TYPE
+// For example, appmanager.groups, identity.userAgents, loggingmanager.sessions.
 
 // The permission group.
 type PermissionGroup struct {
