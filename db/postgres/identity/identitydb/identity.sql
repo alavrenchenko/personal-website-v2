@@ -88,3 +88,36 @@ CREATE TABLE IF NOT EXISTS public.permissions
         ON DELETE RESTRICT
 )
 TABLESPACE pg_default;
+
+-- Table: public.roles
+/*
+Role statuses:
+    Unspecified = 0
+    New         = 1
+    Active      = 2
+    Inactive    = 3
+    Deleted     = 4
+*/
+CREATE TABLE IF NOT EXISTS public.roles
+(
+    id bigint NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 9223372036854775807 CACHE 1 ),
+    name character varying(256) COLLATE pg_catalog."default" NOT NULL,
+    type smallint NOT NULL,
+    title character varying(256) COLLATE pg_catalog."default" NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    created_by bigint NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL DEFAULT (clock_timestamp() AT TIME ZONE 'UTC'::text),
+    updated_by bigint NOT NULL,
+    status smallint NOT NULL,
+    status_updated_at timestamp(6) without time zone NOT NULL DEFAULT (clock_timestamp() AT TIME ZONE 'UTC'::text),
+    status_updated_by bigint NOT NULL,
+    status_comment text COLLATE pg_catalog."default",
+    app_id bigint,
+    app_group_id bigint,
+    description text COLLATE pg_catalog."default" NOT NULL,
+    _version_stamp bigint NOT NULL,
+    _timestamp timestamp(6) without time zone NOT NULL DEFAULT (clock_timestamp() AT TIME ZONE 'UTC'::text),
+    CONSTRAINT roles_pkey PRIMARY KEY (id),
+    CONSTRAINT roles_name_key UNIQUE (name)
+)
+TABLESPACE pg_default;
