@@ -78,3 +78,94 @@ type Role struct {
 	// row timestamp
 	Timestamp time.Time `db:"_timestamp"`
 }
+
+// The role assignment.
+type RoleAssignment struct {
+	// The unique ID to identify the role assignment.
+	Id uint64 `db:"id"`
+
+	// The role ID.
+	RoleId uint64 `db:"role_id"`
+
+	// The unique ID of the entity this role is assigned to - either the userId of a user
+	// or the groupId of a group.
+	AssignedTo uint64 `db:"assigned_to"`
+
+	// The type of the assignee.
+	AssigneeType models.AssigneeType `db:"assignee_type"`
+
+	// It stores the date and time at which the role assignment was created.
+	CreatedAt time.Time `db:"created_at"`
+
+	// The user ID to identify the user who created the role assignment.
+	CreatedBy uint64 `db:"created_by"`
+
+	// It stores the date and time at which the role assignment was updated.
+	UpdatedAt time.Time `db:"updated_at"`
+
+	// The user ID to identify the user who updated the role assignment.
+	UpdatedBy uint64 `db:"updated_by"`
+
+	// The role assignment status.
+	Status models.RoleAssignmentStatus `db:"status"`
+
+	// It stores the date and time at which the role assignment status was updated.
+	StatusUpdatedAt time.Time `db:"status_updated_at"`
+
+	// The user ID to identify the user who updated the role assignment status.
+	StatusUpdatedBy uint64 `db:"status_updated_by"`
+
+	// The role assignment status comment.
+	StatusComment *string `db:"status_comment"`
+
+	// rowversion
+	VersionStamp uint64 `db:"_version_stamp"`
+
+	// row timestamp
+	Timestamp time.Time `db:"_timestamp"`
+}
+
+// The user's role assignment.
+type UserRoleAssignment struct {
+	// The unique ID to identify the user's role assignment.
+	Id uint64 `db:"id"`
+
+	// The user ID.
+	UserId uint64 `db:"user_id"`
+
+	// The role ID.
+	RoleId uint64 `db:"role_id"`
+
+	// The role assignment ID.
+	RoleAssignmentId uint64 `db:"role_assignment_id"`
+
+	// It stores the date and time at which the user's role assignment was created.
+	CreatedAt time.Time `db:"created_at"`
+
+	// The user ID to identify the user who created the user's role assignment.
+	CreatedBy uint64 `db:"created_by"`
+
+	// It stores the date and time at which the user's role assignment was updated.
+	UpdatedAt time.Time `db:"updated_at"`
+
+	// The user ID to identify the user who updated the user's role assignment.
+	UpdatedBy uint64 `db:"updated_by"`
+
+	// The user's role assignment status.
+	Status models.UserRoleAssignmentStatus `db:"status"`
+
+	// It stores the date and time at which the user's role assignment status was updated.
+	StatusUpdatedAt time.Time `db:"status_updated_at"`
+
+	// The user ID to identify the user who updated the user's role assignment status.
+	StatusUpdatedBy uint64 `db:"status_updated_by"`
+
+	// The user's role assignment status comment.
+	StatusComment *string `db:"status_comment"`
+
+	// rowversion
+	VersionStamp uint64 `db:"_version_stamp"`
+
+	// row timestamp
+	Timestamp time.Time `db:"_timestamp"`
+}

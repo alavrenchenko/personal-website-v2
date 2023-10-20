@@ -35,3 +35,39 @@ const (
 	RoleStatusInactive RoleStatus = 3
 	RoleStatusDeleted  RoleStatus = 4
 )
+
+// The type of the object to which a role is assigned.
+type AssigneeType uint8
+
+const (
+	// Unspecified = 0 // Do not use.
+
+	AssigneeTypeUser  AssigneeType = 1
+	AssigneeTypeGroup AssigneeType = 2
+)
+
+// The role assignment status.
+type RoleAssignmentStatus uint8
+
+const (
+	// Unspecified = 0 // Do not use.
+
+	RoleAssignmentStatusNew      RoleAssignmentStatus = 1
+	RoleAssignmentStatusActive   RoleAssignmentStatus = 2
+	RoleAssignmentStatusInactive RoleAssignmentStatus = 3
+	RoleAssignmentStatusDeleting RoleAssignmentStatus = 4
+	RoleAssignmentStatusDeleted  RoleAssignmentStatus = 5
+)
+
+// The user's role assignment status.
+type UserRoleAssignmentStatus uint8
+
+const (
+	// Unspecified = 0 // Do not use.
+
+	UserRoleAssignmentStatusNew      UserRoleAssignmentStatus = 1
+	UserRoleAssignmentStatusActive   UserRoleAssignmentStatus = 2
+	UserRoleAssignmentStatusInactive UserRoleAssignmentStatus = 3
+	UserRoleAssignmentStatusDeleting UserRoleAssignmentStatus = 4
+	UserRoleAssignmentStatusDeleted  UserRoleAssignmentStatus = 5
+)
