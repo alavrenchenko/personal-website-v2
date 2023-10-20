@@ -30,7 +30,7 @@ import (
 	"personal-website-v2/pkg/logging/context"
 )
 
-// UserSessionManager is a user's session manager.
+// UserSessionManager is a user session manager.
 type UserSessionManager struct {
 	opExecutor         *actionhelper.OperationExecutor
 	webSessionStore    sessions.UserSessionStore

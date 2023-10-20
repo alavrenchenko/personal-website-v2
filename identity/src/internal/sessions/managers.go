@@ -22,7 +22,7 @@ import (
 	"personal-website-v2/pkg/actions"
 )
 
-// UserSessionManager is a user's session manager.
+// UserSessionManager is a user session manager.
 type UserSessionManager interface {
 	// CreateAndStartWebSession creates and starts a user's web session and returns the user's session ID
 	// if the operation is successful.
