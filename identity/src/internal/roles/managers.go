@@ -23,8 +23,8 @@ import (
 	"personal-website-v2/pkg/actions"
 )
 
-// RoleStore is a role store.
-type RoleStore interface {
+// RoleManager is a role manager.
+type RoleManager interface {
 	// Create creates a role and returns the role ID if the operation is successful.
 	Create(ctx *actions.OperationContext, data *roles.CreateOperationData) (uint64, error)
 
@@ -41,8 +41,8 @@ type RoleStore interface {
 	GetStatusById(ctx *actions.OperationContext, id uint64) (models.RoleStatus, error)
 }
 
-// RoleAssignmentStore is a role assignment store.
-type RoleAssignmentStore interface {
+// RoleAssignmentManager is a role assignment manager.
+type RoleAssignmentManager interface {
 	// Create creates a role assignment and returns the role assignment ID if the operation is successful.
 	Create(ctx *actions.OperationContext, data *assignments.CreateOperationData) (uint64, error)
 
@@ -59,8 +59,8 @@ type RoleAssignmentStore interface {
 	GetStatusById(ctx *actions.OperationContext, id uint64) (models.RoleAssignmentStatus, error)
 }
 
-// UserRoleAssignmentStore is a user role assignment store.
-type UserRoleAssignmentStore interface {
+// UserRoleAssignmentManager is a user role assignment manager.
+type UserRoleAssignmentManager interface {
 	// Create creates a user's role assignment and returns the user's role assignment ID if the operation is successful.
 	Create(ctx *actions.OperationContext, data *userroleassignments.CreateOperationData) (uint64, error)
 
@@ -78,4 +78,10 @@ type UserRoleAssignmentStore interface {
 
 	// GetStatusById gets a user's role assignment status by the specified user's role assignment ID.
 	GetStatusById(ctx *actions.OperationContext, id uint64) (models.UserRoleAssignmentStatus, error)
+}
+
+// UserRoleManager is a user role manager.
+type UserRoleManager interface {
+	// FindAllByUserId finds and returns all user's roles, if any, by the specified user ID.
+	FindAllByUserId(ctx *actions.OperationContext, userId uint64) ([]*dbmodels.Role, error)
 }
