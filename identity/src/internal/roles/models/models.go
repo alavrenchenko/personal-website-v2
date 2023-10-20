@@ -33,7 +33,8 @@ const (
 	RoleStatusNew      RoleStatus = 1
 	RoleStatusActive   RoleStatus = 2
 	RoleStatusInactive RoleStatus = 3
-	RoleStatusDeleted  RoleStatus = 4
+	RoleStatusDeleting RoleStatus = 4
+	RoleStatusDeleted  RoleStatus = 5
 )
 
 // The type of the object to which a role is assigned.
