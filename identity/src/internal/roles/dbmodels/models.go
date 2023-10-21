@@ -118,6 +118,9 @@ type RoleAssignment struct {
 	// The role assignment status comment.
 	StatusComment *string `db:"status_comment"`
 
+	// The role assignment description.
+	Description *string `db:"description"`
+
 	// rowversion
 	VersionStamp uint64 `db:"_version_stamp"`
 
