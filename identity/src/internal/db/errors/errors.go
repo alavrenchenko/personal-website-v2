@@ -33,11 +33,20 @@ const (
 	// Role error codes (11600-11799).
 	DbErrorCodeRoleNotFound errors.DbErrorCode = 11600
 
+	// The role with the same name already exists.
+	DbErrorCodeRoleAlreadyExists errors.DbErrorCode = 11601
+
 	// Permission error codes (11800-11999).
 	DbErrorCodePermissionNotFound errors.DbErrorCode = 11800
 
+	// The permission with the same name already exists.
+	DbErrorCodePermissionAlreadyExists errors.DbErrorCode = 11801
+
 	// Permission group error codes (12000-12199).
 	DbErrorCodePermissionGroupNotFound errors.DbErrorCode = 12000
+
+	// The permission group with the same name already exists.
+	DbErrorCodePermissionGroupAlreadyExists errors.DbErrorCode = 12001
 
 	// User agent error codes (12200-12399).
 	DbErrorCodeUserAgentNotFound errors.DbErrorCode = 12200
@@ -53,4 +62,11 @@ const (
 
 	// Authentication token encryption key error codes (13200-13399).
 	DbErrorCodeAuthTokenEncryptionKeyNotFound errors.DbErrorCode = 13200
+
+	// Role assignment error codes (13400-13599).
+	// (User or Group) role assignment not found.
+	DbErrorCodeRoleAssignmentNotFound errors.DbErrorCode = 13400
+
+	// Role already assigned (to the user or group).
+	DbErrorCodeRoleAlreadyAssigned errors.DbErrorCode = 13401
 )
