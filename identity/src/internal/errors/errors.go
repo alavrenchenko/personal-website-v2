@@ -33,13 +33,16 @@ const (
 	// User group error codes (31400-31599).
 
 	// Role error codes (31600-31799).
-	ErrorCodeRoleNotFound errors.ErrorCode = 31600
+	ErrorCodeRoleNotFound      errors.ErrorCode = 31600
+	ErrorCodeRoleAlreadyExists errors.ErrorCode = 31601
 
 	// Permission error codes (31800-31999).
-	ErrorCodePermissionNotFound errors.ErrorCode = 31800
+	ErrorCodePermissionNotFound      errors.ErrorCode = 31800
+	ErrorCodePermissionAlreadyExists errors.ErrorCode = 31801
 
 	// Permission group error codes (32000-32199).
-	ErrorCodePermissionGroupNotFound errors.ErrorCode = 32000
+	ErrorCodePermissionGroupNotFound      errors.ErrorCode = 32000
+	ErrorCodePermissionGroupAlreadyExists errors.ErrorCode = 32001
 
 	// User agent error codes (32200-32399).
 	ErrorCodeUserAgentNotFound  errors.ErrorCode = 32200
@@ -58,6 +61,13 @@ const (
 
 	// Authentication token encryption key error codes (33200-33399).
 	ErrorCodeAuthTokenEncryptionKeyNotFound errors.ErrorCode = 33200
+
+	// Role assignment error codes (33400-33599).
+	// (User or Group) role assignment not found.
+	ErrorCodeRoleAssignmentNotFound errors.ErrorCode = 33400
+
+	// Role already assigned (to the user or group).
+	ErrorCodeRoleAlreadyAssigned errors.ErrorCode = 33401
 )
 
 var (
@@ -72,13 +82,16 @@ var (
 	// User group errors.
 
 	// Role errors.
-	ErrRoleNotFound = errors.NewError(ErrorCodeRoleNotFound, "role not found")
+	ErrRoleNotFound      = errors.NewError(ErrorCodeRoleNotFound, "role not found")
+	ErrRoleAlreadyExists = errors.NewError(ErrorCodeRoleAlreadyExists, "role with the same name already exists")
 
 	// Permission errors.
-	ErrPermissionNotFound = errors.NewError(ErrorCodePermissionNotFound, "permission not found")
+	ErrPermissionNotFound      = errors.NewError(ErrorCodePermissionNotFound, "permission not found")
+	ErrPermissionAlreadyExists = errors.NewError(ErrorCodePermissionAlreadyExists, "permission with the same name already exists")
 
 	// Permission group errors.
-	ErrPermissionGroupNotFound = errors.NewError(ErrorCodePermissionGroupNotFound, "permission group not found")
+	ErrPermissionGroupNotFound      = errors.NewError(ErrorCodePermissionGroupNotFound, "permission group not found")
+	ErrPermissionGroupAlreadyExists = errors.NewError(ErrorCodePermissionGroupAlreadyExists, "permission group with the same name already exists")
 
 	// User agent errors.
 	ErrUserAgentNotFound  = errors.NewError(ErrorCodeUserAgentNotFound, "user agent not found")
@@ -97,4 +110,11 @@ var (
 
 	// Authentication token encryption key errors.
 	ErrAuthTokenEncryptionKeyNotFound = errors.NewError(ErrorCodeAuthTokenEncryptionKeyNotFound, "authentication token encryption key not found")
+
+	// Role assignment error codes.
+	// (User or Group) role assignment not found.
+	ErrRoleAssignmentNotFound = errors.NewError(ErrorCodeRoleAssignmentNotFound, "role assignment not found")
+
+	// Role already assigned (to the user or group).
+	ErrRoleAlreadyAssigned = errors.NewError(ErrorCodeRoleAlreadyAssigned, "role already assigned")
 )
