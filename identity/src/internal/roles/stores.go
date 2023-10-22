@@ -46,6 +46,9 @@ type RoleAssignmentStore interface {
 	// Create creates a role assignment and returns the role assignment ID if the operation is successful.
 	Create(ctx *actions.OperationContext, data *assignments.CreateOperationData) (uint64, error)
 
+	// StartDeleting starts deleting a role assignment by the specified role assignment ID.
+	StartDeleting(ctx *actions.OperationContext, id uint64) error
+
 	// Delete deletes a role assignment by the specified role assignment ID.
 	Delete(ctx *actions.OperationContext, id uint64) error
 
@@ -54,6 +57,12 @@ type RoleAssignmentStore interface {
 
 	// FindByRoleIdAndAssignee finds and returns a role assignment, if any, by the specified role id and assignee.
 	FindByRoleIdAndAssignee(ctx *actions.OperationContext, roleId uint64, assigneeId uint64, assigneeType models.AssigneeType) (*dbmodels.RoleAssignment, error)
+
+	// IsAssigned returns true if the role is assigned.
+	IsAssigned(ctx *actions.OperationContext, roleId, assigneeId uint64, assigneeType models.AssigneeType) (bool, error)
+
+	// GetAssigneeTypeById gets a role assignment assignee type by the specified role assignment ID.
+	GetAssigneeTypeById(ctx *actions.OperationContext, id uint64) (models.AssigneeType, error)
 
 	// GetStatusById gets a role assignment status by the specified role assignment ID.
 	GetStatusById(ctx *actions.OperationContext, id uint64) (models.RoleAssignmentStatus, error)
@@ -70,12 +79,21 @@ type UserRoleAssignmentStore interface {
 	// FindById finds and returns a user's role assignment, if any, by the specified user's role assignment ID.
 	FindById(ctx *actions.OperationContext, id uint64) (*dbmodels.UserRoleAssignment, error)
 
+	// FindByRoleAssignmentId finds and returns a user's role assignment, if any, by the specified role assignment ID.
+	FindByRoleAssignmentId(ctx *actions.OperationContext, roleAssignmentId uint64) (*dbmodels.UserRoleAssignment, error)
+
 	// FindAllByUserId finds and returns all user's role assignments, if any, by the specified user ID.
 	FindAllByUserId(ctx *actions.OperationContext, userId uint64) ([]*dbmodels.UserRoleAssignment, error)
 
 	// IsAssigned returns true if the role is assigned to the user.
 	IsAssigned(ctx *actions.OperationContext, userId, roleId uint64) (bool, error)
 
+	// GetIdByRoleAssignmentId gets the user's role assignment ID by the specified role assignment ID.
+	GetIdByRoleAssignmentId(ctx *actions.OperationContext, roleAssignmentId uint64) (uint64, error)
+
 	// GetStatusById gets a user's role assignment status by the specified user's role assignment ID.
 	GetStatusById(ctx *actions.OperationContext, id uint64) (models.UserRoleAssignmentStatus, error)
+
+	// GetStatusByRoleAssignmentId gets a user's role assignment status by the specified role assignment ID.
+	GetStatusByRoleAssignmentId(ctx *actions.OperationContext, roleAssignmentId uint64) (models.UserRoleAssignmentStatus, error)
 }
