@@ -62,6 +62,15 @@ var (
 	// Authentication token encryption key events (id: 0, 12200-12399).
 	AuthTokenEncryptionKeyEvent = logging.NewEvent(0, "AuthTokenEncryptionKey", logging.EventCategoryCommon, amlogging.EventGroupAuthTokenEncryptionKey)
 
+	// RoleAssignment events (id: 0, 12400-12599).
+	RoleAssignmentEvent = logging.NewEvent(0, "RoleAssignment", logging.EventCategoryCommon, amlogging.EventGroupRoleAssignment)
+
+	// UserRoleAssignment events (id: 0, 12600-12799).
+	UserRoleAssignmentEvent = logging.NewEvent(0, "UserRoleAssignment", logging.EventCategoryCommon, amlogging.EventGroupUserRoleAssignment)
+
+	// UserRole events (id: 0, 12800-12999).
+	UserRoleEvent = logging.NewEvent(0, "UserRole", logging.EventCategoryCommon, amlogging.EventGroupUserRole)
+
 	// UserStore events (id: 0, 20200-20399).
 	UserStoreEvent = logging.NewEvent(0, "UserStore", logging.EventCategoryDatabase, amlogging.EventGroupUserStore)
 
