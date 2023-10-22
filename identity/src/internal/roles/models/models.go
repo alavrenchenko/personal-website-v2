@@ -14,6 +14,8 @@
 
 package models
 
+import "fmt"
+
 // The role type.
 type RoleType uint8
 
@@ -23,6 +25,20 @@ const (
 	RoleTypeSystem  RoleType = 1
 	RoleTypeService RoleType = 2
 )
+
+func (t RoleType) IsValid() bool {
+	return t == RoleTypeSystem || t == RoleTypeService
+}
+
+func (t RoleType) String() string {
+	switch t {
+	case RoleTypeSystem:
+		return "system"
+	case RoleTypeService:
+		return "service"
+	}
+	return fmt.Sprintf("RoleType(%d)", t)
+}
 
 // The role status.
 type RoleStatus uint8
@@ -46,6 +62,20 @@ const (
 	AssigneeTypeUser  AssigneeType = 1
 	AssigneeTypeGroup AssigneeType = 2
 )
+
+func (t AssigneeType) IsValid() bool {
+	return t == AssigneeTypeUser || t == AssigneeTypeGroup
+}
+
+func (t AssigneeType) String() string {
+	switch t {
+	case AssigneeTypeUser:
+		return "user"
+	case AssigneeTypeGroup:
+		return "group"
+	}
+	return fmt.Sprintf("AssigneeType(%d)", t)
+}
 
 // The role assignment status.
 type RoleAssignmentStatus uint8
