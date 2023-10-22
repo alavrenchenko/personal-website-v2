@@ -34,4 +34,8 @@ const (
 
 	// Authentication token encryption key operation group.
 	OperationGroupAuthTokenEncryptionKey actions.OperationGroup = 1011
+
+	OperationGroupRoleAssignment     actions.OperationGroup = 1012
+	OperationGroupUserRoleAssignment actions.OperationGroup = 1013
+	OperationGroupUserRole           actions.OperationGroup = 1014
 )

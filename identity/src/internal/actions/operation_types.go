@@ -102,6 +102,30 @@ const (
 	OperationTypeAuthTokenEncryptionKeyManager_FindClientTokenEncryptionKeyById actions.OperationType = 16504
 	OperationTypeAuthTokenEncryptionKeyManager_GetAllClientTokenEncryptionKeys  actions.OperationType = 16505
 
+	// RoleAssignmentManager operation types (16500-16999).
+	OperationTypeRoleAssignmentManager_Create                  actions.OperationType = 16500
+	OperationTypeRoleAssignmentManager_Delete                  actions.OperationType = 16501
+	OperationTypeRoleAssignmentManager_FindById                actions.OperationType = 16502
+	OperationTypeRoleAssignmentManager_FindByRoleIdAndAssignee actions.OperationType = 16503
+	OperationTypeRoleAssignmentManager_IsAssigned              actions.OperationType = 16504
+	OperationTypeRoleAssignmentManager_GetAssigneeTypeById     actions.OperationType = 16505
+	OperationTypeRoleAssignmentManager_GetStatusById           actions.OperationType = 16506
+
+	// UserRoleAssignmentManager operation types (16500-16999).
+	OperationTypeUserRoleAssignmentManager_Create                      actions.OperationType = 16500
+	OperationTypeUserRoleAssignmentManager_Delete                      actions.OperationType = 16501
+	OperationTypeUserRoleAssignmentManager_DeleteByRoleAssignmentId    actions.OperationType = 16502
+	OperationTypeUserRoleAssignmentManager_FindById                    actions.OperationType = 16503
+	OperationTypeUserRoleAssignmentManager_FindByRoleAssignmentId      actions.OperationType = 16504
+	OperationTypeUserRoleAssignmentManager_FindAllByUserId             actions.OperationType = 16505
+	OperationTypeUserRoleAssignmentManager_IsAssigned                  actions.OperationType = 16506
+	OperationTypeUserRoleAssignmentManager_GetIdByRoleAssignmentId     actions.OperationType = 16507
+	OperationTypeUserRoleAssignmentManager_GetStatusById               actions.OperationType = 16508
+	OperationTypeUserRoleAssignmentManager_GetStatusByRoleAssignmentId actions.OperationType = 16509
+
+	// UserRoleManager operation types (17000-17499).
+	OperationTypeUserRoleManager_FindAllByUserId actions.OperationType = 17000
+
 	// UserStore operation types (31000-31499).
 	OperationTypeUserStore_Create                actions.OperationType = 31000
 	OperationTypeUserStore_FindById              actions.OperationType = 31001
