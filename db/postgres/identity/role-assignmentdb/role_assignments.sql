@@ -37,6 +37,7 @@ Error codes:
     NoError             = 0
     RoleAlreadyAssigned = 13401
 */
+-- Minimum transaction isolation level: Read committed.
 CREATE OR REPLACE PROCEDURE public.create_role_assignment(
     IN _role_id public.role_assignments.role_id%TYPE,
     IN _assigned_to public.role_assignments.assigned_to%TYPE,
@@ -89,6 +90,7 @@ Error codes:
     InvalidOperation       = 3
     RoleAssignmentNotFound = 13400
 */
+-- Minimum transaction isolation level: Read committed.
 CREATE OR REPLACE PROCEDURE public.start_deleting_role_assignment(
     IN _id public.role_assignments.id%TYPE,
     IN _deleted_by public.role_assignments.updated_by%TYPE,
@@ -128,7 +130,8 @@ $$ LANGUAGE plpgsql;
 -- PROCEDURE: public.delete_role_assignment(bigint, bigint, text)
 /*
 Role assignment statuses:
-    Deleted = 5
+    Deleting = 4
+    Deleted  = 5
 
 Error codes:
     NoError                = 0
@@ -136,6 +139,7 @@ Error codes:
     InvalidOperation       = 3
     RoleAssignmentNotFound = 13400
 */
+-- Minimum transaction isolation level: Read committed.
 CREATE OR REPLACE PROCEDURE public.delete_role_assignment(
     IN _id public.role_assignments.id%TYPE,
     IN _deleted_by public.role_assignments.updated_by%TYPE,
