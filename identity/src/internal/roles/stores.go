@@ -76,6 +76,10 @@ type UserRoleAssignmentStore interface {
 	// Delete deletes a user's role assignment by the specified user's role assignment ID.
 	Delete(ctx *actions.OperationContext, id uint64) error
 
+	// DeleteByRoleAssignmentId deletes a user's role assignment by the specified role assignment ID
+	// and returns the ID of the user's deleted role assignment if the operation is successful.
+	DeleteByRoleAssignmentId(ctx *actions.OperationContext, roleAssignmentId uint64) (uint64, error)
+
 	// FindById finds and returns a user's role assignment, if any, by the specified user's role assignment ID.
 	FindById(ctx *actions.OperationContext, id uint64) (*dbmodels.UserRoleAssignment, error)
 
