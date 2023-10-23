@@ -76,7 +76,7 @@ func (m *RoleAssignmentManager) Create(ctx *actions.OperationContext, data *assi
 			}
 
 			if isAssigned, err := m.roleAssignmentStore.IsAssigned(opCtx, data.RoleId, data.AssignedTo, data.AssigneeType); err != nil {
-				return fmt.Errorf("[manager.RoleAssignmentManager.Create] is role assigned: %w", err)
+				return fmt.Errorf("[manager.RoleAssignmentManager.Create] is the role assigned: %w", err)
 			} else if isAssigned {
 				return ierrors.ErrRoleAlreadyAssigned
 			}
@@ -170,7 +170,6 @@ func (m *RoleAssignmentManager) Delete(ctx *actions.OperationContext, id uint64)
 				"[manager.RoleAssignmentManager.Delete] role assignment has been deleted",
 				logging.NewField("id", id),
 			)
-
 			return nil
 		},
 	)
@@ -244,7 +243,7 @@ func (m *RoleAssignmentManager) IsAssigned(ctx *actions.OperationContext, roleId
 		func(opCtx *actions.OperationContext) error {
 			var err error
 			if isAssigned, err = m.roleAssignmentStore.IsAssigned(opCtx, roleId, assigneeId, assigneeType); err != nil {
-				return fmt.Errorf("[manager.RoleAssignmentManager.IsAssigned] is role assigned: %w", err)
+				return fmt.Errorf("[manager.RoleAssignmentManager.IsAssigned] is the role assigned: %w", err)
 			}
 			return nil
 		},
