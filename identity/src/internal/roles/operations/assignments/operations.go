@@ -16,6 +16,7 @@ package assignments
 
 import (
 	"personal-website-v2/identity/src/internal/roles/models"
+	"personal-website-v2/pkg/base/nullable"
 )
 
 type CreateOperationData struct {
@@ -28,4 +29,7 @@ type CreateOperationData struct {
 
 	// The type of the assignee.
 	AssigneeType models.AssigneeType `json:"assigneeType"`
+
+	// The role assignment description.
+	Description nullable.Nullable[string] `json:"description"`
 }
