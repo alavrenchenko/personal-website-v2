@@ -47,7 +47,7 @@ func NewUserRoleAssignmentManager(uraStore roles.UserRoleAssignmentStore, logger
 
 	c := &actionhelper.OperationExecutorConfig{
 		DefaultCategory: actions.OperationCategoryCommon,
-		DefaultGroup:    iactions.OperationGroupRoleAssignment,
+		DefaultGroup:    iactions.OperationGroupUserRoleAssignment,
 		StopAppIfError:  true,
 	}
 
