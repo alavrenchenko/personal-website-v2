@@ -67,6 +67,9 @@ const (
 	// (User or Group) role assignment not found.
 	DbErrorCodeRoleAssignmentNotFound errors.DbErrorCode = 13400
 
+	// (User or Group) role assignment already exists.
+	DbErrorCodeRoleAssignmentAlreadyExists errors.DbErrorCode = 13401
+
 	// Role already assigned (to the user or group).
-	DbErrorCodeRoleAlreadyAssigned errors.DbErrorCode = 13401
+	DbErrorCodeRoleAlreadyAssigned errors.DbErrorCode = 13402
 )
