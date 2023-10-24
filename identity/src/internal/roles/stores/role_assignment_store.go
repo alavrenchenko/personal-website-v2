@@ -103,8 +103,8 @@ func (s *RoleAssignmentStore) Create(ctx *actions.OperationContext, data *assign
 				switch errCode {
 				case dberrors.DbErrorCodeNoError:
 					return nil
-				case idberrors.DbErrorCodeRoleAssignmentNotFound:
-					return ierrors.ErrRoleAssignmentNotFound
+				case idberrors.DbErrorCodeRoleAlreadyAssigned:
+					return ierrors.ErrRoleAlreadyAssigned
 				}
 				// unknown error
 				return fmt.Errorf("[stores.RoleAssignmentStore.Create] invalid operation: %w", dberrors.NewDbError(errCode, errMsg))
@@ -250,7 +250,7 @@ func (s *RoleAssignmentStore) IsAssigned(ctx *actions.OperationContext, roleId, 
 			}
 			defer conn.Release()
 
-			// FUNCTION: public.is_role_assigned(IN _role_id, IN _assigned_to, IN _assignee_type) RETURNS boolean
+			// FUNCTION: public.is_role_assigned(_role_id, _assigned_to, _assignee_type) RETURNS boolean
 			const query = "SELECT public.is_role_assigned($1, $2, $3)"
 
 			if err = conn.QueryRow(opCtx.Ctx, query, roleId, assigneeId, assigneeType).Scan(&isAssigned); err != nil {
