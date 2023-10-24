@@ -12,6 +12,21 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
+-- FUNCTION: public.user_role_assignment_exists(bigint, bigint)
+/*
+User role assignment statuses:
+    Deleted = 5
+*/
+CREATE OR REPLACE FUNCTION public.user_role_assignment_exists(
+    _user_id public.user_role_assignments.user_id%TYPE,
+    _role_id public.user_role_assignments.role_id%TYPE
+) RETURNS boolean AS $$
+BEGIN
+   -- user's role assignment status: Deleted(5)
+    RETURN EXISTS (SELECT 1 FROM public.user_role_assignments WHERE user_id = _user_id AND role_id = _role_id AND status <> 5 LIMIT 1);
+END;
+$$ LANGUAGE plpgsql;
+
 -- FUNCTION: public.is_role_assigned(bigint, bigint)
 /*
 User role assignment statuses:
@@ -33,8 +48,8 @@ User role assignment statuses:
     Active = 2
 
 Error codes:
-    NoError             = 0
-    RoleAlreadyAssigned = 13401
+    NoError                     = 0
+    RoleAssignmentAlreadyExists = 13401
 */
 -- Minimum transaction isolation level: Read committed.
 CREATE OR REPLACE PROCEDURE public.create_user_role_assignment(
@@ -53,9 +68,9 @@ BEGIN
     err_code := 0; -- NoError
     err_msg := '';
 
-    IF is_role_assigned(_user_id, _role_id) THEN
-        err_code := 13401; -- RoleAlreadyAssigned
-        err_msg := 'role already assigned';
+    IF user_role_assignment_exists(_user_id, _role_id) THEN
+        err_code := 13401; -- RoleAssignmentAlreadyExists
+        err_msg := 'role assignment with the same params already exists';
         RETURN;
     END IF;
 
@@ -68,9 +83,9 @@ BEGIN
 
     EXCEPTION
         WHEN unique_violation THEN
-            IF is_role_assigned(_user_id, _role_id) THEN
-                err_code := 13401; -- RoleAlreadyAssigned
-                err_msg := 'role already assigned';
+            IF user_role_assignment_exists(_user_id, _role_id) THEN
+                err_code := 13401; -- RoleAssignmentAlreadyExists
+                err_msg := 'role assignment with the same params already exists';
                 RETURN;
             END IF;
             RAISE;
