@@ -12,6 +12,22 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
+-- FUNCTION: public.role_assignment_exists(bigint, bigint, smallint)
+/*
+Role assignment statuses:
+    Deleted = 5
+*/
+CREATE OR REPLACE FUNCTION public.role_assignment_exists(
+    _role_id public.role_assignments.role_id%TYPE,
+    _assigned_to public.role_assignments.assigned_to%TYPE,
+    _assignee_type public.role_assignments.assignee_type%TYPE
+) RETURNS boolean AS $$
+BEGIN
+   -- role assignment status: Deleted(5)
+    RETURN EXISTS (SELECT 1 FROM public.role_assignments WHERE role_id = _role_id AND assigned_to = _assigned_to AND assignee_type = _assignee_type AND status <> 5 LIMIT 1);
+END;
+$$ LANGUAGE plpgsql;
+
 -- FUNCTION: public.is_role_assigned(bigint, bigint, smallint)
 /*
 Role assignment statuses:
@@ -34,8 +50,8 @@ Role assignment statuses:
     Active = 2
 
 Error codes:
-    NoError             = 0
-    RoleAlreadyAssigned = 13401
+    NoError                     = 0
+    RoleAssignmentAlreadyExists = 13401
 */
 -- Minimum transaction isolation level: Read committed.
 CREATE OR REPLACE PROCEDURE public.create_role_assignment(
@@ -55,9 +71,9 @@ BEGIN
     err_code := 0; -- NoError
     err_msg := '';
 
-    IF is_role_assigned(_role_id, _assigned_to, _assignee_type) THEN
-        err_code := 13401; -- RoleAlreadyAssigned
-        err_msg := 'role already assigned';
+    IF role_assignment_exists(_role_id, _assigned_to, _assignee_type) THEN
+        err_code := 13401; -- RoleAssignmentAlreadyExists
+        err_msg := 'role assignment with the same params already exists';
         RETURN;
     END IF;
 
@@ -70,9 +86,9 @@ BEGIN
 
     EXCEPTION
         WHEN unique_violation THEN
-            IF is_role_assigned(_role_id, _assigned_to, _assignee_type) THEN
-                err_code := 13401; -- RoleAlreadyAssigned
-                err_msg := 'role already assigned';
+            IF role_assignment_exists(_role_id, _assigned_to, _assignee_type) THEN
+                err_code := 13401; -- RoleAssignmentAlreadyExists
+                err_msg := 'role assignment with the same params already exists';
                 RETURN;
             END IF;
             RAISE;
