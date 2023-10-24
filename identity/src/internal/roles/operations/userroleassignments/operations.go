@@ -15,12 +15,12 @@
 package userroleassignments
 
 type CreateOperationData struct {
+	// The role assignment ID.
+	RoleAssignmentId uint64 `json:"roleAssignmentId"`
+
 	// The user ID.
 	UserId uint64 `json:"userId"`
 
 	// The role ID.
 	RoleId uint64 `json:"roleId"`
-
-	// The role assignment ID.
-	RoleAssignmentId uint64 `json:"roleAssignmentId"`
 }

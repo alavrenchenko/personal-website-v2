@@ -133,14 +133,14 @@ type UserRoleAssignment struct {
 	// The unique ID to identify the user's role assignment.
 	Id uint64 `db:"id"`
 
+	// The role assignment ID.
+	RoleAssignmentId uint64 `db:"role_assignment_id"`
+
 	// The user ID.
 	UserId uint64 `db:"user_id"`
 
 	// The role ID.
 	RoleId uint64 `db:"role_id"`
-
-	// The role assignment ID.
-	RoleAssignmentId uint64 `db:"role_assignment_id"`
 
 	// It stores the date and time at which the user's role assignment was created.
 	CreatedAt time.Time `db:"created_at"`

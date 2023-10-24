@@ -116,9 +116,9 @@ func (m *RoleAssignmentManager) Create(ctx *actions.OperationContext, data *assi
 
 func (m *RoleAssignmentManager) createUserRoleAssignment(ctx *actions.OperationContext, roleAssignmentId, roleId, userId uint64) error {
 	d := &uraoperations.CreateOperationData{
+		RoleAssignmentId: roleAssignmentId,
 		UserId:           userId,
 		RoleId:           roleId,
-		RoleAssignmentId: roleAssignmentId,
 	}
 
 	id, err := m.uraManager.Create(ctx, d)
