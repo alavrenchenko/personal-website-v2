@@ -238,6 +238,33 @@ func (s *RoleAssignmentStore) FindByRoleIdAndAssignee(ctx *actions.OperationCont
 	return a, nil
 }
 
+// Exists returns true if the role assignment exists.
+func (s *RoleAssignmentStore) Exists(ctx *actions.OperationContext, roleId, assigneeId uint64, assigneeType models.AssigneeType) (bool, error) {
+	var exists bool
+	err := s.opExecutor.Exec(ctx, iactions.OperationTypeRoleAssignmentStore_Exists,
+		[]*actions.OperationParam{actions.NewOperationParam("roleId", roleId), actions.NewOperationParam("assigneeId", assigneeId), actions.NewOperationParam("assigneeType", assigneeType)},
+		func(opCtx *actions.OperationContext) error {
+			conn, err := s.db.ConnPool.Acquire(opCtx.Ctx)
+			if err != nil {
+				return fmt.Errorf("[stores.RoleAssignmentStore.Exists] acquire a connection: %w", err)
+			}
+			defer conn.Release()
+
+			// FUNCTION: public.role_assignment_exists(_role_id, _assigned_to, _assignee_type) RETURNS boolean
+			const query = "SELECT public.role_assignment_exists($1, $2, $3)"
+
+			if err = conn.QueryRow(opCtx.Ctx, query, roleId, assigneeId, assigneeType).Scan(&exists); err != nil {
+				return fmt.Errorf("[stores.RoleAssignmentStore.Exists] execute a query (role_assignment_exists): %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return false, fmt.Errorf("[stores.RoleAssignmentStore.Exists] execute an operation: %w", err)
+	}
+	return exists, nil
+}
+
 // IsAssigned returns true if the role is assigned.
 func (s *RoleAssignmentStore) IsAssigned(ctx *actions.OperationContext, roleId, assigneeId uint64, assigneeType models.AssigneeType) (bool, error) {
 	var isAssigned bool

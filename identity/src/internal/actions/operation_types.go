@@ -229,9 +229,10 @@ const (
 	OperationTypeRoleAssignmentStore_Delete                  actions.OperationType = 37002
 	OperationTypeRoleAssignmentStore_FindById                actions.OperationType = 37003
 	OperationTypeRoleAssignmentStore_FindByRoleIdAndAssignee actions.OperationType = 37004
-	OperationTypeRoleAssignmentStore_IsAssigned              actions.OperationType = 37005
-	OperationTypeRoleAssignmentStore_GetAssigneeTypeById     actions.OperationType = 37006
-	OperationTypeRoleAssignmentStore_GetStatusById           actions.OperationType = 37007
+	OperationTypeRoleAssignmentStore_Exists                  actions.OperationType = 37005
+	OperationTypeRoleAssignmentStore_IsAssigned              actions.OperationType = 37006
+	OperationTypeRoleAssignmentStore_GetAssigneeTypeById     actions.OperationType = 37007
+	OperationTypeRoleAssignmentStore_GetStatusById           actions.OperationType = 37008
 
 	// UserRoleAssignmentStore operation types (37500-37999).
 	OperationTypeUserRoleAssignmentStore_Create                      actions.OperationType = 37500
