@@ -119,10 +119,11 @@ const (
 	OperationTypeUserRoleAssignmentManager_FindById                    actions.OperationType = 17503
 	OperationTypeUserRoleAssignmentManager_FindByRoleAssignmentId      actions.OperationType = 17504
 	OperationTypeUserRoleAssignmentManager_FindAllByUserId             actions.OperationType = 17505
-	OperationTypeUserRoleAssignmentManager_IsAssigned                  actions.OperationType = 17506
-	OperationTypeUserRoleAssignmentManager_GetIdByRoleAssignmentId     actions.OperationType = 17507
-	OperationTypeUserRoleAssignmentManager_GetStatusById               actions.OperationType = 17508
-	OperationTypeUserRoleAssignmentManager_GetStatusByRoleAssignmentId actions.OperationType = 17509
+	OperationTypeUserRoleAssignmentManager_Exists                      actions.OperationType = 17506
+	OperationTypeUserRoleAssignmentManager_IsAssigned                  actions.OperationType = 17507
+	OperationTypeUserRoleAssignmentManager_GetIdByRoleAssignmentId     actions.OperationType = 17508
+	OperationTypeUserRoleAssignmentManager_GetStatusById               actions.OperationType = 17509
+	OperationTypeUserRoleAssignmentManager_GetStatusByRoleAssignmentId actions.OperationType = 17510
 
 	// UserRoleManager operation types (18000-18499).
 	OperationTypeUserRoleManager_FindAllByUserId actions.OperationType = 18000

@@ -68,10 +68,10 @@ func (m *UserRoleAssignmentManager) Create(ctx *actions.OperationContext, data *
 	var id uint64
 	err := m.opExecutor.Exec(ctx, iactions.OperationTypeUserRoleAssignmentManager_Create, []*actions.OperationParam{actions.NewOperationParam("data", data)},
 		func(opCtx *actions.OperationContext) error {
-			if isAssigned, err := m.uraStore.IsAssigned(opCtx, data.UserId, data.RoleId); err != nil {
-				return fmt.Errorf("[manager.UserRoleAssignmentManager.Create] is the role assigned to the user: %w", err)
-			} else if isAssigned {
-				return ierrors.ErrRoleAlreadyAssigned
+			if exists, err := m.uraStore.Exists(opCtx, data.UserId, data.RoleId); err != nil {
+				return fmt.Errorf("[manager.UserRoleAssignmentManager.Create] user's role assignment exists: %w", err)
+			} else if exists {
+				return ierrors.ErrRoleAssignmentAlreadyExists
 			}
 
 			var err error
@@ -199,6 +199,25 @@ func (m *UserRoleAssignmentManager) FindAllByUserId(ctx *actions.OperationContex
 		return nil, fmt.Errorf("[manager.UserRoleAssignmentManager.FindAllByUserId] execute an operation: %w", err)
 	}
 	return as, nil
+}
+
+// Exists returns true if the user's role assignment exists.
+func (m *UserRoleAssignmentManager) Exists(ctx *actions.OperationContext, userId, roleId uint64) (bool, error) {
+	var exists bool
+	err := m.opExecutor.Exec(ctx, iactions.OperationTypeUserRoleAssignmentManager_Exists,
+		[]*actions.OperationParam{actions.NewOperationParam("userId", userId), actions.NewOperationParam("roleId", roleId)},
+		func(opCtx *actions.OperationContext) error {
+			var err error
+			if exists, err = m.uraStore.Exists(opCtx, userId, roleId); err != nil {
+				return fmt.Errorf("[manager.UserRoleAssignmentManager.Exists] user's role assignment exists: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return false, fmt.Errorf("[manager.UserRoleAssignmentManager.Exists] execute an operation: %w", err)
+	}
+	return exists, nil
 }
 
 // IsAssigned returns true if the role is assigned to the user.

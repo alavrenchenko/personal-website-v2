@@ -89,6 +89,9 @@ type UserRoleAssignmentManager interface {
 	// FindAllByUserId finds and returns all user's role assignments, if any, by the specified user ID.
 	FindAllByUserId(ctx *actions.OperationContext, userId uint64) ([]*dbmodels.UserRoleAssignment, error)
 
+	// Exists returns true if the user's role assignment exists.
+	Exists(ctx *actions.OperationContext, userId, roleId uint64) (bool, error)
+
 	// IsAssigned returns true if the role is assigned to the user.
 	IsAssigned(ctx *actions.OperationContext, userId, roleId uint64) (bool, error)
 
