@@ -30,15 +30,15 @@ $$ LANGUAGE plpgsql;
 -- FUNCTION: public.is_role_assigned(bigint, bigint)
 /*
 User role assignment statuses:
-    Deleted = 5
+    Active = 2
 */
 CREATE OR REPLACE FUNCTION public.is_role_assigned(
     _user_id public.user_role_assignments.user_id%TYPE,
     _role_id public.user_role_assignments.role_id%TYPE
 ) RETURNS boolean AS $$
 BEGIN
-   -- user's role assignment status: Deleted(5)
-    RETURN EXISTS (SELECT 1 FROM public.user_role_assignments WHERE user_id = _user_id AND role_id = _role_id AND status <> 5 LIMIT 1);
+   -- user's role assignment status: Active(2)
+    RETURN EXISTS (SELECT 1 FROM public.user_role_assignments WHERE user_id = _user_id AND role_id = _role_id AND status = 2 LIMIT 1);
 END;
 $$ LANGUAGE plpgsql;
 
