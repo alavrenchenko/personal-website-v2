@@ -107,9 +107,10 @@ const (
 	OperationTypeRoleAssignmentManager_Delete                  actions.OperationType = 17001
 	OperationTypeRoleAssignmentManager_FindById                actions.OperationType = 17002
 	OperationTypeRoleAssignmentManager_FindByRoleIdAndAssignee actions.OperationType = 17003
-	OperationTypeRoleAssignmentManager_IsAssigned              actions.OperationType = 17004
-	OperationTypeRoleAssignmentManager_GetAssigneeTypeById     actions.OperationType = 17005
-	OperationTypeRoleAssignmentManager_GetStatusById           actions.OperationType = 17006
+	OperationTypeRoleAssignmentManager_Exists                  actions.OperationType = 17004
+	OperationTypeRoleAssignmentManager_IsAssigned              actions.OperationType = 17005
+	OperationTypeRoleAssignmentManager_GetAssigneeTypeById     actions.OperationType = 17006
+	OperationTypeRoleAssignmentManager_GetStatusById           actions.OperationType = 17007
 
 	// UserRoleAssignmentManager operation types (17500-17999).
 	OperationTypeUserRoleAssignmentManager_Create                      actions.OperationType = 17500

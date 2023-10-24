@@ -58,6 +58,9 @@ type RoleAssignmentStore interface {
 	// FindByRoleIdAndAssignee finds and returns a role assignment, if any, by the specified role id and assignee.
 	FindByRoleIdAndAssignee(ctx *actions.OperationContext, roleId uint64, assigneeId uint64, assigneeType models.AssigneeType) (*dbmodels.RoleAssignment, error)
 
+	// Exists returns true if the role assignment exists.
+	Exists(ctx *actions.OperationContext, roleId, assigneeId uint64, assigneeType models.AssigneeType) (bool, error)
+
 	// IsAssigned returns true if the role is assigned.
 	IsAssigned(ctx *actions.OperationContext, roleId, assigneeId uint64, assigneeType models.AssigneeType) (bool, error)
 

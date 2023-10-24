@@ -75,10 +75,10 @@ func (m *RoleAssignmentManager) Create(ctx *actions.OperationContext, data *assi
 				return fmt.Errorf("[manager.RoleAssignmentManager.Create] '%s' assignee type isn't supported", data.AssigneeType)
 			}
 
-			if isAssigned, err := m.roleAssignmentStore.IsAssigned(opCtx, data.RoleId, data.AssignedTo, data.AssigneeType); err != nil {
-				return fmt.Errorf("[manager.RoleAssignmentManager.Create] is the role assigned: %w", err)
-			} else if isAssigned {
-				return ierrors.ErrRoleAlreadyAssigned
+			if exists, err := m.roleAssignmentStore.Exists(opCtx, data.RoleId, data.AssignedTo, data.AssigneeType); err != nil {
+				return fmt.Errorf("[manager.RoleAssignmentManager.Create] role assignment exists: %w", err)
+			} else if exists {
+				return ierrors.ErrRoleAssignmentAlreadyExists
 			}
 
 			var err error
@@ -233,6 +233,25 @@ func (m *RoleAssignmentManager) FindByRoleIdAndAssignee(ctx *actions.OperationCo
 		return nil, fmt.Errorf("[manager.RoleAssignmentManager.FindByRoleIdAndAssignee] execute an operation: %w", err)
 	}
 	return a, nil
+}
+
+// Exists returns true if the role assignment exists.
+func (m *RoleAssignmentManager) Exists(ctx *actions.OperationContext, roleId, assigneeId uint64, assigneeType models.AssigneeType) (bool, error) {
+	var exists bool
+	err := m.opExecutor.Exec(ctx, iactions.OperationTypeRoleAssignmentManager_Exists,
+		[]*actions.OperationParam{actions.NewOperationParam("roleId", roleId), actions.NewOperationParam("assigneeId", assigneeId), actions.NewOperationParam("assigneeType", assigneeType)},
+		func(opCtx *actions.OperationContext) error {
+			var err error
+			if exists, err = m.roleAssignmentStore.Exists(opCtx, roleId, assigneeId, assigneeType); err != nil {
+				return fmt.Errorf("[manager.RoleAssignmentManager.Exists] role assignment exists: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return false, fmt.Errorf("[manager.RoleAssignmentManager.Exists] execute an operation: %w", err)
+	}
+	return exists, nil
 }
 
 // IsAssigned returns true if the role is assigned.
