@@ -243,10 +243,11 @@ const (
 	OperationTypeUserRoleAssignmentStore_FindById                    actions.OperationType = 37504
 	OperationTypeUserRoleAssignmentStore_FindByRoleAssignmentId      actions.OperationType = 37505
 	OperationTypeUserRoleAssignmentStore_FindAllByUserId             actions.OperationType = 37506
-	OperationTypeUserRoleAssignmentStore_IsAssigned                  actions.OperationType = 37507
-	OperationTypeUserRoleAssignmentStore_GetIdByRoleAssignmentId     actions.OperationType = 37508
-	OperationTypeUserRoleAssignmentStore_GetStatusById               actions.OperationType = 37509
-	OperationTypeUserRoleAssignmentStore_GetStatusByRoleAssignmentId actions.OperationType = 37510
+	OperationTypeUserRoleAssignmentStore_Exists                      actions.OperationType = 37507
+	OperationTypeUserRoleAssignmentStore_IsAssigned                  actions.OperationType = 37508
+	OperationTypeUserRoleAssignmentStore_GetIdByRoleAssignmentId     actions.OperationType = 37509
+	OperationTypeUserRoleAssignmentStore_GetStatusById               actions.OperationType = 37510
+	OperationTypeUserRoleAssignmentStore_GetStatusByRoleAssignmentId actions.OperationType = 37511
 
 	// UserRoleStore operation types (38000-38499).
 

@@ -249,6 +249,33 @@ func (s *UserRoleAssignmentStore) FindAllByUserId(ctx *actions.OperationContext,
 	return as, nil
 }
 
+// Exists returns true if the user's role assignment exists.
+func (s *UserRoleAssignmentStore) Exists(ctx *actions.OperationContext, userId, roleId uint64) (bool, error) {
+	var exists bool
+	err := s.opExecutor.Exec(ctx, iactions.OperationTypeUserRoleAssignmentStore_Exists,
+		[]*actions.OperationParam{actions.NewOperationParam("userId", userId), actions.NewOperationParam("roleId", roleId)},
+		func(opCtx *actions.OperationContext) error {
+			conn, err := s.db.ConnPool.Acquire(opCtx.Ctx)
+			if err != nil {
+				return fmt.Errorf("[stores.UserRoleAssignmentStore.Exists] acquire a connection: %w", err)
+			}
+			defer conn.Release()
+
+			// FUNCTION: public.user_role_assignment_exists(_user_id, _role_id) RETURNS boolean
+			const query = "SELECT public.user_role_assignment_exists($1, $2)"
+
+			if err = conn.QueryRow(opCtx.Ctx, query, userId, roleId).Scan(&exists); err != nil {
+				return fmt.Errorf("[stores.UserRoleAssignmentStore.Exists] execute a query (user_role_assignment_exists): %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return false, fmt.Errorf("[stores.UserRoleAssignmentStore.Exists] execute an operation: %w", err)
+	}
+	return exists, nil
+}
+
 // IsAssigned returns true if the role is assigned to the user.
 func (s *UserRoleAssignmentStore) IsAssigned(ctx *actions.OperationContext, userId, roleId uint64) (bool, error) {
 	var isAssigned bool
