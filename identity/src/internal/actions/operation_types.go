@@ -124,9 +124,10 @@ const (
 	OperationTypeUserRoleAssignmentManager_GetIdByRoleAssignmentId     actions.OperationType = 17508
 	OperationTypeUserRoleAssignmentManager_GetStatusById               actions.OperationType = 17509
 	OperationTypeUserRoleAssignmentManager_GetStatusByRoleAssignmentId actions.OperationType = 17510
+	OperationTypeUserRoleAssignmentManager_GetAllUserRoleIdsByUserId   actions.OperationType = 17511
 
 	// UserRoleManager operation types (18000-18499).
-	OperationTypeUserRoleManager_GetAllByUserId actions.OperationType = 18000
+	OperationTypeUserRoleManager_GetAllRolesByUserId actions.OperationType = 18000
 
 	// UserStore operation types (31000-31499).
 	OperationTypeUserStore_Create                actions.OperationType = 31000
@@ -248,6 +249,7 @@ const (
 	OperationTypeUserRoleAssignmentStore_GetIdByRoleAssignmentId     actions.OperationType = 37509
 	OperationTypeUserRoleAssignmentStore_GetStatusById               actions.OperationType = 37510
 	OperationTypeUserRoleAssignmentStore_GetStatusByRoleAssignmentId actions.OperationType = 37511
+	OperationTypeUserRoleAssignmentStore_GetAllUserRoleIdsByUserId   actions.OperationType = 37512
 
 	// UserRoleStore operation types (38000-38499).
 

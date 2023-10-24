@@ -106,4 +106,7 @@ type UserRoleAssignmentStore interface {
 
 	// GetStatusByRoleAssignmentId gets a user's role assignment status by the specified role assignment ID.
 	GetStatusByRoleAssignmentId(ctx *actions.OperationContext, roleAssignmentId uint64) (models.UserRoleAssignmentStatus, error)
+
+	// GetAllUserRoleIdsByUserId gets all IDs of the roles assigned to the user by the specified user ID.
+	GetAllUserRoleIdsByUserId(ctx *actions.OperationContext, userId uint64) ([]uint64, error)
 }

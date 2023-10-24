@@ -235,7 +235,7 @@ func (s *UserRoleAssignmentStore) GetAllByUserId(ctx *actions.OperationContext, 
 	err := s.opExecutor.Exec(ctx, iactions.OperationTypeUserRoleAssignmentStore_GetAllByUserId,
 		[]*actions.OperationParam{actions.NewOperationParam("userId", userId)},
 		func(opCtx *actions.OperationContext) error {
-			const query = "SELECT * FROM " + userRoleAssignmentsTable + " WHERE role_assignment_id = $1 LIMIT 1"
+			const query = "SELECT * FROM " + userRoleAssignmentsTable + " WHERE role_assignment_id = $1"
 			var err error
 			if as, err = s.store.FindAll(opCtx.Ctx, query, userId); err != nil {
 				return fmt.Errorf("[stores.UserRoleAssignmentStore.GetAllByUserId] find all user's role assignments by user id: %w", err)
@@ -396,4 +396,35 @@ func (s *UserRoleAssignmentStore) GetStatusByRoleAssignmentId(ctx *actions.Opera
 		return status, fmt.Errorf("[stores.UserRoleAssignmentStore.GetStatusByRoleAssignmentId] execute an operation: %w", err)
 	}
 	return status, nil
+}
+
+// GetAllUserRoleIdsByUserId gets all IDs of the roles assigned to the user by the specified user ID.
+func (s *UserRoleAssignmentStore) GetAllUserRoleIdsByUserId(ctx *actions.OperationContext, userId uint64) ([]uint64, error) {
+	var ids []uint64
+	err := s.opExecutor.Exec(ctx, iactions.OperationTypeUserRoleAssignmentStore_GetAllUserRoleIdsByUserId,
+		[]*actions.OperationParam{actions.NewOperationParam("userId", userId)},
+		func(opCtx *actions.OperationContext) error {
+			conn, err := s.db.ConnPool.Acquire(opCtx.Ctx)
+			if err != nil {
+				return fmt.Errorf("[stores.UserRoleAssignmentStore.GetAllUserRoleIdsByUserId] acquire a connection: %w", err)
+			}
+			defer conn.Release()
+
+			const query = "SELECT role_id FROM " + userRoleAssignmentsTable + " WHERE user_id = $1 AND status = $2"
+			rows, err := conn.Query(opCtx.Ctx, query, userId, models.UserRoleAssignmentStatusActive)
+			if err != nil {
+				return fmt.Errorf("[stores.UserRoleAssignmentStore.GetAllUserRoleIdsByUserId] execute a query: %w", err)
+			}
+			defer rows.Close()
+
+			if ids, err = pgx.CollectRows(rows, pgx.RowTo[uint64]); err != nil {
+				return fmt.Errorf("[stores.UserRoleAssignmentStore.GetAllUserRoleIdsByUserId] collect rows: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("[stores.UserRoleAssignmentStore.GetAllUserRoleIdsByUserId] execute an operation: %w", err)
+	}
+	return ids, nil
 }

@@ -103,13 +103,13 @@ type UserRoleAssignmentManager interface {
 
 	// GetStatusByRoleAssignmentId gets a user's role assignment status by the specified role assignment ID.
 	GetStatusByRoleAssignmentId(ctx *actions.OperationContext, roleAssignmentId uint64) (models.UserRoleAssignmentStatus, error)
+
+	// GetAllUserRoleIdsByUserId gets all IDs of the roles assigned to the user by the specified user ID.
+	GetAllUserRoleIdsByUserId(ctx *actions.OperationContext, userId uint64) ([]uint64, error)
 }
 
 // UserRoleManager is a user role manager.
 type UserRoleManager interface {
-	// GetAllByUserId gets all user's roles by the specified user ID.
-	GetAllByUserId(ctx *actions.OperationContext, userId uint64) ([]*dbmodels.Role, error)
-
-	// GetAllRoleIdsByUserId gets all user's role IDs by the specified user ID.
-	GetAllRoleIdsByUserId(ctx *actions.OperationContext, userId uint64) ([]uint64, error)
+	// GetAllRolesByUserId gets all user's roles by the specified user ID.
+	GetAllRolesByUserId(ctx *actions.OperationContext, userId uint64) ([]*dbmodels.Role, error)
 }
