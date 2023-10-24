@@ -66,8 +66,11 @@ const (
 	// (User or Group) role assignment not found.
 	ErrorCodeRoleAssignmentNotFound errors.ErrorCode = 33400
 
+	// (User or Group) role assignment already exists.
+	ErrorCodeRoleAssignmentAlreadyExists errors.ErrorCode = 33401
+
 	// Role already assigned (to the user or group).
-	ErrorCodeRoleAlreadyAssigned errors.ErrorCode = 33401
+	ErrorCodeRoleAlreadyAssigned errors.ErrorCode = 33402
 )
 
 var (
@@ -114,6 +117,9 @@ var (
 	// Role assignment error codes.
 	// (User or Group) role assignment not found.
 	ErrRoleAssignmentNotFound = errors.NewError(ErrorCodeRoleAssignmentNotFound, "role assignment not found")
+
+	// (User or Group) role assignment already exists.
+	ErrRoleAssignmentAlreadyExists = errors.NewError(ErrorCodeRoleAssignmentAlreadyExists, "role assignment with the same params already exists")
 
 	// Role already assigned (to the user or group).
 	ErrRoleAlreadyAssigned = errors.NewError(ErrorCodeRoleAlreadyAssigned, "role already assigned")
