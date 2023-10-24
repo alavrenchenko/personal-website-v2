@@ -182,21 +182,21 @@ func (m *UserRoleAssignmentManager) FindByRoleAssignmentId(ctx *actions.Operatio
 	return a, nil
 }
 
-// FindAllByUserId finds and returns all user's role assignments, if any, by the specified user ID.
-func (m *UserRoleAssignmentManager) FindAllByUserId(ctx *actions.OperationContext, userId uint64) ([]*dbmodels.UserRoleAssignment, error) {
+// GetAllByUserId gets all user's role assignments by the specified user ID.
+func (m *UserRoleAssignmentManager) GetAllByUserId(ctx *actions.OperationContext, userId uint64) ([]*dbmodels.UserRoleAssignment, error) {
 	var as []*dbmodels.UserRoleAssignment
-	err := m.opExecutor.Exec(ctx, iactions.OperationTypeUserRoleAssignmentManager_FindAllByUserId,
+	err := m.opExecutor.Exec(ctx, iactions.OperationTypeUserRoleAssignmentManager_GetAllByUserId,
 		[]*actions.OperationParam{actions.NewOperationParam("userId", userId)},
 		func(opCtx *actions.OperationContext) error {
 			var err error
-			if as, err = m.uraStore.FindAllByUserId(opCtx, userId); err != nil {
-				return fmt.Errorf("[manager.UserRoleAssignmentManager.FindAllByUserId] find all user's role assignments by user id: %w", err)
+			if as, err = m.uraStore.GetAllByUserId(opCtx, userId); err != nil {
+				return fmt.Errorf("[manager.UserRoleAssignmentManager.GetAllByUserId] get all user's role assignments by user id: %w", err)
 			}
 			return nil
 		},
 	)
 	if err != nil {
-		return nil, fmt.Errorf("[manager.UserRoleAssignmentManager.FindAllByUserId] execute an operation: %w", err)
+		return nil, fmt.Errorf("[manager.UserRoleAssignmentManager.GetAllByUserId] execute an operation: %w", err)
 	}
 	return as, nil
 }

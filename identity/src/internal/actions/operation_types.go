@@ -118,7 +118,7 @@ const (
 	OperationTypeUserRoleAssignmentManager_DeleteByRoleAssignmentId    actions.OperationType = 17502
 	OperationTypeUserRoleAssignmentManager_FindById                    actions.OperationType = 17503
 	OperationTypeUserRoleAssignmentManager_FindByRoleAssignmentId      actions.OperationType = 17504
-	OperationTypeUserRoleAssignmentManager_FindAllByUserId             actions.OperationType = 17505
+	OperationTypeUserRoleAssignmentManager_GetAllByUserId              actions.OperationType = 17505
 	OperationTypeUserRoleAssignmentManager_Exists                      actions.OperationType = 17506
 	OperationTypeUserRoleAssignmentManager_IsAssigned                  actions.OperationType = 17507
 	OperationTypeUserRoleAssignmentManager_GetIdByRoleAssignmentId     actions.OperationType = 17508
@@ -126,7 +126,7 @@ const (
 	OperationTypeUserRoleAssignmentManager_GetStatusByRoleAssignmentId actions.OperationType = 17510
 
 	// UserRoleManager operation types (18000-18499).
-	OperationTypeUserRoleManager_FindAllByUserId actions.OperationType = 18000
+	OperationTypeUserRoleManager_GetAllByUserId actions.OperationType = 18000
 
 	// UserStore operation types (31000-31499).
 	OperationTypeUserStore_Create                actions.OperationType = 31000
@@ -242,7 +242,7 @@ const (
 	OperationTypeUserRoleAssignmentStore_DeleteByRoleAssignmentId    actions.OperationType = 37503
 	OperationTypeUserRoleAssignmentStore_FindById                    actions.OperationType = 37504
 	OperationTypeUserRoleAssignmentStore_FindByRoleAssignmentId      actions.OperationType = 37505
-	OperationTypeUserRoleAssignmentStore_FindAllByUserId             actions.OperationType = 37506
+	OperationTypeUserRoleAssignmentStore_GetAllByUserId              actions.OperationType = 37506
 	OperationTypeUserRoleAssignmentStore_Exists                      actions.OperationType = 37507
 	OperationTypeUserRoleAssignmentStore_IsAssigned                  actions.OperationType = 37508
 	OperationTypeUserRoleAssignmentStore_GetIdByRoleAssignmentId     actions.OperationType = 37509

@@ -229,22 +229,22 @@ func (s *UserRoleAssignmentStore) FindByRoleAssignmentId(ctx *actions.OperationC
 	return a, nil
 }
 
-// FindAllByUserId finds and returns all user's role assignments, if any, by the specified user ID.
-func (s *UserRoleAssignmentStore) FindAllByUserId(ctx *actions.OperationContext, userId uint64) ([]*dbmodels.UserRoleAssignment, error) {
+// GetAllByUserId gets all user's role assignments by the specified user ID.
+func (s *UserRoleAssignmentStore) GetAllByUserId(ctx *actions.OperationContext, userId uint64) ([]*dbmodels.UserRoleAssignment, error) {
 	var as []*dbmodels.UserRoleAssignment
-	err := s.opExecutor.Exec(ctx, iactions.OperationTypeUserRoleAssignmentStore_FindAllByUserId,
+	err := s.opExecutor.Exec(ctx, iactions.OperationTypeUserRoleAssignmentStore_GetAllByUserId,
 		[]*actions.OperationParam{actions.NewOperationParam("userId", userId)},
 		func(opCtx *actions.OperationContext) error {
 			const query = "SELECT * FROM " + userRoleAssignmentsTable + " WHERE role_assignment_id = $1 LIMIT 1"
 			var err error
 			if as, err = s.store.FindAll(opCtx.Ctx, query, userId); err != nil {
-				return fmt.Errorf("[stores.UserRoleAssignmentStore.FindAllByUserId] find all user's role assignments by user id: %w", err)
+				return fmt.Errorf("[stores.UserRoleAssignmentStore.GetAllByUserId] find all user's role assignments by user id: %w", err)
 			}
 			return nil
 		},
 	)
 	if err != nil {
-		return nil, fmt.Errorf("[stores.UserRoleAssignmentStore.FindAllByUserId] execute an operation: %w", err)
+		return nil, fmt.Errorf("[stores.UserRoleAssignmentStore.GetAllByUserId] execute an operation: %w", err)
 	}
 	return as, nil
 }
