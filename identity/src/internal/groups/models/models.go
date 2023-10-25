@@ -14,28 +14,34 @@
 
 package models
 
-// The user's status.
-type UserStatus uint8
+import "fmt"
+
+// The user's group.
+type UserGroup uint8
 
 const (
 	// Unspecified = 0 // Do not use.
 
-	UserStatusNew                  UserStatus = 1
-	UserStatusPendingApproval      UserStatus = 2
-	UserStatusActive               UserStatus = 3
-	UserStatusLockedOut            UserStatus = 4
-	UserStatusTemporarilyLockedOut UserStatus = 5
-	UserStatusDisabled             UserStatus = 6
-	UserStatusDeleted              UserStatus = 7
+	UserGroupAnonymousUsers UserGroup = 1
+	UserGroupSystemUsers    UserGroup = 2
+	UserGroupAdmins         UserGroup = 3
+	UserGroupStandardUsers  UserGroup = 4
 )
 
-// The user's gender.
-type Gender uint8
+func (g UserGroup) IsValid() bool {
+	return g == UserGroupAnonymousUsers || g == UserGroupSystemUsers || g == UserGroupAdmins || g == UserGroupStandardUsers
+}
 
-const (
-	GenderUnspecified Gender = 0
-	GenderUnknown     Gender = 1
-	GenderFemale      Gender = 2
-	GenderMale        Gender = 3
-	GenderOther       Gender = 4
-)
+func (g UserGroup) String() string {
+	switch g {
+	case UserGroupAnonymousUsers:
+		return "anonymousUsers"
+	case UserGroupSystemUsers:
+		return "systemUsers"
+	case UserGroupAdmins:
+		return "admins"
+	case UserGroupStandardUsers:
+		return "standardUsers"
+	}
+	return fmt.Sprintf("UserGroup(%d)", g)
+}

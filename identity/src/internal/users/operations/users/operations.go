@@ -15,6 +15,7 @@
 package users
 
 import (
+	groupmodels "personal-website-v2/identity/src/internal/groups/models"
 	"personal-website-v2/identity/src/internal/users/models"
 	"personal-website-v2/pkg/base/nullable"
 	"personal-website-v2/pkg/base/strings"
@@ -24,7 +25,7 @@ import (
 
 type CreateOperationData struct {
 	// The user's group.
-	Group models.UserGroup `json:"group"`
+	Group groupmodels.UserGroup `json:"group"`
 
 	// The user's status.
 	Status models.UserStatus `json:"status"`
@@ -49,11 +50,11 @@ type CreateOperationData struct {
 }
 
 func (d *CreateOperationData) Validate() *errors.Error {
-	if d.Group != models.UserGroupSystemUsers && d.Group != models.UserGroupAdministrators && d.Group != models.UserGroupStandardUsers {
+	if d.Group != groupmodels.UserGroupSystemUsers && d.Group != groupmodels.UserGroupAdmins && d.Group != groupmodels.UserGroupStandardUsers {
 		return errors.NewError(errors.ErrorCodeInvalidData, "invalid group")
 	}
 
-	if d.Group == models.UserGroupSystemUsers {
+	if d.Group == groupmodels.UserGroupSystemUsers {
 		if strings.IsEmptyOrWhitespace(d.DisplayName) {
 			return errors.NewError(errors.ErrorCodeInvalidData, "displayName is empty")
 		}

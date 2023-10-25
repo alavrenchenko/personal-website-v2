@@ -17,6 +17,7 @@ package dbmodels
 import (
 	"time"
 
+	groupmodels "personal-website-v2/identity/src/internal/groups/models"
 	"personal-website-v2/identity/src/internal/users/models"
 )
 
@@ -29,7 +30,7 @@ type User struct {
 	Name *string `db:"name"`
 
 	// The user's group.
-	Group models.UserGroup `db:"group"`
+	Group groupmodels.UserGroup `db:"group"`
 
 	// It stores the date and time at which the user was created.
 	CreatedAt time.Time `db:"created_at"`

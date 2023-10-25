@@ -23,6 +23,7 @@ import (
 
 	iactions "personal-website-v2/identity/src/internal/actions"
 	ierrors "personal-website-v2/identity/src/internal/errors"
+	groupmodels "personal-website-v2/identity/src/internal/groups/models"
 	"personal-website-v2/identity/src/internal/users"
 	"personal-website-v2/identity/src/internal/users/dbmodels"
 	"personal-website-v2/identity/src/internal/users/models"
@@ -182,8 +183,8 @@ func (s *UserStore) FindByEmail(ctx *actions.OperationContext, email string) (*d
 }
 
 // GetGroupById gets a user's group by the specified user ID.
-func (s *UserStore) GetGroupById(ctx *actions.OperationContext, id uint64) (models.UserGroup, error) {
-	var g models.UserGroup
+func (s *UserStore) GetGroupById(ctx *actions.OperationContext, id uint64) (groupmodels.UserGroup, error) {
+	var g groupmodels.UserGroup
 	err := s.opExecutor.Exec(ctx, iactions.OperationTypeUserStore_GetGroupById,
 		[]*actions.OperationParam{actions.NewOperationParam("id", id)},
 		func(opCtx *actions.OperationContext) error {
@@ -240,8 +241,8 @@ func (s *UserStore) GetStatusById(ctx *actions.OperationContext, id uint64) (mod
 }
 
 // GetGroupAndStatusById gets a group and a status of the user by the specified user ID.
-func (s *UserStore) GetGroupAndStatusById(ctx *actions.OperationContext, id uint64) (models.UserGroup, models.UserStatus, error) {
-	var g models.UserGroup
+func (s *UserStore) GetGroupAndStatusById(ctx *actions.OperationContext, id uint64) (groupmodels.UserGroup, models.UserStatus, error) {
+	var g groupmodels.UserGroup
 	var status models.UserStatus
 	err := s.opExecutor.Exec(ctx, iactions.OperationTypeUserStore_GetGroupAndStatusById,
 		[]*actions.OperationParam{actions.NewOperationParam("id", id)},

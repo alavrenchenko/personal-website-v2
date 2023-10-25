@@ -20,6 +20,7 @@ import (
 	"github.com/google/uuid"
 
 	iactions "personal-website-v2/identity/src/internal/actions"
+	groupmodels "personal-website-v2/identity/src/internal/groups/models"
 	"personal-website-v2/identity/src/internal/logging/events"
 	"personal-website-v2/identity/src/internal/users"
 	"personal-website-v2/identity/src/internal/users/dbmodels"
@@ -227,7 +228,7 @@ func (m *UserManager) FindByEmail(ctx *actions.OperationContext, email string) (
 }
 
 // GetGroupById gets a user's group by the specified user ID.
-func (m *UserManager) GetGroupById(ctx *actions.OperationContext, id uint64) (models.UserGroup, error) {
+func (m *UserManager) GetGroupById(ctx *actions.OperationContext, id uint64) (groupmodels.UserGroup, error) {
 	op, err := ctx.Action.Operations.CreateAndStart(
 		iactions.OperationTypeUserManager_GetGroupById,
 		actions.OperationCategoryCommon,
@@ -236,7 +237,7 @@ func (m *UserManager) GetGroupById(ctx *actions.OperationContext, id uint64) (mo
 		actions.NewOperationParam("id", id),
 	)
 	if err != nil {
-		return models.UserGroupAnonymousUsers, fmt.Errorf("[manager.UserManager.GetGroupById] create and start an operation: %w", err)
+		return groupmodels.UserGroupAnonymousUsers, fmt.Errorf("[manager.UserManager.GetGroupById] create and start an operation: %w", err)
 	}
 
 	succeeded := false
@@ -258,7 +259,7 @@ func (m *UserManager) GetGroupById(ctx *actions.OperationContext, id uint64) (mo
 
 	g, err := m.userStore.GetGroupById(ctx2, id)
 	if err != nil {
-		return models.UserGroupAnonymousUsers, fmt.Errorf("[manager.UserManager.GetGroupById] get a user's group by id: %w", err)
+		return groupmodels.UserGroupAnonymousUsers, fmt.Errorf("[manager.UserManager.GetGroupById] get a user's group by id: %w", err)
 	}
 
 	succeeded = true
@@ -305,7 +306,7 @@ func (m *UserManager) GetStatusById(ctx *actions.OperationContext, id uint64) (m
 }
 
 // GetGroupAndStatusById gets a group and a status of the user by the specified user ID.
-func (m *UserManager) GetGroupAndStatusById(ctx *actions.OperationContext, id uint64) (models.UserGroup, models.UserStatus, error) {
+func (m *UserManager) GetGroupAndStatusById(ctx *actions.OperationContext, id uint64) (groupmodels.UserGroup, models.UserStatus, error) {
 	op, err := ctx.Action.Operations.CreateAndStart(
 		iactions.OperationTypeUserManager_GetGroupAndStatusById,
 		actions.OperationCategoryCommon,
@@ -314,7 +315,7 @@ func (m *UserManager) GetGroupAndStatusById(ctx *actions.OperationContext, id ui
 		actions.NewOperationParam("id", id),
 	)
 	if err != nil {
-		return models.UserGroupAnonymousUsers, models.UserStatusNew, fmt.Errorf("[manager.UserManager.GetGroupAndStatusById] create and start an operation: %w", err)
+		return groupmodels.UserGroupAnonymousUsers, models.UserStatusNew, fmt.Errorf("[manager.UserManager.GetGroupAndStatusById] create and start an operation: %w", err)
 	}
 
 	succeeded := false
@@ -336,7 +337,7 @@ func (m *UserManager) GetGroupAndStatusById(ctx *actions.OperationContext, id ui
 
 	g, s, err := m.userStore.GetGroupAndStatusById(ctx2, id)
 	if err != nil {
-		return models.UserGroupAnonymousUsers, models.UserStatusNew, fmt.Errorf("[manager.UserManager.GetGroupAndStatusById] get a group and a status of the user by id: %w", err)
+		return groupmodels.UserGroupAnonymousUsers, models.UserStatusNew, fmt.Errorf("[manager.UserManager.GetGroupAndStatusById] get a group and a status of the user by id: %w", err)
 	}
 
 	succeeded = true
