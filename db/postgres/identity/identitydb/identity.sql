@@ -59,6 +59,49 @@ CREATE TABLE IF NOT EXISTS public.roles
 )
 TABLESPACE pg_default;
 
+-- Table: public.group_role_assignments
+/*
+Group role assignment statuses:
+    Unspecified = 0
+    New         = 1
+    Active      = 2
+    Inactive    = 3
+    Deleting    = 4
+    Deleted     = 5
+*/
+CREATE TABLE IF NOT EXISTS public.group_role_assignments
+(
+    id bigint NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 9223372036854775807 CACHE 1 ),
+    role_assignment_id bigint NOT NULL,
+    "group" smallint NOT NULL,
+    role_id bigint NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    created_by bigint NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL DEFAULT (clock_timestamp() AT TIME ZONE 'UTC'::text),
+    updated_by bigint NOT NULL,
+    status smallint NOT NULL,
+    status_updated_at timestamp(6) without time zone NOT NULL DEFAULT (clock_timestamp() AT TIME ZONE 'UTC'::text),
+    status_updated_by bigint NOT NULL,
+    status_comment text COLLATE pg_catalog."default",
+    _version_stamp bigint NOT NULL,
+    _timestamp timestamp(6) without time zone NOT NULL DEFAULT (clock_timestamp() AT TIME ZONE 'UTC'::text),
+    CONSTRAINT group_role_assignments_pkey PRIMARY KEY (id),
+    CONSTRAINT group_role_assignments_role_assignment_id_key UNIQUE (role_assignment_id),
+    CONSTRAINT group_role_assignments_status_check CHECK (status >= 1 AND status <= 5)
+)
+TABLESPACE pg_default;
+
+CREATE UNIQUE INDEX IF NOT EXISTS group_role_assignments_group_role_id_idx
+    ON public.group_role_assignments ("group", role_id)
+    WHERE status <> 5;
+
+CREATE INDEX IF NOT EXISTS group_role_assignments_group_idx ON public.group_role_assignments ("group");
+CREATE INDEX IF NOT EXISTS group_role_assignments_role_id_idx ON public.group_role_assignments (role_id);
+CREATE INDEX IF NOT EXISTS group_role_assignments_created_at_idx ON public.group_role_assignments (created_at);
+CREATE INDEX IF NOT EXISTS group_role_assignments_updated_at_idx ON public.group_role_assignments (updated_at);
+CREATE INDEX IF NOT EXISTS group_role_assignments_status_idx ON public.group_role_assignments (status);
+CREATE INDEX IF NOT EXISTS group_role_assignments_status_updated_at_idx ON public.group_role_assignments (status_updated_at);
+
 -- Table: public.permission_groups
 /*
 Permission group statuses:
