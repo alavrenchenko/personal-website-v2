@@ -68,8 +68,14 @@ var (
 	// UserRoleAssignment events (id: 0, 12600-12799).
 	UserRoleAssignmentEvent = logging.NewEvent(0, "UserRoleAssignment", logging.EventCategoryCommon, amlogging.EventGroupUserRoleAssignment)
 
-	// UserRole events (id: 0, 12800-12999).
+	// GroupRoleAssignment events (id: 0, 12800-12999).
+	GroupRoleAssignmentEvent = logging.NewEvent(0, "GroupRoleAssignment", logging.EventCategoryCommon, amlogging.EventGroupGroupRoleAssignment)
+
+	// UserRole events (id: 0, 13000-13199).
 	UserRoleEvent = logging.NewEvent(0, "UserRole", logging.EventCategoryCommon, amlogging.EventGroupUserRole)
+
+	// GroupRole events (id: 0, 13200-13399).
+	GroupRoleEvent = logging.NewEvent(0, "GroupRole", logging.EventCategoryCommon, amlogging.EventGroupGroupRole)
 
 	// UserStore events (id: 0, 20200-20399).
 	UserStoreEvent = logging.NewEvent(0, "UserStore", logging.EventCategoryDatabase, amlogging.EventGroupUserStore)
@@ -77,7 +83,7 @@ var (
 	// ClientStore events (id: 0, 20400-20599).
 	ClientStoreEvent = logging.NewEvent(0, "ClientStore", logging.EventCategoryDatabase, amlogging.EventGroupClientStore)
 
-	// UserGroup events (id: 0, 20600-20799).
+	// UserGroupStore events (id: 0, 20600-20799).
 
 	// RoleStore events (id: 0, 20800-20999).
 	RoleStoreEvent = logging.NewEvent(0, "RoleStore", logging.EventCategoryCommon, amlogging.EventGroupRoleStore)

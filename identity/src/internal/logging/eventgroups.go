@@ -35,9 +35,11 @@ const (
 	// Authentication token encryption key event group.
 	EventGroupAuthTokenEncryptionKey logging.EventGroup = 1011
 
-	EventGroupRoleAssignment     logging.EventGroup = 1012
-	EventGroupUserRoleAssignment logging.EventGroup = 1013
-	EventGroupUserRole           logging.EventGroup = 1014
+	EventGroupRoleAssignment      logging.EventGroup = 1012
+	EventGroupUserRoleAssignment  logging.EventGroup = 1013
+	EventGroupGroupRoleAssignment logging.EventGroup = 1014
+	EventGroupUserRole            logging.EventGroup = 1015
+	EventGroupGroupRole           logging.EventGroup = 1016
 
 	EventGroupUserStore             logging.EventGroup = 1050
 	EventGroupClientStore           logging.EventGroup = 1051
