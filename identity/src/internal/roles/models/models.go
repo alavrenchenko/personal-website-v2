@@ -102,3 +102,16 @@ const (
 	UserRoleAssignmentStatusDeleting UserRoleAssignmentStatus = 4
 	UserRoleAssignmentStatusDeleted  UserRoleAssignmentStatus = 5
 )
+
+// The group role assignment status.
+type GroupRoleAssignmentStatus uint8
+
+const (
+	// Unspecified = 0 // Do not use.
+
+	GroupRoleAssignmentStatusNew      GroupRoleAssignmentStatus = 1
+	GroupRoleAssignmentStatusActive   GroupRoleAssignmentStatus = 2
+	GroupRoleAssignmentStatusInactive GroupRoleAssignmentStatus = 3
+	GroupRoleAssignmentStatusDeleting GroupRoleAssignmentStatus = 4
+	GroupRoleAssignmentStatusDeleted  GroupRoleAssignmentStatus = 5
+)

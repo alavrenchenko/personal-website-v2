@@ -15,9 +15,11 @@
 package roles
 
 import (
+	groupmodels "personal-website-v2/identity/src/internal/groups/models"
 	"personal-website-v2/identity/src/internal/roles/dbmodels"
 	"personal-website-v2/identity/src/internal/roles/models"
 	"personal-website-v2/identity/src/internal/roles/operations/assignments"
+	"personal-website-v2/identity/src/internal/roles/operations/grouproleassignments"
 	"personal-website-v2/identity/src/internal/roles/operations/roles"
 	"personal-website-v2/identity/src/internal/roles/operations/userroleassignments"
 	"personal-website-v2/pkg/actions"
@@ -111,8 +113,54 @@ type UserRoleAssignmentManager interface {
 	GetAllUserRoleIdsByUserId(ctx *actions.OperationContext, userId uint64) ([]uint64, error)
 }
 
+// GroupRoleAssignmentManager is a group role assignment manager.
+type GroupRoleAssignmentManager interface {
+	// Create creates a group role assignment and returns the group role assignment ID if the operation is successful.
+	Create(ctx *actions.OperationContext, data *grouproleassignments.CreateOperationData) (uint64, error)
+
+	// Delete deletes a group role assignment by the specified group role assignment ID.
+	Delete(ctx *actions.OperationContext, id uint64) error
+
+	// DeleteByRoleAssignmentId deletes a group role assignment by the specified role assignment ID
+	// and returns the ID of the deleted role assignment of the group if the operation is successful.
+	DeleteByRoleAssignmentId(ctx *actions.OperationContext, roleAssignmentId uint64) (uint64, error)
+
+	// FindById finds and returns a group role assignment, if any, by the specified group role assignment ID.
+	FindById(ctx *actions.OperationContext, id uint64) (*dbmodels.GroupRoleAssignment, error)
+
+	// FindByRoleAssignmentId finds and returns a group role assignment, if any, by the specified role assignment ID.
+	FindByRoleAssignmentId(ctx *actions.OperationContext, roleAssignmentId uint64) (*dbmodels.GroupRoleAssignment, error)
+
+	// GetAllByGroup gets all role assignments of the group by the specified group.
+	GetAllByGroup(ctx *actions.OperationContext, group groupmodels.UserGroup) ([]*dbmodels.GroupRoleAssignment, error)
+
+	// Exists returns true if the group role assignment exists.
+	Exists(ctx *actions.OperationContext, group groupmodels.UserGroup, roleId uint64) (bool, error)
+
+	// IsAssigned returns true if the role is assigned to the group.
+	IsAssigned(ctx *actions.OperationContext, group groupmodels.UserGroup, roleId uint64) (bool, error)
+
+	// GetIdByRoleAssignmentId gets the group role assignment ID by the specified role assignment ID.
+	GetIdByRoleAssignmentId(ctx *actions.OperationContext, roleAssignmentId uint64) (uint64, error)
+
+	// GetStatusById gets a group role assignment status by the specified group role assignment ID.
+	GetStatusById(ctx *actions.OperationContext, id uint64) (models.GroupRoleAssignmentStatus, error)
+
+	// GetStatusByRoleAssignmentId gets a group role assignment status by the specified role assignment ID.
+	GetStatusByRoleAssignmentId(ctx *actions.OperationContext, roleAssignmentId uint64) (models.GroupRoleAssignmentStatus, error)
+
+	// GetAllGroupRoleIdsByGroup gets all IDs of the roles assigned to the group by the specified group.
+	GetAllGroupRoleIdsByGroup(ctx *actions.OperationContext, group groupmodels.UserGroup) ([]uint64, error)
+}
+
 // UserRoleManager is a user role manager.
 type UserRoleManager interface {
 	// GetAllRolesByUserId gets all user's roles by the specified user ID.
 	GetAllRolesByUserId(ctx *actions.OperationContext, userId uint64) ([]*dbmodels.Role, error)
+}
+
+// GroupRoleManager is a group role manager.
+type GroupRoleManager interface {
+	// GetAllRolesByGroup gets all roles of the group by the specified group.
+	GetAllRolesByGroup(ctx *actions.OperationContext, group groupmodels.UserGroup) ([]*dbmodels.Role, error)
 }
