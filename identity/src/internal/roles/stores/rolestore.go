@@ -30,6 +30,7 @@ import (
 	"personal-website-v2/pkg/actions"
 	dberrors "personal-website-v2/pkg/db/errors"
 	"personal-website-v2/pkg/db/postgres"
+	errs "personal-website-v2/pkg/errors"
 	actionhelper "personal-website-v2/pkg/helper/actions"
 	"personal-website-v2/pkg/logging"
 	lcontext "personal-website-v2/pkg/logging/context"
@@ -153,6 +154,45 @@ func (s *RoleStore) FindByName(ctx *actions.OperationContext, name string) (*dbm
 		return nil, fmt.Errorf("[stores.RoleStore.FindByName] execute an operation: %w", err)
 	}
 	return r, nil
+}
+
+// GetAllByIds gets all roles by the specified role IDs.
+func (s *RoleStore) GetAllByIds(ctx *actions.OperationContext, ids []uint64) ([]*dbmodels.Role, error) {
+	var rs []*dbmodels.Role
+	err := s.opExecutor.Exec(ctx, iactions.OperationTypeRoleStore_GetAllByIds, []*actions.OperationParam{actions.NewOperationParam("ids", ids)},
+		func(opCtx *actions.OperationContext) error {
+			if len(ids) == 0 {
+				return errs.NewError(errs.ErrorCodeInvalidData, "number of ids is 0")
+			}
+
+			const query = "SELECT * FROM " + rolesTable + " WHERE id = ANY ($1)"
+			var err error
+			if rs, err = s.store.FindAll(opCtx.Ctx, query, ids); err != nil {
+				return fmt.Errorf("[stores.RoleStore.GetAllByIds] find all roles by ids: %w", err)
+			}
+
+			if len(rs) == 0 {
+				return errs.NewError(ierrors.ErrorCodeRoleNotFound, fmt.Sprintf("role (%d) not found", ids[0]))
+			}
+
+			rslen := len(rs)
+			m := make(map[uint64]bool, rslen)
+			for i := 0; i < rslen; i++ {
+				m[rs[i].Id] = true
+			}
+
+			for i := 0; i < len(ids); i++ {
+				if !m[ids[i]] {
+					return errs.NewError(ierrors.ErrorCodeRoleNotFound, fmt.Sprintf("role (%d) not found", ids[i]))
+				}
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("[stores.RoleStore.GetAllByIds] execute an operation: %w", err)
+	}
+	return rs, nil
 }
 
 // GetTypeById gets a role type by the specified role ID.

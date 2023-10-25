@@ -133,6 +133,28 @@ func (m *RoleManager) FindByName(ctx *actions.OperationContext, name string) (*d
 	return r, nil
 }
 
+// GetAllByIds gets all roles by the specified role IDs.
+func (m *RoleManager) GetAllByIds(ctx *actions.OperationContext, ids []uint64) ([]*dbmodels.Role, error) {
+	var rs []*dbmodels.Role
+	err := m.opExecutor.Exec(ctx, iactions.OperationTypeRoleManager_GetAllByIds, []*actions.OperationParam{actions.NewOperationParam("ids", ids)},
+		func(opCtx *actions.OperationContext) error {
+			if len(ids) == 0 {
+				return errors.NewError(errors.ErrorCodeInvalidData, "number of ids is 0")
+			}
+
+			var err error
+			if rs, err = m.roleStore.GetAllByIds(opCtx, ids); err != nil {
+				return fmt.Errorf("[manager.RoleManager.GetAllByIds] get all roles by ids: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("[manager.RoleManager.GetAllByIds] execute an operation: %w", err)
+	}
+	return rs, nil
+}
+
 // GetTypeById gets a role type by the specified role ID.
 func (m *RoleManager) GetTypeById(ctx *actions.OperationContext, id uint64) (models.RoleType, error) {
 	var t models.RoleType

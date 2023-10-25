@@ -34,6 +34,9 @@ type RoleManager interface {
 	// FindByName finds and returns a role, if any, by the specified role name.
 	FindByName(ctx *actions.OperationContext, name string) (*dbmodels.Role, error)
 
+	// GetAllByIds gets all roles by the specified role IDs.
+	GetAllByIds(ctx *actions.OperationContext, ids []uint64) ([]*dbmodels.Role, error)
+
 	// GetTypeById gets a role type by the specified role ID.
 	GetTypeById(ctx *actions.OperationContext, id uint64) (models.RoleType, error)
 
