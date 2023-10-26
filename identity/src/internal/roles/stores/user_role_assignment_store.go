@@ -235,7 +235,7 @@ func (s *UserRoleAssignmentStore) GetAllByUserId(ctx *actions.OperationContext, 
 	err := s.opExecutor.Exec(ctx, iactions.OperationTypeUserRoleAssignmentStore_GetAllByUserId,
 		[]*actions.OperationParam{actions.NewOperationParam("userId", userId)},
 		func(opCtx *actions.OperationContext) error {
-			const query = "SELECT * FROM " + userRoleAssignmentsTable + " WHERE role_assignment_id = $1"
+			const query = "SELECT * FROM " + userRoleAssignmentsTable + " WHERE user_id = $1"
 			var err error
 			if as, err = s.store.FindAll(opCtx.Ctx, query, userId); err != nil {
 				return fmt.Errorf("[stores.UserRoleAssignmentStore.GetAllByUserId] find all user's role assignments by user id: %w", err)
