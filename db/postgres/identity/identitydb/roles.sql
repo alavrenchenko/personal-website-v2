@@ -12,6 +12,20 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
+-- FUNCTION: public.role_exists(character varying)
+/*
+Role statuses:
+    Deleted = 5
+*/
+CREATE OR REPLACE FUNCTION public.role_exists(
+    _name public.roles.name%TYPE
+) RETURNS boolean AS $$
+BEGIN
+   -- role status: Deleted(5)
+    RETURN EXISTS (SELECT 1 FROM public.roles WHERE lower(name) = lower(_name) AND status <> 5 LIMIT 1);
+END;
+$$ LANGUAGE plpgsql;
+
 -- PROCEDURE: public.create_role(character varying, smallint, character varying, bigint, text, bigint, bigint, text)
 /*
 Role statuses:
@@ -19,6 +33,7 @@ Role statuses:
 
 Error codes:
     NoError = 0
+    RoleAlreadyExists = 11601
 */
 CREATE OR REPLACE PROCEDURE public.create_role(
     IN _name public.roles.name%TYPE,
@@ -39,11 +54,29 @@ BEGIN
     err_code := 0; -- NoError
     err_msg := '';
 
+    IF role_exists(_name) THEN
+        err_code := 11601; -- RoleAlreadyExists
+        err_msg := 'role with the same name already exists';
+        RETURN;
+    END IF;
+
     _time := (clock_timestamp() AT TIME ZONE 'UTC');
     -- role status: Active(2)
     INSERT INTO public.roles(name, type, title, created_at, created_by, updated_at, updated_by, status, status_updated_at, status_updated_by,
             status_comment, app_id, app_group_id, description, _version_stamp, _timestamp)
         VALUES (_name, _type, _title, _time, _created_by, _time, _created_by, 2, _time, _created_by, _status_comment, _app_id, _app_group_id, _description, 1, _time)
         RETURNING id INTO _id;
+
+    INSERT INTO public.role_info(role_id, created_at, created_by, updated_at, updated_by, _version_stamp, _timestamp)
+        VALUES (_id, _time, _created_by, _time, _created_by, 1, _time);
+    
+    EXCEPTION
+        WHEN unique_violation THEN
+            IF _id = 0 AND role_exists(_name) THEN
+                err_code := 11601; -- RoleAlreadyExists
+                err_msg := 'role with the same name already exists';
+                RETURN;
+            END IF;
+            RAISE;
 END;
 $$ LANGUAGE plpgsql;
