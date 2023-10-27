@@ -59,6 +59,39 @@ CREATE TABLE IF NOT EXISTS public.roles
 )
 TABLESPACE pg_default;
 
+-- Table: public.role_info
+
+CREATE TABLE IF NOT EXISTS public.role_info
+(
+    id bigint NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 9223372036854775807 CACHE 1 ),
+    role_id bigint NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    created_by bigint NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL DEFAULT (clock_timestamp() AT TIME ZONE 'UTC'::text),
+    updated_by bigint NOT NULL,
+    is_deleted boolean NOT NULL DEFAULT false,
+    deleted_at timestamp(6) without time zone,
+    deleted_by bigint,
+    active_assignment_count bigint NOT NULL,
+    existing_assignment_count bigint NOT NULL,
+    _version_stamp bigint NOT NULL,
+    _timestamp timestamp(6) without time zone NOT NULL DEFAULT (clock_timestamp() AT TIME ZONE 'UTC'::text),
+    CONSTRAINT role_info_pkey PRIMARY KEY (id),
+    CONSTRAINT role_info_role_id_key UNIQUE (role_id),
+    CONSTRAINT role_info_role_id_fkey FOREIGN KEY (role_id)
+        REFERENCES public.roles (id) MATCH SIMPLE
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT,
+    CONSTRAINT role_info_active_assignment_count_check CHECK (active_assignment_count >= 0),
+    CONSTRAINT role_info_existing_assignment_count_check CHECK (existing_assignment_count >= 0)
+)
+TABLESPACE pg_default;
+
+CREATE INDEX IF NOT EXISTS role_info_created_at_idx ON public.role_info (created_at);
+CREATE INDEX IF NOT EXISTS role_info_updated_at_idx ON public.role_info (updated_at);
+CREATE INDEX IF NOT EXISTS role_info_is_deleted_idx ON public.role_info USING hash (is_deleted);
+CREATE INDEX IF NOT EXISTS role_info_deleted_at_idx ON public.role_info (deleted_at);
+
 -- Table: public.group_role_assignments
 /*
 Group role assignment statuses:
