@@ -17,6 +17,8 @@ package dbmodels
 import (
 	"time"
 
+	"github.com/google/uuid"
+
 	groupmodels "personal-website-v2/identity/src/internal/groups/models"
 	"personal-website-v2/identity/src/internal/roles/models"
 )
@@ -72,6 +74,48 @@ type Role struct {
 
 	// The role description.
 	Description string `db:"description"`
+
+	// rowversion
+	VersionStamp uint64 `db:"_version_stamp"`
+
+	// row timestamp
+	Timestamp time.Time `db:"_timestamp"`
+}
+
+// The role info.
+type RoleInfo struct {
+	// The unique ID to identify the role info.
+	Id uint64 `db:"id"`
+
+	// The unique ID of the role.
+	RoleId uint64 `db:"role_id"`
+
+	// It stores the date and time at which the role info was created.
+	CreatedAt time.Time `db:"created_at"`
+
+	// The user ID to identify the user who created the role info.
+	CreatedBy uint64 `db:"created_by"`
+
+	// It stores the date and time at which the role info was updated.
+	UpdatedAt time.Time `db:"updated_at"`
+
+	// The user ID to identify the user who updated the role info.
+	UpdatedBy uint64 `db:"updated_by"`
+
+	// It indicates whether role info has been deleted.
+	IsDeleted bool `db:"is_deleted"`
+
+	// It stores the date and time at which the role info was deleted.
+	DeletedAt *time.Time `db:"deleted_at"`
+
+	// The user ID to identify the user who deleted the role info.
+	DeletedBy *uint64 `db:"deleted_by"`
+
+	// The number of active assignments of the role.
+	ActiveAssignmentCount uint64 `db:"active_assignment_count"`
+
+	// The number of existing assignments of the role.
+	ExistingAssignmentCount uint64 `db:"existing_assignment_count"`
 
 	// rowversion
 	VersionStamp uint64 `db:"_version_stamp"`
@@ -211,6 +255,30 @@ type GroupRoleAssignment struct {
 
 	// The group role assignment status comment.
 	StatusComment *string `db:"status_comment"`
+
+	// rowversion
+	VersionStamp uint64 `db:"_version_stamp"`
+
+	// row timestamp
+	Timestamp time.Time `db:"_timestamp"`
+}
+
+// The new role assignment.
+type NewRoleAssignment struct {
+	// The unique ID to identify the role assignment.
+	Id uint64 `db:"id"`
+
+	// The unique ID of the operation.
+	OperationId uuid.UUID `db:"operation_id"`
+
+	// The role ID.
+	RoleId uint64 `db:"role_id"`
+
+	// It stores the date and time at which the role assignment was created.
+	CreatedAt time.Time `db:"created_at"`
+
+	// The user ID to identify the user who created the role assignment.
+	CreatedBy uint64 `db:"created_by"`
 
 	// rowversion
 	VersionStamp uint64 `db:"_version_stamp"`
