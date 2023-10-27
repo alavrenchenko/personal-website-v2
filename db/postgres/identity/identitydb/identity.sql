@@ -27,6 +27,11 @@ CREATE DATABASE identity
 
 -- Table: public.roles
 /*
+Role types:
+    Unspecified = 0
+    System      = 1
+    Service     = 2
+
 Role statuses:
     Unspecified = 0
     New         = 1
@@ -55,9 +60,22 @@ CREATE TABLE IF NOT EXISTS public.roles
     _version_stamp bigint NOT NULL,
     _timestamp timestamp(6) without time zone NOT NULL DEFAULT (clock_timestamp() AT TIME ZONE 'UTC'::text),
     CONSTRAINT roles_pkey PRIMARY KEY (id),
-    CONSTRAINT roles_name_key UNIQUE (name)
+    CONSTRAINT roles_type_check CHECK (type = 1 OR type = 2),
+    CONSTRAINT roles_status_check CHECK (status >= 1 AND status <= 5)
 )
 TABLESPACE pg_default;
+
+CREATE UNIQUE INDEX IF NOT EXISTS roles_name_idx
+    ON public.roles (lower(name))
+    WHERE status <> 5;
+
+CREATE INDEX IF NOT EXISTS roles_type_idx ON public.roles (type);
+CREATE INDEX IF NOT EXISTS roles_created_at_idx ON public.roles (created_at);
+CREATE INDEX IF NOT EXISTS roles_updated_at_idx ON public.roles (updated_at);
+CREATE INDEX IF NOT EXISTS roles_status_idx ON public.roles (status);
+CREATE INDEX IF NOT EXISTS roles_status_updated_at_idx ON public.roles (status_updated_at);
+CREATE INDEX IF NOT EXISTS roles_app_id_idx ON public.roles (app_id);
+CREATE INDEX IF NOT EXISTS roles_app_group_id_idx ON public.roles (app_group_id);
 
 -- Table: public.role_info
 
@@ -89,7 +107,7 @@ TABLESPACE pg_default;
 
 CREATE INDEX IF NOT EXISTS role_info_created_at_idx ON public.role_info (created_at);
 CREATE INDEX IF NOT EXISTS role_info_updated_at_idx ON public.role_info (updated_at);
-CREATE INDEX IF NOT EXISTS role_info_is_deleted_idx ON public.role_info USING hash (is_deleted);
+CREATE INDEX IF NOT EXISTS role_info_is_deleted_idx ON public.role_info (is_deleted);
 CREATE INDEX IF NOT EXISTS role_info_deleted_at_idx ON public.role_info (deleted_at);
 
 -- Table: public.group_role_assignments
