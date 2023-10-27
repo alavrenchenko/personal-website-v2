@@ -110,6 +110,22 @@ CREATE INDEX IF NOT EXISTS role_info_updated_at_idx ON public.role_info (updated
 CREATE INDEX IF NOT EXISTS role_info_is_deleted_idx ON public.role_info (is_deleted);
 CREATE INDEX IF NOT EXISTS role_info_deleted_at_idx ON public.role_info (deleted_at);
 
+-- Table: public.new_role_assignments
+
+CREATE TABLE IF NOT EXISTS public.new_role_assignments
+(
+    id bigint NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 9223372036854775807 CACHE 1 ),
+    operation_id uuid NOT NULL,
+    role_id bigint NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    created_by bigint NOT NULL,
+    _version_stamp bigint NOT NULL,
+    _timestamp timestamp(6) without time zone NOT NULL DEFAULT (clock_timestamp() AT TIME ZONE 'UTC'::text),
+    CONSTRAINT new_role_assignments_pkey PRIMARY KEY (id),
+    CONSTRAINT new_role_assignments_operation_id_key UNIQUE (operation_id)
+)
+TABLESPACE pg_default;
+
 -- Table: public.group_role_assignments
 /*
 Group role assignment statuses:
