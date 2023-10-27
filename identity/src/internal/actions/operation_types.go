@@ -147,6 +147,13 @@ const (
 	// GroupRoleManager operation types (19000-19499).
 	OperationTypeGroupRoleManager_GetAllRolesByGroup actions.OperationType = 19000
 
+	// RolesState operation types (19500-19999).
+	OperationTypeRolesState_StartAssigning        actions.OperationType = 19500
+	OperationTypeRolesState_FinishAssigning       actions.OperationType = 19501
+	OperationTypeRolesState_IncrActiveAssignments actions.OperationType = 19502
+	OperationTypeRolesState_DecrActiveAssignments actions.OperationType = 19503
+	OperationTypeRolesState_DecrAssignments       actions.OperationType = 19504
+
 	// UserStore operation types (31000-31499).
 	OperationTypeUserStore_Create                actions.OperationType = 31000
 	OperationTypeUserStore_FindById              actions.OperationType = 31001
@@ -287,6 +294,13 @@ const (
 
 	// UserRoleStore operation types (38500-38999).
 	// GroupRoleStore operation types (39000-39499).
+
+	// RolesStateStore operation types (39500-39999).
+	OperationTypeRolesStateStore_StartAssigning        actions.OperationType = 39500
+	OperationTypeRolesStateStore_FinishAssigning       actions.OperationType = 39501
+	OperationTypeRolesStateStore_IncrActiveAssignments actions.OperationType = 39502
+	OperationTypeRolesStateStore_DecrActiveAssignments actions.OperationType = 39503
+	OperationTypeRolesStateStore_DecrAssignments       actions.OperationType = 39504
 
 	// caching (50000-59999)
 
