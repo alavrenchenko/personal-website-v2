@@ -34,6 +34,6 @@ type RolesState interface {
 	// DecrActiveAssignments decrements the number of active assignments of the role.
 	DecrActiveAssignments(ctx *actions.OperationContext, roleId uint64) error
 
-	// DecrActiveAssignments decrements the number of assignments of the role.
+	// DecrAssignments decrements the number of assignments of the role.
 	DecrAssignments(ctx *actions.OperationContext, roleId uint64) error
 }

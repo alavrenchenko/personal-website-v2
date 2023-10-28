@@ -15,6 +15,8 @@
 package roles
 
 import (
+	"github.com/google/uuid"
+
 	groupmodels "personal-website-v2/identity/src/internal/groups/models"
 	"personal-website-v2/identity/src/internal/roles/dbmodels"
 	"personal-website-v2/identity/src/internal/roles/models"
@@ -154,4 +156,22 @@ type GroupRoleAssignmentStore interface {
 
 	// GetAllGroupRoleIdsByGroup gets all IDs of the roles assigned to the group by the specified group.
 	GetAllGroupRoleIdsByGroup(ctx *actions.OperationContext, group groupmodels.UserGroup) ([]uint64, error)
+}
+
+// RolesStateStore is a store of the state of the roles.
+type RolesStateStore interface {
+	// StartAssigning starts assigning a role.
+	StartAssigning(ctx *actions.OperationContext, operationId uuid.UUID, roleId uint64) error
+
+	// FinishAssigning finishes assigning a role.
+	FinishAssigning(ctx *actions.OperationContext, operationId uuid.UUID, succeeded bool) error
+
+	// IncrActiveAssignments increments the number of active assignments of the role.
+	IncrActiveAssignments(ctx *actions.OperationContext, roleId uint64) error
+
+	// DecrActiveAssignments decrements the number of active assignments of the role.
+	DecrActiveAssignments(ctx *actions.OperationContext, roleId uint64) error
+
+	// DecrAssignments decrements the number of assignments of the role.
+	DecrAssignments(ctx *actions.OperationContext, roleId uint64) error
 }
