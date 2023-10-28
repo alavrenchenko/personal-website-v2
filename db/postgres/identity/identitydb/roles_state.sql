@@ -122,3 +122,144 @@ BEGIN
     END IF;
 END;
 $$ LANGUAGE plpgsql;
+
+-- PROCEDURE: public.incr_active_role_assignments(bigint, bigint)
+/*
+Error codes:
+    NoError                = 0
+    InternalError          = 2
+    InvalidOperation       = 3
+    RoleInfoNotFound       = 11602
+*/
+-- Minimum transaction isolation level: Read committed.
+CREATE OR REPLACE PROCEDURE public.incr_active_role_assignments(
+    IN _role_id public.role_info.role_id%TYPE,
+    IN _operation_user_id public.role_info.updated_by%TYPE,
+    OUT err_code bigint,
+    OUT err_msg text) AS $$
+DECLARE
+    _time timestamp(6) without time zone;
+    _is_deleted public.role_info.is_deleted%TYPE;
+BEGIN
+    err_code := 0; -- NoError
+    err_msg := '';
+    
+    SELECT is_deleted INTO _is_deleted FROM public.role_info WHERE role_id = _role_id LIMIT 1 FOR UPDATE;
+    IF NOT FOUND THEN
+        err_code := 11602; -- RoleInfoNotFound
+        err_msg := 'role info not found';
+        RETURN;
+    END IF;
+
+    IF _is_deleted THEN
+        err_code := 3; -- InvalidOperation
+        err_msg := 'role info is deleted';
+        RETURN;
+    END IF;
+
+    _time := (clock_timestamp() AT TIME ZONE 'UTC');
+    UPDATE public.role_info
+        SET updated_at = _time, updated_by = _operation_user_id, active_assignment_count = active_assignment_count + 1,
+            _version_stamp = _version_stamp + 1, _timestamp = _time
+        WHERE role_id = _role_id;
+    -- an update check
+    IF NOT FOUND THEN
+        err_code := 2; -- InternalError
+        err_msg := 'role info wasn''t updated';
+    END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+-- PROCEDURE: public.decr_active_role_assignments(bigint, bigint)
+/*
+Error codes:
+    NoError                = 0
+    InternalError          = 2
+    InvalidOperation       = 3
+    RoleInfoNotFound       = 11602
+*/
+-- Minimum transaction isolation level: Read committed.
+CREATE OR REPLACE PROCEDURE public.decr_active_role_assignments(
+    IN _role_id public.role_info.role_id%TYPE,
+    IN _operation_user_id public.role_info.updated_by%TYPE,
+    OUT err_code bigint,
+    OUT err_msg text) AS $$
+DECLARE
+    _time timestamp(6) without time zone;
+    _is_deleted public.role_info.is_deleted%TYPE;
+BEGIN
+    err_code := 0; -- NoError
+    err_msg := '';
+    
+    SELECT is_deleted INTO _is_deleted FROM public.role_info WHERE role_id = _role_id LIMIT 1 FOR UPDATE;
+    IF NOT FOUND THEN
+        err_code := 11602; -- RoleInfoNotFound
+        err_msg := 'role info not found';
+        RETURN;
+    END IF;
+
+    IF _is_deleted THEN
+        err_code := 3; -- InvalidOperation
+        err_msg := 'role info is deleted';
+        RETURN;
+    END IF;
+
+    _time := (clock_timestamp() AT TIME ZONE 'UTC');
+    UPDATE public.role_info
+        SET updated_at = _time, updated_by = _operation_user_id, active_assignment_count = active_assignment_count - 1,
+            _version_stamp = _version_stamp + 1, _timestamp = _time
+        WHERE role_id = _role_id;
+    -- an update check
+    IF NOT FOUND THEN
+        err_code := 2; -- InternalError
+        err_msg := 'role info wasn''t updated';
+    END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+-- PROCEDURE: public.decr_role_assignments(bigint, bigint)
+/*
+Error codes:
+    NoError                = 0
+    InternalError          = 2
+    InvalidOperation       = 3
+    RoleInfoNotFound       = 11602
+*/
+-- Minimum transaction isolation level: Read committed.
+CREATE OR REPLACE PROCEDURE public.decr_role_assignments(
+    IN _role_id public.role_info.role_id%TYPE,
+    IN _operation_user_id public.role_info.updated_by%TYPE,
+    OUT err_code bigint,
+    OUT err_msg text) AS $$
+DECLARE
+    _time timestamp(6) without time zone;
+    _is_deleted public.role_info.is_deleted%TYPE;
+BEGIN
+    err_code := 0; -- NoError
+    err_msg := '';
+    
+    SELECT is_deleted INTO _is_deleted FROM public.role_info WHERE role_id = _role_id LIMIT 1 FOR UPDATE;
+    IF NOT FOUND THEN
+        err_code := 11602; -- RoleInfoNotFound
+        err_msg := 'role info not found';
+        RETURN;
+    END IF;
+
+    IF _is_deleted THEN
+        err_code := 3; -- InvalidOperation
+        err_msg := 'role info is deleted';
+        RETURN;
+    END IF;
+
+    _time := (clock_timestamp() AT TIME ZONE 'UTC');
+    UPDATE public.role_info
+        SET updated_at = _time, updated_by = _operation_user_id, active_assignment_count = active_assignment_count - 1, existing_assignment_count = existing_assignment_count - 1,
+            _version_stamp = _version_stamp + 1, _timestamp = _time
+        WHERE role_id = _role_id;
+    -- an update check
+    IF NOT FOUND THEN
+        err_code := 2; -- InternalError
+        err_msg := 'role info wasn''t updated';
+    END IF;
+END;
+$$ LANGUAGE plpgsql;
