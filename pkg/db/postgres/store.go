@@ -51,9 +51,8 @@ func (s *Store[T]) Find(ctx context.Context, query string, args ...any) (*T, err
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, nil
-		} else {
-			return nil, fmt.Errorf("[postgres.Store.Find] collect one row: %w", err)
 		}
+		return nil, fmt.Errorf("[postgres.Store.Find] collect one row: %w", err)
 	}
 	return v, nil
 }
