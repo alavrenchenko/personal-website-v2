@@ -104,14 +104,15 @@ const (
 	OperationTypeAuthTokenEncryptionKeyManager_GetAllClientTokenEncryptionKeys  actions.OperationType = 16505
 
 	// RoleAssignmentManager operation types (17000-17499).
-	OperationTypeRoleAssignmentManager_Create                  actions.OperationType = 17000
-	OperationTypeRoleAssignmentManager_Delete                  actions.OperationType = 17001
-	OperationTypeRoleAssignmentManager_FindById                actions.OperationType = 17002
-	OperationTypeRoleAssignmentManager_FindByRoleIdAndAssignee actions.OperationType = 17003
-	OperationTypeRoleAssignmentManager_Exists                  actions.OperationType = 17004
-	OperationTypeRoleAssignmentManager_IsAssigned              actions.OperationType = 17005
-	OperationTypeRoleAssignmentManager_GetAssigneeTypeById     actions.OperationType = 17006
-	OperationTypeRoleAssignmentManager_GetStatusById           actions.OperationType = 17007
+	OperationTypeRoleAssignmentManager_Create                   actions.OperationType = 17000
+	OperationTypeRoleAssignmentManager_Delete                   actions.OperationType = 17001
+	OperationTypeRoleAssignmentManager_FindById                 actions.OperationType = 17002
+	OperationTypeRoleAssignmentManager_FindByRoleIdAndAssignee  actions.OperationType = 17003
+	OperationTypeRoleAssignmentManager_Exists                   actions.OperationType = 17004
+	OperationTypeRoleAssignmentManager_IsAssigned               actions.OperationType = 17005
+	OperationTypeRoleAssignmentManager_GetAssigneeTypeById      actions.OperationType = 17006
+	OperationTypeRoleAssignmentManager_GetStatusById            actions.OperationType = 17007
+	OperationTypeRoleAssignmentManager_GetRoleIdAndAssigneeById actions.OperationType = 17008
 
 	// UserRoleAssignmentManager operation types (17500-17999).
 	OperationTypeUserRoleAssignmentManager_Create                      actions.OperationType = 17500
@@ -253,15 +254,16 @@ const (
 	OperationTypeAuthTokenEncryptionKeyStore_GetAllClientTokenEncryptionKeys  actions.OperationType = 36505
 
 	// RoleAssignmentStore operation types (37000-37499).
-	OperationTypeRoleAssignmentStore_Create                  actions.OperationType = 37000
-	OperationTypeRoleAssignmentStore_StartDeleting           actions.OperationType = 37001
-	OperationTypeRoleAssignmentStore_Delete                  actions.OperationType = 37002
-	OperationTypeRoleAssignmentStore_FindById                actions.OperationType = 37003
-	OperationTypeRoleAssignmentStore_FindByRoleIdAndAssignee actions.OperationType = 37004
-	OperationTypeRoleAssignmentStore_Exists                  actions.OperationType = 37005
-	OperationTypeRoleAssignmentStore_IsAssigned              actions.OperationType = 37006
-	OperationTypeRoleAssignmentStore_GetAssigneeTypeById     actions.OperationType = 37007
-	OperationTypeRoleAssignmentStore_GetStatusById           actions.OperationType = 37008
+	OperationTypeRoleAssignmentStore_Create                   actions.OperationType = 37000
+	OperationTypeRoleAssignmentStore_StartDeleting            actions.OperationType = 37001
+	OperationTypeRoleAssignmentStore_Delete                   actions.OperationType = 37002
+	OperationTypeRoleAssignmentStore_FindById                 actions.OperationType = 37003
+	OperationTypeRoleAssignmentStore_FindByRoleIdAndAssignee  actions.OperationType = 37004
+	OperationTypeRoleAssignmentStore_Exists                   actions.OperationType = 37005
+	OperationTypeRoleAssignmentStore_IsAssigned               actions.OperationType = 37006
+	OperationTypeRoleAssignmentStore_GetAssigneeTypeById      actions.OperationType = 37007
+	OperationTypeRoleAssignmentStore_GetStatusById            actions.OperationType = 37008
+	OperationTypeRoleAssignmentStore_GetRoleIdAndAssigneeById actions.OperationType = 37009
 
 	// UserRoleAssignmentStore operation types (37500-37999).
 	OperationTypeUserRoleAssignmentStore_Create                      actions.OperationType = 37500

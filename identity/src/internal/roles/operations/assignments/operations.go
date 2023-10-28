@@ -33,3 +33,15 @@ type CreateOperationData struct {
 	// The role assignment description.
 	Description nullable.Nullable[string] `json:"description"`
 }
+
+type GetRoleIdAndAssigneeOperationResult struct {
+	// The role ID.
+	RoleId uint64 `db:"role_id" json:"roleId"`
+
+	// The unique ID of the entity the role is assigned to - either the userId of a user
+	// or the groupId of a group.
+	AssignedTo uint64 `db:"assigned_to" json:"assignedTo"`
+
+	// The type of the assignee.
+	AssigneeType models.AssigneeType `db:"assignee_type" json:"assigneeType"`
+}

@@ -166,16 +166,17 @@ func (m *RoleAssignmentManager) createUserRoleAssignment(ctx *actions.OperationC
 func (m *RoleAssignmentManager) Delete(ctx *actions.OperationContext, id uint64) error {
 	err := m.opExecutor.Exec(ctx, iactions.OperationTypeRoleAssignmentManager_Delete, []*actions.OperationParam{actions.NewOperationParam("id", id)},
 		func(opCtx *actions.OperationContext) error {
-			at, err := m.roleAssignmentStore.GetAssigneeTypeById(opCtx, id)
+			r, err := m.roleAssignmentStore.GetRoleIdAndAssigneeById(opCtx, id)
 			if err != nil {
-				return fmt.Errorf("[manager.RoleAssignmentManager.Delete] get a role assignment assignee type by id: %w", err)
+				return fmt.Errorf("[manager.RoleAssignmentManager.Delete] get the role id and assignee by id: %w", err)
 			}
 
-			if at != models.AssigneeTypeUser {
-				return fmt.Errorf("[manager.RoleAssignmentManager.Delete] '%s' assignee type of the role assignment isn't supported", at)
+			if r.AssigneeType != models.AssigneeTypeUser {
+				return fmt.Errorf("[manager.RoleAssignmentManager.Delete] '%s' assignee type of the role assignment isn't supported", r.AssigneeType)
 			}
 
-			if err = m.roleAssignmentStore.StartDeleting(opCtx, id); err != nil {
+			oldStatus, err := m.roleAssignmentStore.StartDeleting(opCtx, id)
+			if err != nil {
 				return fmt.Errorf("[manager.RoleAssignmentManager.Delete] start deleting a role assignment: %w", err)
 			}
 
@@ -183,12 +184,37 @@ func (m *RoleAssignmentManager) Delete(ctx *actions.OperationContext, id uint64)
 				return fmt.Errorf("[manager.RoleAssignmentManager.Delete] delete a user's role assignment: %w", err)
 			}
 
+			leCtx := opCtx.CreateLogEntryContext()
+			succeeded := false
+			defer func() {
+				var err error
+				var msg string
+				if succeeded {
+					if oldStatus == models.RoleAssignmentStatusActive {
+						if err = m.rolesState.DecrAssignments(opCtx, r.RoleId); err != nil {
+							msg = "[manager.RoleAssignmentManager.Delete] decrement assignments of the role"
+						}
+					} else if err = m.rolesState.DecrExistingAssignments(opCtx, r.RoleId); err != nil {
+						msg = "[manager.RoleAssignmentManager.Delete] decrement existing assignments of the role"
+					}
+				} else if oldStatus == models.RoleAssignmentStatusActive {
+					if err = m.rolesState.DecrActiveAssignments(opCtx, r.RoleId); err != nil {
+						msg = "[manager.RoleAssignmentManager.Delete] decrement active assignments of the role"
+					}
+				}
+
+				if err != nil {
+					m.logger.ErrorWithEvent(leCtx, events.RoleAssignmentEvent, err, msg, logging.NewField("roleId", r.RoleId))
+				}
+			}()
+
 			if err = m.roleAssignmentStore.Delete(opCtx, id); err != nil {
 				return fmt.Errorf("[manager.RoleAssignmentManager.Delete] delete a role assignment: %w", err)
 			}
 
+			succeeded = true
 			m.logger.InfoWithEvent(
-				opCtx.CreateLogEntryContext(),
+				leCtx,
 				events.RoleAssignmentEvent,
 				"[manager.RoleAssignmentManager.Delete] role assignment has been deleted",
 				logging.NewField("id", id),
@@ -239,7 +265,7 @@ func (m *RoleAssignmentManager) FindById(ctx *actions.OperationContext, id uint6
 	return a, nil
 }
 
-// FindByRoleIdAndAssignee finds and returns a role assignment, if any, by the specified role id and assignee.
+// FindByRoleIdAndAssignee finds and returns a role assignment, if any, by the specified role ID and assignee.
 func (m *RoleAssignmentManager) FindByRoleIdAndAssignee(ctx *actions.OperationContext, roleId, assigneeId uint64, assigneeType models.AssigneeType) (*dbmodels.RoleAssignment, error) {
 	var a *dbmodels.RoleAssignment
 	err := m.opExecutor.Exec(ctx, iactions.OperationTypeRoleAssignmentManager_FindByRoleIdAndAssignee,
@@ -330,4 +356,22 @@ func (m *RoleAssignmentManager) GetStatusById(ctx *actions.OperationContext, id 
 		return s, fmt.Errorf("[manager.RoleAssignmentManager.GetStatusById] execute an operation: %w", err)
 	}
 	return s, nil
+}
+
+// GetRoleIdAndAssigneeById gets the role ID and assignee by the specified role assignment ID.
+func (m *RoleAssignmentManager) GetRoleIdAndAssigneeById(ctx *actions.OperationContext, id uint64) (*assignmentoperations.GetRoleIdAndAssigneeOperationResult, error) {
+	var r *assignmentoperations.GetRoleIdAndAssigneeOperationResult
+	err := m.opExecutor.Exec(ctx, iactions.OperationTypeRoleAssignmentManager_GetRoleIdAndAssigneeById, []*actions.OperationParam{actions.NewOperationParam("id", id)},
+		func(opCtx *actions.OperationContext) error {
+			var err error
+			if r, err = m.roleAssignmentStore.GetRoleIdAndAssigneeById(opCtx, id); err != nil {
+				return fmt.Errorf("[manager.RoleAssignmentManager.GetRoleIdAndAssigneeById] get the role id and assignee by id: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("[manager.RoleAssignmentManager.GetRoleIdAndAssigneeById] execute an operation: %w", err)
+	}
+	return r, nil
 }

@@ -57,7 +57,7 @@ type RoleAssignmentManager interface {
 	// FindById finds and returns a role assignment, if any, by the specified role assignment ID.
 	FindById(ctx *actions.OperationContext, id uint64) (*dbmodels.RoleAssignment, error)
 
-	// FindByRoleIdAndAssignee finds and returns a role assignment, if any, by the specified role id and assignee.
+	// FindByRoleIdAndAssignee finds and returns a role assignment, if any, by the specified role ID and assignee.
 	FindByRoleIdAndAssignee(ctx *actions.OperationContext, roleId, assigneeId uint64, assigneeType models.AssigneeType) (*dbmodels.RoleAssignment, error)
 
 	// Exists returns true if the role assignment exists.
@@ -71,6 +71,9 @@ type RoleAssignmentManager interface {
 
 	// GetStatusById gets a role assignment status by the specified role assignment ID.
 	GetStatusById(ctx *actions.OperationContext, id uint64) (models.RoleAssignmentStatus, error)
+
+	// GetRoleIdAndAssigneeById gets the role ID and assignee by the specified role assignment ID.
+	GetRoleIdAndAssigneeById(ctx *actions.OperationContext, id uint64) (*assignments.GetRoleIdAndAssigneeOperationResult, error)
 }
 
 // UserRoleAssignmentManager is a user role assignment manager.
