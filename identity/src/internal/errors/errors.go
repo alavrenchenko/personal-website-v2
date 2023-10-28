@@ -35,6 +35,7 @@ const (
 	// Role error codes (31600-31799).
 	ErrorCodeRoleNotFound      errors.ErrorCode = 31600
 	ErrorCodeRoleAlreadyExists errors.ErrorCode = 31601
+	ErrorCodeRoleInfoNotFound  errors.ErrorCode = 31602
 
 	// Permission error codes (31800-31999).
 	ErrorCodePermissionNotFound      errors.ErrorCode = 31800
@@ -87,6 +88,7 @@ var (
 	// Role errors.
 	ErrRoleNotFound      = errors.NewError(ErrorCodeRoleNotFound, "role not found")
 	ErrRoleAlreadyExists = errors.NewError(ErrorCodeRoleAlreadyExists, "role with the same name already exists")
+	ErrRoleInfoNotFound  = errors.NewError(ErrorCodeRoleInfoNotFound, "role info not found")
 
 	// Permission errors.
 	ErrPermissionNotFound      = errors.NewError(ErrorCodePermissionNotFound, "permission not found")
