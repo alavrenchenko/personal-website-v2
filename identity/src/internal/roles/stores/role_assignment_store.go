@@ -132,7 +132,7 @@ func (s *RoleAssignmentStore) StartDeleting(ctx *actions.OperationContext, id ui
 				const query = "CALL public.start_deleting_role_assignment($1, $2, 'deletion', NULL, NULL)"
 				r := tx.QueryRow(txCtx, query, id, opCtx.UserId.Value)
 
-				if err := r.Scan(&id, &errCode, &errMsg); err != nil {
+				if err := r.Scan(&errCode, &errMsg); err != nil {
 					return fmt.Errorf("[stores.RoleAssignmentStore.StartDeleting] execute a query (start_deleting_role_assignment): %w", err)
 				}
 
@@ -170,7 +170,7 @@ func (s *RoleAssignmentStore) Delete(ctx *actions.OperationContext, id uint64) e
 				const query = "CALL public.delete_role_assignment($1, $2, 'deletion', NULL, NULL)"
 				r := tx.QueryRow(txCtx, query, id, opCtx.UserId.Value)
 
-				if err := r.Scan(&id, &errCode, &errMsg); err != nil {
+				if err := r.Scan(&errCode, &errMsg); err != nil {
 					return fmt.Errorf("[stores.RoleAssignmentStore.Delete] execute a query (delete_role_assignment): %w", err)
 				}
 

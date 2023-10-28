@@ -169,7 +169,7 @@ func (s *UserRoleAssignmentStore) delete(ctx *actions.OperationContext, id uint6
 		const query = "CALL public.delete_user_role_assignment($1, $2, 'deletion', NULL, NULL)"
 		r := tx.QueryRow(txCtx, query, id, ctx.UserId.Value)
 
-		if err := r.Scan(&id, &errCode, &errMsg); err != nil {
+		if err := r.Scan(&errCode, &errMsg); err != nil {
 			return fmt.Errorf("[stores.UserRoleAssignmentStore.delete] execute a query (delete_user_role_assignment): %w", err)
 		}
 
