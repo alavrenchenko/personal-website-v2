@@ -98,8 +98,9 @@ $$ LANGUAGE plpgsql;
 -- PROCEDURE: public.start_deleting_role_assignment(bigint, bigint, text)
 /*
 Role assignment statuses:
-    Deleting = 4
-    Deleted  = 5
+    Unspecified = 0
+    Deleting    = 4
+    Deleted     = 5
 
 Error codes:
     NoError                = 0
@@ -111,12 +112,14 @@ CREATE OR REPLACE PROCEDURE public.start_deleting_role_assignment(
     IN _id public.role_assignments.id%TYPE,
     IN _deleted_by public.role_assignments.updated_by%TYPE,
     IN _status_comment public.role_assignments.status_comment%TYPE,
+    OUT _old_status public.role_assignments.status%TYPE,
     OUT err_code bigint,
     OUT err_msg text) AS $$
 DECLARE
     _time timestamp(6) without time zone;
     _status public.role_assignments.status%TYPE;
 BEGIN
+    _old_status := 0; -- Unspecified
     err_code := 0; -- NoError
     err_msg := '';
 
@@ -140,6 +143,8 @@ BEGIN
         SET updated_at = _time, updated_by = _deleted_by, status = 4, status_updated_at = _time, status_updated_by = _deleted_by,
             status_comment = _status_comment, _version_stamp = _version_stamp + 1, _timestamp = _time
         WHERE id = _id;
+        
+    _old_status := _status;
 END;
 $$ LANGUAGE plpgsql;
 
