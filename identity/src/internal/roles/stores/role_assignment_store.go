@@ -121,18 +121,20 @@ func (s *RoleAssignmentStore) Create(ctx *actions.OperationContext, data *assign
 	return id, nil
 }
 
-// StartDeleting starts deleting a role assignment by the specified role assignment ID.
-func (s *RoleAssignmentStore) StartDeleting(ctx *actions.OperationContext, id uint64) error {
+// StartDeleting starts deleting a role assignment by the specified role assignment ID
+// and returns the old status of the role assignment if the operation is successful.
+func (s *RoleAssignmentStore) StartDeleting(ctx *actions.OperationContext, id uint64) (models.RoleAssignmentStatus, error) {
+	var status models.RoleAssignmentStatus
 	err := s.opExecutor.Exec(ctx, iactions.OperationTypeRoleAssignmentStore_StartDeleting, []*actions.OperationParam{actions.NewOperationParam("id", id)},
 		func(opCtx *actions.OperationContext) error {
 			err := s.txManager.ExecWithReadCommittedLevel(opCtx.Ctx, func(txCtx context.Context, tx pgx.Tx) error {
 				var errCode dberrors.DbErrorCode
 				var errMsg string
-				// PROCEDURE: public.start_deleting_role_assignment(IN _id, IN _deleted_by, IN _status_comment, OUT err_code, OUT err_msg)
-				const query = "CALL public.start_deleting_role_assignment($1, $2, 'deletion', NULL, NULL)"
+				// PROCEDURE: public.start_deleting_role_assignment(IN _id, IN _deleted_by, IN _status_comment, OUT _old_status, OUT err_code, OUT err_msg)
+				const query = "CALL public.start_deleting_role_assignment($1, $2, 'deletion', NULL, NULL, NULL)"
 				r := tx.QueryRow(txCtx, query, id, opCtx.UserId.Value)
 
-				if err := r.Scan(&errCode, &errMsg); err != nil {
+				if err := r.Scan(&status, &errCode, &errMsg); err != nil {
 					return fmt.Errorf("[stores.RoleAssignmentStore.StartDeleting] execute a query (start_deleting_role_assignment): %w", err)
 				}
 
@@ -154,9 +156,9 @@ func (s *RoleAssignmentStore) StartDeleting(ctx *actions.OperationContext, id ui
 		},
 	)
 	if err != nil {
-		return fmt.Errorf("[stores.RoleAssignmentStore.StartDeleting] execute an operation: %w", err)
+		return status, fmt.Errorf("[stores.RoleAssignmentStore.StartDeleting] execute an operation: %w", err)
 	}
-	return nil
+	return status, nil
 }
 
 // Delete deletes a role assignment by the specified role assignment ID.
@@ -218,7 +220,7 @@ func (s *RoleAssignmentStore) FindById(ctx *actions.OperationContext, id uint64)
 	return a, nil
 }
 
-// FindByRoleIdAndAssignee finds and returns a role assignment, if any, by the specified role id and assignee.
+// FindByRoleIdAndAssignee finds and returns a role assignment, if any, by the specified role ID and assignee.
 func (s *RoleAssignmentStore) FindByRoleIdAndAssignee(ctx *actions.OperationContext, roleId uint64, assigneeId uint64, assigneeType models.AssigneeType) (*dbmodels.RoleAssignment, error) {
 	var a *dbmodels.RoleAssignment
 	err := s.opExecutor.Exec(ctx, iactions.OperationTypeRoleAssignmentStore_FindByRoleIdAndAssignee,
@@ -346,4 +348,33 @@ func (s *RoleAssignmentStore) GetStatusById(ctx *actions.OperationContext, id ui
 		return status, fmt.Errorf("[stores.RoleAssignmentStore.GetStatusById] execute an operation: %w", err)
 	}
 	return status, nil
+}
+
+// GetRoleIdAndAssigneeById gets the role ID and assignee by the specified role assignment ID.
+func (s *RoleAssignmentStore) GetRoleIdAndAssigneeById(ctx *actions.OperationContext, id uint64) (*assignmentoperations.GetRoleIdAndAssigneeOperationResult, error) {
+	var r *assignmentoperations.GetRoleIdAndAssigneeOperationResult
+	err := s.opExecutor.Exec(ctx, iactions.OperationTypeRoleAssignmentStore_GetRoleIdAndAssigneeById, []*actions.OperationParam{actions.NewOperationParam("id", id)},
+		func(opCtx *actions.OperationContext) error {
+			conn, err := s.db.ConnPool.Acquire(opCtx.Ctx)
+			if err != nil {
+				return fmt.Errorf("[stores.RoleAssignmentStore.GetRoleIdAndAssigneeById] acquire a connection: %w", err)
+			}
+			defer conn.Release()
+
+			r = new(assignmentoperations.GetRoleIdAndAssigneeOperationResult)
+			const query = "SELECT role_id, assigned_to, assignee_type FROM " + roleAssignmentsTable + " WHERE id = $1 LIMIT 1"
+
+			if err = conn.QueryRow(opCtx.Ctx, query, id).Scan(&r.RoleId, &r.AssignedTo, &r.AssigneeType); err != nil {
+				if errors.Is(err, pgx.ErrNoRows) {
+					return ierrors.ErrRoleAssignmentNotFound
+				}
+				return fmt.Errorf("[stores.RoleAssignmentStore.GetRoleIdAndAssigneeById] execute a query: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("[stores.RoleAssignmentStore.GetRoleIdAndAssigneeById] execute an operation: %w", err)
+	}
+	return r, nil
 }
