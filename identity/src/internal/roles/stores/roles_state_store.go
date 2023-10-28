@@ -156,6 +156,45 @@ func (s *RolesStateStore) FinishAssigning(ctx *actions.OperationContext, operati
 	return nil
 }
 
+// DecrAssignments decrements the number of assignments of the role.
+func (s *RolesStateStore) DecrAssignments(ctx *actions.OperationContext, roleId uint64) error {
+	err := s.opExecutor.Exec(ctx, iactions.OperationTypeRolesStateStore_DecrAssignments, []*actions.OperationParam{actions.NewOperationParam("roleId", roleId)},
+		func(opCtx *actions.OperationContext) error {
+			err := s.txManager.ExecWithReadCommittedLevel(opCtx.Ctx, func(txCtx context.Context, tx pgx.Tx) error {
+				var errCode dberrors.DbErrorCode
+				var errMsg string
+				// PROCEDURE: public.decr_role_assignments(IN _role_id, IN _operation_user_id, OUT err_code, OUT err_msg)
+				const query = "CALL public.decr_role_assignments($1, $2, NULL, NULL)"
+
+				if err := tx.QueryRow(txCtx, query, roleId, opCtx.UserId.Value).Scan(&errCode, &errMsg); err != nil {
+					return fmt.Errorf("[stores.RolesStateStore.DecrAssignments] execute a query (decr_role_assignments): %w", err)
+				}
+
+				switch errCode {
+				case dberrors.DbErrorCodeNoError:
+					return nil
+				case dberrors.DbErrorCodeInternalError:
+					return errs.NewError(errs.ErrorCodeInternalError, errMsg)
+				case dberrors.DbErrorCodeInvalidOperation:
+					return errs.NewError(errs.ErrorCodeInvalidOperation, errMsg)
+				case idberrors.DbErrorCodeRoleInfoNotFound:
+					return ierrors.ErrRoleInfoNotFound
+				}
+				// unknown error
+				return fmt.Errorf("[stores.RolesStateStore.DecrAssignments] invalid operation: %w", dberrors.NewDbError(errCode, errMsg))
+			})
+			if err != nil {
+				return fmt.Errorf("[stores.RolesStateStore.DecrAssignments] execute a transaction: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("[stores.RolesStateStore.DecrAssignments] execute an operation: %w", err)
+	}
+	return nil
+}
+
 // IncrActiveAssignments increments the number of active assignments of the role.
 func (s *RolesStateStore) IncrActiveAssignments(ctx *actions.OperationContext, roleId uint64) error {
 	err := s.opExecutor.Exec(ctx, iactions.OperationTypeRolesStateStore_IncrActiveAssignments, []*actions.OperationParam{actions.NewOperationParam("roleId", roleId)},
@@ -234,18 +273,18 @@ func (s *RolesStateStore) DecrActiveAssignments(ctx *actions.OperationContext, r
 	return nil
 }
 
-// DecrAssignments decrements the number of assignments of the role.
-func (s *RolesStateStore) DecrAssignments(ctx *actions.OperationContext, roleId uint64) error {
-	err := s.opExecutor.Exec(ctx, iactions.OperationTypeRolesStateStore_DecrAssignments, []*actions.OperationParam{actions.NewOperationParam("roleId", roleId)},
+// DecrExistingAssignments decrements the number of existing assignments of the role.
+func (s *RolesStateStore) DecrExistingAssignments(ctx *actions.OperationContext, roleId uint64) error {
+	err := s.opExecutor.Exec(ctx, iactions.OperationTypeRolesStateStore_DecrExistingAssignments, []*actions.OperationParam{actions.NewOperationParam("roleId", roleId)},
 		func(opCtx *actions.OperationContext) error {
 			err := s.txManager.ExecWithReadCommittedLevel(opCtx.Ctx, func(txCtx context.Context, tx pgx.Tx) error {
 				var errCode dberrors.DbErrorCode
 				var errMsg string
-				// PROCEDURE: public.decr_role_assignments(IN _role_id, IN _operation_user_id, OUT err_code, OUT err_msg)
-				const query = "CALL public.decr_role_assignments($1, $2, NULL, NULL)"
+				// PROCEDURE: public.decr_existing_role_assignments(IN _role_id, IN _operation_user_id, OUT err_code, OUT err_msg)
+				const query = "CALL public.decr_existing_role_assignments($1, $2, NULL, NULL)"
 
 				if err := tx.QueryRow(txCtx, query, roleId, opCtx.UserId.Value).Scan(&errCode, &errMsg); err != nil {
-					return fmt.Errorf("[stores.RolesStateStore.DecrAssignments] execute a query (decr_role_assignments): %w", err)
+					return fmt.Errorf("[stores.RolesStateStore.DecrExistingAssignments] execute a query (decr_existing_role_assignments): %w", err)
 				}
 
 				switch errCode {
@@ -259,16 +298,16 @@ func (s *RolesStateStore) DecrAssignments(ctx *actions.OperationContext, roleId 
 					return ierrors.ErrRoleInfoNotFound
 				}
 				// unknown error
-				return fmt.Errorf("[stores.RolesStateStore.DecrAssignments] invalid operation: %w", dberrors.NewDbError(errCode, errMsg))
+				return fmt.Errorf("[stores.RolesStateStore.DecrExistingAssignments] invalid operation: %w", dberrors.NewDbError(errCode, errMsg))
 			})
 			if err != nil {
-				return fmt.Errorf("[stores.RolesStateStore.DecrAssignments] execute a transaction: %w", err)
+				return fmt.Errorf("[stores.RolesStateStore.DecrExistingAssignments] execute a transaction: %w", err)
 			}
 			return nil
 		},
 	)
 	if err != nil {
-		return fmt.Errorf("[stores.RolesStateStore.DecrAssignments] execute an operation: %w", err)
+		return fmt.Errorf("[stores.RolesStateStore.DecrExistingAssignments] execute an operation: %w", err)
 	}
 	return nil
 }

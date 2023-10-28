@@ -94,6 +94,22 @@ func (m *RolesState) FinishAssigning(ctx *actions.OperationContext, operationId 
 	return nil
 }
 
+// DecrAssignments decrements the number of assignments of the role.
+func (m *RolesState) DecrAssignments(ctx *actions.OperationContext, roleId uint64) error {
+	err := m.opExecutor.Exec(ctx, iactions.OperationTypeRolesState_DecrAssignments, []*actions.OperationParam{actions.NewOperationParam("roleId", roleId)},
+		func(opCtx *actions.OperationContext) error {
+			if err := m.rolesStateStore.DecrAssignments(opCtx, roleId); err != nil {
+				return fmt.Errorf("[state.RolesState.DecrAssignments] decrement assignments of the role: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("[state.RolesState.DecrAssignments] execute an operation: %w", err)
+	}
+	return nil
+}
+
 // IncrActiveAssignments increments the number of active assignments of the role.
 func (m *RolesState) IncrActiveAssignments(ctx *actions.OperationContext, roleId uint64) error {
 	err := m.opExecutor.Exec(ctx, iactions.OperationTypeRolesState_IncrActiveAssignments, []*actions.OperationParam{actions.NewOperationParam("roleId", roleId)},
@@ -126,18 +142,18 @@ func (m *RolesState) DecrActiveAssignments(ctx *actions.OperationContext, roleId
 	return nil
 }
 
-// DecrAssignments decrements the number of assignments of the role.
-func (m *RolesState) DecrAssignments(ctx *actions.OperationContext, roleId uint64) error {
-	err := m.opExecutor.Exec(ctx, iactions.OperationTypeRolesState_DecrAssignments, []*actions.OperationParam{actions.NewOperationParam("roleId", roleId)},
+// DecrExistingAssignments decrements the number of existing assignments of the role.
+func (m *RolesState) DecrExistingAssignments(ctx *actions.OperationContext, roleId uint64) error {
+	err := m.opExecutor.Exec(ctx, iactions.OperationTypeRolesState_DecrExistingAssignments, []*actions.OperationParam{actions.NewOperationParam("roleId", roleId)},
 		func(opCtx *actions.OperationContext) error {
-			if err := m.rolesStateStore.DecrAssignments(opCtx, roleId); err != nil {
-				return fmt.Errorf("[state.RolesState.DecrAssignments] decrement assignments of the role: %w", err)
+			if err := m.rolesStateStore.DecrExistingAssignments(opCtx, roleId); err != nil {
+				return fmt.Errorf("[state.RolesState.DecrExistingAssignments] decrement existing assignments of the role: %w", err)
 			}
 			return nil
 		},
 	)
 	if err != nil {
-		return fmt.Errorf("[state.RolesState.DecrAssignments] execute an operation: %w", err)
+		return fmt.Errorf("[state.RolesState.DecrExistingAssignments] execute an operation: %w", err)
 	}
 	return nil
 }

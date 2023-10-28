@@ -28,12 +28,15 @@ type RolesState interface {
 	// FinishAssigning finishes assigning a role.
 	FinishAssigning(ctx *actions.OperationContext, operationId uuid.UUID, succeeded bool) error
 
+	// DecrAssignments decrements the number of assignments of the role.
+	DecrAssignments(ctx *actions.OperationContext, roleId uint64) error
+
 	// IncrActiveAssignments increments the number of active assignments of the role.
 	IncrActiveAssignments(ctx *actions.OperationContext, roleId uint64) error
 
 	// DecrActiveAssignments decrements the number of active assignments of the role.
 	DecrActiveAssignments(ctx *actions.OperationContext, roleId uint64) error
 
-	// DecrAssignments decrements the number of assignments of the role.
-	DecrAssignments(ctx *actions.OperationContext, roleId uint64) error
+	// DecrExistingAssignments decrements the number of existing assignments of the role.
+	DecrExistingAssignments(ctx *actions.OperationContext, roleId uint64) error
 }

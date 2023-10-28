@@ -53,8 +53,9 @@ type RoleAssignmentStore interface {
 	// Create creates a role assignment and returns the role assignment ID if the operation is successful.
 	Create(ctx *actions.OperationContext, data *assignments.CreateOperationData) (uint64, error)
 
-	// StartDeleting starts deleting a role assignment by the specified role assignment ID.
-	StartDeleting(ctx *actions.OperationContext, id uint64) error
+	// StartDeleting starts deleting a role assignment by the specified role assignment ID
+	// and returns the old status of the role assignment if the operation is successful.
+	StartDeleting(ctx *actions.OperationContext, id uint64) (models.RoleAssignmentStatus, error)
 
 	// Delete deletes a role assignment by the specified role assignment ID.
 	Delete(ctx *actions.OperationContext, id uint64) error
@@ -166,12 +167,15 @@ type RolesStateStore interface {
 	// FinishAssigning finishes assigning a role.
 	FinishAssigning(ctx *actions.OperationContext, operationId uuid.UUID, succeeded bool) error
 
+	// DecrAssignments decrements the number of assignments of the role.
+	DecrAssignments(ctx *actions.OperationContext, roleId uint64) error
+
 	// IncrActiveAssignments increments the number of active assignments of the role.
 	IncrActiveAssignments(ctx *actions.OperationContext, roleId uint64) error
 
 	// DecrActiveAssignments decrements the number of active assignments of the role.
 	DecrActiveAssignments(ctx *actions.OperationContext, roleId uint64) error
 
-	// DecrAssignments decrements the number of assignments of the role.
-	DecrAssignments(ctx *actions.OperationContext, roleId uint64) error
+	// DecrExistingAssignments decrements the number of existing assignments of the role.
+	DecrExistingAssignments(ctx *actions.OperationContext, roleId uint64) error
 }
