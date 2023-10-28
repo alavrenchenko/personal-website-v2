@@ -25,6 +25,7 @@ import (
 	"personal-website-v2/identity/src/internal/roles/models"
 	assignmentoperations "personal-website-v2/identity/src/internal/roles/operations/assignments"
 	uraoperations "personal-website-v2/identity/src/internal/roles/operations/userroleassignments"
+	"personal-website-v2/identity/src/internal/roles/state"
 	"personal-website-v2/pkg/actions"
 	actionhelper "personal-website-v2/pkg/helper/actions"
 	"personal-website-v2/pkg/logging"
@@ -34,6 +35,7 @@ import (
 // RoleAssignmentManager is a role assignment manager.
 type RoleAssignmentManager struct {
 	opExecutor          *actionhelper.OperationExecutor
+	rolesState          state.RolesState
 	uraManager          roles.UserRoleAssignmentManager
 	roleAssignmentStore roles.RoleAssignmentStore
 	logger              logging.Logger[*context.LogEntryContext]
@@ -41,7 +43,12 @@ type RoleAssignmentManager struct {
 
 var _ roles.RoleAssignmentManager = (*RoleAssignmentManager)(nil)
 
-func NewRoleAssignmentManager(uraManager roles.UserRoleAssignmentManager, roleAssignmentStore roles.RoleAssignmentStore, loggerFactory logging.LoggerFactory[*context.LogEntryContext]) (*RoleAssignmentManager, error) {
+func NewRoleAssignmentManager(
+	rolesState state.RolesState,
+	uraManager roles.UserRoleAssignmentManager,
+	roleAssignmentStore roles.RoleAssignmentStore,
+	loggerFactory logging.LoggerFactory[*context.LogEntryContext],
+) (*RoleAssignmentManager, error) {
 	l, err := loggerFactory.CreateLogger("internal.roles.manager.RoleAssignmentManager")
 	if err != nil {
 		return nil, fmt.Errorf("[manager.NewRoleAssignmentManager] create a logger: %w", err)
@@ -60,6 +67,7 @@ func NewRoleAssignmentManager(uraManager roles.UserRoleAssignmentManager, roleAs
 
 	return &RoleAssignmentManager{
 		opExecutor:          e,
+		rolesState:          rolesState,
 		uraManager:          uraManager,
 		roleAssignmentStore: roleAssignmentStore,
 		logger:              l,
@@ -81,18 +89,33 @@ func (m *RoleAssignmentManager) Create(ctx *actions.OperationContext, data *assi
 				return ierrors.ErrRoleAssignmentAlreadyExists
 			}
 
+			if err := m.rolesState.StartAssigning(opCtx, opCtx.Operation.Id(), data.RoleId); err != nil {
+				return fmt.Errorf("[manager.RoleAssignmentManager.Create] start assigning a role: %w", err)
+			}
+
+			leCtx := opCtx.CreateLogEntryContext()
+			succeeded := false
+			defer func() {
+				if err := m.rolesState.FinishAssigning(opCtx, opCtx.Operation.Id(), succeeded); err != nil {
+					m.logger.ErrorWithEvent(leCtx, events.RoleAssignmentEvent, err, "[manager.RoleAssignmentManager.Create] finish assigning a role",
+						logging.NewField("operationId", opCtx.Operation.Id()),
+						logging.NewField("succeeded", succeeded),
+					)
+				}
+			}()
+
 			var err error
 			if id, err = m.roleAssignmentStore.Create(opCtx, data); err != nil {
 				return fmt.Errorf("[manager.RoleAssignmentManager.Create] create a role assignment: %w", err)
 			}
 
-			leCtx := opCtx.CreateLogEntryContext()
 			m.logger.InfoWithEvent(leCtx, events.RoleAssignmentEvent, "[manager.RoleAssignmentManager.Create] role assignment has been created",
 				logging.NewField("id", id),
 			)
 
 			err = m.createUserRoleAssignment(opCtx, id, data.RoleId, data.AssignedTo)
 			if err == nil {
+				succeeded = true
 				return nil
 			}
 
