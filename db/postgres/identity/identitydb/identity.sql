@@ -87,7 +87,7 @@ CREATE TABLE IF NOT EXISTS public.role_info
     created_by bigint NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL DEFAULT (clock_timestamp() AT TIME ZONE 'UTC'::text),
     updated_by bigint NOT NULL,
-    is_deleted boolean NOT NULL DEFAULT false,
+    is_deleted boolean NOT NULL DEFAULT FALSE,
     deleted_at timestamp(6) without time zone,
     deleted_by bigint,
     active_assignment_count bigint NOT NULL DEFAULT 0,

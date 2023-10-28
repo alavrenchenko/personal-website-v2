@@ -32,9 +32,10 @@ Role statuses:
     Active = 2
 
 Error codes:
-    NoError = 0
+    NoError           = 0
     RoleAlreadyExists = 11601
 */
+-- Minimum transaction isolation level: Read committed.
 CREATE OR REPLACE PROCEDURE public.create_role(
     IN _name public.roles.name%TYPE,
     IN _type public.roles.type%TYPE,
