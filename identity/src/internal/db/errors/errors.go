@@ -35,6 +35,7 @@ const (
 
 	// The role with the same name already exists.
 	DbErrorCodeRoleAlreadyExists errors.DbErrorCode = 11601
+	DbErrorCodeRoleInfoNotFound  errors.DbErrorCode = 11602
 
 	// Permission error codes (11800-11999).
 	DbErrorCodePermissionNotFound errors.DbErrorCode = 11800
