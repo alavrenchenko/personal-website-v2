@@ -134,8 +134,6 @@ func (s *RolesStateStore) FinishAssigning(ctx *actions.OperationContext, operati
 					return nil
 				case dberrors.DbErrorCodeInternalError:
 					return errs.NewError(errs.ErrorCodeInternalError, errMsg)
-				case dberrors.DbErrorCodeInvalidOperation:
-					return errs.NewError(errs.ErrorCodeInvalidOperation, errMsg)
 				case idberrors.DbErrorCodeRoleInfoNotFound:
 					return ierrors.ErrRoleInfoNotFound
 				case idberrors.DbErrorCodeRoleAssignmentNotFound:
