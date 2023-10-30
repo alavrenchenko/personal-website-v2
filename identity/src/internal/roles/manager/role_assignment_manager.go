@@ -212,7 +212,7 @@ func (m *RoleAssignmentManager) Delete(ctx *actions.OperationContext, id uint64)
 				return fmt.Errorf("[manager.RoleAssignmentManager.Delete] get the role id and assignee by id: %w", err)
 			}
 
-			if r.AssigneeType != models.AssigneeTypeUser {
+			if r.AssigneeType != models.AssigneeTypeUser && r.AssigneeType != models.AssigneeTypeGroup {
 				return fmt.Errorf("[manager.RoleAssignmentManager.Delete] '%s' assignee type of the role assignment isn't supported", r.AssigneeType)
 			}
 
@@ -221,8 +221,12 @@ func (m *RoleAssignmentManager) Delete(ctx *actions.OperationContext, id uint64)
 				return fmt.Errorf("[manager.RoleAssignmentManager.Delete] start deleting a role assignment: %w", err)
 			}
 
-			if err = m.deleteUserRoleAssignment(opCtx, id); err != nil {
-				return fmt.Errorf("[manager.RoleAssignmentManager.Delete] delete a user's role assignment: %w", err)
+			if r.AssigneeType == models.AssigneeTypeUser {
+				if err = m.deleteUserRoleAssignment(opCtx, id); err != nil {
+					return fmt.Errorf("[manager.RoleAssignmentManager.Delete] delete a user's role assignment: %w", err)
+				}
+			} else if err = m.deleteGroupRoleAssignment(opCtx, id); err != nil {
+				return fmt.Errorf("[manager.RoleAssignmentManager.Delete] delete a group role assignment: %w", err)
 			}
 
 			leCtx := opCtx.CreateLogEntryContext()
@@ -282,6 +286,25 @@ func (m *RoleAssignmentManager) deleteUserRoleAssignment(ctx *actions.OperationC
 		ctx.CreateLogEntryContext(),
 		events.RoleAssignmentEvent,
 		"[manager.RoleAssignmentManager.deleteUserRoleAssignment] user's role assignment has been deleted",
+		logging.NewField("id", id),
+		logging.NewField("roleAssignmentId", roleAssignmentId),
+	)
+	return nil
+}
+
+func (m *RoleAssignmentManager) deleteGroupRoleAssignment(ctx *actions.OperationContext, roleAssignmentId uint64) error {
+	id, err := m.graManager.DeleteByRoleAssignmentId(ctx, roleAssignmentId)
+	if err != nil {
+		msg := "[manager.RoleAssignmentManager.deleteGroupRoleAssignment] delete a group role assignment by the role assignment id"
+		m.logger.ErrorWithEvent(ctx.CreateLogEntryContext(), events.RoleAssignmentEvent, err, msg, logging.NewField("roleAssignmentId", roleAssignmentId))
+		// internal error
+		return fmt.Errorf("%s: %v", msg, err)
+	}
+
+	m.logger.InfoWithEvent(
+		ctx.CreateLogEntryContext(),
+		events.RoleAssignmentEvent,
+		"[manager.RoleAssignmentManager.deleteGroupRoleAssignment] group role assignment has been deleted",
 		logging.NewField("id", id),
 		logging.NewField("roleAssignmentId", roleAssignmentId),
 	)
