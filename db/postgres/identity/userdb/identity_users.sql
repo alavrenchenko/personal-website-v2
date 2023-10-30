@@ -27,13 +27,6 @@ CREATE DATABASE identity_users
 
 -- Table: public.users
 /*
-User groups:
-    Unspecified    = 0
-    AnonymousUsers = 1
-    SystemUsers    = 2
-    Administrators = 3
-    StandardUsers  = 4
-
 User statuses:
     Unspecified          = 0
     New                  = 1
@@ -48,7 +41,7 @@ CREATE TABLE IF NOT EXISTS public.users
 (
     id bigint NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 9223372036854775807 CACHE 1 ),
     name character varying(256) COLLATE pg_catalog."default",
-    "group" smallint NOT NULL,
+    "group" bigint NOT NULL,
     created_at timestamp(6) without time zone NOT NULL,
     created_by bigint NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL DEFAULT (clock_timestamp() AT TIME ZONE 'UTC'::text),

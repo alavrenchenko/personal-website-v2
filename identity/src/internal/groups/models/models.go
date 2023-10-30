@@ -17,31 +17,36 @@ package models
 import "fmt"
 
 // The user's group.
-type UserGroup uint8
+type UserGroup uint64
 
 const (
 	// Unspecified = 0 // Do not use.
 
 	UserGroupAnonymousUsers UserGroup = 1
-	UserGroupSystemUsers    UserGroup = 2
-	UserGroupAdmins         UserGroup = 3
-	UserGroupStandardUsers  UserGroup = 4
+	UserGroupSuperusers     UserGroup = 2
+	UserGroupSystemUsers    UserGroup = 3
+	UserGroupAdmins         UserGroup = 4
+
+	// The standard users.
+	UserGroupUsers UserGroup = 5
 )
 
+var userGroupNames = [...]string{
+	0:                       "unspecified",
+	UserGroupAnonymousUsers: "anonymousUsers",
+	UserGroupSuperusers:     "superusers",
+	UserGroupSystemUsers:    "systemUsers",
+	UserGroupAdmins:         "admins",
+	UserGroupUsers:          "users",
+}
+
 func (g UserGroup) IsValid() bool {
-	return g == UserGroupAnonymousUsers || g == UserGroupSystemUsers || g == UserGroupAdmins || g == UserGroupStandardUsers
+	return g > 0 && int(g) < len(userGroupNames)
 }
 
 func (g UserGroup) String() string {
-	switch g {
-	case UserGroupAnonymousUsers:
-		return "anonymousUsers"
-	case UserGroupSystemUsers:
-		return "systemUsers"
-	case UserGroupAdmins:
-		return "admins"
-	case UserGroupStandardUsers:
-		return "standardUsers"
+	if g.IsValid() {
+		return userGroupNames[g]
 	}
 	return fmt.Sprintf("UserGroup(%d)", g)
 }

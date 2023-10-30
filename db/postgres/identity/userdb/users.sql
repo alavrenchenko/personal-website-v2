@@ -12,7 +12,7 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
--- PROCEDURE: public.create_user(smallint, bigint, smallint, text, character varying, character varying, character varying, character varying, timestamp without time zone, smallint)
+-- PROCEDURE: public.create_user(bigint, bigint, smallint, text, character varying, character varying, character varying, character varying, timestamp without time zone, smallint)
 /*
 User statuses:
     Active = 3

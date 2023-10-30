@@ -50,7 +50,7 @@ type CreateOperationData struct {
 }
 
 func (d *CreateOperationData) Validate() *errors.Error {
-	if d.Group != groupmodels.UserGroupSystemUsers && d.Group != groupmodels.UserGroupAdmins && d.Group != groupmodels.UserGroupStandardUsers {
+	if d.Group != groupmodels.UserGroupSystemUsers && d.Group != groupmodels.UserGroupAdmins && d.Group != groupmodels.UserGroupUsers {
 		return errors.NewError(errors.ErrorCodeInvalidData, "invalid group")
 	}
 

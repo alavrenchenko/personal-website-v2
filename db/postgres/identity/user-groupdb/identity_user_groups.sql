@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS public.group_role_assignments
 (
     id bigint NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 9223372036854775807 CACHE 1 ),
     role_assignment_id bigint NOT NULL,
-    "group" smallint NOT NULL,
+    "group" bigint NOT NULL,
     role_id bigint NOT NULL,
     created_at timestamp(6) without time zone NOT NULL,
     created_by bigint NOT NULL,

@@ -12,7 +12,7 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
--- FUNCTION: public.group_role_assignment_exists(smallint, bigint)
+-- FUNCTION: public.group_role_assignment_exists(bigint, bigint)
 /*
 Group role assignment statuses:
     Deleted = 5
@@ -27,7 +27,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- FUNCTION: public.is_role_assigned(smallint, bigint)
+-- FUNCTION: public.is_role_assigned(bigint, bigint)
 /*
 Group role assignment statuses:
     Active = 2
@@ -42,7 +42,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- PROCEDURE: public.create_group_role_assignment(bigint, smallint, bigint, bigint, text)
+-- PROCEDURE: public.create_group_role_assignment(bigint, bigint, bigint, bigint, text)
 /*
 Group role assignment statuses:
     Active = 2
