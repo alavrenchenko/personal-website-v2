@@ -32,6 +32,9 @@ type RoleStore interface {
 	// Create creates a role and returns the role ID if the operation is successful.
 	Create(ctx *actions.OperationContext, data *roles.CreateOperationData) (uint64, error)
 
+	// Delete deletes a role by the specified role ID.
+	Delete(ctx *actions.OperationContext, id uint64) error
+
 	// FindById finds and returns a role, if any, by the specified role ID.
 	FindById(ctx *actions.OperationContext, id uint64) (*dbmodels.Role, error)
 

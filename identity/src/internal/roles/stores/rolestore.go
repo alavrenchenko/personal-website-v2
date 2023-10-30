@@ -22,6 +22,7 @@ import (
 	"github.com/jackc/pgx/v5"
 
 	iactions "personal-website-v2/identity/src/internal/actions"
+	idberrors "personal-website-v2/identity/src/internal/db/errors"
 	ierrors "personal-website-v2/identity/src/internal/errors"
 	"personal-website-v2/identity/src/internal/roles"
 	"personal-website-v2/identity/src/internal/roles/dbmodels"
@@ -87,27 +88,29 @@ func (s *RoleStore) Create(ctx *actions.OperationContext, data *roleoperations.C
 	var id uint64
 	err := s.opExecutor.Exec(ctx, iactions.OperationTypeRoleStore_Create, []*actions.OperationParam{actions.NewOperationParam("data", data)},
 		func(opCtx *actions.OperationContext) error {
-			var errCode dberrors.DbErrorCode
-			var errMsg string
-			// public.create_role(IN _name, IN _type, IN _title, IN _created_by, IN _status_comment, IN _app_id, IN _app_group_id, IN _description,
-			// OUT _id, OUT err_code, OUT err_msg)
-			const query = "CALL public.create_role($1, $2, $3, $4, NULL, $5, $6, $7, NULL, NULL, NULL)"
-
 			err := s.txManager.ExecWithReadCommittedLevel(opCtx.Ctx, func(txCtx context.Context, tx pgx.Tx) error {
+				var errCode dberrors.DbErrorCode
+				var errMsg string
+				// PROCEDURE: public.create_role(IN _name, IN _type, IN _title, IN _created_by, IN _status_comment, IN _app_id, IN _app_group_id, IN _description,
+				// OUT _id, OUT err_code, OUT err_msg)
+				const query = "CALL public.create_role($1, $2, $3, $4, NULL, $5, $6, $7, NULL, NULL, NULL)"
 				r := tx.QueryRow(txCtx, query, data.Name, data.Type, data.Title, opCtx.UserId.Value, data.AppId.Ptr(), data.AppGroupId.Ptr(), data.Description)
 
 				if err := r.Scan(&id, &errCode, &errMsg); err != nil {
 					return fmt.Errorf("[stores.RoleStore.Create] execute a query (create_role): %w", err)
 				}
-				return nil
-			})
-			if err != nil {
-				return fmt.Errorf("[stores.RoleStore.Create] execute a transaction with the 'read committed' isolation level: %w", err)
-			}
 
-			if errCode != dberrors.DbErrorCodeNoError {
+				switch errCode {
+				case dberrors.DbErrorCodeNoError:
+					return nil
+				case idberrors.DbErrorCodeRoleAlreadyExists:
+					return ierrors.ErrRoleAlreadyExists
+				}
 				// unknown error
 				return fmt.Errorf("[stores.RoleStore.Create] invalid operation: %w", dberrors.NewDbError(errCode, errMsg))
+			})
+			if err != nil {
+				return fmt.Errorf("[stores.RoleStore.Create] execute a transaction: %w", err)
 			}
 			return nil
 		},
@@ -116,6 +119,47 @@ func (s *RoleStore) Create(ctx *actions.OperationContext, data *roleoperations.C
 		return 0, fmt.Errorf("[stores.RoleStore.Create] execute an operation: %w", err)
 	}
 	return id, nil
+}
+
+// Delete deletes a role by the specified role ID.
+func (s *RoleStore) Delete(ctx *actions.OperationContext, id uint64) error {
+	err := s.opExecutor.Exec(ctx, iactions.OperationTypeRoleStore_Delete, []*actions.OperationParam{actions.NewOperationParam("id", id)},
+		func(opCtx *actions.OperationContext) error {
+			err := s.txManager.ExecWithReadCommittedLevel(opCtx.Ctx, func(txCtx context.Context, tx pgx.Tx) error {
+				var errCode dberrors.DbErrorCode
+				var errMsg string
+				// PROCEDURE: public.delete_role(IN _id, IN _deleted_by, IN _status_comment, OUT err_code, OUT err_msg)
+				const query = "CALL public.delete_role($1, $2, 'deletion', NULL, NULL)"
+
+				if err := tx.QueryRow(txCtx, query, id, opCtx.UserId.Value).Scan(&errCode, &errMsg); err != nil {
+					return fmt.Errorf("[stores.RoleStore.Delete] execute a query (delete_role): %w", err)
+				}
+
+				switch errCode {
+				case dberrors.DbErrorCodeNoError:
+					return nil
+				case dberrors.DbErrorCodeInternalError:
+					return errs.NewError(errs.ErrorCodeInternalError, errMsg)
+				case dberrors.DbErrorCodeInvalidOperation:
+					return errs.NewError(errs.ErrorCodeInvalidOperation, errMsg)
+				case idberrors.DbErrorCodeRoleNotFound:
+					return ierrors.ErrRoleNotFound
+				case idberrors.DbErrorCodeRoleInfoNotFound:
+					return ierrors.ErrRoleInfoNotFound
+				}
+				// unknown error
+				return fmt.Errorf("[stores.RoleStore.Delete] invalid operation: %w", dberrors.NewDbError(errCode, errMsg))
+			})
+			if err != nil {
+				return fmt.Errorf("[stores.RoleStore.Delete] execute a transaction: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("[stores.RoleStore.Delete] execute an operation: %w", err)
+	}
+	return nil
 }
 
 // FindById finds and returns a role, if any, by the specified role ID.
