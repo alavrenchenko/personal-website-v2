@@ -61,7 +61,6 @@ $$ LANGUAGE plpgsql;
 Error codes:
     NoError                = 0
     InternalError          = 2
-    InvalidOperation       = 3
     RoleInfoNotFound       = 11602
     RoleAssignmentNotFound = 13400
 */
@@ -90,13 +89,14 @@ BEGIN
     IF _succeeded THEN
         SELECT is_deleted INTO _is_deleted FROM public.role_info WHERE role_id = _role_id LIMIT 1 FOR UPDATE;
         IF NOT FOUND THEN
+            -- internal error
             err_code := 11602; -- RoleInfoNotFound
             err_msg := 'role info not found';
             RETURN;
         END IF;
 
         IF _is_deleted THEN
-            err_code := 3; -- InvalidOperation
+            err_code := 2; -- InternalError
             err_msg := 'role info is deleted';
             RETURN;
         END IF;
@@ -106,23 +106,11 @@ BEGIN
             SET updated_at = _time, updated_by = _operation_user_id, active_assignment_count = active_assignment_count + 1, existing_assignment_count = existing_assignment_count + 1,
                 _version_stamp = _version_stamp + 1, _timestamp = _time
             WHERE role_id = _role_id;
-        -- an update check
-        IF NOT FOUND THEN
-            err_code := 2; -- InternalError
-            err_msg := 'role info wasn''t updated';
-            RETURN;
-        END IF;
     END IF;
 
     DELETE FROM public.new_role_assignments WHERE operation_id = _operation_id;
-    -- a deletion check
-    IF NOT FOUND THEN
-        err_code := 2; -- InternalError
-        err_msg := 'new role assignment wasn''t deleted';
-    END IF;
 END;
 $$ LANGUAGE plpgsql;
-
 
 -- PROCEDURE: public.decr_role_assignments(bigint, bigint)
 /*
