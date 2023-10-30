@@ -93,6 +93,29 @@ func (m *RoleManager) Create(ctx *actions.OperationContext, data *roleoperations
 	return id, nil
 }
 
+// Delete deletes a role by the specified role ID.
+func (m *RoleManager) Delete(ctx *actions.OperationContext, id uint64) error {
+	err := m.opExecutor.Exec(ctx, iactions.OperationTypeRoleManager_Delete, []*actions.OperationParam{actions.NewOperationParam("id", id)},
+		func(opCtx *actions.OperationContext) error {
+			if err := m.roleStore.Delete(opCtx, id); err != nil {
+				return fmt.Errorf("[manager.RoleManager.Delete] delete a role: %w", err)
+			}
+
+			m.logger.InfoWithEvent(
+				opCtx.CreateLogEntryContext(),
+				events.RoleEvent,
+				"[manager.RoleManager.Delete] role has been deleted",
+				logging.NewField("id", id),
+			)
+			return nil
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("[manager.RoleManager.Delete] execute an operation: %w", err)
+	}
+	return nil
+}
+
 // FindById finds and returns a role, if any, by the specified role ID.
 func (m *RoleManager) FindById(ctx *actions.OperationContext, id uint64) (*dbmodels.Role, error) {
 	var r *dbmodels.Role

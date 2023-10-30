@@ -44,11 +44,12 @@ const (
 
 	// RoleManager operation types (12500-12999).
 	OperationTypeRoleManager_Create        actions.OperationType = 12500
-	OperationTypeRoleManager_FindById      actions.OperationType = 12501
-	OperationTypeRoleManager_FindByName    actions.OperationType = 12502
-	OperationTypeRoleManager_GetAllByIds   actions.OperationType = 12503
-	OperationTypeRoleManager_GetTypeById   actions.OperationType = 12504
-	OperationTypeRoleManager_GetStatusById actions.OperationType = 12505
+	OperationTypeRoleManager_Delete        actions.OperationType = 12501
+	OperationTypeRoleManager_FindById      actions.OperationType = 12502
+	OperationTypeRoleManager_FindByName    actions.OperationType = 12503
+	OperationTypeRoleManager_GetAllByIds   actions.OperationType = 12504
+	OperationTypeRoleManager_GetTypeById   actions.OperationType = 12505
+	OperationTypeRoleManager_GetStatusById actions.OperationType = 12506
 
 	// PermissionManager operation types (13000-13499).
 	OperationTypePermissionManager_Create        actions.OperationType = 13000
@@ -181,11 +182,13 @@ const (
 
 	// RoleStore operation types (32500-32999).
 	OperationTypeRoleStore_Create        actions.OperationType = 32500
-	OperationTypeRoleStore_FindById      actions.OperationType = 32501
-	OperationTypeRoleStore_FindByName    actions.OperationType = 32502
-	OperationTypeRoleStore_GetAllByIds   actions.OperationType = 32503
-	OperationTypeRoleStore_GetTypeById   actions.OperationType = 32504
-	OperationTypeRoleStore_GetStatusById actions.OperationType = 32505
+	OperationTypeRoleStore_StartDeleting actions.OperationType = 32501
+	OperationTypeRoleStore_Delete        actions.OperationType = 32502
+	OperationTypeRoleStore_FindById      actions.OperationType = 32503
+	OperationTypeRoleStore_FindByName    actions.OperationType = 32504
+	OperationTypeRoleStore_GetAllByIds   actions.OperationType = 32505
+	OperationTypeRoleStore_GetTypeById   actions.OperationType = 32506
+	OperationTypeRoleStore_GetStatusById actions.OperationType = 32507
 
 	// PermissionStore operation types (33000-33499).
 	OperationTypePermissionStore_Create        actions.OperationType = 33000
