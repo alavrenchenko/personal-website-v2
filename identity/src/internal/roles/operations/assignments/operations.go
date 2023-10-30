@@ -15,8 +15,10 @@
 package assignments
 
 import (
+	groupmodels "personal-website-v2/identity/src/internal/groups/models"
 	"personal-website-v2/identity/src/internal/roles/models"
 	"personal-website-v2/pkg/base/nullable"
+	"personal-website-v2/pkg/errors"
 )
 
 type CreateOperationData struct {
@@ -32,6 +34,13 @@ type CreateOperationData struct {
 
 	// The role assignment description.
 	Description nullable.Nullable[string] `json:"description"`
+}
+
+func (d *CreateOperationData) Validate() *errors.Error {
+	if d.AssigneeType == models.AssigneeTypeGroup && !groupmodels.UserGroup(d.AssignedTo).IsValid() {
+		return errors.NewError(errors.ErrorCodeInvalidData, "invalid assignee id")
+	}
+	return nil
 }
 
 type GetRoleIdAndAssigneeOperationResult struct {

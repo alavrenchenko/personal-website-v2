@@ -19,11 +19,13 @@ import (
 
 	iactions "personal-website-v2/identity/src/internal/actions"
 	ierrors "personal-website-v2/identity/src/internal/errors"
+	groupmodels "personal-website-v2/identity/src/internal/groups/models"
 	"personal-website-v2/identity/src/internal/logging/events"
 	"personal-website-v2/identity/src/internal/roles"
 	"personal-website-v2/identity/src/internal/roles/dbmodels"
 	"personal-website-v2/identity/src/internal/roles/models"
 	assignmentoperations "personal-website-v2/identity/src/internal/roles/operations/assignments"
+	graoperations "personal-website-v2/identity/src/internal/roles/operations/grouproleassignments"
 	uraoperations "personal-website-v2/identity/src/internal/roles/operations/userroleassignments"
 	"personal-website-v2/identity/src/internal/roles/state"
 	"personal-website-v2/pkg/actions"
@@ -37,6 +39,7 @@ type RoleAssignmentManager struct {
 	opExecutor          *actionhelper.OperationExecutor
 	rolesState          state.RolesState
 	uraManager          roles.UserRoleAssignmentManager
+	graManager          roles.GroupRoleAssignmentManager
 	roleAssignmentStore roles.RoleAssignmentStore
 	logger              logging.Logger[*context.LogEntryContext]
 }
@@ -46,6 +49,7 @@ var _ roles.RoleAssignmentManager = (*RoleAssignmentManager)(nil)
 func NewRoleAssignmentManager(
 	rolesState state.RolesState,
 	uraManager roles.UserRoleAssignmentManager,
+	graManager roles.GroupRoleAssignmentManager,
 	roleAssignmentStore roles.RoleAssignmentStore,
 	loggerFactory logging.LoggerFactory[*context.LogEntryContext],
 ) (*RoleAssignmentManager, error) {
@@ -69,6 +73,7 @@ func NewRoleAssignmentManager(
 		opExecutor:          e,
 		rolesState:          rolesState,
 		uraManager:          uraManager,
+		graManager:          graManager,
 		roleAssignmentStore: roleAssignmentStore,
 		logger:              l,
 	}, nil
@@ -79,7 +84,10 @@ func (m *RoleAssignmentManager) Create(ctx *actions.OperationContext, data *assi
 	var id uint64
 	err := m.opExecutor.Exec(ctx, iactions.OperationTypeRoleAssignmentManager_Create, []*actions.OperationParam{actions.NewOperationParam("data", data)},
 		func(opCtx *actions.OperationContext) error {
-			if data.AssigneeType != models.AssigneeTypeUser {
+			if err := data.Validate(); err != nil {
+				return fmt.Errorf("[manager.RoleAssignmentManager.Create] validate data: %w", err)
+			}
+			if data.AssigneeType != models.AssigneeTypeUser && data.AssigneeType != models.AssigneeTypeGroup {
 				return fmt.Errorf("[manager.RoleAssignmentManager.Create] '%s' assignee type isn't supported", data.AssigneeType)
 			}
 
@@ -113,22 +121,30 @@ func (m *RoleAssignmentManager) Create(ctx *actions.OperationContext, data *assi
 				logging.NewField("id", id),
 			)
 
-			err = m.createUserRoleAssignment(opCtx, id, data.RoleId, data.AssignedTo)
-			if err == nil {
-				succeeded = true
-				return nil
+			defer func() {
+				if !succeeded {
+					if err := m.roleAssignmentStore.Delete(opCtx, id); err != nil {
+						m.logger.ErrorWithEvent(leCtx, events.RoleAssignmentEvent, err, "[manager.RoleAssignmentManager.Create] delete a role assignment",
+							logging.NewField("id", id),
+						)
+					} else {
+						m.logger.InfoWithEvent(leCtx, events.RoleAssignmentEvent, "[manager.RoleAssignmentManager.Create] role assignment has been deleted",
+							logging.NewField("id", id),
+						)
+					}
+				}
+			}()
+
+			if data.AssigneeType == models.AssigneeTypeUser {
+				if err = m.createUserRoleAssignment(opCtx, id, data.RoleId, data.AssignedTo); err != nil {
+					return fmt.Errorf("[manager.RoleAssignmentManager.Create] create a user's role assignment: %w", err)
+				}
+			} else if err = m.createGroupRoleAssignment(opCtx, id, data.RoleId, groupmodels.UserGroup(data.AssignedTo)); err != nil {
+				return fmt.Errorf("[manager.RoleAssignmentManager.Create] create a group role assignment: %w", err)
 			}
 
-			if err2 := m.roleAssignmentStore.Delete(opCtx, id); err2 != nil {
-				m.logger.ErrorWithEvent(leCtx, events.RoleAssignmentEvent, err2, "[manager.RoleAssignmentManager.Create] delete a role assignment",
-					logging.NewField("id", id),
-				)
-			} else {
-				m.logger.InfoWithEvent(leCtx, events.RoleAssignmentEvent, "[manager.RoleAssignmentManager.Create] role assignment has been deleted",
-					logging.NewField("id", id),
-				)
-			}
-			return fmt.Errorf("[manager.RoleAssignmentManager.Create] create a user's role assignment: %w", err)
+			succeeded = true
+			return nil
 		},
 	)
 	if err != nil {
@@ -156,6 +172,31 @@ func (m *RoleAssignmentManager) createUserRoleAssignment(ctx *actions.OperationC
 		ctx.CreateLogEntryContext(),
 		events.RoleAssignmentEvent,
 		"[manager.RoleAssignmentManager.createUserRoleAssignment] user's role assignment has been created",
+		logging.NewField("id", id),
+		logging.NewField("roleAssignmentId", roleAssignmentId),
+	)
+	return nil
+}
+
+func (m *RoleAssignmentManager) createGroupRoleAssignment(ctx *actions.OperationContext, roleAssignmentId, roleId uint64, group groupmodels.UserGroup) error {
+	d := &graoperations.CreateOperationData{
+		RoleAssignmentId: roleAssignmentId,
+		Group:            group,
+		RoleId:           roleId,
+	}
+
+	id, err := m.graManager.Create(ctx, d)
+	if err != nil {
+		msg := "[manager.RoleAssignmentManager.createGroupRoleAssignment] create a group role assignment"
+		m.logger.ErrorWithEvent(ctx.CreateLogEntryContext(), events.RoleAssignmentEvent, err, msg, logging.NewField("roleAssignmentId", roleAssignmentId))
+		// internal error
+		return fmt.Errorf("%s: %v", msg, err)
+	}
+
+	m.logger.InfoWithEvent(
+		ctx.CreateLogEntryContext(),
+		events.RoleAssignmentEvent,
+		"[manager.RoleAssignmentManager.createGroupRoleAssignment] group role assignment has been created",
 		logging.NewField("id", id),
 		logging.NewField("roleAssignmentId", roleAssignmentId),
 	)
