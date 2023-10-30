@@ -81,3 +81,84 @@ BEGIN
             RAISE;
 END;
 $$ LANGUAGE plpgsql;
+
+-- PROCEDURE: public.delete_role(bigint, bigint, text)
+/*
+Role assignment statuses:
+    Deleted = 5
+
+Error codes:
+    NoError          = 0
+    InternalError    = 2
+    InvalidOperation = 3
+    RoleNotFound     = 11600
+    RoleInfoNotFound = 11602
+*/
+-- Minimum transaction isolation level: Read committed.
+CREATE OR REPLACE PROCEDURE public.delete_role(
+    IN _id public.roles.id%TYPE,
+    IN _deleted_by public.roles.updated_by%TYPE,
+    IN _status_comment public.roles.status_comment%TYPE,
+    OUT err_code bigint,
+    OUT err_msg text) AS $$
+DECLARE
+    _time timestamp(6) without time zone;
+    _status public.roles.status%TYPE;
+    _is_role_info_deleted public.role_info.is_deleted%TYPE;
+    _existing_assignment_count public.role_info.existing_assignment_count%TYPE;
+BEGIN
+    err_code := 0; -- NoError
+    err_msg := '';
+
+    SELECT status INTO _status FROM public.roles WHERE id = _id LIMIT 1 FOR UPDATE;
+    IF NOT FOUND THEN
+        err_code := 11600; -- RoleNotFound
+        err_msg := 'role not found';
+        RETURN;
+    END IF;
+
+    -- role status: Deleted(5)
+    IF _status = 5 THEN
+        err_code := 3; -- InvalidOperation
+        err_msg := 'role has already been deleted';
+        RETURN;
+    END IF;
+
+    IF EXISTS (SELECT 1 FROM public.new_role_assignments WHERE role_id = _id LIMIT 1) THEN
+        err_code := 3; -- InvalidOperation
+        err_msg := 'role is assigned';
+        RETURN;
+    END IF;
+
+    SELECT is_deleted, existing_assignment_count INTO _is_role_info_deleted, _existing_assignment_count FROM public.role_info WHERE role_id = _role_id LIMIT 1 FOR UPDATE;
+    IF NOT FOUND THEN
+        -- internal error
+        err_code := 11602; -- RoleInfoNotFound
+        err_msg := 'role info not found';
+        RETURN;
+    END IF;
+
+    IF _is_role_info_deleted THEN
+        err_code := 2; -- InternalError
+        err_msg := 'role info is deleted';
+        RETURN;
+    END IF;
+
+    IF _existing_assignment_count > 0 THEN
+        err_code := 3; -- InvalidOperation
+        err_msg := 'role is assigned';
+        RETURN;
+    END IF;
+
+    _time := (clock_timestamp() AT TIME ZONE 'UTC');
+    -- role status: Deleted(5)
+    UPDATE public.roles
+        SET updated_at = _time, updated_by = _deleted_by, status = 5, status_updated_at = _time, status_updated_by = _deleted_by,
+            status_comment = _status_comment, _version_stamp = _version_stamp + 1, _timestamp = _time
+        WHERE id = _id;
+
+    UPDATE public.role_info
+        SET updated_at = _time, updated_by = _deleted_by, is_deleted = TRUE, deleted_at = _time, deleted_by = _deleted_by, _version_stamp = _version_stamp + 1, _timestamp = _time
+    WHERE role_id = _role_id;
+END;
+$$ LANGUAGE plpgsql;
