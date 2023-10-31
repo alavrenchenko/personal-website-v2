@@ -25,6 +25,7 @@ CREATE OR REPLACE PROCEDURE public.create_permission_group(
     IN _created_by public.permission_groups.created_by%TYPE,
     IN _status_comment public.permission_groups.status_comment%TYPE,
     IN _app_id public.permission_groups.app_id%TYPE,
+    IN _app_group_id public.permission_groups.app_group_id%TYPE,
     IN _description public.permission_groups.description%TYPE,
     OUT _id public.permission_groups.id%TYPE,
     OUT err_code bigint,
@@ -39,8 +40,8 @@ BEGIN
     _time := (clock_timestamp() AT TIME ZONE 'UTC');
     -- permission group status: Active(2)
     INSERT INTO public.permission_groups(name, created_at, created_by, updated_at, updated_by, status, status_updated_at, status_updated_by,
-            status_comment, app_id, description, _version_stamp, _timestamp)
-        VALUES (_name, _time, _created_by, _time, _created_by, 2, _time, _created_by, _status_comment, _app_id, _description, 1, _time)
+            status_comment, app_id, app_group_id, description, _version_stamp, _timestamp)
+        VALUES (_name, _time, _created_by, _time, _created_by, 2, _time, _created_by, _status_comment, _app_id, _app_group_id, _description, 1, _time)
         RETURNING id INTO _id;
 END;
 $$ LANGUAGE plpgsql;
