@@ -118,8 +118,5 @@ CREATE INDEX IF NOT EXISTS deleted_role_assignments_assigned_to_idx ON public.de
 CREATE INDEX IF NOT EXISTS deleted_role_assignments_assignee_type_idx ON public.deleted_role_assignments (assignee_type);
 CREATE INDEX IF NOT EXISTS deleted_role_assignments_created_at_idx ON public.deleted_role_assignments (created_at);
 CREATE INDEX IF NOT EXISTS deleted_role_assignments_updated_at_idx ON public.deleted_role_assignments (updated_at);
-CREATE INDEX IF NOT EXISTS deleted_role_assignments_status_idx ON public.deleted_role_assignments (status);
 CREATE INDEX IF NOT EXISTS deleted_role_assignments_status_updated_at_idx ON public.deleted_role_assignments (status_updated_at);
-
-CREATE INDEX IF NOT EXISTS deleted_role_assignments_role_id_assigned_to_assignee_type_idx
-    ON public.deleted_role_assignments (role_id, assigned_to, assignee_type);
+CREATE INDEX IF NOT EXISTS deleted_role_assignments_role_id_assigned_to_assignee_type_idx ON public.deleted_role_assignments (role_id, assigned_to, assignee_type);
