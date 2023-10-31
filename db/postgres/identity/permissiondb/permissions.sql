@@ -26,7 +26,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- PROCEDURE: public.create_permission(bigint, character varying, bigint, text, text)
+-- PROCEDURE: public.create_permission(bigint, character varying, bigint, text, bigint, bigint, text)
 /*
 Permission statuses:
     Active = 2
@@ -37,8 +37,10 @@ Permission group statuses:
 Error codes:
     NoError                 = 0
     InvalidOperation        = 3
+    PermissionAlreadyExists = 11801
     PermissionGroupNotFound = 12200
 */
+-- Minimum transaction isolation level: Read committed.
 CREATE OR REPLACE PROCEDURE public.create_permission(
     IN _group_id public.permissions.group_id%TYPE,
     IN _name public.permissions.name%TYPE,
@@ -57,6 +59,12 @@ BEGIN
     _id := 0;
     err_code := 0; -- NoError
     err_msg := '';
+
+    IF permission_exists(_name) THEN
+        err_code := 11801; -- PermissionAlreadyExists
+        err_msg := 'permission with the same name already exists';
+        RETURN;
+    END IF;
 
     SELECT status INTO _status FROM public.permission_groups WHERE id = _group_id LIMIT 1 FOR UPDATE;
     IF NOT FOUND THEN
@@ -78,5 +86,14 @@ BEGIN
             status_comment, app_id, app_group_id, description, _version_stamp, _timestamp)
         VALUES (_group_id, _name, _time, _created_by, _time, _created_by, 2, _time, _created_by, _status_comment, _app_id, _app_group_id, _description, 1, _time)
         RETURNING id INTO _id;
+
+    EXCEPTION
+        WHEN unique_violation THEN
+            IF permission_exists(_name) THEN
+                err_code := 11801; -- PermissionAlreadyExists
+                err_msg := 'permission with the same name already exists';
+                RETURN;
+            END IF;
+            RAISE;
 END;
 $$ LANGUAGE plpgsql;
