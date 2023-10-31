@@ -32,7 +32,8 @@ Permission group statuses:
     New         = 1
     Active      = 2
     Inactive    = 3
-    Deleted     = 4
+    Deleting    = 4
+    Deleted     = 5
 */
 CREATE TABLE IF NOT EXISTS public.permission_groups
 (
@@ -47,13 +48,25 @@ CREATE TABLE IF NOT EXISTS public.permission_groups
     status_updated_by bigint NOT NULL,
     status_comment text COLLATE pg_catalog."default",
     app_id bigint,
+    app_group_id bigint,
     description text COLLATE pg_catalog."default" NOT NULL,
     _version_stamp bigint NOT NULL,
     _timestamp timestamp(6) without time zone NOT NULL DEFAULT (clock_timestamp() AT TIME ZONE 'UTC'::text),
     CONSTRAINT permission_groups_pkey PRIMARY KEY (id),
-    CONSTRAINT permission_groups_name_key UNIQUE (name)
+    CONSTRAINT permission_groups_status_check CHECK (status >= 1 AND status <= 5)
 )
 TABLESPACE pg_default;
+
+CREATE UNIQUE INDEX IF NOT EXISTS permission_groups_name_idx
+    ON public.permission_groups (lower(name))
+    WHERE status <> 5;
+
+CREATE INDEX IF NOT EXISTS permission_groups_created_at_idx ON public.permission_groups (created_at);
+CREATE INDEX IF NOT EXISTS permission_groups_updated_at_idx ON public.permission_groups (updated_at);
+CREATE INDEX IF NOT EXISTS permission_groups_status_idx ON public.permission_groups (status);
+CREATE INDEX IF NOT EXISTS permission_groups_status_updated_at_idx ON public.permission_groups (status_updated_at);
+CREATE INDEX IF NOT EXISTS permission_groups_app_id_idx ON public.permission_groups (app_id);
+CREATE INDEX IF NOT EXISTS permission_groups_app_group_id_idx ON public.permission_groups (app_group_id);
 
 -- Table: public.permissions
 /*
@@ -62,7 +75,8 @@ Permission statuses:
     New         = 1
     Active      = 2
     Inactive    = 3
-    Deleted     = 4
+    Deleting    = 4
+    Deleted     = 5
 */
 CREATE TABLE IF NOT EXISTS public.permissions
 (
@@ -77,14 +91,86 @@ CREATE TABLE IF NOT EXISTS public.permissions
     status_updated_at timestamp(6) without time zone NOT NULL DEFAULT (clock_timestamp() AT TIME ZONE 'UTC'::text),
     status_updated_by bigint NOT NULL,
     status_comment text COLLATE pg_catalog."default",
+    app_id bigint,
+    app_group_id bigint,
     description text COLLATE pg_catalog."default" NOT NULL,
     _version_stamp bigint NOT NULL,
     _timestamp timestamp(6) without time zone NOT NULL DEFAULT (clock_timestamp() AT TIME ZONE 'UTC'::text),
     CONSTRAINT permissions_pkey PRIMARY KEY (id),
-    CONSTRAINT permissions_name_key UNIQUE (name),
     CONSTRAINT permissions_group_id_fkey FOREIGN KEY (group_id)
         REFERENCES public.permission_groups (id) MATCH SIMPLE
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT,
+    CONSTRAINT permissions_status_check CHECK (status >= 1 AND status <= 5)
+)
+TABLESPACE pg_default;
+
+CREATE UNIQUE INDEX IF NOT EXISTS permissions_name_idx
+    ON public.permissions (lower(name))
+    WHERE status <> 5;
+
+CREATE INDEX IF NOT EXISTS permissions_created_at_idx ON public.permissions (created_at);
+CREATE INDEX IF NOT EXISTS permissions_updated_at_idx ON public.permissions (updated_at);
+CREATE INDEX IF NOT EXISTS permissions_status_idx ON public.permissions (status);
+CREATE INDEX IF NOT EXISTS permissions_status_updated_at_idx ON public.permissions (status_updated_at);
+CREATE INDEX IF NOT EXISTS permissions_app_id_idx ON public.permissions (app_id);
+CREATE INDEX IF NOT EXISTS permissions_app_group_id_idx ON public.permissions (app_group_id);
+
+CREATE TABLE IF NOT EXISTS public.role_permissions
+(
+    id bigint NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 9223372036854775807 CACHE 1 ),
+    role_id bigint NOT NULL,
+    permission_id bigint NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    created_by bigint NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL DEFAULT (clock_timestamp() AT TIME ZONE 'UTC'::text),
+    updated_by bigint NOT NULL,
+    is_deleted boolean NOT NULL DEFAULT FALSE,
+    deleted_at timestamp(6) without time zone,
+    deleted_by bigint,
+    _version_stamp bigint NOT NULL,
+    _timestamp timestamp(6) without time zone NOT NULL DEFAULT (clock_timestamp() AT TIME ZONE 'UTC'::text),
+    CONSTRAINT role_permissions_pkey PRIMARY KEY (id),
+    CONSTRAINT role_permissions_permission_id_fkey FOREIGN KEY (permission_id)
+        REFERENCES public.permissions (id) MATCH SIMPLE
         ON UPDATE CASCADE
         ON DELETE RESTRICT
 )
 TABLESPACE pg_default;
+
+CREATE UNIQUE INDEX IF NOT EXISTS role_permissions_role_id_permission_id_idx
+    ON public.role_permissions (role_id, permission_id)
+    WHERE is_deleted IS FALSE;
+
+CREATE INDEX IF NOT EXISTS role_permissions_created_at_idx ON public.role_permissions (created_at);
+CREATE INDEX IF NOT EXISTS role_permissions_updated_at_idx ON public.role_permissions (updated_at);
+CREATE INDEX IF NOT EXISTS role_permissions_is_deleted_idx ON public.role_permissions (is_deleted);
+CREATE INDEX IF NOT EXISTS role_permissions_deleted_at_idx ON public.role_permissions (deleted_at);
+
+CREATE TABLE IF NOT EXISTS public.deleted_role_permissions
+(
+    id bigint NOT NULL,
+    role_id bigint NOT NULL,
+    permission_id bigint NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    created_by bigint NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL,
+    updated_by bigint NOT NULL,
+    is_deleted boolean NOT NULL,
+    deleted_at timestamp(6) without time zone,
+    deleted_by bigint,
+    _version_stamp bigint NOT NULL,
+    _timestamp timestamp(6) without time zone NOT NULL,
+    CONSTRAINT deleted_role_permissions_pkey PRIMARY KEY (id),
+    CONSTRAINT deleted_role_permissions_permission_id_fkey FOREIGN KEY (permission_id)
+        REFERENCES public.permissions (id) MATCH SIMPLE
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT,
+    CONSTRAINT deleted_role_permissions_is_deleted_check CHECK (is_deleted IS TRUE)
+)
+TABLESPACE pg_default;
+
+CREATE INDEX IF NOT EXISTS deleted_role_permissions_created_at_idx ON public.deleted_role_permissions (created_at);
+CREATE INDEX IF NOT EXISTS deleted_role_permissions_updated_at_idx ON public.deleted_role_permissions (updated_at);
+CREATE INDEX IF NOT EXISTS deleted_role_permissions_deleted_at_idx ON public.deleted_role_permissions (deleted_at);
+CREATE INDEX IF NOT EXISTS deleted_role_permissions_role_id_permission_id_idx ON public.deleted_role_permissions (role_id, permission_id);
