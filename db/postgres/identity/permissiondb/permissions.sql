@@ -97,3 +97,110 @@ BEGIN
             RAISE;
 END;
 $$ LANGUAGE plpgsql;
+
+-- PROCEDURE: public.start_deleting_permission(bigint, bigint, text)
+/*
+Permission statuses:
+    Deleting = 4
+    Deleted  = 5
+
+Error codes:
+    NoError            = 0
+    InvalidOperation   = 3
+    PermissionNotFound = 11800
+*/
+-- Minimum transaction isolation level: Read committed.
+CREATE OR REPLACE PROCEDURE public.start_deleting_permission(
+    IN _id public.permissions.id%TYPE,
+    IN _deleted_by public.permissions.updated_by%TYPE,
+    IN _status_comment public.permissions.status_comment%TYPE,
+    OUT err_code bigint,
+    OUT err_msg text) AS $$
+DECLARE
+    _time timestamp(6) without time zone;
+    _status public.permissions.status%TYPE;
+BEGIN
+    err_code := 0; -- NoError
+    err_msg := '';
+
+    SELECT status INTO _status FROM public.permissions WHERE id = _id LIMIT 1 FOR UPDATE;
+    IF NOT FOUND THEN
+        err_code := 11800; -- PermissionNotFound
+        err_msg := 'permission not found';
+        RETURN;
+    END IF;
+
+    -- permission statuses: Deleting(4), Deleted(5)
+    IF _status = 4 OR _status = 5 THEN
+        err_code := 3; -- InvalidOperation
+        err_msg := format('invalid permission status (%s)', _status);
+        RETURN;
+    END IF;
+
+    _time := (clock_timestamp() AT TIME ZONE 'UTC');
+    -- permission status: Deleting(4)
+    UPDATE public.permissions
+        SET updated_at = _time, updated_by = _deleted_by, status = 4, status_updated_at = _time, status_updated_by = _deleted_by,
+            status_comment = _status_comment, _version_stamp = _version_stamp + 1, _timestamp = _time
+        WHERE id = _id;
+END;
+$$ LANGUAGE plpgsql;
+
+-- PROCEDURE: public.delete_permission(bigint, bigint, text)
+/*
+Permission statuses:
+    Deleting = 4
+    Deleted  = 5
+
+Error codes:
+    NoError            = 0
+    InvalidOperation   = 3
+    PermissionNotFound = 11800
+*/
+-- Minimum transaction isolation level: Read committed.
+CREATE OR REPLACE PROCEDURE public.delete_permission(
+    IN _id public.permissions.id%TYPE,
+    IN _deleted_by public.permissions.updated_by%TYPE,
+    IN _status_comment public.permissions.status_comment%TYPE,
+    OUT err_code bigint,
+    OUT err_msg text) AS $$
+DECLARE
+    _time timestamp(6) without time zone;
+    _status public.permissions.status%TYPE;
+BEGIN
+    err_code := 0; -- NoError
+    err_msg := '';
+
+    SELECT status INTO _status FROM public.permissions WHERE id = _id LIMIT 1 FOR UPDATE;
+    IF NOT FOUND THEN
+        err_code := 11800; -- PermissionNotFound
+        err_msg := 'permission not found';
+        RETURN;
+    END IF;
+
+    -- permission status: Deleting(4)
+    IF _status <> 4 THEN
+        err_code := 3; -- InvalidOperation
+        -- permission status: Deleted(5)
+        IF _status = 5 THEN
+            err_msg := 'permission has already been deleted';
+        ELSE
+            err_msg := format('invalid permission status (%s)', _status);
+        END IF;
+        RETURN;
+    END IF;
+
+    IF EXISTS (SELECT 1 FROM public.role_permissions WHERE permission_id = _id AND is_deleted IS FALSE LIMIT 1) THEN
+        err_code := 3; -- InvalidOperation
+        err_msg := 'permission is granted';
+        RETURN;
+    END IF;
+
+    _time := (clock_timestamp() AT TIME ZONE 'UTC');
+    -- permission status: Deleted(5)
+    UPDATE public.permissions
+        SET updated_at = _time, updated_by = _deleted_by, status = 5, status_updated_at = _time, status_updated_by = _deleted_by,
+            status_comment = _status_comment, _version_stamp = _version_stamp + 1, _timestamp = _time
+        WHERE id = _id;
+END;
+$$ LANGUAGE plpgsql;
