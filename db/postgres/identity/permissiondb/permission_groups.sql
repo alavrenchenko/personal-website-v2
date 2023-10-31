@@ -12,6 +12,20 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
+-- FUNCTION: public.permission_group_exists(character varying)
+/*
+Permission group statuses:
+    Deleted = 5
+*/
+CREATE OR REPLACE FUNCTION public.permission_group_exists(
+    _name public.permission_groups.name%TYPE
+) RETURNS boolean AS $$
+BEGIN
+   -- permission status: Deleted(5)
+    RETURN EXISTS (SELECT 1 FROM public.permission_groups WHERE lower(name) = lower(_name) AND status <> 5 LIMIT 1);
+END;
+$$ LANGUAGE plpgsql;
+
 -- PROCEDURE: public.create_permission_group(character varying, bigint, text, bigint, text)
 /*
 Permission group statuses:
