@@ -55,7 +55,7 @@ BEGIN
     err_code := 0; -- NoError
     err_msg := '';
 
-    IF role_exists(_name) THEN
+    IF public.role_exists(_name) THEN
         err_code := 11601; -- RoleAlreadyExists
         err_msg := 'role with the same name already exists';
         RETURN;
@@ -73,7 +73,7 @@ BEGIN
     
     EXCEPTION
         WHEN unique_violation THEN
-            IF _id = 0 AND role_exists(_name) THEN
+            IF _id = 0 AND public.role_exists(_name) THEN
                 err_code := 11601; -- RoleAlreadyExists
                 err_msg := 'role with the same name already exists';
                 RETURN;

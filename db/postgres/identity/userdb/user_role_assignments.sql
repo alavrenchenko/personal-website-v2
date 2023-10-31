@@ -68,7 +68,7 @@ BEGIN
     err_code := 0; -- NoError
     err_msg := '';
 
-    IF user_role_assignment_exists(_user_id, _role_id) THEN
+    IF public.user_role_assignment_exists(_user_id, _role_id) THEN
         err_code := 13401; -- RoleAssignmentAlreadyExists
         err_msg := 'role assignment with the same params already exists';
         RETURN;
@@ -83,7 +83,7 @@ BEGIN
 
     EXCEPTION
         WHEN unique_violation THEN
-            IF user_role_assignment_exists(_user_id, _role_id) THEN
+            IF public.user_role_assignment_exists(_user_id, _role_id) THEN
                 err_code := 13401; -- RoleAssignmentAlreadyExists
                 err_msg := 'role assignment with the same params already exists';
                 RETURN;

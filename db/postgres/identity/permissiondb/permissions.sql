@@ -60,7 +60,7 @@ BEGIN
     err_code := 0; -- NoError
     err_msg := '';
 
-    IF permission_exists(_name) THEN
+    IF public.permission_exists(_name) THEN
         err_code := 11801; -- PermissionAlreadyExists
         err_msg := 'permission with the same name already exists';
         RETURN;
@@ -89,7 +89,7 @@ BEGIN
 
     EXCEPTION
         WHEN unique_violation THEN
-            IF permission_exists(_name) THEN
+            IF public.permission_exists(_name) THEN
                 err_code := 11801; -- PermissionAlreadyExists
                 err_msg := 'permission with the same name already exists';
                 RETURN;

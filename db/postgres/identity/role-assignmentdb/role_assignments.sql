@@ -71,7 +71,7 @@ BEGIN
     err_code := 0; -- NoError
     err_msg := '';
 
-    IF role_assignment_exists(_role_id, _assigned_to, _assignee_type) THEN
+    IF public.role_assignment_exists(_role_id, _assigned_to, _assignee_type) THEN
         err_code := 13401; -- RoleAssignmentAlreadyExists
         err_msg := 'role assignment with the same params already exists';
         RETURN;
@@ -86,7 +86,7 @@ BEGIN
 
     EXCEPTION
         WHEN unique_violation THEN
-            IF role_assignment_exists(_role_id, _assigned_to, _assignee_type) THEN
+            IF public.role_assignment_exists(_role_id, _assigned_to, _assignee_type) THEN
                 err_code := 13401; -- RoleAssignmentAlreadyExists
                 err_msg := 'role assignment with the same params already exists';
                 RETURN;
@@ -143,7 +143,7 @@ BEGIN
         SET updated_at = _time, updated_by = _deleted_by, status = 4, status_updated_at = _time, status_updated_by = _deleted_by,
             status_comment = _status_comment, _version_stamp = _version_stamp + 1, _timestamp = _time
         WHERE id = _id;
-        
+
     _old_status := _status;
 END;
 $$ LANGUAGE plpgsql;
