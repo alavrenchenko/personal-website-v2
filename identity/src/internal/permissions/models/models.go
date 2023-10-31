@@ -23,7 +23,8 @@ const (
 	PermissionStatusNew      PermissionStatus = 1
 	PermissionStatusActive   PermissionStatus = 2
 	PermissionStatusInactive PermissionStatus = 3
-	PermissionStatusDeleted  PermissionStatus = 4
+	PermissionStatusDeleting PermissionStatus = 4
+	PermissionStatusDeleted  PermissionStatus = 5
 )
 
 // The permission group status.
@@ -35,5 +36,6 @@ const (
 	PermissionGroupStatusNew      PermissionGroupStatus = 1
 	PermissionGroupStatusActive   PermissionGroupStatus = 2
 	PermissionGroupStatusInactive PermissionGroupStatus = 3
-	PermissionGroupStatusDeleted  PermissionGroupStatus = 4
+	PermissionGroupStatusDeleting PermissionGroupStatus = 4
+	PermissionGroupStatusDeleted  PermissionGroupStatus = 5
 )

@@ -59,6 +59,12 @@ type Permission struct {
 	// The permission status comment.
 	StatusComment *string `db:"status_comment"`
 
+	// The app ID.
+	AppId *uint64 `db:"app_id"`
+
+	// The app group ID.
+	AppGroupId *uint64 `db:"app_group_id"`
+
 	// The permission description.
 	Description string `db:"description"`
 
@@ -108,8 +114,44 @@ type PermissionGroup struct {
 	// The app ID.
 	AppId *uint64 `db:"app_id"`
 
+	// The app group ID.
+	AppGroupId *uint64 `db:"app_group_id"`
+
 	// The permission group description.
 	Description string `db:"description"`
+
+	// rowversion
+	VersionStamp uint64 `db:"_version_stamp"`
+
+	// row timestamp
+	Timestamp time.Time `db:"_timestamp"`
+}
+
+// The role permission info.
+type RolePermissionInfo struct {
+	// The unique ID to identify the role permission info.
+	Id uint64 `db:"id"`
+
+	// The role ID.
+	RoleId uint64 `db:"role_id"`
+
+	// The permission ID.
+	PermissionId uint64 `db:"permission_id"`
+
+	// It stores the date and time at which the role permission info was created.
+	CreatedAt time.Time `db:"created_at"`
+
+	// The user ID to identify the user who created the role permission info.
+	CreatedBy uint64 `db:"created_by"`
+
+	// It indicates whether role permission info has been deleted.
+	IsDeleted bool `db:"is_deleted"`
+
+	// It stores the date and time at which the role permission info was deleted.
+	DeletedAt *time.Time `db:"deleted_at"`
+
+	// The user ID to identify the user who deleted the role permission info.
+	DeletedBy *uint64 `db:"deleted_by"`
 
 	// rowversion
 	VersionStamp uint64 `db:"_version_stamp"`
