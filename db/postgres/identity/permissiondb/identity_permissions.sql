@@ -123,8 +123,6 @@ CREATE TABLE IF NOT EXISTS public.role_permissions
     permission_id bigint NOT NULL,
     created_at timestamp(6) without time zone NOT NULL,
     created_by bigint NOT NULL,
-    updated_at timestamp(6) without time zone NOT NULL DEFAULT (clock_timestamp() AT TIME ZONE 'UTC'::text),
-    updated_by bigint NOT NULL,
     is_deleted boolean NOT NULL DEFAULT FALSE,
     deleted_at timestamp(6) without time zone,
     deleted_by bigint,
@@ -143,7 +141,6 @@ CREATE UNIQUE INDEX IF NOT EXISTS role_permissions_role_id_permission_id_idx
     WHERE is_deleted IS FALSE;
 
 CREATE INDEX IF NOT EXISTS role_permissions_created_at_idx ON public.role_permissions (created_at);
-CREATE INDEX IF NOT EXISTS role_permissions_updated_at_idx ON public.role_permissions (updated_at);
 CREATE INDEX IF NOT EXISTS role_permissions_is_deleted_idx ON public.role_permissions (is_deleted);
 CREATE INDEX IF NOT EXISTS role_permissions_deleted_at_idx ON public.role_permissions (deleted_at);
 
@@ -154,8 +151,6 @@ CREATE TABLE IF NOT EXISTS public.deleted_role_permissions
     permission_id bigint NOT NULL,
     created_at timestamp(6) without time zone NOT NULL,
     created_by bigint NOT NULL,
-    updated_at timestamp(6) without time zone NOT NULL,
-    updated_by bigint NOT NULL,
     is_deleted boolean NOT NULL,
     deleted_at timestamp(6) without time zone,
     deleted_by bigint,
@@ -171,6 +166,5 @@ CREATE TABLE IF NOT EXISTS public.deleted_role_permissions
 TABLESPACE pg_default;
 
 CREATE INDEX IF NOT EXISTS deleted_role_permissions_created_at_idx ON public.deleted_role_permissions (created_at);
-CREATE INDEX IF NOT EXISTS deleted_role_permissions_updated_at_idx ON public.deleted_role_permissions (updated_at);
 CREATE INDEX IF NOT EXISTS deleted_role_permissions_deleted_at_idx ON public.deleted_role_permissions (deleted_at);
 CREATE INDEX IF NOT EXISTS deleted_role_permissions_role_id_permission_id_idx ON public.deleted_role_permissions (role_id, permission_id);
