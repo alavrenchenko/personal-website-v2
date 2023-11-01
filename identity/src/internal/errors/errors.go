@@ -41,6 +41,9 @@ const (
 	ErrorCodePermissionNotFound      errors.ErrorCode = 31800
 	ErrorCodePermissionAlreadyExists errors.ErrorCode = 31801
 
+	// Permission already granted to the role.
+	ErrorCodePermissionAlreadyGranted errors.ErrorCode = 31900
+
 	// Permission group error codes (32000-32199).
 	ErrorCodePermissionGroupNotFound      errors.ErrorCode = 32000
 	ErrorCodePermissionGroupAlreadyExists errors.ErrorCode = 32001
@@ -93,6 +96,8 @@ var (
 	// Permission errors.
 	ErrPermissionNotFound      = errors.NewError(ErrorCodePermissionNotFound, "permission not found")
 	ErrPermissionAlreadyExists = errors.NewError(ErrorCodePermissionAlreadyExists, "permission with the same name already exists")
+
+	ErrPermissionAlreadyGranted = errors.NewError(ErrorCodePermissionAlreadyGranted, "permission already granted to the role")
 
 	// Permission group errors.
 	ErrPermissionGroupNotFound      = errors.NewError(ErrorCodePermissionGroupNotFound, "permission group not found")
