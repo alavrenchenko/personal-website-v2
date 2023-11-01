@@ -159,6 +159,6 @@ BEGIN
 
     UPDATE public.role_info
         SET updated_at = _time, updated_by = _deleted_by, is_deleted = TRUE, deleted_at = _time, deleted_by = _deleted_by, _version_stamp = _version_stamp + 1, _timestamp = _time
-    WHERE role_id = _role_id;
+        WHERE role_id = _role_id;
 END;
 $$ LANGUAGE plpgsql;
