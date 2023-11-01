@@ -30,17 +30,88 @@ CREATE OR REPLACE FUNCTION public.are_permissions_granted(
     _permission_ids bigint[]
 ) RETURNS boolean AS $$
 DECLARE
-    _id bigint;
+    _permission_id bigint;
 BEGIN
     IF array_length(_permission_ids, 1) IS NULL THEN
         RETURN FALSE;
     END IF;
 
-    FOREACH _id IN ARRAY _permission_ids LOOP
-        IF NOT EXISTS (SELECT 1 FROM public.role_permissions WHERE role_id = _role_id AND permission_id = _id AND is_deleted IS FALSE LIMIT 1) THEN
+    FOREACH _permission_id IN ARRAY _permission_ids LOOP
+        IF NOT EXISTS (SELECT 1 FROM public.role_permissions WHERE role_id = _role_id AND permission_id = _permission_id AND is_deleted IS FALSE LIMIT 1) THEN
             RETURN FALSE;
         END IF;
     END LOOP;
     RETURN TRUE;
+END;
+$$ LANGUAGE plpgsql;
+
+-- PROCEDURE: public.grant_permissions(bigint, bigint[], bigint)
+/*
+Permission statuses:
+    Active = 2
+
+Error codes:
+    NoError                  = 0
+    InvalidOperation         = 3
+    InvalidData              = 1000
+    PermissionNotFound       = 11800
+    PermissionAlreadyGranted = 11900
+*/
+-- Minimum transaction isolation level: Serializable.
+CREATE OR REPLACE PROCEDURE public.grant_permissions(
+    IN _role_id public.role_permissions.role_id%TYPE,
+    IN _permission_ids bigint[],
+    IN _operation_user_id public.role_permissions.created_by%TYPE,
+    OUT err_code bigint,
+    OUT err_msg text) AS $$
+DECLARE
+    _time timestamp(6) without time zone;
+    _permission_id bigint;
+    _status public.permissions.status%TYPE;
+BEGIN
+    err_code := 0; -- NoError
+    err_msg := '';
+
+    IF array_length(_permission_ids, 1) IS NULL THEN
+        err_code := 1000; -- InvalidData
+        err_msg := 'number of permission ids is 0';
+        RETURN;
+    END IF;
+
+    _time := (clock_timestamp() AT TIME ZONE 'UTC');
+
+    FOREACH _permission_id IN ARRAY _permission_ids LOOP
+        SELECT status INTO _status FROM public.permissions WHERE id = _permission_id LIMIT 1;
+        IF NOT FOUND THEN
+            err_code := 11800; -- PermissionNotFound
+            err_msg := format('permission (%s) not found', _permission_id);
+            RETURN;
+        END IF;
+
+        -- permission status: Active(2)
+        IF _status <> 2 THEN
+            err_code := 3; -- InvalidOperation
+            err_msg := format('invalid permission (%s) status (%s)', _permission_id, _status);
+            RETURN;
+        END IF;
+
+        IF public.is_permission_granted(_role_id, _permission_id) THEN
+            err_code := 11900; -- PermissionAlreadyGranted
+            err_msg := format('permission (%s) already granted to the role', _permission_id);
+            RETURN;
+        END IF;
+
+        INSERT INTO public.role_assignments(role_id, permission_id, created_at, created_by, _version_stamp, _timestamp)
+            VALUES (_role_id, _permission_id, _time, _operation_user_id, 1, _time);
+    END LOOP;
+
+    EXCEPTION
+        WHEN unique_violation THEN
+            IF _permission_id IS NOT NULL AND public.is_permission_granted(_role_id, _permission_id) THEN
+                err_code := 11900; -- PermissionAlreadyGranted
+                err_msg := format('permission (%s) already granted to the role', _permission_id);
+                RETURN;
+            END IF;
+            RAISE;
 END;
 $$ LANGUAGE plpgsql;

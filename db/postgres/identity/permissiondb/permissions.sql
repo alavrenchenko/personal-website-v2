@@ -157,7 +157,7 @@ Error codes:
     InvalidOperation   = 3
     PermissionNotFound = 11800
 */
--- Minimum transaction isolation level: Read committed.
+-- Minimum transaction isolation level: Serializable.
 CREATE OR REPLACE PROCEDURE public.delete_permission(
     IN _id public.permissions.id%TYPE,
     IN _deleted_by public.permissions.updated_by%TYPE,
