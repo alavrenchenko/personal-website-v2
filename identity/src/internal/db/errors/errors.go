@@ -43,8 +43,14 @@ const (
 	// The permission with the same name already exists.
 	DbErrorCodePermissionAlreadyExists errors.DbErrorCode = 11801
 
+	DbErrorCodeRolePermissionInfoNotFound      errors.DbErrorCode = 11900
+	DbErrorCodeRolePermissionInfoAlreadyExists errors.DbErrorCode = 11901
+
 	// Permission already granted to the role.
-	DbErrorCodePermissionAlreadyGranted errors.DbErrorCode = 11900
+	DbErrorCodePermissionAlreadyGranted errors.DbErrorCode = 11902
+
+	// Permission not granted to the role.
+	DbErrorCodePermissionNotGranted errors.DbErrorCode = 11903
 
 	// Permission group error codes (12000-12199).
 	DbErrorCodePermissionGroupNotFound errors.DbErrorCode = 12000
