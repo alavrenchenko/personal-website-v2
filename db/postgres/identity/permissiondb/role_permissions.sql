@@ -211,3 +211,52 @@ BEGIN
     END LOOP;
 END;
 $$ LANGUAGE plpgsql;
+
+-- PROCEDURE: public.revoke_permissions_from_all(bigint[], bigint)
+/*
+Error codes:
+    NoError       = 0
+    InternalError = 2
+    InvalidData   = 1000
+*/
+-- Minimum transaction isolation level: Read committed.
+CREATE OR REPLACE PROCEDURE public.revoke_permissions_from_all(
+    IN _permission_ids bigint[],
+    IN _operation_user_id public.role_permissions.deleted_by%TYPE,
+    OUT err_code bigint,
+    OUT err_msg text) AS $$
+DECLARE
+    _time timestamp(6) without time zone;
+    -- rows need to be sorted to avoid deadlocks
+    _rpc CURSOR FOR
+        SELECT id FROM public.role_permissions
+            WHERE permission_id = ANY (_permission_ids) AND is_deleted IS FALSE
+            ORDER BY permission_id, id
+            FOR UPDATE;
+BEGIN
+    err_code := 0; -- NoError
+    err_msg := '';
+
+    IF array_length(_permission_ids, 1) IS NULL THEN
+        err_code := 1000; -- InvalidData
+        err_msg := 'number of permission ids is 0';
+        RETURN;
+    END IF;
+
+   _time := (clock_timestamp() AT TIME ZONE 'UTC');
+
+    FOR _item IN _rpc LOOP
+        UPDATE public.role_permissions
+            SET is_deleted = TRUE, deleted_at = _time, deleted_by = _operation_user_id, _version_stamp = _version_stamp + 1, _timestamp = _time
+            WHERE CURRENT OF _rpc;
+
+        INSERT INTO public.deleted_role_permissions SELECT * FROM public.role_permissions WHERE id = _item.id LIMIT 1;
+        -- an insertion check
+        IF NOT FOUND THEN
+            err_code := 2; -- InternalError
+            err_msg := 'role permission info wasn''t inserted into deleted_role_permissions';
+            RETURN;
+        END IF;
+    END LOOP;
+END;
+$$ LANGUAGE plpgsql;
