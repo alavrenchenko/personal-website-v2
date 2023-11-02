@@ -199,6 +199,28 @@ func (m *PermissionManager) GetAllByIds(ctx *actions.OperationContext, ids []uin
 	return ps, nil
 }
 
+// GetAllByNames gets all permissions by the specified permission names.
+func (m *PermissionManager) GetAllByNames(ctx *actions.OperationContext, names []string) ([]*dbmodels.Permission, error) {
+	var ps []*dbmodels.Permission
+	err := m.opExecutor.Exec(ctx, iactions.OperationTypePermissionManager_GetAllByNames, []*actions.OperationParam{actions.NewOperationParam("names", names)},
+		func(opCtx *actions.OperationContext) error {
+			if len(names) == 0 {
+				return errors.NewError(errors.ErrorCodeInvalidData, "number of names is 0")
+			}
+
+			var err error
+			if ps, err = m.permissionStore.GetAllByNames(opCtx, names); err != nil {
+				return fmt.Errorf("[manager.PermissionManager.GetAllByNames] get all permissions by names: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("[manager.PermissionManager.GetAllByNames] execute an operation: %w", err)
+	}
+	return ps, nil
+}
+
 // Exists returns true if the permission exists.
 func (m *PermissionManager) Exists(ctx *actions.OperationContext, name string) (bool, error) {
 	var exists bool

@@ -277,6 +277,45 @@ func (s *PermissionStore) GetAllByIds(ctx *actions.OperationContext, ids []uint6
 	return ps, nil
 }
 
+// GetAllByNames gets all permissions by the specified permission names.
+func (s *PermissionStore) GetAllByNames(ctx *actions.OperationContext, names []string) ([]*dbmodels.Permission, error) {
+	var ps []*dbmodels.Permission
+	err := s.opExecutor.Exec(ctx, iactions.OperationTypePermissionStore_GetAllByNames, []*actions.OperationParam{actions.NewOperationParam("names", names)},
+		func(opCtx *actions.OperationContext) error {
+			if len(names) == 0 {
+				return errs.NewError(errs.ErrorCodeInvalidData, "number of names is 0")
+			}
+
+			const query = "SELECT * FROM " + permissionsTable + " WHERE name = ANY ($1)"
+			var err error
+			if ps, err = s.store.FindAll(opCtx.Ctx, query, names); err != nil {
+				return fmt.Errorf("[stores.PermissionStore.GetAllByNames] find all permissions by names: %w", err)
+			}
+
+			if len(ps) == 0 {
+				return errs.NewError(ierrors.ErrorCodePermissionNotFound, fmt.Sprintf("permission (%s) not found", names[0]))
+			}
+
+			pslen := len(ps)
+			m := make(map[string]bool, pslen)
+			for i := 0; i < pslen; i++ {
+				m[ps[i].Name] = true
+			}
+
+			for i := 0; i < len(names); i++ {
+				if !m[names[i]] {
+					return errs.NewError(ierrors.ErrorCodePermissionNotFound, fmt.Sprintf("permission (%s) not found", names[i]))
+				}
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("[stores.PermissionStore.GetAllByNames] execute an operation: %w", err)
+	}
+	return ps, nil
+}
+
 // Exists returns true if the permission exists.
 func (s *PermissionStore) Exists(ctx *actions.OperationContext, name string) (bool, error) {
 	var exists bool
