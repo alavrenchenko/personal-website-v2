@@ -106,5 +106,5 @@ type RolePermissionStore interface {
 	GetAllPermissionIdsByRoleId(ctx *actions.OperationContext, roleId uint64) ([]uint64, error)
 
 	// GetAllRoleIdsByPermissionId gets all IDs of the roles that are granted the specified permission.
-	GetAllRoleIdsByPermissionId(ctx *actions.OperationContext, roleId uint64) ([]uint64, error)
+	GetAllRoleIdsByPermissionId(ctx *actions.OperationContext, permissionId uint64) ([]uint64, error)
 }
