@@ -62,6 +62,9 @@ type PermissionGroupStore interface {
 	// FindByName finds and returns a permission group, if any, by the specified permission group name.
 	FindByName(ctx *actions.OperationContext, name string) (*dbmodels.PermissionGroup, error)
 
+	// GetAllByIds gets all permission groups by the specified permission group IDs.
+	GetAllByIds(ctx *actions.OperationContext, ids []uint64) ([]*dbmodels.PermissionGroup, error)
+
 	// Exists returns true if the permission group exists.
 	Exists(ctx *actions.OperationContext, name string) (bool, error)
 

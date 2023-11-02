@@ -196,6 +196,45 @@ func (s *PermissionGroupStore) FindByName(ctx *actions.OperationContext, name st
 	return g, nil
 }
 
+// GetAllByIds gets all permission groups by the specified permission group IDs.
+func (s *PermissionGroupStore) GetAllByIds(ctx *actions.OperationContext, ids []uint64) ([]*dbmodels.PermissionGroup, error) {
+	var gs []*dbmodels.PermissionGroup
+	err := s.opExecutor.Exec(ctx, iactions.OperationTypePermissionGroupStore_GetAllByIds, []*actions.OperationParam{actions.NewOperationParam("ids", ids)},
+		func(opCtx *actions.OperationContext) error {
+			if len(ids) == 0 {
+				return errs.NewError(errs.ErrorCodeInvalidData, "number of ids is 0")
+			}
+
+			const query = "SELECT * FROM " + permissionGroupsTable + " WHERE id = ANY ($1)"
+			var err error
+			if gs, err = s.store.FindAll(opCtx.Ctx, query, ids); err != nil {
+				return fmt.Errorf("[stores.PermissionGroupStore.GetAllByIds] find all permission groups by ids: %w", err)
+			}
+
+			if len(gs) == 0 {
+				return errs.NewError(ierrors.ErrorCodePermissionGroupNotFound, fmt.Sprintf("permission group (%d) not found", ids[0]))
+			}
+
+			gslen := len(gs)
+			m := make(map[uint64]bool, gslen)
+			for i := 0; i < gslen; i++ {
+				m[gs[i].Id] = true
+			}
+
+			for i := 0; i < len(ids); i++ {
+				if !m[ids[i]] {
+					return errs.NewError(ierrors.ErrorCodePermissionGroupNotFound, fmt.Sprintf("permission group (%d) not found", ids[i]))
+				}
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("[stores.PermissionGroupStore.GetAllByIds] execute an operation: %w", err)
+	}
+	return gs, nil
+}
+
 // Exists returns true if the permission group exists.
 func (s *PermissionGroupStore) Exists(ctx *actions.OperationContext, name string) (bool, error) {
 	var exists bool
