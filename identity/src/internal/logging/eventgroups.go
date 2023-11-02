@@ -40,6 +40,7 @@ const (
 	EventGroupGroupRoleAssignment logging.EventGroup = 1014
 	EventGroupUserRole            logging.EventGroup = 1015
 	EventGroupGroupRole           logging.EventGroup = 1016
+	EventGroupRolePermission      logging.EventGroup = 1017
 
 	EventGroupUserStore             logging.EventGroup = 1050
 	EventGroupClientStore           logging.EventGroup = 1051

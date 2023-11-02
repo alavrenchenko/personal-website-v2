@@ -77,6 +77,9 @@ var (
 	// GroupRole events (id: 0, 13200-13399).
 	GroupRoleEvent = logging.NewEvent(0, "GroupRole", logging.EventCategoryCommon, amlogging.EventGroupGroupRole)
 
+	// RolePermission events (id: 0, 13400-13599).
+	RolePermissionEvent = logging.NewEvent(0, "RolePermission", logging.EventCategoryCommon, amlogging.EventGroupRolePermission)
+
 	// UserStore events (id: 0, 20200-20399).
 	UserStoreEvent = logging.NewEvent(0, "UserStore", logging.EventCategoryDatabase, amlogging.EventGroupUserStore)
 
