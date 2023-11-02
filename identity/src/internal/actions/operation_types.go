@@ -167,6 +167,19 @@ const (
 	OperationTypeRolesState_DecrActiveAssignments   actions.OperationType = 19504
 	OperationTypeRolesState_DecrExistingAssignments actions.OperationType = 19505
 
+	// RolePermissionManager operation types (20000-20499).
+	OperationTypeRolePermissionManager_Grant                       actions.OperationType = 20000
+	OperationTypeRolePermissionManager_Revoke                      actions.OperationType = 20001
+	OperationTypeRolePermissionManager_RevokeAll                   actions.OperationType = 20002
+	OperationTypeRolePermissionManager_RevokeFromAll               actions.OperationType = 20003
+	OperationTypeRolePermissionManager_Update                      actions.OperationType = 20004
+	OperationTypeRolePermissionManager_IsGranted                   actions.OperationType = 20005
+	OperationTypeRolePermissionManager_AreGranted                  actions.OperationType = 20006
+	OperationTypeRolePermissionManager_GetAllPermissionsByRoleId   actions.OperationType = 20007
+	OperationTypeRolePermissionManager_GetAllPermissionIdsByRoleId actions.OperationType = 20008
+	OperationTypeRolePermissionManager_GetAllRolesByPermissionId   actions.OperationType = 20009
+	OperationTypeRolePermissionManager_GetAllRoleIdsByPermissionId actions.OperationType = 20010
+
 	// UserStore operation types (31000-31499).
 	OperationTypeUserStore_Create                actions.OperationType = 31000
 	OperationTypeUserStore_FindById              actions.OperationType = 31001
@@ -330,6 +343,19 @@ const (
 	OperationTypeRolesStateStore_IncrActiveAssignments   actions.OperationType = 39503
 	OperationTypeRolesStateStore_DecrActiveAssignments   actions.OperationType = 39504
 	OperationTypeRolesStateStore_DecrExistingAssignments actions.OperationType = 39505
+
+	// RolePermissionStore operation types (40000-40499).
+	OperationTypeRolePermissionStore_Grant                       actions.OperationType = 40000
+	OperationTypeRolePermissionStore_Revoke                      actions.OperationType = 40001
+	OperationTypeRolePermissionStore_RevokeAll                   actions.OperationType = 40002
+	OperationTypeRolePermissionStore_RevokeFromAll               actions.OperationType = 40003
+	OperationTypeRolePermissionStore_Update                      actions.OperationType = 40004
+	OperationTypeRolePermissionStore_IsGranted                   actions.OperationType = 40005
+	OperationTypeRolePermissionStore_AreGranted                  actions.OperationType = 40006
+	OperationTypeRolePermissionStore_GetAllPermissionsByRoleId   actions.OperationType = 40007
+	OperationTypeRolePermissionStore_GetAllPermissionIdsByRoleId actions.OperationType = 40008
+	OperationTypeRolePermissionStore_GetAllRolesByPermissionId   actions.OperationType = 40009
+	OperationTypeRolePermissionStore_GetAllRoleIdsByPermissionId actions.OperationType = 40010
 
 	// caching (50000-59999)
 
