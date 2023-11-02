@@ -44,6 +44,9 @@ type RoleStore interface {
 	// GetAllByIds gets all roles by the specified role IDs.
 	GetAllByIds(ctx *actions.OperationContext, ids []uint64) ([]*dbmodels.Role, error)
 
+	// Exists returns true if the role exists.
+	Exists(ctx *actions.OperationContext, name string) (bool, error)
+
 	// GetTypeById gets a role type by the specified role ID.
 	GetTypeById(ctx *actions.OperationContext, id uint64) (models.RoleType, error)
 

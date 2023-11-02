@@ -192,8 +192,9 @@ const (
 	OperationTypeRoleStore_FindById      actions.OperationType = 32503
 	OperationTypeRoleStore_FindByName    actions.OperationType = 32504
 	OperationTypeRoleStore_GetAllByIds   actions.OperationType = 32505
-	OperationTypeRoleStore_GetTypeById   actions.OperationType = 32506
-	OperationTypeRoleStore_GetStatusById actions.OperationType = 32507
+	OperationTypeRoleStore_Exists        actions.OperationType = 32506
+	OperationTypeRoleStore_GetTypeById   actions.OperationType = 32507
+	OperationTypeRoleStore_GetStatusById actions.OperationType = 32508
 
 	// PermissionStore operation types (33000-33499).
 	OperationTypePermissionStore_Create        actions.OperationType = 33000
