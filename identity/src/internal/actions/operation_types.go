@@ -205,9 +205,12 @@ const (
 
 	// PermissionGroupStore operation types (33500-33999).
 	OperationTypePermissionGroupStore_Create        actions.OperationType = 33500
-	OperationTypePermissionGroupStore_FindById      actions.OperationType = 33501
-	OperationTypePermissionGroupStore_FindByName    actions.OperationType = 33502
-	OperationTypePermissionGroupStore_GetStatusById actions.OperationType = 33503
+	OperationTypePermissionGroupStore_StartDeleting actions.OperationType = 33501
+	OperationTypePermissionGroupStore_Delete        actions.OperationType = 33502
+	OperationTypePermissionGroupStore_FindById      actions.OperationType = 33503
+	OperationTypePermissionGroupStore_FindByName    actions.OperationType = 33504
+	OperationTypePermissionGroupStore_Exists        actions.OperationType = 33505
+	OperationTypePermissionGroupStore_GetStatusById actions.OperationType = 33506
 
 	// UserAgentStore operation types (34000-34499).
 	OperationTypeUserAgentStore_Create                                 actions.OperationType = 34000

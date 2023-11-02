@@ -31,6 +31,7 @@ import (
 	"personal-website-v2/pkg/actions"
 	dberrors "personal-website-v2/pkg/db/errors"
 	"personal-website-v2/pkg/db/postgres"
+	errs "personal-website-v2/pkg/errors"
 	actionhelper "personal-website-v2/pkg/helper/actions"
 	"personal-website-v2/pkg/logging"
 	lcontext "personal-website-v2/pkg/logging/context"
@@ -119,6 +120,44 @@ func (s *PermissionGroupStore) Create(ctx *actions.OperationContext, data *group
 	return id, nil
 }
 
+// Delete deletes a permission group by the specified permission group ID.
+func (s *PermissionGroupStore) Delete(ctx *actions.OperationContext, id uint64) error {
+	err := s.opExecutor.Exec(ctx, iactions.OperationTypePermissionGroupStore_Delete, []*actions.OperationParam{actions.NewOperationParam("id", id)},
+		func(opCtx *actions.OperationContext) error {
+			err := s.txManager.ExecWithReadCommittedLevel(opCtx.Ctx, func(txCtx context.Context, tx pgx.Tx) error {
+				var errCode dberrors.DbErrorCode
+				var errMsg string
+				// PROCEDURE: public.delete_permission_group(IN _id, IN _deleted_by, IN _status_comment, OUT err_code, OUT err_msg)
+				const query = "CALL public.delete_permission_group($1, $2, 'deletion', NULL, NULL)"
+				r := tx.QueryRow(txCtx, query, id, opCtx.UserId.Value)
+
+				if err := r.Scan(&errCode, &errMsg); err != nil {
+					return fmt.Errorf("[stores.PermissionGroupStore.Delete] execute a query (delete_permission_group): %w", err)
+				}
+
+				switch errCode {
+				case dberrors.DbErrorCodeNoError:
+					return nil
+				case dberrors.DbErrorCodeInvalidOperation:
+					return errs.NewError(errs.ErrorCodeInvalidOperation, errMsg)
+				case idberrors.DbErrorCodePermissionGroupNotFound:
+					return ierrors.ErrPermissionGroupNotFound
+				}
+				// unknown error
+				return fmt.Errorf("[stores.PermissionGroupStore.Delete] invalid operation: %w", dberrors.NewDbError(errCode, errMsg))
+			})
+			if err != nil {
+				return fmt.Errorf("[stores.PermissionGroupStore.Delete] execute a transaction: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("[stores.PermissionGroupStore.Delete] execute an operation: %w", err)
+	}
+	return nil
+}
+
 // FindById finds and returns a permission group, if any, by the specified permission group ID.
 func (s *PermissionGroupStore) FindById(ctx *actions.OperationContext, id uint64) (*dbmodels.PermissionGroup, error) {
 	var g *dbmodels.PermissionGroup
@@ -155,6 +194,32 @@ func (s *PermissionGroupStore) FindByName(ctx *actions.OperationContext, name st
 		return nil, fmt.Errorf("[stores.PermissionGroupStore.FindByName] execute an operation: %w", err)
 	}
 	return g, nil
+}
+
+// Exists returns true if the permission group exists.
+func (s *PermissionGroupStore) Exists(ctx *actions.OperationContext, name string) (bool, error) {
+	var exists bool
+	err := s.opExecutor.Exec(ctx, iactions.OperationTypePermissionGroupStore_Exists, []*actions.OperationParam{actions.NewOperationParam("name", name)},
+		func(opCtx *actions.OperationContext) error {
+			conn, err := s.db.ConnPool.Acquire(opCtx.Ctx)
+			if err != nil {
+				return fmt.Errorf("[stores.PermissionGroupStore.Exists] acquire a connection: %w", err)
+			}
+			defer conn.Release()
+
+			// FUNCTION: public.permission_group_exists(_name) RETURNS boolean
+			const query = "SELECT public.permission_group_exists($1)"
+
+			if err = conn.QueryRow(opCtx.Ctx, query, name).Scan(&exists); err != nil {
+				return fmt.Errorf("[stores.PermissionGroupStore.Exists] execute a query (permission_group_exists): %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return false, fmt.Errorf("[stores.PermissionGroupStore.Exists] execute an operation: %w", err)
+	}
+	return exists, nil
 }
 
 // GetStatusById gets a permission group status by the specified permission group ID.
