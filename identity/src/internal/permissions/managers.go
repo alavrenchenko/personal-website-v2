@@ -49,11 +49,17 @@ type PermissionGroupManager interface {
 	// Create creates a permission group and returns the permission group ID if the operation is successful.
 	Create(ctx *actions.OperationContext, data *groups.CreateOperationData) (uint64, error)
 
+	// Delete deletes a permission group by the specified permission group ID.
+	Delete(ctx *actions.OperationContext, id uint64) error
+
 	// FindById finds and returns a permission group, if any, by the specified permission group ID.
 	FindById(ctx *actions.OperationContext, id uint64) (*dbmodels.PermissionGroup, error)
 
 	// FindByName finds and returns a permission group, if any, by the specified permission group name.
 	FindByName(ctx *actions.OperationContext, name string) (*dbmodels.PermissionGroup, error)
+
+	// Exists returns true if the permission group exists.
+	Exists(ctx *actions.OperationContext, name string) (bool, error)
 
 	// GetStatusById gets a permission group status by the specified permission group ID.
 	GetStatusById(ctx *actions.OperationContext, id uint64) (models.PermissionGroupStatus, error)

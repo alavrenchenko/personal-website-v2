@@ -27,6 +27,9 @@ type CreateOperationData struct {
 	// The app ID.
 	AppId nullable.Nullable[uint64] `json:"appId"`
 
+	// The app group ID.
+	AppGroupId nullable.Nullable[uint64] `json:"appGroupId"`
+
 	// The permission group description.
 	Description string `json:"description"`
 }

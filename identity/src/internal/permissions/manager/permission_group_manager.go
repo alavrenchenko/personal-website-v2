@@ -93,6 +93,29 @@ func (m *PermissionGroupManager) Create(ctx *actions.OperationContext, data *gro
 	return id, nil
 }
 
+// Delete deletes a permission group by the specified permission group ID.
+func (m *PermissionGroupManager) Delete(ctx *actions.OperationContext, id uint64) error {
+	err := m.opExecutor.Exec(ctx, iactions.OperationTypePermissionGroupManager_Delete, []*actions.OperationParam{actions.NewOperationParam("id", id)},
+		func(opCtx *actions.OperationContext) error {
+			if err := m.permissionGroupStore.Delete(opCtx, id); err != nil {
+				return fmt.Errorf("[manager.PermissionGroupManager.Delete] delete a permission group: %w", err)
+			}
+
+			m.logger.InfoWithEvent(
+				opCtx.CreateLogEntryContext(),
+				events.PermissionGroupEvent,
+				"[manager.PermissionGroupManager.Delete] permission group has been deleted",
+				logging.NewField("id", id),
+			)
+			return nil
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("[manager.PermissionGroupManager.Delete] execute an operation: %w", err)
+	}
+	return nil
+}
+
 // FindById finds and returns a permission group, if any, by the specified permission group ID.
 func (m *PermissionGroupManager) FindById(ctx *actions.OperationContext, id uint64) (*dbmodels.PermissionGroup, error) {
 	var g *dbmodels.PermissionGroup
@@ -131,6 +154,24 @@ func (m *PermissionGroupManager) FindByName(ctx *actions.OperationContext, name 
 		return nil, fmt.Errorf("[manager.PermissionGroupManager.FindByName] execute an operation: %w", err)
 	}
 	return g, nil
+}
+
+// Exists returns true if the permission group exists.
+func (m *PermissionGroupManager) Exists(ctx *actions.OperationContext, name string) (bool, error) {
+	var exists bool
+	err := m.opExecutor.Exec(ctx, iactions.OperationTypePermissionGroupManager_Exists, []*actions.OperationParam{actions.NewOperationParam("name", name)},
+		func(opCtx *actions.OperationContext) error {
+			var err error
+			if exists, err = m.permissionGroupStore.Exists(opCtx, name); err != nil {
+				return fmt.Errorf("[manager.PermissionGroupManager.Exists] permission group exists: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return false, fmt.Errorf("[manager.PermissionGroupManager.Exists] execute an operation: %w", err)
+	}
+	return exists, nil
 }
 
 // GetStatusById gets a permission group status by the specified permission group ID.
