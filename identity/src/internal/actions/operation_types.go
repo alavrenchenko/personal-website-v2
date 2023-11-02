@@ -48,9 +48,10 @@ const (
 	OperationTypeRoleManager_FindById      actions.OperationType = 12502
 	OperationTypeRoleManager_FindByName    actions.OperationType = 12503
 	OperationTypeRoleManager_GetAllByIds   actions.OperationType = 12504
-	OperationTypeRoleManager_Exists        actions.OperationType = 12505
-	OperationTypeRoleManager_GetTypeById   actions.OperationType = 12506
-	OperationTypeRoleManager_GetStatusById actions.OperationType = 12507
+	OperationTypeRoleManager_GetAllByNames actions.OperationType = 12505
+	OperationTypeRoleManager_Exists        actions.OperationType = 12506
+	OperationTypeRoleManager_GetTypeById   actions.OperationType = 12507
+	OperationTypeRoleManager_GetStatusById actions.OperationType = 12508
 
 	// PermissionManager operation types (13000-13499).
 	OperationTypePermissionManager_Create        actions.OperationType = 13000
@@ -194,9 +195,10 @@ const (
 	OperationTypeRoleStore_FindById      actions.OperationType = 32503
 	OperationTypeRoleStore_FindByName    actions.OperationType = 32504
 	OperationTypeRoleStore_GetAllByIds   actions.OperationType = 32505
-	OperationTypeRoleStore_Exists        actions.OperationType = 32506
-	OperationTypeRoleStore_GetTypeById   actions.OperationType = 32507
-	OperationTypeRoleStore_GetStatusById actions.OperationType = 32508
+	OperationTypeRoleStore_GetAllByNames actions.OperationType = 32506
+	OperationTypeRoleStore_Exists        actions.OperationType = 32507
+	OperationTypeRoleStore_GetTypeById   actions.OperationType = 32508
+	OperationTypeRoleStore_GetStatusById actions.OperationType = 32509
 
 	// PermissionStore operation types (33000-33499).
 	OperationTypePermissionStore_Create        actions.OperationType = 33000

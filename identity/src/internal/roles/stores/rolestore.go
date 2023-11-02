@@ -239,6 +239,45 @@ func (s *RoleStore) GetAllByIds(ctx *actions.OperationContext, ids []uint64) ([]
 	return rs, nil
 }
 
+// GetAllByNames gets all roles by the specified role names.
+func (s *RoleStore) GetAllByNames(ctx *actions.OperationContext, names []string) ([]*dbmodels.Role, error) {
+	var rs []*dbmodels.Role
+	err := s.opExecutor.Exec(ctx, iactions.OperationTypeRoleStore_GetAllByNames, []*actions.OperationParam{actions.NewOperationParam("names", names)},
+		func(opCtx *actions.OperationContext) error {
+			if len(names) == 0 {
+				return errs.NewError(errs.ErrorCodeInvalidData, "number of names is 0")
+			}
+
+			const query = "SELECT * FROM " + rolesTable + " WHERE name = ANY ($1)"
+			var err error
+			if rs, err = s.store.FindAll(opCtx.Ctx, query, names); err != nil {
+				return fmt.Errorf("[stores.RoleStore.GetAllByNames] find all roles by names: %w", err)
+			}
+
+			if len(rs) == 0 {
+				return errs.NewError(ierrors.ErrorCodeRoleNotFound, fmt.Sprintf("role (%s) not found", names[0]))
+			}
+
+			rslen := len(rs)
+			m := make(map[string]bool, rslen)
+			for i := 0; i < rslen; i++ {
+				m[rs[i].Name] = true
+			}
+
+			for i := 0; i < len(names); i++ {
+				if !m[names[i]] {
+					return errs.NewError(ierrors.ErrorCodeRoleNotFound, fmt.Sprintf("role (%s) not found", names[i]))
+				}
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("[stores.RoleStore.GetAllByNames] execute an operation: %w", err)
+	}
+	return rs, nil
+}
+
 // Exists returns true if the role exists.
 func (s *RoleStore) Exists(ctx *actions.OperationContext, name string) (bool, error) {
 	var exists bool

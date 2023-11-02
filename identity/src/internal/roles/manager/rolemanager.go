@@ -178,6 +178,28 @@ func (m *RoleManager) GetAllByIds(ctx *actions.OperationContext, ids []uint64) (
 	return rs, nil
 }
 
+// GetAllByNames gets all roles by the specified role names.
+func (m *RoleManager) GetAllByNames(ctx *actions.OperationContext, names []string) ([]*dbmodels.Role, error) {
+	var rs []*dbmodels.Role
+	err := m.opExecutor.Exec(ctx, iactions.OperationTypeRoleManager_GetAllByNames, []*actions.OperationParam{actions.NewOperationParam("names", names)},
+		func(opCtx *actions.OperationContext) error {
+			if len(names) == 0 {
+				return errors.NewError(errors.ErrorCodeInvalidData, "number of names is 0")
+			}
+
+			var err error
+			if rs, err = m.roleStore.GetAllByNames(opCtx, names); err != nil {
+				return fmt.Errorf("[manager.RoleManager.GetAllByNames] get all roles by names: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("[manager.RoleManager.GetAllByNames] execute an operation: %w", err)
+	}
+	return rs, nil
+}
+
 // Exists returns true if the role exists.
 func (m *RoleManager) Exists(ctx *actions.OperationContext, name string) (bool, error) {
 	var exists bool
