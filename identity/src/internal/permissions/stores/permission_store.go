@@ -87,33 +87,35 @@ func (s *PermissionStore) Create(ctx *actions.OperationContext, data *permission
 	var id uint64
 	err := s.opExecutor.Exec(ctx, iactions.OperationTypePermissionStore_Create, []*actions.OperationParam{actions.NewOperationParam("data", data)},
 		func(opCtx *actions.OperationContext) error {
-			var errCode dberrors.DbErrorCode
-			var errMsg string
-			// public.create_permission(IN _group_id, IN _name, IN _created_by, IN _status_comment, IN _description, OUT _id, OUT err_code, OUT err_msg)
-			const query = "CALL public.create_permission($1, $2, $3, NULL, $4, NULL, NULL, NULL)"
-
-			err := s.txManager.ExecWithSerializableLevel(opCtx.Ctx, func(txCtx context.Context, tx pgx.Tx) error {
-				r := tx.QueryRow(txCtx, query, data.GroupId, data.Name, opCtx.UserId.Value, data.Description)
+			err := s.txManager.ExecWithReadCommittedLevel(opCtx.Ctx, func(txCtx context.Context, tx pgx.Tx) error {
+				var errCode dberrors.DbErrorCode
+				var errMsg string
+				// PROCEDURE: public.create_permission(IN _group_id, IN _name, IN _created_by, IN _status_comment, IN _app_id, IN _app_group_id, IN _description,
+				// OUT _id, OUT err_code, OUT err_msg)
+				const query = "CALL public.create_permission($1, $2, $3, NULL, $4, $5, $6, NULL, NULL, NULL)"
+				r := tx.QueryRow(txCtx, query, data.GroupId, data.Name, opCtx.UserId.Value, data.AppId.Ptr(), data.AppGroupId.Ptr(), data.Description)
 
 				if err := r.Scan(&id, &errCode, &errMsg); err != nil {
 					return fmt.Errorf("[stores.PermissionStore.Create] execute a query (create_permission): %w", err)
 				}
-				return nil
+
+				switch errCode {
+				case dberrors.DbErrorCodeNoError:
+					return nil
+				case dberrors.DbErrorCodeInvalidOperation:
+					return errs.NewError(errs.ErrorCodeInvalidOperation, errMsg)
+				case idberrors.DbErrorCodePermissionAlreadyExists:
+					return ierrors.ErrPermissionAlreadyExists
+				case idberrors.DbErrorCodePermissionGroupNotFound:
+					return ierrors.ErrPermissionGroupNotFound
+				}
+				// unknown error
+				return fmt.Errorf("[stores.PermissionStore.Create] invalid operation: %w", dberrors.NewDbError(errCode, errMsg))
 			})
 			if err != nil {
-				return fmt.Errorf("[stores.PermissionStore.Create] execute a transaction with the 'serializable' isolation level: %w", err)
+				return fmt.Errorf("[stores.PermissionStore.Create] execute a transaction: %w", err)
 			}
-
-			switch errCode {
-			case dberrors.DbErrorCodeNoError:
-				return nil
-			case idberrors.DbErrorCodePermissionGroupNotFound:
-				return ierrors.ErrPermissionGroupNotFound
-			case dberrors.DbErrorCodeInvalidOperation:
-				return errs.NewError(errs.ErrorCodeInvalidOperation, errMsg)
-			}
-			// unknown error
-			return fmt.Errorf("[stores.PermissionStore.Create] invalid operation: %w", dberrors.NewDbError(errCode, errMsg))
+			return nil
 		},
 	)
 	if err != nil {

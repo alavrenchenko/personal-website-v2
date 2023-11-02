@@ -38,7 +38,7 @@ Error codes:
     NoError                 = 0
     InvalidOperation        = 3
     PermissionAlreadyExists = 11801
-    PermissionGroupNotFound = 12200
+    PermissionGroupNotFound = 12000
 */
 -- Minimum transaction isolation level: Read committed.
 CREATE OR REPLACE PROCEDURE public.create_permission(
@@ -68,7 +68,7 @@ BEGIN
 
     SELECT status INTO _status FROM public.permission_groups WHERE id = _group_id LIMIT 1 FOR UPDATE;
     IF NOT FOUND THEN
-        err_code := 12200; -- PermissionGroupNotFound
+        err_code := 12000; -- PermissionGroupNotFound
         err_msg := 'permission group not found';
         RETURN;
     END IF;
