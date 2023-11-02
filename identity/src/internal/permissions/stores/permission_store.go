@@ -124,6 +124,82 @@ func (s *PermissionStore) Create(ctx *actions.OperationContext, data *permission
 	return id, nil
 }
 
+// StartDeleting starts deleting a permission by the specified permission ID.
+func (s *PermissionStore) StartDeleting(ctx *actions.OperationContext, id uint64) error {
+	err := s.opExecutor.Exec(ctx, iactions.OperationTypePermissionStore_StartDeleting, []*actions.OperationParam{actions.NewOperationParam("id", id)},
+		func(opCtx *actions.OperationContext) error {
+			err := s.txManager.ExecWithReadCommittedLevel(opCtx.Ctx, func(txCtx context.Context, tx pgx.Tx) error {
+				var errCode dberrors.DbErrorCode
+				var errMsg string
+				// PROCEDURE: public.start_deleting_permission(IN _id, IN _deleted_by, IN _status_comment, OUT err_code, OUT err_msg)
+				const query = "CALL public.start_deleting_permission($1, $2, 'deletion', NULL, NULL)"
+				r := tx.QueryRow(txCtx, query, id, opCtx.UserId.Value)
+
+				if err := r.Scan(&errCode, &errMsg); err != nil {
+					return fmt.Errorf("[stores.PermissionStore.StartDeleting] execute a query (start_deleting_permission): %w", err)
+				}
+
+				switch errCode {
+				case dberrors.DbErrorCodeNoError:
+					return nil
+				case dberrors.DbErrorCodeInvalidOperation:
+					return errs.NewError(errs.ErrorCodeInvalidOperation, errMsg)
+				case idberrors.DbErrorCodePermissionNotFound:
+					return ierrors.ErrPermissionNotFound
+				}
+				// unknown error
+				return fmt.Errorf("[stores.PermissionStore.StartDeleting] invalid operation: %w", dberrors.NewDbError(errCode, errMsg))
+			})
+			if err != nil {
+				return fmt.Errorf("[stores.PermissionStore.StartDeleting] execute a transaction: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("[stores.PermissionStore.StartDeleting] execute an operation: %w", err)
+	}
+	return nil
+}
+
+// Delete deletes a permission by the specified permission ID.
+func (s *PermissionStore) Delete(ctx *actions.OperationContext, id uint64) error {
+	err := s.opExecutor.Exec(ctx, iactions.OperationTypePermissionStore_Delete, []*actions.OperationParam{actions.NewOperationParam("id", id)},
+		func(opCtx *actions.OperationContext) error {
+			err := s.txManager.ExecWithSerializableLevel(opCtx.Ctx, func(txCtx context.Context, tx pgx.Tx) error {
+				var errCode dberrors.DbErrorCode
+				var errMsg string
+				// PROCEDURE: public.delete_permission(IN _id, IN _deleted_by, IN _status_comment, OUT err_code, OUT err_msg)
+				const query = "CALL public.delete_permission($1, $2, 'deletion', NULL, NULL)"
+				r := tx.QueryRow(txCtx, query, id, opCtx.UserId.Value)
+
+				if err := r.Scan(&errCode, &errMsg); err != nil {
+					return fmt.Errorf("[stores.PermissionStore.Delete] execute a query (delete_permission): %w", err)
+				}
+
+				switch errCode {
+				case dberrors.DbErrorCodeNoError:
+					return nil
+				case dberrors.DbErrorCodeInvalidOperation:
+					return errs.NewError(errs.ErrorCodeInvalidOperation, errMsg)
+				case idberrors.DbErrorCodePermissionNotFound:
+					return ierrors.ErrPermissionNotFound
+				}
+				// unknown error
+				return fmt.Errorf("[stores.PermissionStore.Delete] invalid operation: %w", dberrors.NewDbError(errCode, errMsg))
+			})
+			if err != nil {
+				return fmt.Errorf("[stores.PermissionStore.Delete] execute a transaction: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("[stores.PermissionStore.Delete] execute an operation: %w", err)
+	}
+	return nil
+}
+
 // FindById finds and returns a permission, if any, by the specified permission ID.
 func (s *PermissionStore) FindById(ctx *actions.OperationContext, id uint64) (*dbmodels.Permission, error) {
 	var p *dbmodels.Permission

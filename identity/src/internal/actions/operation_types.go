@@ -194,9 +194,12 @@ const (
 
 	// PermissionStore operation types (33000-33499).
 	OperationTypePermissionStore_Create        actions.OperationType = 33000
-	OperationTypePermissionStore_FindById      actions.OperationType = 33001
-	OperationTypePermissionStore_FindByName    actions.OperationType = 33002
-	OperationTypePermissionStore_GetStatusById actions.OperationType = 33003
+	OperationTypePermissionStore_StartDeleting actions.OperationType = 33001
+	OperationTypePermissionStore_Delete        actions.OperationType = 33002
+	OperationTypePermissionStore_FindById      actions.OperationType = 33003
+	OperationTypePermissionStore_FindByName    actions.OperationType = 33004
+	OperationTypePermissionStore_Exists        actions.OperationType = 33005
+	OperationTypePermissionStore_GetStatusById actions.OperationType = 33006
 
 	// PermissionGroupStore operation types (33500-33999).
 	OperationTypePermissionGroupStore_Create        actions.OperationType = 33500
