@@ -33,14 +33,19 @@ import (
 
 // PermissionManager is a permission manager.
 type PermissionManager struct {
-	opExecutor      *actionhelper.OperationExecutor
-	permissionStore permissions.PermissionStore
-	logger          logging.Logger[*context.LogEntryContext]
+	opExecutor            *actionhelper.OperationExecutor
+	rolePermissionManager permissions.RolePermissionManager
+	permissionStore       permissions.PermissionStore
+	logger                logging.Logger[*context.LogEntryContext]
 }
 
 var _ permissions.PermissionManager = (*PermissionManager)(nil)
 
-func NewPermissionManager(permissionStore permissions.PermissionStore, loggerFactory logging.LoggerFactory[*context.LogEntryContext]) (*PermissionManager, error) {
+func NewPermissionManager(
+	rolePermissionManager permissions.RolePermissionManager,
+	permissionStore permissions.PermissionStore,
+	loggerFactory logging.LoggerFactory[*context.LogEntryContext],
+) (*PermissionManager, error) {
 	l, err := loggerFactory.CreateLogger("internal.permissions.manager.PermissionManager")
 	if err != nil {
 		return nil, fmt.Errorf("[manager.NewPermissionManager] create a logger: %w", err)
@@ -58,9 +63,10 @@ func NewPermissionManager(permissionStore permissions.PermissionStore, loggerFac
 	}
 
 	return &PermissionManager{
-		opExecutor:      e,
-		permissionStore: permissionStore,
-		logger:          l,
+		opExecutor:            e,
+		rolePermissionManager: rolePermissionManager,
+		permissionStore:       permissionStore,
+		logger:                l,
 	}, nil
 }
 
@@ -91,6 +97,44 @@ func (m *PermissionManager) Create(ctx *actions.OperationContext, data *permissi
 		return 0, fmt.Errorf("[manager.PermissionManager.Create] execute an operation: %w", err)
 	}
 	return id, nil
+}
+
+// Delete deletes a permission by the specified permission ID.
+func (m *PermissionManager) Delete(ctx *actions.OperationContext, id uint64) error {
+	err := m.opExecutor.Exec(ctx, iactions.OperationTypePermissionManager_Delete, []*actions.OperationParam{actions.NewOperationParam("id", id)},
+		func(opCtx *actions.OperationContext) error {
+			if err := m.permissionStore.StartDeleting(opCtx, id); err != nil {
+				return fmt.Errorf("[manager.PermissionManager.Delete] start deleting a permission: %w", err)
+			}
+
+			if err := m.rolePermissionManager.RevokeFromAll(opCtx, []uint64{id}); err != nil {
+				return fmt.Errorf("[manager.PermissionManager.Delete] start deleting a permission: %w", err)
+			}
+
+			m.logger.InfoWithEvent(
+				opCtx.CreateLogEntryContext(),
+				events.PermissionEvent,
+				"[manager.PermissionManager.Delete] permission has been revoked from all roles",
+				logging.NewField("id", id),
+			)
+
+			if err := m.permissionStore.Delete(opCtx, id); err != nil {
+				return fmt.Errorf("[manager.PermissionManager.Delete] delete a permission: %w", err)
+			}
+
+			m.logger.InfoWithEvent(
+				opCtx.CreateLogEntryContext(),
+				events.PermissionEvent,
+				"[manager.PermissionManager.Delete] permission has been deleted",
+				logging.NewField("id", id),
+			)
+			return nil
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("[manager.PermissionManager.Delete] execute an operation: %w", err)
+	}
+	return nil
 }
 
 // FindById finds and returns a permission, if any, by the specified permission ID.
@@ -131,6 +175,24 @@ func (m *PermissionManager) FindByName(ctx *actions.OperationContext, name strin
 		return nil, fmt.Errorf("[manager.PermissionManager.FindByName] execute an operation: %w", err)
 	}
 	return p, nil
+}
+
+// Exists returns true if the permission exists.
+func (m *PermissionManager) Exists(ctx *actions.OperationContext, name string) (bool, error) {
+	var exists bool
+	err := m.opExecutor.Exec(ctx, iactions.OperationTypePermissionManager_Exists, []*actions.OperationParam{actions.NewOperationParam("name", name)},
+		func(opCtx *actions.OperationContext) error {
+			var err error
+			if exists, err = m.permissionStore.Exists(opCtx, name); err != nil {
+				return fmt.Errorf("[manager.PermissionManager.Exists] permission exists: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return false, fmt.Errorf("[manager.PermissionManager.Exists] execute an operation: %w", err)
+	}
+	return exists, nil
 }
 
 // GetStatusById gets a permission status by the specified permission ID.

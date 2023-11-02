@@ -15,6 +15,7 @@
 package permissions
 
 import (
+	"personal-website-v2/pkg/base/nullable"
 	"personal-website-v2/pkg/base/strings"
 	"personal-website-v2/pkg/errors"
 )
@@ -25,6 +26,12 @@ type CreateOperationData struct {
 
 	// The permission name.
 	Name string `json:"name"`
+
+	// The app ID.
+	AppId nullable.Nullable[uint64] `json:"appId"`
+
+	// The app group ID.
+	AppGroupId nullable.Nullable[uint64] `json:"appGroupId"`
 
 	// The permission description.
 	Description string `json:"description"`

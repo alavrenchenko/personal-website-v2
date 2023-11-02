@@ -53,9 +53,11 @@ const (
 
 	// PermissionManager operation types (13000-13499).
 	OperationTypePermissionManager_Create        actions.OperationType = 13000
-	OperationTypePermissionManager_FindById      actions.OperationType = 13001
-	OperationTypePermissionManager_FindByName    actions.OperationType = 13002
-	OperationTypePermissionManager_GetStatusById actions.OperationType = 13003
+	OperationTypePermissionManager_Delete        actions.OperationType = 13001
+	OperationTypePermissionManager_FindById      actions.OperationType = 13002
+	OperationTypePermissionManager_FindByName    actions.OperationType = 13003
+	OperationTypePermissionManager_Exists        actions.OperationType = 13004
+	OperationTypePermissionManager_GetStatusById actions.OperationType = 13005
 
 	// PermissionGroupManager operation types (13500-13999).
 	OperationTypePermissionGroupManager_Create        actions.OperationType = 13500
