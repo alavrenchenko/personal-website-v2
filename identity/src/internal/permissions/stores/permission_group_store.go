@@ -22,6 +22,7 @@ import (
 	"github.com/jackc/pgx/v5"
 
 	iactions "personal-website-v2/identity/src/internal/actions"
+	idberrors "personal-website-v2/identity/src/internal/db/errors"
 	ierrors "personal-website-v2/identity/src/internal/errors"
 	"personal-website-v2/identity/src/internal/permissions"
 	"personal-website-v2/identity/src/internal/permissions/dbmodels"
@@ -85,26 +86,29 @@ func (s *PermissionGroupStore) Create(ctx *actions.OperationContext, data *group
 	var id uint64
 	err := s.opExecutor.Exec(ctx, iactions.OperationTypePermissionGroupStore_Create, []*actions.OperationParam{actions.NewOperationParam("data", data)},
 		func(opCtx *actions.OperationContext) error {
-			var errCode dberrors.DbErrorCode
-			var errMsg string
-			// public.create_permission_group(IN _name, IN _created_by, IN _status_comment, IN _app_id, IN _description, OUT _id, OUT err_code, OUT err_msg)
-			const query = "CALL public.create_permission_group($1, $2, NULL, $3, $4, NULL, NULL, NULL)"
-
 			err := s.txManager.ExecWithReadCommittedLevel(opCtx.Ctx, func(txCtx context.Context, tx pgx.Tx) error {
-				r := tx.QueryRow(txCtx, query, data.Name, opCtx.UserId.Value, data.AppId.Ptr(), data.Description)
+				var errCode dberrors.DbErrorCode
+				var errMsg string
+				// PROCEDURE: public.create_permission_group(IN _name, IN _created_by, IN _status_comment, IN _app_id, IN _app_group_id, IN _description,
+				// OUT _id, OUT err_code, OUT err_msg)
+				const query = "CALL public.create_permission_group($1, $2, NULL, $3, $4, $5, NULL, NULL, NULL)"
+				r := tx.QueryRow(txCtx, query, data.Name, opCtx.UserId.Value, data.AppId.Ptr(), data.AppGroupId.Ptr(), data.Description)
 
 				if err := r.Scan(&id, &errCode, &errMsg); err != nil {
 					return fmt.Errorf("[stores.PermissionGroupStore.Create] execute a query (create_permission_group): %w", err)
 				}
-				return nil
-			})
-			if err != nil {
-				return fmt.Errorf("[stores.PermissionGroupStore.Create] execute a transaction with the 'read committed' isolation level: %w", err)
-			}
 
-			if errCode != dberrors.DbErrorCodeNoError {
+				switch errCode {
+				case dberrors.DbErrorCodeNoError:
+					return nil
+				case idberrors.DbErrorCodePermissionGroupAlreadyExists:
+					return ierrors.ErrPermissionGroupAlreadyExists
+				}
 				// unknown error
 				return fmt.Errorf("[stores.PermissionGroupStore.Create] invalid operation: %w", dberrors.NewDbError(errCode, errMsg))
+			})
+			if err != nil {
+				return fmt.Errorf("[stores.PermissionGroupStore.Create] execute a transaction: %w", err)
 			}
 			return nil
 		},

@@ -35,6 +35,7 @@ Error codes:
     NoError                      = 0
     PermissionGroupAlreadyExists = 12001
 */
+-- Minimum transaction isolation level: Read committed.
 CREATE OR REPLACE PROCEDURE public.create_permission_group(
     IN _name public.permission_groups.name%TYPE,
     IN _created_by public.permission_groups.created_by%TYPE,
