@@ -48,8 +48,9 @@ const (
 	OperationTypeRoleManager_FindById      actions.OperationType = 12502
 	OperationTypeRoleManager_FindByName    actions.OperationType = 12503
 	OperationTypeRoleManager_GetAllByIds   actions.OperationType = 12504
-	OperationTypeRoleManager_GetTypeById   actions.OperationType = 12505
-	OperationTypeRoleManager_GetStatusById actions.OperationType = 12506
+	OperationTypeRoleManager_Exists        actions.OperationType = 12505
+	OperationTypeRoleManager_GetTypeById   actions.OperationType = 12506
+	OperationTypeRoleManager_GetStatusById actions.OperationType = 12507
 
 	// PermissionManager operation types (13000-13499).
 	OperationTypePermissionManager_Create        actions.OperationType = 13000

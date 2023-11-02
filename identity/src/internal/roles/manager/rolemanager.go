@@ -178,6 +178,24 @@ func (m *RoleManager) GetAllByIds(ctx *actions.OperationContext, ids []uint64) (
 	return rs, nil
 }
 
+// Exists returns true if the role exists.
+func (m *RoleManager) Exists(ctx *actions.OperationContext, name string) (bool, error) {
+	var exists bool
+	err := m.opExecutor.Exec(ctx, iactions.OperationTypeRoleManager_Exists, []*actions.OperationParam{actions.NewOperationParam("name", name)},
+		func(opCtx *actions.OperationContext) error {
+			var err error
+			if exists, err = m.roleStore.Exists(opCtx, name); err != nil {
+				return fmt.Errorf("[manager.RoleManager.Exists] role exists: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return false, fmt.Errorf("[manager.RoleManager.Exists] execute an operation: %w", err)
+	}
+	return exists, nil
+}
+
 // GetTypeById gets a role type by the specified role ID.
 func (m *RoleManager) GetTypeById(ctx *actions.OperationContext, id uint64) (models.RoleType, error) {
 	var t models.RoleType
