@@ -57,8 +57,9 @@ const (
 	OperationTypePermissionManager_Delete        actions.OperationType = 13001
 	OperationTypePermissionManager_FindById      actions.OperationType = 13002
 	OperationTypePermissionManager_FindByName    actions.OperationType = 13003
-	OperationTypePermissionManager_Exists        actions.OperationType = 13004
-	OperationTypePermissionManager_GetStatusById actions.OperationType = 13005
+	OperationTypePermissionManager_GetAllByIds   actions.OperationType = 13004
+	OperationTypePermissionManager_Exists        actions.OperationType = 13005
+	OperationTypePermissionManager_GetStatusById actions.OperationType = 13006
 
 	// PermissionGroupManager operation types (13500-13999).
 	OperationTypePermissionGroupManager_Create        actions.OperationType = 13500
@@ -202,8 +203,9 @@ const (
 	OperationTypePermissionStore_Delete        actions.OperationType = 33002
 	OperationTypePermissionStore_FindById      actions.OperationType = 33003
 	OperationTypePermissionStore_FindByName    actions.OperationType = 33004
-	OperationTypePermissionStore_Exists        actions.OperationType = 33005
-	OperationTypePermissionStore_GetStatusById actions.OperationType = 33006
+	OperationTypePermissionStore_GetAllByIds   actions.OperationType = 33005
+	OperationTypePermissionStore_Exists        actions.OperationType = 33006
+	OperationTypePermissionStore_GetStatusById actions.OperationType = 33007
 
 	// PermissionGroupStore operation types (33500-33999).
 	OperationTypePermissionGroupStore_Create        actions.OperationType = 33500

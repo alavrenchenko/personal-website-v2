@@ -37,6 +37,9 @@ type PermissionManager interface {
 	// FindByName finds and returns a permission, if any, by the specified permission name.
 	FindByName(ctx *actions.OperationContext, name string) (*dbmodels.Permission, error)
 
+	// GetAllByIds gets all permissions by the specified permission IDs.
+	GetAllByIds(ctx *actions.OperationContext, ids []uint64) ([]*dbmodels.Permission, error)
+
 	// Exists returns true if the permission exists.
 	Exists(ctx *actions.OperationContext, name string) (bool, error)
 
