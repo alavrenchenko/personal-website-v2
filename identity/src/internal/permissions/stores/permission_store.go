@@ -238,6 +238,32 @@ func (s *PermissionStore) FindByName(ctx *actions.OperationContext, name string)
 	return p, nil
 }
 
+// Exists returns true if the permission exists.
+func (s *PermissionStore) Exists(ctx *actions.OperationContext, name string) (bool, error) {
+	var exists bool
+	err := s.opExecutor.Exec(ctx, iactions.OperationTypePermissionStore_Exists, []*actions.OperationParam{actions.NewOperationParam("name", name)},
+		func(opCtx *actions.OperationContext) error {
+			conn, err := s.db.ConnPool.Acquire(opCtx.Ctx)
+			if err != nil {
+				return fmt.Errorf("[stores.PermissionStore.Exists] acquire a connection: %w", err)
+			}
+			defer conn.Release()
+
+			// FUNCTION: public.permission_exists(_name) RETURNS boolean
+			const query = "SELECT public.permission_exists($1)"
+
+			if err = conn.QueryRow(opCtx.Ctx, query, name).Scan(&exists); err != nil {
+				return fmt.Errorf("[stores.PermissionStore.Exists] execute a query (permission_exists): %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return false, fmt.Errorf("[stores.PermissionStore.Exists] execute an operation: %w", err)
+	}
+	return exists, nil
+}
+
 // GetStatusById gets a permission status by the specified permission ID.
 func (s *PermissionStore) GetStatusById(ctx *actions.OperationContext, id uint64) (models.PermissionStatus, error) {
 	var status models.PermissionStatus
