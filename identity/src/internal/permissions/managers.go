@@ -67,6 +67,9 @@ type PermissionGroupManager interface {
 	// GetAllByIds gets all permission groups by the specified permission group IDs.
 	GetAllByIds(ctx *actions.OperationContext, ids []uint64) ([]*dbmodels.PermissionGroup, error)
 
+	// GetAllByNames gets all permission groups by the specified permission group names.
+	GetAllByNames(ctx *actions.OperationContext, names []string) ([]*dbmodels.PermissionGroup, error)
+
 	// Exists returns true if the permission group exists.
 	Exists(ctx *actions.OperationContext, name string) (bool, error)
 

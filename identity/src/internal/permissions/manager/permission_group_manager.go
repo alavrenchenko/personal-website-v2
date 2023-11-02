@@ -178,6 +178,28 @@ func (m *PermissionGroupManager) GetAllByIds(ctx *actions.OperationContext, ids 
 	return gs, nil
 }
 
+// GetAllByNames gets all permission groups by the specified permission group names.
+func (m *PermissionGroupManager) GetAllByNames(ctx *actions.OperationContext, names []string) ([]*dbmodels.PermissionGroup, error) {
+	var gs []*dbmodels.PermissionGroup
+	err := m.opExecutor.Exec(ctx, iactions.OperationTypePermissionGroupManager_GetAllByNames, []*actions.OperationParam{actions.NewOperationParam("names", names)},
+		func(opCtx *actions.OperationContext) error {
+			if len(names) == 0 {
+				return errors.NewError(errors.ErrorCodeInvalidData, "number of names is 0")
+			}
+
+			var err error
+			if gs, err = m.permissionGroupStore.GetAllByNames(opCtx, names); err != nil {
+				return fmt.Errorf("[manager.PermissionGroupManager.GetAllByNames] get all permission groups by names: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("[manager.PermissionGroupManager.GetAllByNames] execute an operation: %w", err)
+	}
+	return gs, nil
+}
+
 // Exists returns true if the permission group exists.
 func (m *PermissionGroupManager) Exists(ctx *actions.OperationContext, name string) (bool, error) {
 	var exists bool

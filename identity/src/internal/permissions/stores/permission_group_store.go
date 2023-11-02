@@ -41,6 +41,7 @@ const (
 	permissionGroupsTable = "public.permission_groups"
 )
 
+// PermissionGroupStore is a permission group store.
 type PermissionGroupStore struct {
 	db         *postgres.Database
 	opExecutor *actionhelper.OperationExecutor
@@ -231,6 +232,45 @@ func (s *PermissionGroupStore) GetAllByIds(ctx *actions.OperationContext, ids []
 	)
 	if err != nil {
 		return nil, fmt.Errorf("[stores.PermissionGroupStore.GetAllByIds] execute an operation: %w", err)
+	}
+	return gs, nil
+}
+
+// GetAllByNames gets all permission groups by the specified permission group names.
+func (s *PermissionGroupStore) GetAllByNames(ctx *actions.OperationContext, names []string) ([]*dbmodels.PermissionGroup, error) {
+	var gs []*dbmodels.PermissionGroup
+	err := s.opExecutor.Exec(ctx, iactions.OperationTypePermissionGroupStore_GetAllByNames, []*actions.OperationParam{actions.NewOperationParam("names", names)},
+		func(opCtx *actions.OperationContext) error {
+			if len(names) == 0 {
+				return errs.NewError(errs.ErrorCodeInvalidData, "number of names is 0")
+			}
+
+			const query = "SELECT * FROM " + permissionGroupsTable + " WHERE name = ANY ($1)"
+			var err error
+			if gs, err = s.store.FindAll(opCtx.Ctx, query, names); err != nil {
+				return fmt.Errorf("[stores.PermissionGroupStore.GetAllByNames] find all permission groups by names: %w", err)
+			}
+
+			if len(gs) == 0 {
+				return errs.NewError(ierrors.ErrorCodePermissionGroupNotFound, fmt.Sprintf("permission group (%s) not found", names[0]))
+			}
+
+			gslen := len(gs)
+			m := make(map[string]bool, gslen)
+			for i := 0; i < gslen; i++ {
+				m[gs[i].Name] = true
+			}
+
+			for i := 0; i < len(names); i++ {
+				if !m[names[i]] {
+					return errs.NewError(ierrors.ErrorCodePermissionGroupNotFound, fmt.Sprintf("permission group (%s) not found", names[i]))
+				}
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("[stores.PermissionGroupStore.GetAllByNames] execute an operation: %w", err)
 	}
 	return gs, nil
 }

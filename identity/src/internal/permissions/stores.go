@@ -23,6 +23,7 @@ import (
 	"personal-website-v2/pkg/actions"
 )
 
+// PermissionStore is a permission store.
 type PermissionStore interface {
 	// Create creates a permission and returns the permission ID if the operation is successful.
 	Create(ctx *actions.OperationContext, data *permissions.CreateOperationData) (uint64, error)
@@ -52,6 +53,7 @@ type PermissionStore interface {
 	GetStatusById(ctx *actions.OperationContext, id uint64) (models.PermissionStatus, error)
 }
 
+// PermissionGroupStore is a permission group store.
 type PermissionGroupStore interface {
 	// Create creates a permission group and returns the permission group ID if the operation is successful.
 	Create(ctx *actions.OperationContext, data *groups.CreateOperationData) (uint64, error)
@@ -67,6 +69,9 @@ type PermissionGroupStore interface {
 
 	// GetAllByIds gets all permission groups by the specified permission group IDs.
 	GetAllByIds(ctx *actions.OperationContext, ids []uint64) ([]*dbmodels.PermissionGroup, error)
+
+	// GetAllByNames gets all permission groups by the specified permission group names.
+	GetAllByNames(ctx *actions.OperationContext, names []string) ([]*dbmodels.PermissionGroup, error)
 
 	// Exists returns true if the permission group exists.
 	Exists(ctx *actions.OperationContext, name string) (bool, error)
