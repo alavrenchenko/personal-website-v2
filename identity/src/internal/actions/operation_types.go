@@ -175,10 +175,8 @@ const (
 	OperationTypeRolePermissionManager_Update                      actions.OperationType = 20004
 	OperationTypeRolePermissionManager_IsGranted                   actions.OperationType = 20005
 	OperationTypeRolePermissionManager_AreGranted                  actions.OperationType = 20006
-	OperationTypeRolePermissionManager_GetAllPermissionsByRoleId   actions.OperationType = 20007
-	OperationTypeRolePermissionManager_GetAllPermissionIdsByRoleId actions.OperationType = 20008
-	OperationTypeRolePermissionManager_GetAllRolesByPermissionId   actions.OperationType = 20009
-	OperationTypeRolePermissionManager_GetAllRoleIdsByPermissionId actions.OperationType = 20010
+	OperationTypeRolePermissionManager_GetAllPermissionIdsByRoleId actions.OperationType = 20007
+	OperationTypeRolePermissionManager_GetAllRoleIdsByPermissionId actions.OperationType = 20008
 
 	// UserStore operation types (31000-31499).
 	OperationTypeUserStore_Create                actions.OperationType = 31000
@@ -352,10 +350,8 @@ const (
 	OperationTypeRolePermissionStore_Update                      actions.OperationType = 40004
 	OperationTypeRolePermissionStore_IsGranted                   actions.OperationType = 40005
 	OperationTypeRolePermissionStore_AreGranted                  actions.OperationType = 40006
-	OperationTypeRolePermissionStore_GetAllPermissionsByRoleId   actions.OperationType = 40007
-	OperationTypeRolePermissionStore_GetAllPermissionIdsByRoleId actions.OperationType = 40008
-	OperationTypeRolePermissionStore_GetAllRolesByPermissionId   actions.OperationType = 40009
-	OperationTypeRolePermissionStore_GetAllRoleIdsByPermissionId actions.OperationType = 40010
+	OperationTypeRolePermissionStore_GetAllPermissionIdsByRoleId actions.OperationType = 40007
+	OperationTypeRolePermissionStore_GetAllRoleIdsByPermissionId actions.OperationType = 40008
 
 	// caching (50000-59999)
 

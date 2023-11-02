@@ -19,7 +19,6 @@ import (
 	"personal-website-v2/identity/src/internal/permissions/models"
 	"personal-website-v2/identity/src/internal/permissions/operations/groups"
 	"personal-website-v2/identity/src/internal/permissions/operations/permissions"
-	roledbmodels "personal-website-v2/identity/src/internal/roles/dbmodels"
 	"personal-website-v2/pkg/actions"
 )
 
@@ -100,14 +99,8 @@ type RolePermissionManager interface {
 	// AreGranted returns true if all permissions are granted to the role.
 	AreGranted(ctx *actions.OperationContext, roleId, permissionIds []uint64) (bool, error)
 
-	// GetAllPermissionsByRoleId gets all permissions granted to the role by the specified role ID.
-	GetAllPermissionsByRoleId(ctx *actions.OperationContext, roleId uint64) ([]*dbmodels.Permission, error)
-
 	// GetAllPermissionIdsByRoleId gets all IDs of the permissions granted to the role by the specified role ID.
 	GetAllPermissionIdsByRoleId(ctx *actions.OperationContext, roleId uint64) ([]uint64, error)
-
-	// GetAllRolesByPermissionId gets all roles that are granted the specified permission.
-	GetAllRolesByPermissionId(ctx *actions.OperationContext, roleId uint64) ([]*roledbmodels.Role, error)
 
 	// GetAllRoleIdsByPermissionId gets all IDs of the roles that are granted the specified permission.
 	GetAllRoleIdsByPermissionId(ctx *actions.OperationContext, roleId uint64) ([]uint64, error)
