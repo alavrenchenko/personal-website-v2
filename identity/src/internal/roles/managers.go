@@ -163,8 +163,10 @@ type GroupRoleAssignmentManager interface {
 	// GetStatusByRoleAssignmentId gets a group role assignment status by the specified role assignment ID.
 	GetStatusByRoleAssignmentId(ctx *actions.OperationContext, roleAssignmentId uint64) (models.GroupRoleAssignmentStatus, error)
 
-	// GetAllGroupRoleIdsByGroup gets all IDs of the roles assigned to the group by the specified group.
-	GetAllGroupRoleIdsByGroup(ctx *actions.OperationContext, group groupmodels.UserGroup) ([]uint64, error)
+	// GetGroupRoleIdsByGroup gets the IDs of the roles assigned to the group by the specified group.
+	// If the role filter is empty, then all assigned roles are returned, otherwise only the roles
+	// specified in the filter, if any, are returned.
+	GetGroupRoleIdsByGroup(ctx *actions.OperationContext, group groupmodels.UserGroup, roleFilter []uint64) ([]uint64, error)
 }
 
 // UserRoleManager is a user role manager.

@@ -68,9 +68,9 @@ func (m *GroupRoleManager) GetAllRolesByGroup(ctx *actions.OperationContext, gro
 	var rs []*dbmodels.Role
 	err := m.opExecutor.Exec(ctx, iactions.OperationTypeGroupRoleManager_GetAllRolesByGroup, []*actions.OperationParam{actions.NewOperationParam("group", group)},
 		func(opCtx *actions.OperationContext) error {
-			ids, err := m.graManager.GetAllGroupRoleIdsByGroup(opCtx, group)
+			ids, err := m.graManager.GetGroupRoleIdsByGroup(opCtx, group, nil)
 			if err != nil {
-				return fmt.Errorf("[manager.GroupRoleManager.GetAllRolesByGroup] get all role ids of the group by group: %w", err)
+				return fmt.Errorf("[manager.GroupRoleManager.GetAllRolesByGroup] get role ids of the group by group: %w", err)
 			}
 
 			if len(ids) == 0 {

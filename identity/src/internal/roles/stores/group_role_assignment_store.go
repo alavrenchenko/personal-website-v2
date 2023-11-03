@@ -399,33 +399,44 @@ func (s *GroupRoleAssignmentStore) GetStatusByRoleAssignmentId(ctx *actions.Oper
 	return status, nil
 }
 
-// GetAllGroupRoleIdsByGroup gets all IDs of the roles assigned to the group by the specified group.
-func (s *GroupRoleAssignmentStore) GetAllGroupRoleIdsByGroup(ctx *actions.OperationContext, group groupmodels.UserGroup) ([]uint64, error) {
+// GetGroupRoleIdsByGroup gets the IDs of the roles assigned to the group by the specified group.
+// If the role filter is empty, then all assigned roles are returned, otherwise only the roles
+// specified in the filter, if any, are returned.
+func (s *GroupRoleAssignmentStore) GetGroupRoleIdsByGroup(ctx *actions.OperationContext, group groupmodels.UserGroup, roleFilter []uint64) ([]uint64, error) {
 	var ids []uint64
-	err := s.opExecutor.Exec(ctx, iactions.OperationTypeGroupRoleAssignmentStore_GetAllGroupRoleIdsByGroup,
-		[]*actions.OperationParam{actions.NewOperationParam("group", group)},
+	err := s.opExecutor.Exec(ctx, iactions.OperationTypeGroupRoleAssignmentStore_GetGroupRoleIdsByGroup,
+		[]*actions.OperationParam{actions.NewOperationParam("group", group), actions.NewOperationParam("roleFilter", roleFilter)},
 		func(opCtx *actions.OperationContext) error {
 			conn, err := s.db.ConnPool.Acquire(opCtx.Ctx)
 			if err != nil {
-				return fmt.Errorf("[stores.GroupRoleAssignmentStore.GetAllGroupRoleIdsByGroup] acquire a connection: %w", err)
+				return fmt.Errorf("[stores.GroupRoleAssignmentStore.GetGroupRoleIdsByGroup] acquire a connection: %w", err)
 			}
 			defer conn.Release()
 
-			const query = "SELECT role_id FROM " + groupRoleAssignmentsTable + ` WHERE "group" = $1 AND status = $2`
-			rows, err := conn.Query(opCtx.Ctx, query, group, models.GroupRoleAssignmentStatusActive)
+			var query string
+			var rows pgx.Rows
+
+			if len(roleFilter) > 0 {
+				query = "SELECT role_id FROM " + groupRoleAssignmentsTable + ` WHERE "group" = $1 AND role_id = ANY ($2) AND status = $3`
+				rows, err = conn.Query(opCtx.Ctx, query, group, roleFilter, models.GroupRoleAssignmentStatusActive)
+			} else {
+				query = "SELECT role_id FROM " + groupRoleAssignmentsTable + ` WHERE "group" = $1 AND status = $2`
+				rows, err = conn.Query(opCtx.Ctx, query, group, models.GroupRoleAssignmentStatusActive)
+			}
+
 			if err != nil {
-				return fmt.Errorf("[stores.GroupRoleAssignmentStore.GetAllGroupRoleIdsByGroup] execute a query: %w", err)
+				return fmt.Errorf("[stores.GroupRoleAssignmentStore.GetGroupRoleIdsByGroup] execute a query: %w", err)
 			}
 			defer rows.Close()
 
 			if ids, err = pgx.CollectRows(rows, pgx.RowTo[uint64]); err != nil {
-				return fmt.Errorf("[stores.GroupRoleAssignmentStore.GetAllGroupRoleIdsByGroup] collect rows: %w", err)
+				return fmt.Errorf("[stores.GroupRoleAssignmentStore.GetGroupRoleIdsByGroup] collect rows: %w", err)
 			}
 			return nil
 		},
 	)
 	if err != nil {
-		return nil, fmt.Errorf("[stores.GroupRoleAssignmentStore.GetAllGroupRoleIdsByGroup] execute an operation: %w", err)
+		return nil, fmt.Errorf("[stores.GroupRoleAssignmentStore.GetGroupRoleIdsByGroup] execute an operation: %w", err)
 	}
 	return ids, nil
 }

@@ -296,21 +296,23 @@ func (m *GroupRoleAssignmentManager) GetStatusByRoleAssignmentId(ctx *actions.Op
 	return s, nil
 }
 
-// GetAllGroupRoleIdsByGroup gets all IDs of the roles assigned to the group by the specified group.
-func (m *GroupRoleAssignmentManager) GetAllGroupRoleIdsByGroup(ctx *actions.OperationContext, group groupmodels.UserGroup) ([]uint64, error) {
+// GetGroupRoleIdsByGroup gets the IDs of the roles assigned to the group by the specified group.
+// If the role filter is empty, then all assigned roles are returned, otherwise only the roles
+// specified in the filter, if any, are returned.
+func (m *GroupRoleAssignmentManager) GetGroupRoleIdsByGroup(ctx *actions.OperationContext, group groupmodels.UserGroup, roleFilter []uint64) ([]uint64, error) {
 	var ids []uint64
-	err := m.opExecutor.Exec(ctx, iactions.OperationTypeGroupRoleAssignmentManager_GetAllGroupRoleIdsByGroup,
-		[]*actions.OperationParam{actions.NewOperationParam("group", group)},
+	err := m.opExecutor.Exec(ctx, iactions.OperationTypeGroupRoleAssignmentManager_GetGroupRoleIdsByGroup,
+		[]*actions.OperationParam{actions.NewOperationParam("group", group), actions.NewOperationParam("roleFilter", roleFilter)},
 		func(opCtx *actions.OperationContext) error {
 			var err error
-			if ids, err = m.graStore.GetAllGroupRoleIdsByGroup(opCtx, group); err != nil {
-				return fmt.Errorf("[manager.GroupRoleAssignmentManager.GetAllGroupRoleIdsByGroup] get all role ids of the group by group: %w", err)
+			if ids, err = m.graStore.GetGroupRoleIdsByGroup(opCtx, group, roleFilter); err != nil {
+				return fmt.Errorf("[manager.GroupRoleAssignmentManager.GetGroupRoleIdsByGroup] get role ids of the group by group: %w", err)
 			}
 			return nil
 		},
 	)
 	if err != nil {
-		return nil, fmt.Errorf("[manager.GroupRoleAssignmentManager.GetAllGroupRoleIdsByGroup] execute an operation: %w", err)
+		return nil, fmt.Errorf("[manager.GroupRoleAssignmentManager.GetGroupRoleIdsByGroup] execute an operation: %w", err)
 	}
 	return ids, nil
 }
