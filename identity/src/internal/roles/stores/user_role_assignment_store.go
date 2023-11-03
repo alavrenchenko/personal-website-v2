@@ -398,33 +398,44 @@ func (s *UserRoleAssignmentStore) GetStatusByRoleAssignmentId(ctx *actions.Opera
 	return status, nil
 }
 
-// GetAllUserRoleIdsByUserId gets all IDs of the roles assigned to the user by the specified user ID.
-func (s *UserRoleAssignmentStore) GetAllUserRoleIdsByUserId(ctx *actions.OperationContext, userId uint64) ([]uint64, error) {
+// GetUserRoleIdsByUserId gets the IDs of the roles assigned to the user by the specified user ID.
+// If the role filter is empty, then all assigned roles are returned, otherwise only the roles
+// specified in the filter, if any, are returned.
+func (s *UserRoleAssignmentStore) GetUserRoleIdsByUserId(ctx *actions.OperationContext, userId uint64, roleFilter []uint64) ([]uint64, error) {
 	var ids []uint64
-	err := s.opExecutor.Exec(ctx, iactions.OperationTypeUserRoleAssignmentStore_GetAllUserRoleIdsByUserId,
-		[]*actions.OperationParam{actions.NewOperationParam("userId", userId)},
+	err := s.opExecutor.Exec(ctx, iactions.OperationTypeUserRoleAssignmentStore_GetUserRoleIdsByUserId,
+		[]*actions.OperationParam{actions.NewOperationParam("userId", userId), actions.NewOperationParam("roleFilter", roleFilter)},
 		func(opCtx *actions.OperationContext) error {
 			conn, err := s.db.ConnPool.Acquire(opCtx.Ctx)
 			if err != nil {
-				return fmt.Errorf("[stores.UserRoleAssignmentStore.GetAllUserRoleIdsByUserId] acquire a connection: %w", err)
+				return fmt.Errorf("[stores.UserRoleAssignmentStore.GetUserRoleIdsByUserId] acquire a connection: %w", err)
 			}
 			defer conn.Release()
 
-			const query = "SELECT role_id FROM " + userRoleAssignmentsTable + " WHERE user_id = $1 AND status = $2"
-			rows, err := conn.Query(opCtx.Ctx, query, userId, models.UserRoleAssignmentStatusActive)
+			var query string
+			var rows pgx.Rows
+
+			if len(roleFilter) > 0 {
+				query = "SELECT role_id FROM " + userRoleAssignmentsTable + " WHERE user_id = $1 AND role_id = ANY ($2) AND status = $3"
+				rows, err = conn.Query(opCtx.Ctx, query, userId, roleFilter, models.UserRoleAssignmentStatusActive)
+			} else {
+				query = "SELECT role_id FROM " + userRoleAssignmentsTable + " WHERE user_id = $1 AND status = $2"
+				rows, err = conn.Query(opCtx.Ctx, query, userId, models.UserRoleAssignmentStatusActive)
+			}
+
 			if err != nil {
-				return fmt.Errorf("[stores.UserRoleAssignmentStore.GetAllUserRoleIdsByUserId] execute a query: %w", err)
+				return fmt.Errorf("[stores.UserRoleAssignmentStore.GetUserRoleIdsByUserId] execute a query: %w", err)
 			}
 			defer rows.Close()
 
 			if ids, err = pgx.CollectRows(rows, pgx.RowTo[uint64]); err != nil {
-				return fmt.Errorf("[stores.UserRoleAssignmentStore.GetAllUserRoleIdsByUserId] collect rows: %w", err)
+				return fmt.Errorf("[stores.UserRoleAssignmentStore.GetUserRoleIdsByUserId] collect rows: %w", err)
 			}
 			return nil
 		},
 	)
 	if err != nil {
-		return nil, fmt.Errorf("[stores.UserRoleAssignmentStore.GetAllUserRoleIdsByUserId] execute an operation: %w", err)
+		return nil, fmt.Errorf("[stores.UserRoleAssignmentStore.GetUserRoleIdsByUserId] execute an operation: %w", err)
 	}
 	return ids, nil
 }

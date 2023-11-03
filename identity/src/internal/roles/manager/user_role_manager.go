@@ -67,9 +67,9 @@ func (m *UserRoleManager) GetAllRolesByUserId(ctx *actions.OperationContext, use
 	var rs []*dbmodels.Role
 	err := m.opExecutor.Exec(ctx, iactions.OperationTypeUserRoleManager_GetAllRolesByUserId, []*actions.OperationParam{actions.NewOperationParam("userId", userId)},
 		func(opCtx *actions.OperationContext) error {
-			ids, err := m.uraManager.GetAllUserRoleIdsByUserId(opCtx, userId)
+			ids, err := m.uraManager.GetUserRoleIdsByUserId(opCtx, userId, nil)
 			if err != nil {
-				return fmt.Errorf("[manager.UserRoleManager.GetAllRolesByUserId] get all user's role ids by user id: %w", err)
+				return fmt.Errorf("[manager.UserRoleManager.GetAllRolesByUserId] get user's role ids by user id: %w", err)
 			}
 
 			if len(ids) == 0 {

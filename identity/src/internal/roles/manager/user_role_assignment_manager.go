@@ -295,21 +295,23 @@ func (m *UserRoleAssignmentManager) GetStatusByRoleAssignmentId(ctx *actions.Ope
 	return s, nil
 }
 
-// GetAllUserRoleIdsByUserId gets all IDs of the roles assigned to the user by the specified user ID.
-func (m *UserRoleAssignmentManager) GetAllUserRoleIdsByUserId(ctx *actions.OperationContext, userId uint64) ([]uint64, error) {
+// GetUserRoleIdsByUserId gets the IDs of the roles assigned to the user by the specified user ID.
+// If the role filter is empty, then all assigned roles are returned, otherwise only the roles
+// specified in the filter, if any, are returned.
+func (m *UserRoleAssignmentManager) GetUserRoleIdsByUserId(ctx *actions.OperationContext, userId uint64, roleFilter []uint64) ([]uint64, error) {
 	var ids []uint64
-	err := m.opExecutor.Exec(ctx, iactions.OperationTypeUserRoleAssignmentManager_GetAllUserRoleIdsByUserId,
-		[]*actions.OperationParam{actions.NewOperationParam("userId", userId)},
+	err := m.opExecutor.Exec(ctx, iactions.OperationTypeUserRoleAssignmentManager_GetUserRoleIdsByUserId,
+		[]*actions.OperationParam{actions.NewOperationParam("userId", userId), actions.NewOperationParam("roleFilter", roleFilter)},
 		func(opCtx *actions.OperationContext) error {
 			var err error
-			if ids, err = m.uraStore.GetAllUserRoleIdsByUserId(opCtx, userId); err != nil {
-				return fmt.Errorf("[manager.UserRoleAssignmentManager.GetAllUserRoleIdsByUserId] get all user's role ids by user id: %w", err)
+			if ids, err = m.uraStore.GetUserRoleIdsByUserId(opCtx, userId, roleFilter); err != nil {
+				return fmt.Errorf("[manager.UserRoleAssignmentManager.GetUserRoleIdsByUserId] get user's role ids by user id: %w", err)
 			}
 			return nil
 		},
 	)
 	if err != nil {
-		return nil, fmt.Errorf("[manager.UserRoleAssignmentManager.GetAllUserRoleIdsByUserId] execute an operation: %w", err)
+		return nil, fmt.Errorf("[manager.UserRoleAssignmentManager.GetUserRoleIdsByUserId] execute an operation: %w", err)
 	}
 	return ids, nil
 }
