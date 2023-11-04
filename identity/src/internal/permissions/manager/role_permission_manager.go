@@ -222,7 +222,7 @@ func (m *RolePermissionManager) IsGranted(ctx *actions.OperationContext, roleId,
 }
 
 // AreGranted returns true if all permissions are granted to the role.
-func (m *RolePermissionManager) AreGranted(ctx *actions.OperationContext, roleId, permissionIds []uint64) (bool, error) {
+func (m *RolePermissionManager) AreGranted(ctx *actions.OperationContext, roleId uint64, permissionIds []uint64) (bool, error) {
 	var areGranted bool
 	err := m.opExecutor.Exec(ctx, iactions.OperationTypeRolePermissionManager_AreGranted,
 		[]*actions.OperationParam{actions.NewOperationParam("roleId", roleId), actions.NewOperationParam("permissionIds", permissionIds)},

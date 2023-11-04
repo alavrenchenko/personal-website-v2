@@ -97,7 +97,7 @@ type RolePermissionManager interface {
 	IsGranted(ctx *actions.OperationContext, roleId, permissionId uint64) (bool, error)
 
 	// AreGranted returns true if all permissions are granted to the role.
-	AreGranted(ctx *actions.OperationContext, roleId, permissionIds []uint64) (bool, error)
+	AreGranted(ctx *actions.OperationContext, roleId uint64, permissionIds []uint64) (bool, error)
 
 	// GetAllPermissionIdsByRoleId gets all IDs of the permissions granted to the role by the specified role ID.
 	GetAllPermissionIdsByRoleId(ctx *actions.OperationContext, roleId uint64) ([]uint64, error)
