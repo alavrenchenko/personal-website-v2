@@ -67,6 +67,10 @@ const (
 	ErrorCodeInvalidUserAgentSessionId errors.ErrorCode = 32601
 
 	// Authentication error codes (32800-32999).
+	ErrorCodeInvalidAuthToken       errors.ErrorCode = 32800
+	ErrorCodeInvalidUserAuthToken   errors.ErrorCode = 32801
+	ErrorCodeInvalidClientAuthToken errors.ErrorCode = 32802
+
 	// Authorization error codes (33000-33199).
 
 	// Authentication token encryption key error codes (33200-33399).
@@ -125,6 +129,10 @@ var (
 	ErrInvalidUserAgentSessionId = errors.NewError(ErrorCodeInvalidUserAgentSessionId, "invalid user agent session id")
 
 	// Authentication errors.
+	ErrInvalidAuthToken       = errors.NewError(ErrorCodeInvalidAuthToken, "invalid authentication token")
+	ErrInvalidUserAuthToken   = errors.NewError(ErrorCodeInvalidUserAuthToken, "invalid user's authentication token")
+	ErrInvalidClientAuthToken = errors.NewError(ErrorCodeInvalidClientAuthToken, "invalid client authentication token")
+
 	// Authorization errors.
 
 	// Authentication token encryption key errors.
