@@ -227,6 +227,10 @@ func (m *RolePermissionManager) AreGranted(ctx *actions.OperationContext, roleId
 	err := m.opExecutor.Exec(ctx, iactions.OperationTypeRolePermissionManager_AreGranted,
 		[]*actions.OperationParam{actions.NewOperationParam("roleId", roleId), actions.NewOperationParam("permissionIds", permissionIds)},
 		func(opCtx *actions.OperationContext) error {
+			if len(permissionIds) == 0 {
+				return errors.NewError(errors.ErrorCodeInvalidData, "number of permission ids is 0")
+			}
+
 			var err error
 			if areGranted, err = m.rolePermissionStore.AreGranted(opCtx, roleId, permissionIds); err != nil {
 				return fmt.Errorf("[manager.RolePermissionManager.AreGranted] are all permissions granted to the role: %w", err)

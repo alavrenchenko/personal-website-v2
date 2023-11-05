@@ -331,6 +331,10 @@ func (s *RolePermissionStore) AreGranted(ctx *actions.OperationContext, roleId u
 	err := s.opExecutor.Exec(ctx, iactions.OperationTypeRolePermissionStore_AreGranted,
 		[]*actions.OperationParam{actions.NewOperationParam("roleId", roleId), actions.NewOperationParam("permissionIds", permissionIds)},
 		func(opCtx *actions.OperationContext) error {
+			if len(permissionIds) == 0 {
+				return errs.NewError(errs.ErrorCodeInvalidData, "number of permission ids is 0")
+			}
+
 			conn, err := s.db.ConnPool.Acquire(opCtx.Ctx)
 			if err != nil {
 				return fmt.Errorf("[stores.RolePermissionStore.AreGranted] acquire a connection: %w", err)
