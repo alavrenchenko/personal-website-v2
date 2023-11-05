@@ -12,15 +12,46 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
--- PROCEDURE: public.create_user(bigint, bigint, smallint, text, character varying, character varying, character varying, character varying, timestamp without time zone, smallint)
+-- FUNCTION: public.username_exists(character varying)
+/*
+User statuses:
+    Deleted = 8
+*/
+CREATE OR REPLACE FUNCTION public.username_exists(
+    _name public.users.name%TYPE
+) RETURNS boolean AS $$
+BEGIN
+   -- user status: Deleted(8)
+    RETURN EXISTS (SELECT 1 FROM public.users WHERE lower(name) = lower(_name) AND status <> 8 LIMIT 1);
+END;
+$$ LANGUAGE plpgsql;
+
+-- FUNCTION: public.user_email_exists(character varying)
+/*
+User statuses:
+    Deleted = 8
+*/
+CREATE OR REPLACE FUNCTION public.user_email_exists(
+    _email public.users.email%TYPE
+) RETURNS boolean AS $$
+BEGIN
+   -- user status: Deleted(8)
+    RETURN EXISTS (SELECT 1 FROM public.users WHERE lower(email) = lower(_email) AND status <> 8 LIMIT 1);
+END;
+$$ LANGUAGE plpgsql;
+
+-- PROCEDURE: public.create_user(smallint, bigint, bigint, smallint, text, character varying, character varying, character varying, character varying, timestamp without time zone, smallint)
 /*
 User statuses:
     Active = 3
 
 Error codes:
-    NoError           = 0
+    NoError                = 0
+    UserEmailAlreadyExists = 11002
 */
+-- Minimum transaction isolation level: Read committed.
 CREATE OR REPLACE PROCEDURE public.create_user(
+    IN _type public.users.type%TYPE,
     IN _group public.users.group%TYPE,
     IN _created_by public.users.created_by%TYPE,
     IN _status public.users.status%TYPE,
@@ -41,15 +72,30 @@ BEGIN
     err_code := 0; -- NoError
     err_msg := '';
 
+    IF _email IS NOT NULL AND public.user_email_exists(_email) THEN
+        err_code := 11002; -- UserEmailAlreadyExists
+        err_msg := 'user with the same email already exists';
+        RETURN;
+    END IF;
+
     _time := (clock_timestamp() AT TIME ZONE 'UTC');
     -- user status: Active(3)
-    INSERT INTO public.users("group", created_at, created_by, updated_at, updated_by, status, status_updated_at, status_updated_by, status_comment,
-            email, _version_stamp, _timestamp)
-        VALUES (_group, _time, _created_by, _time, _created_by, 3, _time, _created_by, _status_comment, _email, 1, _time)
+    INSERT INTO public.users(type, "group", created_at, created_by, updated_at, updated_by, status, status_updated_at, status_updated_by,
+            status_comment, email, _version_stamp, _timestamp)
+        VALUES (_type, _group, _time, _created_by, _time, _created_by, 3, _time, _created_by, _status_comment, _email, 1, _time)
         RETURNING id INTO _id;
 
     INSERT INTO public.personal_info(user_id, created_at, created_by, updated_at, updated_by, first_name, last_name, display_name,
             birth_date, gender, _version_stamp, _timestamp)
         VALUES (_id, _time, _created_by, _time, _created_by, _first_name, _last_name, _display_name, _birth_date, _gender, 1, _time);
+
+    EXCEPTION
+        WHEN unique_violation THEN
+            IF _id = 0 AND _email IS NOT NULL AND public.user_email_exists(_email) THEN
+                err_code := 11002; -- UserEmailAlreadyExists
+                err_msg := 'user with the same email already exists';
+                RETURN;
+            END IF;
+            RAISE;
 END;
 $$ LANGUAGE plpgsql;
