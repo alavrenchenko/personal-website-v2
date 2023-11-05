@@ -14,6 +14,32 @@
 
 package models
 
+import "fmt"
+
+// The user's type (account type).
+type UserType uint8
+
+const (
+	// Unspecified = 0 // Do not use.
+
+	UserTypeUser       UserType = 1
+	UserTypeSystemUser UserType = 2
+)
+
+func (t UserType) IsValid() bool {
+	return t == UserTypeUser || t == UserTypeSystemUser
+}
+
+func (t UserType) String() string {
+	switch t {
+	case UserTypeUser:
+		return "user"
+	case UserTypeSystemUser:
+		return "systemUser"
+	}
+	return fmt.Sprintf("UserType(%d)", t)
+}
+
 // The user's status.
 type UserStatus uint8
 
@@ -26,7 +52,8 @@ const (
 	UserStatusLockedOut            UserStatus = 4
 	UserStatusTemporarilyLockedOut UserStatus = 5
 	UserStatusDisabled             UserStatus = 6
-	UserStatusDeleted              UserStatus = 7
+	UserStatusDeleting             UserStatus = 7
+	UserStatusDeleted              UserStatus = 8
 )
 
 // The user's gender.
@@ -39,3 +66,11 @@ const (
 	GenderMale        Gender = 3
 	GenderOther       Gender = 4
 )
+
+func (g Gender) IsValid() bool {
+	switch g {
+	case GenderUnspecified, GenderUnknown, GenderFemale, GenderMale, GenderOther:
+		return true
+	}
+	return false
+}

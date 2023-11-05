@@ -27,6 +27,9 @@ type UserManager interface {
 	// Create creates a user and returns the user ID if the operation is successful.
 	Create(ctx *actions.OperationContext, data *users.CreateOperationData) (uint64, error)
 
+	// Delete deletes a user by the specified user ID.
+	Delete(ctx *actions.OperationContext, id uint64) error
+
 	// FindById finds and returns a user, if any, by the specified user ID.
 	FindById(ctx *actions.OperationContext, id uint64) (*dbmodels.User, error)
 
@@ -36,11 +39,17 @@ type UserManager interface {
 	// FindByEmail finds and returns a user, if any, by the specified user's email.
 	FindByEmail(ctx *actions.OperationContext, email string) (*dbmodels.User, error)
 
+	// GetTypeById gets a user's type by the specified user ID.
+	GetTypeById(ctx *actions.OperationContext, id uint64) (models.UserType, error)
+
 	// GetGroupById gets a user's group by the specified user ID.
 	GetGroupById(ctx *actions.OperationContext, id uint64) (groupmodels.UserGroup, error)
 
 	// GetStatusById gets a user's status by the specified user ID.
 	GetStatusById(ctx *actions.OperationContext, id uint64) (models.UserStatus, error)
+
+	// GetTypeAndStatusById gets a type and a status of the user by the specified user ID.
+	GetTypeAndStatusById(ctx *actions.OperationContext, id uint64) (models.UserType, models.UserStatus, error)
 
 	// GetGroupAndStatusById gets a group and a status of the user by the specified user ID.
 	GetGroupAndStatusById(ctx *actions.OperationContext, id uint64) (groupmodels.UserGroup, models.UserStatus, error)

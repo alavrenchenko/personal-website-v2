@@ -29,6 +29,9 @@ type User struct {
 	// The unique name to identify the user.
 	Name *string `db:"name"`
 
+	// The user's type (account type).
+	Type models.UserType `db:"type"`
+
 	// The user's group.
 	Group groupmodels.UserGroup `db:"group"`
 
@@ -44,7 +47,7 @@ type User struct {
 	// The user ID to identify the user who updated this user.
 	UpdatedBy uint64 `db:"updated_by"`
 
-	// The user's status can be New(1), PendingApproval(2), Active(3), LockedOut(4), TemporarilyLockedOut(5), Disabled(6), or Deleted(7).
+	// The user's status.
 	Status models.UserStatus `db:"status"`
 
 	// It stores the date and time at which the user's status was updated.
@@ -107,6 +110,15 @@ type PersonalInfo struct {
 	// The user ID to identify the user who updated the personal info.
 	UpdatedBy uint64 `db:"updated_by"`
 
+	// It indicates whether personal info has been deleted.
+	IsDeleted bool `db:"is_deleted"`
+
+	// It stores the date and time at which the personal info was deleted.
+	DeletedAt *time.Time `db:"deleted_at"`
+
+	// The user ID to identify the user who deleted the personal info.
+	DeletedBy *uint64 `db:"deleted_by"`
+
 	// The first name.
 	FirstName string `db:"first_name"`
 
@@ -121,15 +133,6 @@ type PersonalInfo struct {
 
 	// The user's gender.
 	Gender models.Gender `db:"gender"`
-
-	// It indicates whether personal info has been deleted.
-	IsDeleted bool `db:"is_deleted"`
-
-	// It stores the date and time at which the personal info was deleted.
-	DeletedAt *time.Time `db:"deleted_at"`
-
-	// The user ID to identify the user who deleted the personal info.
-	DeletedBy *uint64 `db:"deleted_by"`
 
 	// rowversion
 	VersionStamp uint64 `db:"_version_stamp"`

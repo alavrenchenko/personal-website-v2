@@ -24,6 +24,9 @@ import (
 )
 
 type CreateOperationData struct {
+	// The user's type (account type).
+	Type models.UserType `json:"type"`
+
 	// The user's group.
 	Group groupmodels.UserGroup `json:"group"`
 
@@ -50,11 +53,17 @@ type CreateOperationData struct {
 }
 
 func (d *CreateOperationData) Validate() *errors.Error {
-	if d.Group != groupmodels.UserGroupSystemUsers && d.Group != groupmodels.UserGroupAdmins && d.Group != groupmodels.UserGroupUsers {
+	if !d.Type.IsValid() {
+		return errors.NewError(errors.ErrorCodeInvalidData, "invalid type")
+	}
+	if !d.Group.IsValid() || d.Group == groupmodels.UserGroupAnonymousUsers {
 		return errors.NewError(errors.ErrorCodeInvalidData, "invalid group")
 	}
 
-	if d.Group == groupmodels.UserGroupSystemUsers {
+	if d.Type == models.UserTypeSystemUser {
+		if d.Group != groupmodels.UserGroupSystemUsers {
+			return errors.NewError(errors.ErrorCodeInvalidData, "invalid group")
+		}
 		if strings.IsEmptyOrWhitespace(d.DisplayName) {
 			return errors.NewError(errors.ErrorCodeInvalidData, "displayName is empty")
 		}
