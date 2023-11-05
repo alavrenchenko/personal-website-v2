@@ -105,6 +105,7 @@ const (
 	OperationTypeAuthenticationManager_AuthenticateClient actions.OperationType = 15504
 
 	// AuthorizationManager operation types (16000-16499).
+	OperationTypeAuthorizationManager_Authorize actions.OperationType = 16000
 
 	// Authentication TokenEncryptionKeyManager operation types (16500-16999).
 	OperationTypeAuthTokenEncryptionKeyManager_FindById                         actions.OperationType = 16500
