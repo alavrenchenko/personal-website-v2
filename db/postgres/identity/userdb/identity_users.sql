@@ -27,6 +27,11 @@ CREATE DATABASE identity_users
 
 -- Table: public.users
 /*
+User types:
+    Unspecified = 0
+    User        = 1
+    SystemUser  = 2
+
 User statuses:
     Unspecified          = 0
     New                  = 1
@@ -35,12 +40,14 @@ User statuses:
     LockedOut            = 4
     TemporarilyLockedOut = 5
     Disabled             = 6
-    Deleted              = 7
+    Deleting             = 7
+    Deleted              = 8
 */
 CREATE TABLE IF NOT EXISTS public.users
 (
     id bigint NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 9223372036854775807 CACHE 1 ),
     name character varying(256) COLLATE pg_catalog."default",
+    type smallint NOT NULL,
     "group" bigint NOT NULL,
     created_at timestamp(6) without time zone NOT NULL,
     created_by bigint NOT NULL,
@@ -61,9 +68,31 @@ CREATE TABLE IF NOT EXISTS public.users
     _version_stamp bigint NOT NULL,
     _timestamp timestamp(6) without time zone NOT NULL DEFAULT (clock_timestamp() AT TIME ZONE 'UTC'::text),
     CONSTRAINT users_pkey PRIMARY KEY (id),
-    CONSTRAINT users_name_key UNIQUE (name)
+    CONSTRAINT users_type_check CHECK (type = 1 OR type = 2),
+    CONSTRAINT users_status_check CHECK (status >= 1 AND status <= 8)
 )
 TABLESPACE pg_default;
+
+CREATE UNIQUE INDEX IF NOT EXISTS users_name_idx
+    ON public.users (lower(name))
+    WHERE status <> 8;
+
+CREATE UNIQUE INDEX IF NOT EXISTS users_email_idx
+    ON public.users (lower(email))
+    WHERE status <> 8;
+
+CREATE INDEX IF NOT EXISTS users_type_idx ON public.users (type);
+CREATE INDEX IF NOT EXISTS users_group_idx ON public.users ("group");
+CREATE INDEX IF NOT EXISTS users_created_at_idx ON public.users (created_at);
+CREATE INDEX IF NOT EXISTS users_updated_at_idx ON public.users (updated_at);
+CREATE INDEX IF NOT EXISTS users_status_idx ON public.users (status);
+CREATE INDEX IF NOT EXISTS users_status_updated_at_idx ON public.users (status_updated_at);
+CREATE INDEX IF NOT EXISTS users_first_sign_in_time_idx ON public.users (first_sign_in_time);
+CREATE INDEX IF NOT EXISTS users_first_sign_in_ip_idx ON public.users (first_sign_in_ip);
+CREATE INDEX IF NOT EXISTS users_last_sign_in_time_idx ON public.users (last_sign_in_time);
+CREATE INDEX IF NOT EXISTS users_last_sign_in_ip_idx ON public.users (last_sign_in_ip);
+CREATE INDEX IF NOT EXISTS users_last_activity_time_idx ON public.users (last_activity_time);
+CREATE INDEX IF NOT EXISTS users_last_activity_ip_idx ON public.users (last_activity_ip);
 
 -- Table: public.personal_info
 /*
@@ -82,23 +111,33 @@ CREATE TABLE IF NOT EXISTS public.personal_info
     created_by bigint NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL DEFAULT (clock_timestamp() AT TIME ZONE 'UTC'::text),
     updated_by bigint NOT NULL,
+    is_deleted boolean NOT NULL DEFAULT FALSE,
+    deleted_at timestamp(6) without time zone,
+    deleted_by bigint,
     first_name character varying(512) COLLATE pg_catalog."default" NOT NULL,
     last_name character varying(512) COLLATE pg_catalog."default" NOT NULL,
     display_name character varying(512) COLLATE pg_catalog."default" NOT NULL,
     birth_date timestamp(6) without time zone,
     gender smallint NOT NULL,
-    is_deleted boolean NOT NULL DEFAULT false,
-    deleted_at timestamp(6) without time zone,
-    deleted_by bigint,
     _version_stamp bigint NOT NULL,
     _timestamp timestamp(6) without time zone NOT NULL DEFAULT (clock_timestamp() AT TIME ZONE 'UTC'::text),
     CONSTRAINT personal_info_pkey PRIMARY KEY (id),
+    CONSTRAINT personal_info_user_id_key UNIQUE (user_id),
     CONSTRAINT personal_info_user_id_fkey FOREIGN KEY (user_id)
         REFERENCES public.users (id) MATCH SIMPLE
         ON UPDATE CASCADE
         ON DELETE RESTRICT
 )
 TABLESPACE pg_default;
+
+CREATE INDEX IF NOT EXISTS personal_info_created_at_idx ON public.personal_info (created_at);
+CREATE INDEX IF NOT EXISTS personal_info_updated_at_idx ON public.personal_info (updated_at);
+CREATE INDEX IF NOT EXISTS personal_info_is_deleted_idx ON public.personal_info (is_deleted);
+CREATE INDEX IF NOT EXISTS personal_info_deleted_at_idx ON public.personal_info (deleted_at);
+CREATE INDEX IF NOT EXISTS personal_info_first_name_idx ON public.personal_info (first_name);
+CREATE INDEX IF NOT EXISTS personal_info_last_name_idx ON public.personal_info (last_name);
+CREATE INDEX IF NOT EXISTS personal_info_birth_date_idx ON public.personal_info (birth_date);
+CREATE INDEX IF NOT EXISTS personal_info_gender_idx ON public.personal_info (gender);
 
 -- Table: public.user_role_assignments
 /*
