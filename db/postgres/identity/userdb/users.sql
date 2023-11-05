@@ -99,3 +99,126 @@ BEGIN
             RAISE;
 END;
 $$ LANGUAGE plpgsql;
+
+-- PROCEDURE: public.start_deleting_user(bigint, bigint, text)
+/*
+User statuses:
+    Deleting = 7
+    Deleted  = 8
+
+Error codes:
+    NoError          = 0
+    InvalidOperation = 3
+    UserNotFound     = 11000
+*/
+-- Minimum transaction isolation level: Read committed.
+CREATE OR REPLACE PROCEDURE public.start_deleting_user(
+    IN _id public.users.id%TYPE,
+    IN _deleted_by public.users.updated_by%TYPE,
+    IN _status_comment public.users.status_comment%TYPE,
+    OUT err_code bigint,
+    OUT err_msg text) AS $$
+DECLARE
+    _time timestamp(6) without time zone;
+    _status public.users.status%TYPE;
+BEGIN
+    err_code := 0; -- NoError
+    err_msg := '';
+
+    SELECT status INTO _status FROM public.users WHERE id = _id LIMIT 1 FOR UPDATE;
+    IF NOT FOUND THEN
+        err_code := 11000; -- UserNotFound
+        err_msg := 'user not found';
+        RETURN;
+    END IF;
+
+    -- user's statuses: Deleting(7), Deleted(8)
+    IF _status = 7 OR _status = 8 THEN
+        err_code := 3; -- InvalidOperation
+        err_msg := format('invalid user''s status (%s)', _status);
+        RETURN;
+    END IF;
+
+    _time := (clock_timestamp() AT TIME ZONE 'UTC');
+    -- user's status: Deleting(7)
+    UPDATE public.users
+        SET updated_at = _time, updated_by = _deleted_by, status = 7, status_updated_at = _time, status_updated_by = _deleted_by,
+            status_comment = _status_comment, _version_stamp = _version_stamp + 1, _timestamp = _time
+        WHERE id = _id;
+END;
+$$ LANGUAGE plpgsql;
+
+-- PROCEDURE: public.delete_user(bigint, bigint, text)
+/*
+User statuses:
+    Deleting = 7
+    Deleted  = 8
+
+Error codes:
+    NoError                  = 0
+    InternalError            = 2
+    InvalidOperation         = 3
+    UserNotFound             = 11000
+    UserPersonalInfoNotFound = 11003
+*/
+-- Minimum transaction isolation level: Read committed.
+CREATE OR REPLACE PROCEDURE public.delete_user(
+    IN _id public.users.id%TYPE,
+    IN _deleted_by public.users.updated_by%TYPE,
+    IN _status_comment public.users.status_comment%TYPE,
+    OUT err_code bigint,
+    OUT err_msg text) AS $$
+DECLARE
+    _time timestamp(6) without time zone;
+    _status public.users.status%TYPE;
+    _is_personal_info_deleted public.personal_info.is_deleted%TYPE;
+BEGIN
+    err_code := 0; -- NoError
+    err_msg := '';
+
+    SELECT status INTO _status FROM public.users WHERE id = _id LIMIT 1 FOR UPDATE;
+    IF NOT FOUND THEN
+        err_code := 11000; -- UserNotFound
+        err_msg := 'user not found';
+        RETURN;
+    END IF;
+
+    -- user's status: Deleting(7)
+    IF _status <> 7 THEN
+        err_code := 3; -- InvalidOperation
+        -- user's status: Deleted(8)
+        IF _status = 8 THEN
+            err_msg := 'user has already been deleted';
+        ELSE
+            err_msg := format('invalid user''s status (%s)', _status);
+        END IF;
+        RETURN;
+    END IF;
+
+    SELECT is_deleted INTO _is_personal_info_deleted FROM public.personal_info WHERE user_id = _id LIMIT 1 FOR UPDATE;
+    IF NOT FOUND THEN
+        -- internal error
+        err_code := 11003; -- UserPersonalInfoNotFound
+        err_msg := 'user''s personal info not found';
+        RETURN;
+    END IF;
+
+    IF _is_personal_info_deleted THEN
+        err_code := 2; -- InternalError
+        err_msg := 'user''s personal info is deleted';
+        RETURN;
+    END IF;
+
+    _time := (clock_timestamp() AT TIME ZONE 'UTC');
+    -- user's status: Deleted(8)
+    UPDATE public.users
+        SET updated_at = _time, updated_by = _deleted_by, status = 8, status_updated_at = _time, status_updated_by = _deleted_by,
+            status_comment = _status_comment, _version_stamp = _version_stamp + 1, _timestamp = _time
+        WHERE id = _id;
+
+    UPDATE public.personal_info
+        SET updated_at = _time, updated_by = _deleted_by, is_deleted = TRUE, deleted_at = _time, deleted_by = _deleted_by,
+            _version_stamp = _version_stamp + 1, _timestamp = _time
+        WHERE user_id = _id;
+END;
+$$ LANGUAGE plpgsql;
