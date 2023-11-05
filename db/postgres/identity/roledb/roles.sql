@@ -130,7 +130,7 @@ BEGIN
         RETURN;
     END IF;
 
-    SELECT is_deleted, existing_assignment_count INTO _is_role_info_deleted, _existing_assignment_count FROM public.role_info WHERE role_id = _role_id LIMIT 1 FOR UPDATE;
+    SELECT is_deleted, existing_assignment_count INTO _is_role_info_deleted, _existing_assignment_count FROM public.role_info WHERE role_id = _id LIMIT 1 FOR UPDATE;
     IF NOT FOUND THEN
         -- internal error
         err_code := 11602; -- RoleInfoNotFound
@@ -158,7 +158,8 @@ BEGIN
         WHERE id = _id;
 
     UPDATE public.role_info
-        SET updated_at = _time, updated_by = _deleted_by, is_deleted = TRUE, deleted_at = _time, deleted_by = _deleted_by, _version_stamp = _version_stamp + 1, _timestamp = _time
-        WHERE role_id = _role_id;
+        SET updated_at = _time, updated_by = _deleted_by, is_deleted = TRUE, deleted_at = _time, deleted_by = _deleted_by,
+            _version_stamp = _version_stamp + 1, _timestamp = _time
+        WHERE role_id = _id;
 END;
 $$ LANGUAGE plpgsql;
