@@ -23,7 +23,9 @@ import "personal-website-v2/pkg/db/errors"
 const (
 	// User error codes (11000-11199).
 	DbErrorCodeUserNotFound             errors.DbErrorCode = 11000
-	DbErrorCodeUserPersonalInfoNotFound errors.DbErrorCode = 11001
+	DbErrorCodeUsernameAlreadyExists    errors.DbErrorCode = 11001
+	DbErrorCodeUserEmailAlreadyExists   errors.DbErrorCode = 11002
+	DbErrorCodeUserPersonalInfoNotFound errors.DbErrorCode = 11003
 
 	// Client error codes (11200-11399).
 	DbErrorCodeClientNotFound errors.DbErrorCode = 11200

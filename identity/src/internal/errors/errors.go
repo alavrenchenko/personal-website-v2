@@ -24,7 +24,9 @@ import "personal-website-v2/pkg/errors"
 const (
 	// User error codes (31000-31199).
 	ErrorCodeUserNotFound             errors.ErrorCode = 31000
-	ErrorCodeUserPersonalInfoNotFound errors.ErrorCode = 31001
+	ErrorCodeUsernameAlreadyExists    errors.ErrorCode = 31001
+	ErrorCodeUserEmailAlreadyExists   errors.ErrorCode = 31002
+	ErrorCodeUserPersonalInfoNotFound errors.ErrorCode = 31003
 
 	// Client error codes (31200-31399).
 	ErrorCodeClientNotFound  errors.ErrorCode = 31200
@@ -90,6 +92,8 @@ const (
 var (
 	// User errors.
 	ErrUserNotFound             = errors.NewError(ErrorCodeUserNotFound, "user not found")
+	ErrUsernameAlreadyExists    = errors.NewError(ErrorCodeUsernameAlreadyExists, "username already exists")
+	ErrUserEmailAlreadyExists   = errors.NewError(ErrorCodeUserEmailAlreadyExists, "user with the same email already exists")
 	ErrUserPersonalInfoNotFound = errors.NewError(ErrorCodeUserPersonalInfoNotFound, "user's personal info not found")
 
 	// Client errors.
