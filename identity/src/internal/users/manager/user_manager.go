@@ -142,13 +142,14 @@ func (m *UserManager) FindById(ctx *actions.OperationContext, id uint64) (*dbmod
 }
 
 // FindByName finds and returns a user, if any, by the specified user name.
-func (m *UserManager) FindByName(ctx *actions.OperationContext, name string) (*dbmodels.User, error) {
+func (m *UserManager) FindByName(ctx *actions.OperationContext, name string, isCaseSensitive bool) (*dbmodels.User, error) {
 	op, err := ctx.Action.Operations.CreateAndStart(
 		iactions.OperationTypeUserManager_FindByName,
 		actions.OperationCategoryCommon,
 		iactions.OperationGroupUser,
 		uuid.NullUUID{UUID: ctx.Operation.Id(), Valid: true},
 		actions.NewOperationParam("name", name),
+		actions.NewOperationParam("isCaseSensitive", isCaseSensitive),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("[manager.UserManager.FindByName] create and start an operation: %w", err)
@@ -175,7 +176,7 @@ func (m *UserManager) FindByName(ctx *actions.OperationContext, name string) (*d
 		return nil, errors.NewError(errors.ErrorCodeInvalidData, "name is empty")
 	}
 
-	u, err := m.userStore.FindByName(ctx2, name)
+	u, err := m.userStore.FindByName(ctx2, name, isCaseSensitive)
 	if err != nil {
 		return nil, fmt.Errorf("[manager.UserManager.FindByName] find a user by name: %w", err)
 	}
@@ -185,13 +186,14 @@ func (m *UserManager) FindByName(ctx *actions.OperationContext, name string) (*d
 }
 
 // FindByEmail finds and returns a user, if any, by the specified user's email.
-func (m *UserManager) FindByEmail(ctx *actions.OperationContext, email string) (*dbmodels.User, error) {
+func (m *UserManager) FindByEmail(ctx *actions.OperationContext, email string, isCaseSensitive bool) (*dbmodels.User, error) {
 	op, err := ctx.Action.Operations.CreateAndStart(
 		iactions.OperationTypeUserManager_FindByEmail,
 		actions.OperationCategoryCommon,
 		iactions.OperationGroupUser,
 		uuid.NullUUID{UUID: ctx.Operation.Id(), Valid: true},
 		actions.NewOperationParam("email", email),
+		actions.NewOperationParam("isCaseSensitive", isCaseSensitive),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("[manager.UserManager.FindByEmail] create and start an operation: %w", err)
@@ -218,7 +220,7 @@ func (m *UserManager) FindByEmail(ctx *actions.OperationContext, email string) (
 		return nil, errors.NewError(errors.ErrorCodeInvalidData, "email is empty")
 	}
 
-	u, err := m.userStore.FindByEmail(ctx2, email)
+	u, err := m.userStore.FindByEmail(ctx2, email, isCaseSensitive)
 	if err != nil {
 		return nil, fmt.Errorf("[manager.UserManager.FindByEmail] find a user by email: %w", err)
 	}

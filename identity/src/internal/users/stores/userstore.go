@@ -143,14 +143,20 @@ func (s *UserStore) FindById(ctx *actions.OperationContext, id uint64) (*dbmodel
 }
 
 // FindByName finds and returns a user, if any, by the specified user name.
-func (s *UserStore) FindByName(ctx *actions.OperationContext, name string) (*dbmodels.User, error) {
+func (s *UserStore) FindByName(ctx *actions.OperationContext, name string, isCaseSensitive bool) (*dbmodels.User, error) {
 	var u *dbmodels.User
 	err := s.opExecutor.Exec(ctx, iactions.OperationTypeUserStore_FindByName,
-		[]*actions.OperationParam{actions.NewOperationParam("name", name)},
+		[]*actions.OperationParam{actions.NewOperationParam("name", name), actions.NewOperationParam("isCaseSensitive", isCaseSensitive)},
 		func(opCtx *actions.OperationContext) error {
-			const query = "SELECT * FROM " + usersTable + " WHERE name = $1 LIMIT 1"
+			var query string
+			if isCaseSensitive {
+				query = "SELECT * FROM " + usersTable + " WHERE lower(name) = lower($1) AND name = $1 AND status <> $2 LIMIT 1"
+			} else {
+				query = "SELECT * FROM " + usersTable + " WHERE lower(name) = lower($1) AND status <> $2 LIMIT 1"
+			}
+
 			var err error
-			if u, err = s.uStore.Find(opCtx.Ctx, query, name); err != nil {
+			if u, err = s.uStore.Find(opCtx.Ctx, query, name, models.UserStatusDeleted); err != nil {
 				return fmt.Errorf("[stores.UserStore.FindByName] find a user by name: %w", err)
 			}
 			return nil
@@ -163,14 +169,20 @@ func (s *UserStore) FindByName(ctx *actions.OperationContext, name string) (*dbm
 }
 
 // FindByEmail finds and returns a user, if any, by the specified user's email.
-func (s *UserStore) FindByEmail(ctx *actions.OperationContext, email string) (*dbmodels.User, error) {
+func (s *UserStore) FindByEmail(ctx *actions.OperationContext, email string, isCaseSensitive bool) (*dbmodels.User, error) {
 	var u *dbmodels.User
 	err := s.opExecutor.Exec(ctx, iactions.OperationTypeUserStore_FindByEmail,
-		[]*actions.OperationParam{actions.NewOperationParam("email", email)},
+		[]*actions.OperationParam{actions.NewOperationParam("email", email), actions.NewOperationParam("isCaseSensitive", isCaseSensitive)},
 		func(opCtx *actions.OperationContext) error {
-			const query = "SELECT * FROM " + usersTable + " WHERE email = $1 LIMIT 1"
+			var query string
+			if isCaseSensitive {
+				query = "SELECT * FROM " + usersTable + " WHERE lower(email) = lower($1) AND email = $1 AND status <> $2 LIMIT 1"
+			} else {
+				query = "SELECT * FROM " + usersTable + " WHERE lower(email) = lower($1) AND status <> $2 LIMIT 1"
+			}
+
 			var err error
-			if u, err = s.uStore.Find(opCtx.Ctx, query, email); err != nil {
+			if u, err = s.uStore.Find(opCtx.Ctx, query, email, models.UserStatusDeleted); err != nil {
 				return fmt.Errorf("[stores.UserStore.FindByEmail] find a user by email: %w", err)
 			}
 			return nil
