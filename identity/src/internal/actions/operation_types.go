@@ -25,12 +25,13 @@ const (
 
 	// UserManager operation types (11000-11499).
 	OperationTypeUserManager_Create                actions.OperationType = 11000
-	OperationTypeUserManager_FindById              actions.OperationType = 11001
-	OperationTypeUserManager_FindByName            actions.OperationType = 11002
-	OperationTypeUserManager_FindByEmail           actions.OperationType = 11003
-	OperationTypeUserManager_GetGroupById          actions.OperationType = 11004
-	OperationTypeUserManager_GetStatusById         actions.OperationType = 11005
-	OperationTypeUserManager_GetGroupAndStatusById actions.OperationType = 11006
+	OperationTypeUserManager_Delete                actions.OperationType = 11001
+	OperationTypeUserManager_FindById              actions.OperationType = 11002
+	OperationTypeUserManager_FindByName            actions.OperationType = 11003
+	OperationTypeUserManager_FindByEmail           actions.OperationType = 11004
+	OperationTypeUserManager_GetGroupById          actions.OperationType = 11005
+	OperationTypeUserManager_GetStatusById         actions.OperationType = 11006
+	OperationTypeUserManager_GetGroupAndStatusById actions.OperationType = 11007
 
 	// ClientManager operation types (11500-11999).
 	OperationTypeClientManager_Create             actions.OperationType = 11500

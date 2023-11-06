@@ -27,6 +27,12 @@ type UserStore interface {
 	// Create creates a user and returns the user ID if the operation is successful.
 	Create(ctx *actions.OperationContext, data *users.CreateOperationData) (uint64, error)
 
+	// StartDeleting starts deleting a user by the specified user ID.
+	StartDeleting(ctx *actions.OperationContext, id uint64) error
+
+	// Delete deletes a user by the specified user ID.
+	Delete(ctx *actions.OperationContext, id uint64) error
+
 	// FindById finds and returns a user, if any, by the specified user ID.
 	FindById(ctx *actions.OperationContext, id uint64) (*dbmodels.User, error)
 

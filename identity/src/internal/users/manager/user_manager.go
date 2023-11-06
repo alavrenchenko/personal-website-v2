@@ -102,6 +102,33 @@ func (m *UserManager) Create(ctx *actions.OperationContext, data *useroperations
 	return id, nil
 }
 
+// Delete deletes a user by the specified user ID.
+func (m *UserManager) Delete(ctx *actions.OperationContext, id uint64) error {
+	err := m.opExecutor.Exec(ctx, iactions.OperationTypeUserManager_Delete, []*actions.OperationParam{actions.NewOperationParam("id", id)},
+		func(opCtx *actions.OperationContext) error {
+			if err := m.userStore.StartDeleting(opCtx, id); err != nil {
+				return fmt.Errorf("[manager.UserManager.Delete] start deleting a user: %w", err)
+			}
+
+			if err := m.userStore.Delete(opCtx, id); err != nil {
+				return fmt.Errorf("[manager.UserManager.Delete] delete a user: %w", err)
+			}
+
+			m.logger.InfoWithEvent(
+				opCtx.CreateLogEntryContext(),
+				events.UserEvent,
+				"[manager.UserManager.Delete] user has been deleted",
+				logging.NewField("id", id),
+			)
+			return nil
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("[manager.UserManager.Delete] execute an operation: %w", err)
+	}
+	return nil
+}
+
 // FindById finds and returns a user, if any, by the specified user ID.
 func (m *UserManager) FindById(ctx *actions.OperationContext, id uint64) (*dbmodels.User, error) {
 	op, err := ctx.Action.Operations.CreateAndStart(
