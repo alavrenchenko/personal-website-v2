@@ -32,6 +32,7 @@ import (
 	"personal-website-v2/pkg/actions"
 	dberrors "personal-website-v2/pkg/db/errors"
 	"personal-website-v2/pkg/db/postgres"
+	errs "personal-website-v2/pkg/errors"
 	actionhelper "personal-website-v2/pkg/helper/actions"
 	"personal-website-v2/pkg/logging"
 	lcontext "personal-website-v2/pkg/logging/context"
@@ -122,6 +123,86 @@ func (s *UserStore) Create(ctx *actions.OperationContext, data *useroperations.C
 		return 0, fmt.Errorf("[stores.UserStore.Create] execute an operation: %w", err)
 	}
 	return id, nil
+}
+
+// StartDeleting starts deleting a user by the specified user ID.
+func (s *UserStore) StartDeleting(ctx *actions.OperationContext, id uint64) error {
+	err := s.opExecutor.Exec(ctx, iactions.OperationTypeUserStore_StartDeleting, []*actions.OperationParam{actions.NewOperationParam("id", id)},
+		func(opCtx *actions.OperationContext) error {
+			err := s.txManager.ExecWithReadCommittedLevel(opCtx.Ctx, func(txCtx context.Context, tx pgx.Tx) error {
+				var errCode dberrors.DbErrorCode
+				var errMsg string
+				// PROCEDURE: public.start_deleting_user(IN _id, IN _deleted_by, IN _status_comment, OUT err_code, OUT err_msg)
+				// Minimum transaction isolation level: Read committed.
+				const query = "CALL public.start_deleting_user($1, $2, 'deletion', NULL, NULL)"
+
+				if err := tx.QueryRow(txCtx, query, id, opCtx.UserId.Value).Scan(&errCode, &errMsg); err != nil {
+					return fmt.Errorf("[stores.UserStore.StartDeleting] execute a query (start_deleting_user): %w", err)
+				}
+
+				switch errCode {
+				case dberrors.DbErrorCodeNoError:
+					return nil
+				case dberrors.DbErrorCodeInvalidOperation:
+					return errs.NewError(errs.ErrorCodeInvalidOperation, errMsg)
+				case idberrors.DbErrorCodeUserNotFound:
+					return ierrors.ErrUserNotFound
+				}
+				// unknown error
+				return fmt.Errorf("[stores.UserStore.StartDeleting] invalid operation: %w", dberrors.NewDbError(errCode, errMsg))
+			})
+			if err != nil {
+				return fmt.Errorf("[stores.UserStore.StartDeleting] execute a transaction: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("[stores.UserStore.StartDeleting] execute an operation: %w", err)
+	}
+	return nil
+}
+
+// Delete deletes a user by the specified user ID.
+func (s *UserStore) Delete(ctx *actions.OperationContext, id uint64) error {
+	err := s.opExecutor.Exec(ctx, iactions.OperationTypeUserStore_Delete, []*actions.OperationParam{actions.NewOperationParam("id", id)},
+		func(opCtx *actions.OperationContext) error {
+			err := s.txManager.ExecWithReadCommittedLevel(opCtx.Ctx, func(txCtx context.Context, tx pgx.Tx) error {
+				var errCode dberrors.DbErrorCode
+				var errMsg string
+				// PROCEDURE: public.delete_user(IN _id, IN _deleted_by, IN _status_comment, OUT err_code, OUT err_msg)
+				// Minimum transaction isolation level: Read committed.
+				const query = "CALL public.delete_user($1, $2, 'deletion', NULL, NULL)"
+
+				if err := tx.QueryRow(txCtx, query, id, opCtx.UserId.Value).Scan(&errCode, &errMsg); err != nil {
+					return fmt.Errorf("[stores.UserStore.Delete] execute a query (delete_user): %w", err)
+				}
+
+				switch errCode {
+				case dberrors.DbErrorCodeNoError:
+					return nil
+				case dberrors.DbErrorCodeInternalError:
+					return errs.NewError(errs.ErrorCodeInternalError, errMsg)
+				case dberrors.DbErrorCodeInvalidOperation:
+					return errs.NewError(errs.ErrorCodeInvalidOperation, errMsg)
+				case idberrors.DbErrorCodeUserNotFound:
+					return ierrors.ErrUserNotFound
+				case idberrors.DbErrorCodeUserPersonalInfoNotFound:
+					return ierrors.ErrUserPersonalInfoNotFound
+				}
+				// unknown error
+				return fmt.Errorf("[stores.UserStore.Delete] invalid operation: %w", dberrors.NewDbError(errCode, errMsg))
+			})
+			if err != nil {
+				return fmt.Errorf("[stores.UserStore.Delete] execute a transaction: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("[stores.UserStore.Delete] execute an operation: %w", err)
+	}
+	return nil
 }
 
 // FindById finds and returns a user, if any, by the specified user ID.

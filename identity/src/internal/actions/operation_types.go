@@ -187,12 +187,14 @@ const (
 
 	// UserStore operation types (31000-31499).
 	OperationTypeUserStore_Create                actions.OperationType = 31000
-	OperationTypeUserStore_FindById              actions.OperationType = 31001
-	OperationTypeUserStore_FindByName            actions.OperationType = 31002
-	OperationTypeUserStore_FindByEmail           actions.OperationType = 31003
-	OperationTypeUserStore_GetGroupById          actions.OperationType = 31004
-	OperationTypeUserStore_GetStatusById         actions.OperationType = 31005
-	OperationTypeUserStore_GetGroupAndStatusById actions.OperationType = 31006
+	OperationTypeUserStore_StartDeleting         actions.OperationType = 31001
+	OperationTypeUserStore_Delete                actions.OperationType = 31002
+	OperationTypeUserStore_FindById              actions.OperationType = 31003
+	OperationTypeUserStore_FindByName            actions.OperationType = 31004
+	OperationTypeUserStore_FindByEmail           actions.OperationType = 31005
+	OperationTypeUserStore_GetGroupById          actions.OperationType = 31006
+	OperationTypeUserStore_GetStatusById         actions.OperationType = 31007
+	OperationTypeUserStore_GetGroupAndStatusById actions.OperationType = 31008
 
 	// ClientStore operation types (31500-31999).
 	OperationTypeClientStore_Create                    actions.OperationType = 31500
