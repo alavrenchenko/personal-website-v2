@@ -277,6 +277,34 @@ func (s *UserStore) FindByEmail(ctx *actions.OperationContext, email string, isC
 	return u, nil
 }
 
+// GetTypeById gets a user's type by the specified user ID.
+func (s *UserStore) GetTypeById(ctx *actions.OperationContext, id uint64) (models.UserType, error) {
+	var t models.UserType
+	err := s.opExecutor.Exec(ctx, iactions.OperationTypeUserStore_GetTypeById, []*actions.OperationParam{actions.NewOperationParam("id", id)},
+		func(opCtx *actions.OperationContext) error {
+			conn, err := s.db.ConnPool.Acquire(opCtx.Ctx)
+			if err != nil {
+				return fmt.Errorf("[stores.UserStore.GetTypeById] acquire a connection: %w", err)
+			}
+			defer conn.Release()
+
+			const query = "SELECT type FROM " + usersTable + " WHERE id = $1 LIMIT 1"
+
+			if err = conn.QueryRow(opCtx.Ctx, query, id).Scan(&t); err != nil {
+				if errors.Is(err, pgx.ErrNoRows) {
+					return ierrors.ErrUserNotFound
+				}
+				return fmt.Errorf("[stores.UserStore.GetTypeById] execute a query: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return t, fmt.Errorf("[stores.UserStore.GetTypeById] execute an operation: %w", err)
+	}
+	return t, nil
+}
+
 // GetGroupById gets a user's group by the specified user ID.
 func (s *UserStore) GetGroupById(ctx *actions.OperationContext, id uint64) (groupmodels.UserGroup, error) {
 	var g groupmodels.UserGroup

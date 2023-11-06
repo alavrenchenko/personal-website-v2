@@ -42,6 +42,9 @@ type UserStore interface {
 	// FindByEmail finds and returns a user, if any, by the specified user's email.
 	FindByEmail(ctx *actions.OperationContext, email string, isCaseSensitive bool) (*dbmodels.User, error)
 
+	// GetTypeById gets a user's type by the specified user ID.
+	GetTypeById(ctx *actions.OperationContext, id uint64) (models.UserType, error)
+
 	// GetGroupById gets a user's group by the specified user ID.
 	GetGroupById(ctx *actions.OperationContext, id uint64) (groupmodels.UserGroup, error)
 

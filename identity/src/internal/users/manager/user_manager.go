@@ -256,6 +256,24 @@ func (m *UserManager) FindByEmail(ctx *actions.OperationContext, email string, i
 	return u, nil
 }
 
+// GetTypeById gets a user's type by the specified user ID.
+func (m *UserManager) GetTypeById(ctx *actions.OperationContext, id uint64) (models.UserType, error) {
+	var t models.UserType
+	err := m.opExecutor.Exec(ctx, iactions.OperationTypeUserManager_GetTypeById, []*actions.OperationParam{actions.NewOperationParam("id", id)},
+		func(opCtx *actions.OperationContext) error {
+			var err error
+			if t, err = m.userStore.GetTypeById(opCtx, id); err != nil {
+				return fmt.Errorf("[manager.UserManager.GetTypeById] get a user's type by id: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return t, fmt.Errorf("[manager.UserManager.GetTypeById] execute an operation: %w", err)
+	}
+	return t, nil
+}
+
 // GetGroupById gets a user's group by the specified user ID.
 func (m *UserManager) GetGroupById(ctx *actions.OperationContext, id uint64) (groupmodels.UserGroup, error) {
 	op, err := ctx.Action.Operations.CreateAndStart(
