@@ -58,6 +58,10 @@ CREATE TABLE IF NOT EXISTS public.permission_groups
 TABLESPACE pg_default;
 
 CREATE UNIQUE INDEX IF NOT EXISTS permission_groups_name_idx
+    ON public.permission_groups (name)
+    WHERE status <> 5;
+
+CREATE UNIQUE INDEX IF NOT EXISTS permission_groups_name_lc_idx
     ON public.permission_groups (lower(name))
     WHERE status <> 5;
 
@@ -106,6 +110,10 @@ CREATE TABLE IF NOT EXISTS public.permissions
 TABLESPACE pg_default;
 
 CREATE UNIQUE INDEX IF NOT EXISTS permissions_name_idx
+    ON public.permissions (name)
+    WHERE status <> 5;
+
+CREATE UNIQUE INDEX IF NOT EXISTS permissions_name_lc_idx
     ON public.permissions (lower(name))
     WHERE status <> 5;
 

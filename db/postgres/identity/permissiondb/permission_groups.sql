@@ -21,7 +21,7 @@ CREATE OR REPLACE FUNCTION public.permission_group_exists(
     _name public.permission_groups.name%TYPE
 ) RETURNS boolean AS $$
 BEGIN
-   -- permission status: Deleted(5)
+   -- permission group status: Deleted(5)
     RETURN EXISTS (SELECT 1 FROM public.permission_groups WHERE lower(name) = lower(_name) AND status <> 5 LIMIT 1);
 END;
 $$ LANGUAGE plpgsql;
