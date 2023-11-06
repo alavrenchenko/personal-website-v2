@@ -294,6 +294,24 @@ func (m *UserManager) GetNameById(ctx *actions.OperationContext, id uint64) (nul
 	return n, nil
 }
 
+// NameExists returns true if the user name exists.
+func (m *UserManager) NameExists(ctx *actions.OperationContext, name string) (bool, error) {
+	var exists bool
+	err := m.opExecutor.Exec(ctx, iactions.OperationTypeUserManager_NameExists, []*actions.OperationParam{actions.NewOperationParam("name", name)},
+		func(opCtx *actions.OperationContext) error {
+			var err error
+			if exists, err = m.userStore.NameExists(opCtx, name); err != nil {
+				return fmt.Errorf("[manager.UserManager.NameExists] user name exists: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return false, fmt.Errorf("[manager.UserManager.NameExists] execute an operation: %w", err)
+	}
+	return exists, nil
+}
+
 // GetTypeById gets a user's type by the specified user ID.
 func (m *UserManager) GetTypeById(ctx *actions.OperationContext, id uint64) (models.UserType, error) {
 	var t models.UserType

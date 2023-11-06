@@ -340,6 +340,32 @@ func (s *UserStore) GetNameById(ctx *actions.OperationContext, id uint64) (nulla
 	return nullable.FromPtr(n), nil
 }
 
+// NameExists returns true if the user name exists.
+func (s *UserStore) NameExists(ctx *actions.OperationContext, name string) (bool, error) {
+	var exists bool
+	err := s.opExecutor.Exec(ctx, iactions.OperationTypeUserStore_NameExists, []*actions.OperationParam{actions.NewOperationParam("name", name)},
+		func(opCtx *actions.OperationContext) error {
+			conn, err := s.db.ConnPool.Acquire(opCtx.Ctx)
+			if err != nil {
+				return fmt.Errorf("[stores.UserStore.NameExists] acquire a connection: %w", err)
+			}
+			defer conn.Release()
+
+			// FUNCTION: public.username_exists(_name) RETURNS boolean
+			const query = "SELECT public.username_exists($1)"
+
+			if err = conn.QueryRow(opCtx.Ctx, query, name).Scan(&exists); err != nil {
+				return fmt.Errorf("[stores.UserStore.NameExists] execute a query (username_exists): %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return false, fmt.Errorf("[stores.UserStore.NameExists] execute an operation: %w", err)
+	}
+	return exists, nil
+}
+
 // GetTypeById gets a user's type by the specified user ID.
 func (s *UserStore) GetTypeById(ctx *actions.OperationContext, id uint64) (models.UserType, error) {
 	var t models.UserType

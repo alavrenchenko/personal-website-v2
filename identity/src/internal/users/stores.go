@@ -40,6 +40,9 @@ type UserStore interface {
 	// FindByName finds and returns a user, if any, by the specified user name.
 	FindByName(ctx *actions.OperationContext, name string, isCaseSensitive bool) (*dbmodels.User, error)
 
+	// FindByEmail finds and returns a user, if any, by the specified user's email.
+	FindByEmail(ctx *actions.OperationContext, email string, isCaseSensitive bool) (*dbmodels.User, error)
+
 	// GetIdByName gets the user ID by the specified user name.
 	GetIdByName(ctx *actions.OperationContext, name string, isCaseSensitive bool) (uint64, error)
 
@@ -51,9 +54,6 @@ type UserStore interface {
 
 	// NameExists returns true if the user name exists.
 	NameExists(ctx *actions.OperationContext, name string) (bool, error)
-
-	// FindByEmail finds and returns a user, if any, by the specified user's email.
-	FindByEmail(ctx *actions.OperationContext, email string, isCaseSensitive bool) (*dbmodels.User, error)
 
 	// GetTypeById gets a user's type by the specified user ID.
 	GetTypeById(ctx *actions.OperationContext, id uint64) (models.UserType, error)
