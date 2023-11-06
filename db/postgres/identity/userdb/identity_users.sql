@@ -73,11 +73,11 @@ CREATE TABLE IF NOT EXISTS public.users
 )
 TABLESPACE pg_default;
 
-CREATE UNIQUE INDEX IF NOT EXISTS users_name_idx
+CREATE UNIQUE INDEX IF NOT EXISTS users_name_lc_idx
     ON public.users (lower(name))
     WHERE status <> 8;
 
-CREATE UNIQUE INDEX IF NOT EXISTS users_email_idx
+CREATE UNIQUE INDEX IF NOT EXISTS users_email_lc_idx
     ON public.users (lower(email))
     WHERE status <> 8;
 
@@ -134,8 +134,8 @@ CREATE INDEX IF NOT EXISTS personal_info_created_at_idx ON public.personal_info 
 CREATE INDEX IF NOT EXISTS personal_info_updated_at_idx ON public.personal_info (updated_at);
 CREATE INDEX IF NOT EXISTS personal_info_is_deleted_idx ON public.personal_info (is_deleted);
 CREATE INDEX IF NOT EXISTS personal_info_deleted_at_idx ON public.personal_info (deleted_at);
-CREATE INDEX IF NOT EXISTS personal_info_first_name_idx ON public.personal_info (first_name);
-CREATE INDEX IF NOT EXISTS personal_info_last_name_idx ON public.personal_info (last_name);
+CREATE INDEX IF NOT EXISTS personal_info_first_name_lc_idx ON public.personal_info (lower(first_name));
+CREATE INDEX IF NOT EXISTS personal_info_last_name_lc_idx ON public.personal_info (lower(last_name));
 CREATE INDEX IF NOT EXISTS personal_info_birth_date_idx ON public.personal_info (birth_date);
 CREATE INDEX IF NOT EXISTS personal_info_gender_idx ON public.personal_info (gender);
 
