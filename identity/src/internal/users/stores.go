@@ -22,6 +22,7 @@ import (
 	"personal-website-v2/pkg/actions"
 )
 
+// UserStore is a user store.
 type UserStore interface {
 	// Create creates a user and returns the user ID if the operation is successful.
 	Create(ctx *actions.OperationContext, data *users.CreateOperationData) (uint64, error)
@@ -43,7 +44,10 @@ type UserStore interface {
 
 	// GetGroupAndStatusById gets a group and a status of the user by the specified user ID.
 	GetGroupAndStatusById(ctx *actions.OperationContext, id uint64) (groupmodels.UserGroup, models.UserStatus, error)
+}
 
-	// GetPersonalInfoById gets user's personal info by the specified user ID.
-	GetPersonalInfoById(ctx *actions.OperationContext, id uint64) (*dbmodels.PersonalInfo, error)
+// UserPersonalInfoStore is a store of users' personal info.
+type UserPersonalInfoStore interface {
+	// GetByUserId gets user's personal info by the specified user ID.
+	GetByUserId(ctx *actions.OperationContext, userId uint64) (*dbmodels.PersonalInfo, error)
 }
