@@ -41,4 +41,5 @@ const (
 	OperationGroupUserRole            actions.OperationGroup = 1015
 	OperationGroupGroupRole           actions.OperationGroup = 1016
 	OperationGroupRolePermission      actions.OperationGroup = 1017
+	OperationGroupUserPersonalInfo    actions.OperationGroup = 1018
 )

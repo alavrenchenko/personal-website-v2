@@ -168,7 +168,7 @@ const (
 	OperationTypeRolesState_DecrActiveAssignments   actions.OperationType = 19504
 	OperationTypeRolesState_DecrExistingAssignments actions.OperationType = 19505
 
-	// RolePermissionManager operation types (20000-20499).
+	// RolePermissionManager operation types (20000-20199).
 	OperationTypeRolePermissionManager_Grant                       actions.OperationType = 20000
 	OperationTypeRolePermissionManager_Revoke                      actions.OperationType = 20001
 	OperationTypeRolePermissionManager_RevokeAll                   actions.OperationType = 20002
@@ -178,6 +178,12 @@ const (
 	OperationTypeRolePermissionManager_AreGranted                  actions.OperationType = 20006
 	OperationTypeRolePermissionManager_GetAllPermissionIdsByRoleId actions.OperationType = 20007
 	OperationTypeRolePermissionManager_GetAllRoleIdsByPermissionId actions.OperationType = 20008
+
+	// UserPersonalInfoManager operation types (20200-20399).
+	OperationTypeUserPersonalInfoManager_Create      actions.OperationType = 20200
+	OperationTypeUserPersonalInfoManager_Delete      actions.OperationType = 20201
+	OperationTypeUserPersonalInfoManager_FindById    actions.OperationType = 20202
+	OperationTypeUserPersonalInfoManager_GetByUserId actions.OperationType = 20203
 
 	// UserStore operation types (31000-31499).
 	OperationTypeUserStore_Create                actions.OperationType = 31000
@@ -343,7 +349,7 @@ const (
 	OperationTypeRolesStateStore_DecrActiveAssignments   actions.OperationType = 39504
 	OperationTypeRolesStateStore_DecrExistingAssignments actions.OperationType = 39505
 
-	// RolePermissionStore operation types (40000-40499).
+	// RolePermissionStore operation types (40000-40199).
 	OperationTypeRolePermissionStore_Grant                       actions.OperationType = 40000
 	OperationTypeRolePermissionStore_Revoke                      actions.OperationType = 40001
 	OperationTypeRolePermissionStore_RevokeAll                   actions.OperationType = 40002
@@ -353,6 +359,13 @@ const (
 	OperationTypeRolePermissionStore_AreGranted                  actions.OperationType = 40006
 	OperationTypeRolePermissionStore_GetAllPermissionIdsByRoleId actions.OperationType = 40007
 	OperationTypeRolePermissionStore_GetAllRoleIdsByPermissionId actions.OperationType = 40008
+
+	// UserPersonalInfoStore operation types (40200-40399).
+	OperationTypeUserPersonalInfoStore_Create        actions.OperationType = 40200
+	OperationTypeUserPersonalInfoStore_StartDeleting actions.OperationType = 40201
+	OperationTypeUserPersonalInfoStore_Delete        actions.OperationType = 40202
+	OperationTypeUserPersonalInfoStore_FindById      actions.OperationType = 40203
+	OperationTypeUserPersonalInfoStore_GetByUserId   actions.OperationType = 40204
 
 	// caching (50000-59999)
 
