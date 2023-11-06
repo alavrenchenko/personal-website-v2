@@ -37,15 +37,14 @@ import (
 )
 
 const (
-	usersTable        = "public.users"
-	personalInfoTable = "public.personal_info"
+	usersTable = "public.users"
 )
 
+// UserStore is a user store.
 type UserStore struct {
 	db         *postgres.Database
 	opExecutor *actionhelper.OperationExecutor
-	uStore     *postgres.Store[dbmodels.User]
-	piStore    *postgres.Store[dbmodels.PersonalInfo]
+	store      *postgres.Store[dbmodels.User]
 	txManager  *postgres.TxManager
 	logger     logging.Logger[*lcontext.LogEntryContext]
 }
@@ -77,8 +76,7 @@ func NewUserStore(db *postgres.Database, loggerFactory logging.LoggerFactory[*lc
 	return &UserStore{
 		db:         db,
 		opExecutor: e,
-		uStore:     postgres.NewStore[dbmodels.User](db),
-		piStore:    postgres.NewStore[dbmodels.PersonalInfo](db),
+		store:      postgres.NewStore[dbmodels.User](db),
 		txManager:  txm,
 		logger:     l,
 	}, nil
@@ -130,7 +128,7 @@ func (s *UserStore) FindById(ctx *actions.OperationContext, id uint64) (*dbmodel
 		func(opCtx *actions.OperationContext) error {
 			const query = "SELECT * FROM " + usersTable + " WHERE id = $1 LIMIT 1"
 			var err error
-			if u, err = s.uStore.Find(opCtx.Ctx, query, id); err != nil {
+			if u, err = s.store.Find(opCtx.Ctx, query, id); err != nil {
 				return fmt.Errorf("[stores.UserStore.FindById] find a user by id: %w", err)
 			}
 			return nil
@@ -156,7 +154,7 @@ func (s *UserStore) FindByName(ctx *actions.OperationContext, name string, isCas
 			}
 
 			var err error
-			if u, err = s.uStore.Find(opCtx.Ctx, query, name, models.UserStatusDeleted); err != nil {
+			if u, err = s.store.Find(opCtx.Ctx, query, name, models.UserStatusDeleted); err != nil {
 				return fmt.Errorf("[stores.UserStore.FindByName] find a user by name: %w", err)
 			}
 			return nil
@@ -182,7 +180,7 @@ func (s *UserStore) FindByEmail(ctx *actions.OperationContext, email string, isC
 			}
 
 			var err error
-			if u, err = s.uStore.Find(opCtx.Ctx, query, email, models.UserStatusDeleted); err != nil {
+			if u, err = s.store.Find(opCtx.Ctx, query, email, models.UserStatusDeleted); err != nil {
 				return fmt.Errorf("[stores.UserStore.FindByEmail] find a user by email: %w", err)
 			}
 			return nil
@@ -280,29 +278,4 @@ func (s *UserStore) GetGroupAndStatusById(ctx *actions.OperationContext, id uint
 		return g, status, fmt.Errorf("[stores.UserStore.GetGroupAndStatusById] execute an operation: %w", err)
 	}
 	return g, status, nil
-}
-
-// GetPersonalInfoById gets user's personal info by the specified user ID.
-func (s *UserStore) GetPersonalInfoById(ctx *actions.OperationContext, id uint64) (*dbmodels.PersonalInfo, error) {
-	var pi *dbmodels.PersonalInfo
-	err := s.opExecutor.Exec(ctx, iactions.OperationTypeUserStore_GetPersonalInfoById,
-		[]*actions.OperationParam{actions.NewOperationParam("id", id)},
-		func(opCtx *actions.OperationContext) error {
-			const query = "SELECT * FROM " + personalInfoTable + " WHERE id = $1 LIMIT 1"
-			var err error
-			pi, err = s.piStore.Find(opCtx.Ctx, query, id)
-			if err != nil {
-				return fmt.Errorf("[stores.UserStore.GetPersonalInfoById] find user's personal info by id: %w", err)
-			}
-
-			if pi == nil {
-				return ierrors.ErrUserPersonalInfoNotFound
-			}
-			return nil
-		},
-	)
-	if err != nil {
-		return nil, fmt.Errorf("[stores.UserStore.GetPersonalInfoById] execute an operation: %w", err)
-	}
-	return pi, nil
 }
