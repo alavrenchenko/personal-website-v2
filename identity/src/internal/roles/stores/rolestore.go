@@ -186,9 +186,10 @@ func (s *RoleStore) FindByName(ctx *actions.OperationContext, name string) (*dbm
 	var r *dbmodels.Role
 	err := s.opExecutor.Exec(ctx, iactions.OperationTypeRoleStore_FindByName, []*actions.OperationParam{actions.NewOperationParam("name", name)},
 		func(opCtx *actions.OperationContext) error {
-			const query = "SELECT * FROM " + rolesTable + " WHERE name = $1 LIMIT 1"
+			// must be case-sensitive
+			const query = "SELECT * FROM " + rolesTable + " WHERE name = $1 AND status <> $2 LIMIT 1"
 			var err error
-			if r, err = s.store.Find(opCtx.Ctx, query, name); err != nil {
+			if r, err = s.store.Find(opCtx.Ctx, query, name, models.RoleStatusDeleted); err != nil {
 				return fmt.Errorf("[stores.RoleStore.FindByName] find a role by name: %w", err)
 			}
 			return nil
@@ -248,9 +249,10 @@ func (s *RoleStore) GetAllByNames(ctx *actions.OperationContext, names []string)
 				return errs.NewError(errs.ErrorCodeInvalidData, "number of names is 0")
 			}
 
-			const query = "SELECT * FROM " + rolesTable + " WHERE name = ANY ($1)"
+			// must be case-sensitive
+			const query = "SELECT * FROM " + rolesTable + " WHERE name = ANY ($1) AND status <> $2"
 			var err error
-			if rs, err = s.store.FindAll(opCtx.Ctx, query, names); err != nil {
+			if rs, err = s.store.FindAll(opCtx.Ctx, query, names, models.RoleStatusDeleted); err != nil {
 				return fmt.Errorf("[stores.RoleStore.GetAllByNames] find all roles by names: %w", err)
 			}
 
