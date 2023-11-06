@@ -32,7 +32,8 @@ const (
 	OperationTypeUserManager_GetTypeById           actions.OperationType = 11005
 	OperationTypeUserManager_GetGroupById          actions.OperationType = 11006
 	OperationTypeUserManager_GetStatusById         actions.OperationType = 11007
-	OperationTypeUserManager_GetGroupAndStatusById actions.OperationType = 11008
+	OperationTypeUserManager_GetTypeAndStatusById  actions.OperationType = 11008
+	OperationTypeUserManager_GetGroupAndStatusById actions.OperationType = 11009
 
 	// ClientManager operation types (11500-11999).
 	OperationTypeClientManager_Create             actions.OperationType = 11500
@@ -196,7 +197,8 @@ const (
 	OperationTypeUserStore_GetTypeById           actions.OperationType = 31006
 	OperationTypeUserStore_GetGroupById          actions.OperationType = 31007
 	OperationTypeUserStore_GetStatusById         actions.OperationType = 31008
-	OperationTypeUserStore_GetGroupAndStatusById actions.OperationType = 31009
+	OperationTypeUserStore_GetTypeAndStatusById  actions.OperationType = 31009
+	OperationTypeUserStore_GetGroupAndStatusById actions.OperationType = 31010
 
 	// ClientStore operation types (31500-31999).
 	OperationTypeClientStore_Create                    actions.OperationType = 31500

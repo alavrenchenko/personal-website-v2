@@ -51,6 +51,9 @@ type UserStore interface {
 	// GetStatusById gets a user's status by the specified user ID.
 	GetStatusById(ctx *actions.OperationContext, id uint64) (models.UserStatus, error)
 
+	// GetTypeAndStatusById gets a type and a status of the user by the specified user ID.
+	GetTypeAndStatusById(ctx *actions.OperationContext, id uint64) (models.UserType, models.UserStatus, error)
+
 	// GetGroupAndStatusById gets a group and a status of the user by the specified user ID.
 	GetGroupAndStatusById(ctx *actions.OperationContext, id uint64) (groupmodels.UserGroup, models.UserStatus, error)
 }

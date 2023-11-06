@@ -363,6 +363,35 @@ func (s *UserStore) GetStatusById(ctx *actions.OperationContext, id uint64) (mod
 	return status, nil
 }
 
+// GetTypeAndStatusById gets a type and a status of the user by the specified user ID.
+func (s *UserStore) GetTypeAndStatusById(ctx *actions.OperationContext, id uint64) (models.UserType, models.UserStatus, error) {
+	var t models.UserType
+	var status models.UserStatus
+	err := s.opExecutor.Exec(ctx, iactions.OperationTypeUserStore_GetTypeAndStatusById, []*actions.OperationParam{actions.NewOperationParam("id", id)},
+		func(opCtx *actions.OperationContext) error {
+			conn, err := s.db.ConnPool.Acquire(opCtx.Ctx)
+			if err != nil {
+				return fmt.Errorf("[stores.UserStore.GetTypeAndStatusById] acquire a connection: %w", err)
+			}
+			defer conn.Release()
+
+			const query = "SELECT type, status FROM " + usersTable + " WHERE id = $1 LIMIT 1"
+
+			if err = conn.QueryRow(opCtx.Ctx, query, id).Scan(&t, &status); err != nil {
+				if errors.Is(err, pgx.ErrNoRows) {
+					return ierrors.ErrUserNotFound
+				}
+				return fmt.Errorf("[stores.UserStore.GetTypeAndStatusById] execute a query: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return t, status, fmt.Errorf("[stores.UserStore.GetTypeAndStatusById] execute an operation: %w", err)
+	}
+	return t, status, nil
+}
+
 // GetGroupAndStatusById gets a group and a status of the user by the specified user ID.
 func (s *UserStore) GetGroupAndStatusById(ctx *actions.OperationContext, id uint64) (groupmodels.UserGroup, models.UserStatus, error) {
 	var g groupmodels.UserGroup

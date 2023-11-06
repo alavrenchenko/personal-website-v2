@@ -352,6 +352,25 @@ func (m *UserManager) GetStatusById(ctx *actions.OperationContext, id uint64) (m
 	return s, nil
 }
 
+// GetTypeAndStatusById gets a type and a status of the user by the specified user ID.
+func (m *UserManager) GetTypeAndStatusById(ctx *actions.OperationContext, id uint64) (models.UserType, models.UserStatus, error) {
+	var t models.UserType
+	var s models.UserStatus
+	err := m.opExecutor.Exec(ctx, iactions.OperationTypeUserManager_GetTypeAndStatusById, []*actions.OperationParam{actions.NewOperationParam("id", id)},
+		func(opCtx *actions.OperationContext) error {
+			var err error
+			if t, s, err = m.userStore.GetTypeAndStatusById(opCtx, id); err != nil {
+				return fmt.Errorf("[manager.UserManager.GetTypeAndStatusById] get a type and a status of the user by id: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return t, s, fmt.Errorf("[manager.UserManager.GetTypeAndStatusById] execute an operation: %w", err)
+	}
+	return t, s, nil
+}
+
 // GetGroupAndStatusById gets a group and a status of the user by the specified user ID.
 func (m *UserManager) GetGroupAndStatusById(ctx *actions.OperationContext, id uint64) (groupmodels.UserGroup, models.UserStatus, error) {
 	op, err := ctx.Action.Operations.CreateAndStart(
