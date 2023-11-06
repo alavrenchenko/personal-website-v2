@@ -224,9 +224,10 @@ func (s *PermissionStore) FindByName(ctx *actions.OperationContext, name string)
 	var p *dbmodels.Permission
 	err := s.opExecutor.Exec(ctx, iactions.OperationTypePermissionStore_FindByName, []*actions.OperationParam{actions.NewOperationParam("name", name)},
 		func(opCtx *actions.OperationContext) error {
-			const query = "SELECT * FROM " + permissionsTable + " WHERE name = $1 LIMIT 1"
+			// must be case-sensitive
+			const query = "SELECT * FROM " + permissionsTable + " WHERE name = $1 AND status <> $2 LIMIT 1"
 			var err error
-			if p, err = s.store.Find(opCtx.Ctx, query, name); err != nil {
+			if p, err = s.store.Find(opCtx.Ctx, query, name, models.PermissionStatusDeleted); err != nil {
 				return fmt.Errorf("[stores.PermissionStore.FindByName] find a permission by name: %w", err)
 			}
 			return nil
@@ -286,9 +287,10 @@ func (s *PermissionStore) GetAllByNames(ctx *actions.OperationContext, names []s
 				return errs.NewError(errs.ErrorCodeInvalidData, "number of names is 0")
 			}
 
-			const query = "SELECT * FROM " + permissionsTable + " WHERE name = ANY ($1)"
+			// must be case-sensitive
+			const query = "SELECT * FROM " + permissionsTable + " WHERE name = ANY ($1) AND status <> $2"
 			var err error
-			if ps, err = s.store.FindAll(opCtx.Ctx, query, names); err != nil {
+			if ps, err = s.store.FindAll(opCtx.Ctx, query, names, models.PermissionStatusDeleted); err != nil {
 				return fmt.Errorf("[stores.PermissionStore.GetAllByNames] find all permissions by names: %w", err)
 			}
 

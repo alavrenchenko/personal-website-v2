@@ -183,9 +183,10 @@ func (s *PermissionGroupStore) FindByName(ctx *actions.OperationContext, name st
 	var g *dbmodels.PermissionGroup
 	err := s.opExecutor.Exec(ctx, iactions.OperationTypePermissionGroupStore_FindByName, []*actions.OperationParam{actions.NewOperationParam("name", name)},
 		func(opCtx *actions.OperationContext) error {
-			const query = "SELECT * FROM " + permissionGroupsTable + " WHERE name = $1 LIMIT 1"
+			// must be case-sensitive
+			const query = "SELECT * FROM " + permissionGroupsTable + " WHERE name = $1 AND status <> $2 LIMIT 1"
 			var err error
-			if g, err = s.store.Find(opCtx.Ctx, query, name); err != nil {
+			if g, err = s.store.Find(opCtx.Ctx, query, name, models.PermissionGroupStatusDeleted); err != nil {
 				return fmt.Errorf("[stores.PermissionGroupStore.FindByName] find a permission group by name: %w", err)
 			}
 			return nil
@@ -245,9 +246,10 @@ func (s *PermissionGroupStore) GetAllByNames(ctx *actions.OperationContext, name
 				return errs.NewError(errs.ErrorCodeInvalidData, "number of names is 0")
 			}
 
-			const query = "SELECT * FROM " + permissionGroupsTable + " WHERE name = ANY ($1)"
+			// must be case-sensitive
+			const query = "SELECT * FROM " + permissionGroupsTable + " WHERE name = ANY ($1) AND status <> $2"
 			var err error
-			if gs, err = s.store.FindAll(opCtx.Ctx, query, names); err != nil {
+			if gs, err = s.store.FindAll(opCtx.Ctx, query, names, models.PermissionGroupStatusDeleted); err != nil {
 				return fmt.Errorf("[stores.PermissionGroupStore.GetAllByNames] find all permission groups by names: %w", err)
 			}
 
