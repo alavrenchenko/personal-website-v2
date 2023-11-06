@@ -66,6 +66,10 @@ CREATE TABLE IF NOT EXISTS public.roles
 TABLESPACE pg_default;
 
 CREATE UNIQUE INDEX IF NOT EXISTS roles_name_idx
+    ON public.roles (name)
+    WHERE status <> 5;
+
+CREATE UNIQUE INDEX IF NOT EXISTS roles_name_lc_idx
     ON public.roles (lower(name))
     WHERE status <> 5;
 
