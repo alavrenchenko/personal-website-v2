@@ -30,6 +30,7 @@ import (
 	"personal-website-v2/identity/src/internal/users/models"
 	useroperations "personal-website-v2/identity/src/internal/users/operations/users"
 	"personal-website-v2/pkg/actions"
+	"personal-website-v2/pkg/base/nullable"
 	dberrors "personal-website-v2/pkg/db/errors"
 	"personal-website-v2/pkg/db/postgres"
 	errs "personal-website-v2/pkg/errors"
@@ -309,6 +310,34 @@ func (s *UserStore) GetIdByName(ctx *actions.OperationContext, name string, isCa
 		return 0, fmt.Errorf("[stores.UserStore.GetIdByName] execute an operation: %w", err)
 	}
 	return id, nil
+}
+
+// GetNameById gets a user name by the specified user ID.
+func (s *UserStore) GetNameById(ctx *actions.OperationContext, id uint64) (nullable.Nullable[string], error) {
+	var n *string
+	err := s.opExecutor.Exec(ctx, iactions.OperationTypeUserStore_GetNameById, []*actions.OperationParam{actions.NewOperationParam("id", id)},
+		func(opCtx *actions.OperationContext) error {
+			conn, err := s.db.ConnPool.Acquire(opCtx.Ctx)
+			if err != nil {
+				return fmt.Errorf("[stores.UserStore.GetNameById] acquire a connection: %w", err)
+			}
+			defer conn.Release()
+
+			const query = "SELECT name FROM " + usersTable + " WHERE id = $1 LIMIT 1"
+
+			if err = conn.QueryRow(opCtx.Ctx, query, id).Scan(&n); err != nil {
+				if errors.Is(err, pgx.ErrNoRows) {
+					return ierrors.ErrUserNotFound
+				}
+				return fmt.Errorf("[stores.UserStore.GetNameById] execute a query: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return nullable.Nullable[string]{}, fmt.Errorf("[stores.UserStore.GetNameById] execute an operation: %w", err)
+	}
+	return nullable.FromPtr(n), nil
 }
 
 // GetTypeById gets a user's type by the specified user ID.

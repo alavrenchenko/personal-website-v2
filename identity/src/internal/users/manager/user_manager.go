@@ -28,6 +28,7 @@ import (
 	useroperations "personal-website-v2/identity/src/internal/users/operations/users"
 	"personal-website-v2/pkg/actions"
 	"personal-website-v2/pkg/app"
+	"personal-website-v2/pkg/base/nullable"
 	"personal-website-v2/pkg/base/strings"
 	"personal-website-v2/pkg/errors"
 	actionhelper "personal-website-v2/pkg/helper/actions"
@@ -273,6 +274,24 @@ func (m *UserManager) GetIdByName(ctx *actions.OperationContext, name string, is
 		return id, fmt.Errorf("[manager.UserManager.GetIdByName] execute an operation: %w", err)
 	}
 	return id, nil
+}
+
+// GetNameById gets a user name by the specified user ID.
+func (m *UserManager) GetNameById(ctx *actions.OperationContext, id uint64) (nullable.Nullable[string], error) {
+	var n nullable.Nullable[string]
+	err := m.opExecutor.Exec(ctx, iactions.OperationTypeUserManager_GetNameById, []*actions.OperationParam{actions.NewOperationParam("id", id)},
+		func(opCtx *actions.OperationContext) error {
+			var err error
+			if n, err = m.userStore.GetNameById(opCtx, id); err != nil {
+				return fmt.Errorf("[manager.UserManager.GetNameById] get a user name by id: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return n, fmt.Errorf("[manager.UserManager.GetNameById] execute an operation: %w", err)
+	}
+	return n, nil
 }
 
 // GetTypeById gets a user's type by the specified user ID.
