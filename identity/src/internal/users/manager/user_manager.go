@@ -256,6 +256,25 @@ func (m *UserManager) FindByEmail(ctx *actions.OperationContext, email string, i
 	return u, nil
 }
 
+// GetIdByName gets the user ID by the specified user name.
+func (m *UserManager) GetIdByName(ctx *actions.OperationContext, name string, isCaseSensitive bool) (uint64, error) {
+	var id uint64
+	err := m.opExecutor.Exec(ctx, iactions.OperationTypeUserManager_GetIdByName,
+		[]*actions.OperationParam{actions.NewOperationParam("name", name), actions.NewOperationParam("isCaseSensitive", isCaseSensitive)},
+		func(opCtx *actions.OperationContext) error {
+			var err error
+			if id, err = m.userStore.GetIdByName(opCtx, name, isCaseSensitive); err != nil {
+				return fmt.Errorf("[manager.UserManager.GetIdByName] get the user id by name: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return id, fmt.Errorf("[manager.UserManager.GetIdByName] execute an operation: %w", err)
+	}
+	return id, nil
+}
+
 // GetTypeById gets a user's type by the specified user ID.
 func (m *UserManager) GetTypeById(ctx *actions.OperationContext, id uint64) (models.UserType, error) {
 	var t models.UserType

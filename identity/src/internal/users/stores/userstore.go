@@ -277,6 +277,40 @@ func (s *UserStore) FindByEmail(ctx *actions.OperationContext, email string, isC
 	return u, nil
 }
 
+// GetIdByName gets the user ID by the specified user name.
+func (s *UserStore) GetIdByName(ctx *actions.OperationContext, name string, isCaseSensitive bool) (uint64, error) {
+	var id uint64
+	err := s.opExecutor.Exec(ctx, iactions.OperationTypeUserStore_GetIdByName,
+		[]*actions.OperationParam{actions.NewOperationParam("name", name), actions.NewOperationParam("isCaseSensitive", isCaseSensitive)},
+		func(opCtx *actions.OperationContext) error {
+			conn, err := s.db.ConnPool.Acquire(opCtx.Ctx)
+			if err != nil {
+				return fmt.Errorf("[stores.UserStore.GetIdByName] acquire a connection: %w", err)
+			}
+			defer conn.Release()
+
+			var query string
+			if isCaseSensitive {
+				query = "SELECT id FROM " + usersTable + " WHERE lower(name) = lower($1) AND name = $1 AND status <> $2 LIMIT 1"
+			} else {
+				query = "SELECT id FROM " + usersTable + " WHERE lower(name) = lower($1) AND status <> $2 LIMIT 1"
+			}
+
+			if err = conn.QueryRow(opCtx.Ctx, query, name, models.UserStatusDeleted).Scan(&id); err != nil {
+				if errors.Is(err, pgx.ErrNoRows) {
+					return ierrors.ErrUserNotFound
+				}
+				return fmt.Errorf("[stores.UserStore.GetIdByName] execute a query: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return 0, fmt.Errorf("[stores.UserStore.GetIdByName] execute an operation: %w", err)
+	}
+	return id, nil
+}
+
 // GetTypeById gets a user's type by the specified user ID.
 func (s *UserStore) GetTypeById(ctx *actions.OperationContext, id uint64) (models.UserType, error) {
 	var t models.UserType

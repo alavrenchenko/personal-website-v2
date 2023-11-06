@@ -20,6 +20,7 @@ import (
 	"personal-website-v2/identity/src/internal/users/models"
 	"personal-website-v2/identity/src/internal/users/operations/users"
 	"personal-website-v2/pkg/actions"
+	"personal-website-v2/pkg/base/nullable"
 )
 
 // UserStore is a user store.
@@ -38,6 +39,18 @@ type UserStore interface {
 
 	// FindByName finds and returns a user, if any, by the specified user name.
 	FindByName(ctx *actions.OperationContext, name string, isCaseSensitive bool) (*dbmodels.User, error)
+
+	// GetIdByName gets the user ID by the specified user name.
+	GetIdByName(ctx *actions.OperationContext, name string, isCaseSensitive bool) (uint64, error)
+
+	// GetNameById gets a user name by the specified user ID.
+	GetNameById(ctx *actions.OperationContext, id uint64) (nullable.Nullable[string], error)
+
+	// SetNameById sets a user name by the specified user ID.
+	SetNameById(ctx *actions.OperationContext, id uint64, name string) error
+
+	// NameExists returns true if the user name exists.
+	NameExists(ctx *actions.OperationContext, name string) (bool, error)
 
 	// FindByEmail finds and returns a user, if any, by the specified user's email.
 	FindByEmail(ctx *actions.OperationContext, email string, isCaseSensitive bool) (*dbmodels.User, error)

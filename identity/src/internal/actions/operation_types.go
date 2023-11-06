@@ -29,11 +29,15 @@ const (
 	OperationTypeUserManager_FindById              actions.OperationType = 11002
 	OperationTypeUserManager_FindByName            actions.OperationType = 11003
 	OperationTypeUserManager_FindByEmail           actions.OperationType = 11004
-	OperationTypeUserManager_GetTypeById           actions.OperationType = 11005
-	OperationTypeUserManager_GetGroupById          actions.OperationType = 11006
-	OperationTypeUserManager_GetStatusById         actions.OperationType = 11007
-	OperationTypeUserManager_GetTypeAndStatusById  actions.OperationType = 11008
-	OperationTypeUserManager_GetGroupAndStatusById actions.OperationType = 11009
+	OperationTypeUserManager_GetIdByName           actions.OperationType = 11005
+	OperationTypeUserManager_GetNameById           actions.OperationType = 11006
+	OperationTypeUserManager_SetNameById           actions.OperationType = 11007
+	OperationTypeUserManager_NameExists            actions.OperationType = 11008
+	OperationTypeUserManager_GetTypeById           actions.OperationType = 11009
+	OperationTypeUserManager_GetGroupById          actions.OperationType = 11010
+	OperationTypeUserManager_GetStatusById         actions.OperationType = 11011
+	OperationTypeUserManager_GetTypeAndStatusById  actions.OperationType = 11012
+	OperationTypeUserManager_GetGroupAndStatusById actions.OperationType = 11013
 
 	// ClientManager operation types (11500-11999).
 	OperationTypeClientManager_Create             actions.OperationType = 11500
@@ -194,11 +198,15 @@ const (
 	OperationTypeUserStore_FindById              actions.OperationType = 31003
 	OperationTypeUserStore_FindByName            actions.OperationType = 31004
 	OperationTypeUserStore_FindByEmail           actions.OperationType = 31005
-	OperationTypeUserStore_GetTypeById           actions.OperationType = 31006
-	OperationTypeUserStore_GetGroupById          actions.OperationType = 31007
-	OperationTypeUserStore_GetStatusById         actions.OperationType = 31008
-	OperationTypeUserStore_GetTypeAndStatusById  actions.OperationType = 31009
-	OperationTypeUserStore_GetGroupAndStatusById actions.OperationType = 31010
+	OperationTypeUserStore_GetIdByName           actions.OperationType = 31006
+	OperationTypeUserStore_GetNameById           actions.OperationType = 31007
+	OperationTypeUserStore_SetNameById           actions.OperationType = 31008
+	OperationTypeUserStore_NameExists            actions.OperationType = 31009
+	OperationTypeUserStore_GetTypeById           actions.OperationType = 31010
+	OperationTypeUserStore_GetGroupById          actions.OperationType = 31011
+	OperationTypeUserStore_GetStatusById         actions.OperationType = 31012
+	OperationTypeUserStore_GetTypeAndStatusById  actions.OperationType = 31013
+	OperationTypeUserStore_GetGroupAndStatusById actions.OperationType = 31014
 
 	// ClientStore operation types (31500-31999).
 	OperationTypeClientStore_Create                    actions.OperationType = 31500
