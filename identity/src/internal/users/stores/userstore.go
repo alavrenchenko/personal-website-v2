@@ -22,6 +22,7 @@ import (
 	"github.com/jackc/pgx/v5"
 
 	iactions "personal-website-v2/identity/src/internal/actions"
+	idberrors "personal-website-v2/identity/src/internal/db/errors"
 	ierrors "personal-website-v2/identity/src/internal/errors"
 	groupmodels "personal-website-v2/identity/src/internal/groups/models"
 	"personal-website-v2/identity/src/internal/users"
@@ -87,29 +88,32 @@ func (s *UserStore) Create(ctx *actions.OperationContext, data *useroperations.C
 	var id uint64
 	err := s.opExecutor.Exec(ctx, iactions.OperationTypeUserStore_Create, []*actions.OperationParam{actions.NewOperationParam("data", data)},
 		func(opCtx *actions.OperationContext) error {
-			var errCode dberrors.DbErrorCode
-			var errMsg string
-			// public.create_user(IN _group, IN _created_by, IN _status, IN _status_comment, IN _email, IN _first_name, IN _last_name,
-			// IN _display_name, IN _birth_date, IN _gender, OUT _id, OUT err_code, OUT err_msg)
-			const query = "CALL public.create_user($1, $2, $3, NULL, $4, $5, $6, $7, $8, $9, NULL, NULL, NULL)"
-
 			err := s.txManager.ExecWithReadCommittedLevel(opCtx.Ctx, func(txCtx context.Context, tx pgx.Tx) error {
-				r := tx.QueryRow(txCtx, query, data.Group, opCtx.UserId.Value, data.Status, data.Email.Ptr(), data.FirstName, data.LastName,
+				var errCode dberrors.DbErrorCode
+				var errMsg string
+				// PROCEDURE: public.create_user(IN _type, IN _group, IN _created_by, IN _status, IN _status_comment, IN _email, IN _first_name, IN _last_name,
+				// IN _display_name, IN _birth_date, IN _gender, OUT _id, OUT err_code, OUT err_msg)
+				// Minimum transaction isolation level: Read committed.
+				const query = "CALL public.create_user($1, $2, $3, $4, NULL, $5, $6, $7, $8, $9, $10, NULL, NULL, NULL)"
+				r := tx.QueryRow(txCtx, query, data.Type, data.Group, opCtx.UserId.Value, data.Status, data.Email.Ptr(), data.FirstName, data.LastName,
 					data.DisplayName, data.BirthDate.Ptr(), data.Gender,
 				)
 
 				if err := r.Scan(&id, &errCode, &errMsg); err != nil {
 					return fmt.Errorf("[stores.UserStore.Create] execute a query (create_user): %w", err)
 				}
-				return nil
-			})
-			if err != nil {
-				return fmt.Errorf("[stores.UserStore.Create] execute a transaction with the 'read committed' isolation level: %w", err)
-			}
 
-			if errCode != dberrors.DbErrorCodeNoError {
+				switch errCode {
+				case dberrors.DbErrorCodeNoError:
+					return nil
+				case idberrors.DbErrorCodeUserEmailAlreadyExists:
+					return ierrors.ErrUserEmailAlreadyExists
+				}
 				// unknown error
 				return fmt.Errorf("[stores.UserStore.Create] invalid operation: %w", dberrors.NewDbError(errCode, errMsg))
+			})
+			if err != nil {
+				return fmt.Errorf("[stores.UserStore.Create] execute a transaction: %w", err)
 			}
 			return nil
 		},
