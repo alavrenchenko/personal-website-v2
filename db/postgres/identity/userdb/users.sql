@@ -21,7 +21,7 @@ CREATE OR REPLACE FUNCTION public.username_exists(
     _name public.users.name%TYPE
 ) RETURNS boolean AS $$
 BEGIN
-   -- user status: Deleted(8)
+   -- user's status: Deleted(8)
     RETURN EXISTS (SELECT 1 FROM public.users WHERE lower(name) = lower(_name) AND status <> 8 LIMIT 1);
 END;
 $$ LANGUAGE plpgsql;
@@ -35,7 +35,7 @@ CREATE OR REPLACE FUNCTION public.user_email_exists(
     _email public.users.email%TYPE
 ) RETURNS boolean AS $$
 BEGIN
-   -- user status: Deleted(8)
+   -- user's status: Deleted(8)
     RETURN EXISTS (SELECT 1 FROM public.users WHERE lower(email) = lower(_email) AND status <> 8 LIMIT 1);
 END;
 $$ LANGUAGE plpgsql;
@@ -79,7 +79,7 @@ BEGIN
     END IF;
 
     _time := (clock_timestamp() AT TIME ZONE 'UTC');
-    -- user status: Active(3)
+    -- user's status: Active(3)
     INSERT INTO public.users(type, "group", created_at, created_by, updated_at, updated_by, status, status_updated_at, status_updated_by,
             status_comment, email, _version_stamp, _timestamp)
         VALUES (_type, _group, _time, _created_by, _time, _created_by, 3, _time, _created_by, _status_comment, _email, 1, _time)
@@ -220,5 +220,66 @@ BEGIN
         SET updated_at = _time, updated_by = _deleted_by, is_deleted = TRUE, deleted_at = _time, deleted_by = _deleted_by,
             _version_stamp = _version_stamp + 1, _timestamp = _time
         WHERE user_id = _id;
+END;
+$$ LANGUAGE plpgsql;
+
+-- PROCEDURE: public.set_username(bigint, character varying, bigint)
+/*
+User statuses:
+    Active = 3
+
+Error codes:
+    NoError               = 0
+    InvalidOperation      = 3
+    UserNotFound          = 11000
+    UsernameAlreadyExists = 11001
+*/
+-- Minimum transaction isolation level: Read committed.
+CREATE OR REPLACE PROCEDURE public.set_username(
+    IN _id public.users.id%TYPE,
+    IN _name public.users.name%TYPE,
+    IN _updated_by public.users.updated_by%TYPE,
+    OUT err_code bigint,
+    OUT err_msg text) AS $$
+DECLARE
+    _time timestamp(6) without time zone;
+    _status public.users.status%TYPE;
+BEGIN
+    err_code := 0; -- NoError
+    err_msg := '';
+
+    SELECT status INTO _status FROM public.users WHERE id = _id LIMIT 1 FOR UPDATE;
+    IF NOT FOUND THEN
+        err_code := 11000; -- UserNotFound
+        err_msg := 'user not found';
+        RETURN;
+    END IF;
+
+    -- user's status: Active(3)
+    IF _status <> 3 THEN
+        err_code := 3; -- InvalidOperation
+        err_msg := format('invalid user''s status (%s)', _status);
+        RETURN;
+    END IF;
+
+    IF _name IS NOT NULL AND public.username_exists(_name) THEN
+        err_code := 11001; -- UsernameAlreadyExists
+        err_msg := 'username already exists';
+        RETURN;
+    END IF;
+
+    _time := (clock_timestamp() AT TIME ZONE 'UTC');
+    UPDATE public.users
+        SET name = _name, updated_at = _time, updated_by = _updated_by, _version_stamp = _version_stamp + 1, _timestamp = _time
+        WHERE id = _id;
+
+    EXCEPTION
+        WHEN unique_violation THEN
+            IF _name IS NOT NULL AND public.username_exists(_name) THEN
+                err_code := 11001; -- UsernameAlreadyExists
+                err_msg := 'username already exists';
+                RETURN;
+            END IF;
+            RAISE;
 END;
 $$ LANGUAGE plpgsql;
