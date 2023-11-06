@@ -47,7 +47,7 @@ type UserManager interface {
 	GetNameById(ctx *actions.OperationContext, id uint64) (nullable.Nullable[string], error)
 
 	// SetNameById sets a user name by the specified user ID.
-	SetNameById(ctx *actions.OperationContext, id uint64, name string) error
+	SetNameById(ctx *actions.OperationContext, id uint64, name nullable.Nullable[string]) error
 
 	// NameExists returns true if the user name exists.
 	NameExists(ctx *actions.OperationContext, name string) (bool, error)

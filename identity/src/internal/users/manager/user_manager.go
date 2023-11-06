@@ -294,6 +294,31 @@ func (m *UserManager) GetNameById(ctx *actions.OperationContext, id uint64) (nul
 	return n, nil
 }
 
+// SetNameById sets a user name by the specified user ID.
+func (m *UserManager) SetNameById(ctx *actions.OperationContext, id uint64, name nullable.Nullable[string]) error {
+	err := m.opExecutor.Exec(ctx, iactions.OperationTypeUserManager_SetNameById,
+		[]*actions.OperationParam{actions.NewOperationParam("id", id), actions.NewOperationParam("name", name.Ptr())},
+		func(opCtx *actions.OperationContext) error {
+			if err := m.userStore.SetNameById(opCtx, id, name); err != nil {
+				return fmt.Errorf("[manager.UserManager.SetNameById] set a user name by id: %w", err)
+			}
+
+			m.logger.InfoWithEvent(
+				opCtx.CreateLogEntryContext(),
+				events.UserEvent,
+				"[manager.UserManager.SetNameById] user name has been set",
+				logging.NewField("id", id),
+				logging.NewField("name", name.Ptr()),
+			)
+			return nil
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("[manager.UserManager.SetNameById] execute an operation: %w", err)
+	}
+	return nil
+}
+
 // NameExists returns true if the user name exists.
 func (m *UserManager) NameExists(ctx *actions.OperationContext, name string) (bool, error) {
 	var exists bool

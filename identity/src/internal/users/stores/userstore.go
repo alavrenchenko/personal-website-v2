@@ -340,6 +340,47 @@ func (s *UserStore) GetNameById(ctx *actions.OperationContext, id uint64) (nulla
 	return nullable.FromPtr(n), nil
 }
 
+// SetNameById sets a user name by the specified user ID.
+func (s *UserStore) SetNameById(ctx *actions.OperationContext, id uint64, name nullable.Nullable[string]) error {
+	err := s.opExecutor.Exec(ctx, iactions.OperationTypeUserStore_SetNameById,
+		[]*actions.OperationParam{actions.NewOperationParam("id", id), actions.NewOperationParam("name", name.Ptr())},
+		func(opCtx *actions.OperationContext) error {
+			err := s.txManager.ExecWithReadCommittedLevel(opCtx.Ctx, func(txCtx context.Context, tx pgx.Tx) error {
+				var errCode dberrors.DbErrorCode
+				var errMsg string
+				// PROCEDURE: public.set_username(IN _id, IN _name, IN _updated_by, OUT err_code, OUT err_msg)
+				// Minimum transaction isolation level: Read committed.
+				const query = "CALL public.set_username($1, $2, $3, NULL, NULL)"
+
+				if err := tx.QueryRow(txCtx, query, id, name.Ptr(), opCtx.UserId.Value).Scan(&errCode, &errMsg); err != nil {
+					return fmt.Errorf("[stores.UserStore.SetNameById] execute a query (set_username): %w", err)
+				}
+
+				switch errCode {
+				case dberrors.DbErrorCodeNoError:
+					return nil
+				case dberrors.DbErrorCodeInvalidOperation:
+					return errs.NewError(errs.ErrorCodeInvalidOperation, errMsg)
+				case idberrors.DbErrorCodeUserNotFound:
+					return ierrors.ErrUserNotFound
+				case idberrors.DbErrorCodeUsernameAlreadyExists:
+					return ierrors.ErrUsernameAlreadyExists
+				}
+				// unknown error
+				return fmt.Errorf("[stores.UserStore.SetNameById] invalid operation: %w", dberrors.NewDbError(errCode, errMsg))
+			})
+			if err != nil {
+				return fmt.Errorf("[stores.UserStore.SetNameById] execute a transaction: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("[stores.UserStore.SetNameById] execute an operation: %w", err)
+	}
+	return nil
+}
+
 // NameExists returns true if the user name exists.
 func (s *UserStore) NameExists(ctx *actions.OperationContext, name string) (bool, error) {
 	var exists bool
