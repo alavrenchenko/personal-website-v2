@@ -40,7 +40,7 @@ type Client struct {
 	// The user ID to identify the user who updated the client.
 	UpdatedBy uint64 `db:"updated_by"`
 
-	// The status of the client can be New(1), PendingApproval(2), Active(3), LockedOut(4), TemporarilyLockedOut(5), Disabled(6), or Deleted(7).
+	// The client status.
 	Status models.ClientStatus `db:"status"`
 
 	// It stores the date and time at which the client status was updated.

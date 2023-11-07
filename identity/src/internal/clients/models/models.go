@@ -54,5 +54,6 @@ const (
 	ClientStatusLockedOut            ClientStatus = 4
 	ClientStatusTemporarilyLockedOut ClientStatus = 5
 	ClientStatusDisabled             ClientStatus = 6
-	ClientStatusDeleted              ClientStatus = 7
+	ClientStatusDeleting             ClientStatus = 7
+	ClientStatusDeleted              ClientStatus = 8
 )
