@@ -42,7 +42,8 @@ Client statuses:
     LockedOut            = 4
     TemporarilyLockedOut = 5
     Disabled             = 6
-    Deleted              = 7
+    Deleting             = 7
+    Deleted              = 8
 
 id:
 increment: 1<<8 = 256
@@ -77,6 +78,15 @@ CREATE TABLE IF NOT EXISTS public.clients
     last_activity_ip character varying(64) COLLATE pg_catalog."default" NOT NULL,
     _version_stamp bigint NOT NULL,
     _timestamp timestamp(6) without time zone NOT NULL DEFAULT (clock_timestamp() AT TIME ZONE 'UTC'::text),
-    CONSTRAINT clients_pkey PRIMARY KEY (id)
+    CONSTRAINT clients_pkey PRIMARY KEY (id),
+    CONSTRAINT clients_status_check CHECK (status >= 1 AND status <= 8)
 )
 TABLESPACE pg_default;
+
+CREATE INDEX IF NOT EXISTS clients_created_at_idx ON public.clients (created_at);
+CREATE INDEX IF NOT EXISTS clients_updated_at_idx ON public.clients (updated_at);
+CREATE INDEX IF NOT EXISTS clients_status_idx ON public.clients (status);
+CREATE INDEX IF NOT EXISTS clients_status_updated_at_idx ON public.clients (status_updated_at);
+CREATE INDEX IF NOT EXISTS clients_app_id_idx ON public.clients (app_id);
+CREATE INDEX IF NOT EXISTS clients_last_activity_time_idx ON public.clients (last_activity_time);
+CREATE INDEX IF NOT EXISTS clients_last_activity_ip_idx ON public.clients (last_activity_ip);
