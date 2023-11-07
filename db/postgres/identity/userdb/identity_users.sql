@@ -32,6 +32,14 @@ User types:
     User        = 1
     SystemUser  = 2
 
+User groups:
+    Unspecified    = 0
+    AnonymousUsers = 1
+    Superusers     = 2
+    SystemUsers    = 3
+    Admins         = 4
+    Users          = 5
+
 User statuses:
     Unspecified          = 0
     New                  = 1
@@ -68,7 +76,8 @@ CREATE TABLE IF NOT EXISTS public.users
     _version_stamp bigint NOT NULL,
     _timestamp timestamp(6) without time zone NOT NULL DEFAULT (clock_timestamp() AT TIME ZONE 'UTC'::text),
     CONSTRAINT users_pkey PRIMARY KEY (id),
-    CONSTRAINT users_type_check CHECK (type = 1 OR type = 2),
+    CONSTRAINT users_type_check CHECK (type = 1 AND "group" IN (2, 4, 5) OR type = 2 AND "group" = 3),
+    CONSTRAINT users_group_check CHECK ("group" >= 2 AND "group" <= 5),
     CONSTRAINT users_status_check CHECK (status >= 1 AND status <= 8)
 )
 TABLESPACE pg_default;
@@ -126,7 +135,8 @@ CREATE TABLE IF NOT EXISTS public.personal_info
     CONSTRAINT personal_info_user_id_fkey FOREIGN KEY (user_id)
         REFERENCES public.users (id) MATCH SIMPLE
         ON UPDATE CASCADE
-        ON DELETE RESTRICT
+        ON DELETE RESTRICT,
+    CONSTRAINT personal_info_gender_check CHECK (gender >= 0 AND gender <= 4)
 )
 TABLESPACE pg_default;
 
