@@ -21,11 +21,11 @@ import (
 )
 
 type CreateOperationData struct {
-	// The permission group ID.
-	GroupId uint64 `json:"groupId"`
-
 	// The permission name.
 	Name string `json:"name"`
+
+	// The permission group ID.
+	GroupId uint64 `json:"groupId"`
 
 	// The app ID.
 	AppId nullable.Nullable[uint64] `json:"appId"`

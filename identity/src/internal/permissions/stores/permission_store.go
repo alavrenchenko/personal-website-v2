@@ -90,10 +90,10 @@ func (s *PermissionStore) Create(ctx *actions.OperationContext, data *permission
 			err := s.txManager.ExecWithReadCommittedLevel(opCtx.Ctx, func(txCtx context.Context, tx pgx.Tx) error {
 				var errCode dberrors.DbErrorCode
 				var errMsg string
-				// PROCEDURE: public.create_permission(IN _group_id, IN _name, IN _created_by, IN _status_comment, IN _app_id, IN _app_group_id, IN _description,
+				// PROCEDURE: public.create_permission(IN _name, IN _group_id, IN _created_by, IN _status_comment, IN _app_id, IN _app_group_id, IN _description,
 				// OUT _id, OUT err_code, OUT err_msg)
 				const query = "CALL public.create_permission($1, $2, $3, NULL, $4, $5, $6, NULL, NULL, NULL)"
-				r := tx.QueryRow(txCtx, query, data.GroupId, data.Name, opCtx.UserId.Value, data.AppId.Ptr(), data.AppGroupId.Ptr(), data.Description)
+				r := tx.QueryRow(txCtx, query, data.Name, data.GroupId, opCtx.UserId.Value, data.AppId.Ptr(), data.AppGroupId.Ptr(), data.Description)
 
 				if err := r.Scan(&id, &errCode, &errMsg); err != nil {
 					return fmt.Errorf("[stores.PermissionStore.Create] execute a query (create_permission): %w", err)

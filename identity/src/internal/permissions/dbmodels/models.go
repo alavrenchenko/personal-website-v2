@@ -29,11 +29,11 @@ type Permission struct {
 	// The unique ID to identify the permission.
 	Id uint64 `db:"id"`
 
-	// The permission group ID.
-	GroupId uint64 `db:"group_id"`
-
 	// The unique name to identify the permission.
 	Name string `db:"name"`
+
+	// The permission group ID.
+	GroupId uint64 `db:"group_id"`
 
 	// It stores the date and time at which the permission was created.
 	CreatedAt time.Time `db:"created_at"`
