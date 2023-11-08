@@ -12,6 +12,22 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
+-- FUNCTION: public.user_agent_session_exists(bigint, bigint, bigint)
+/*
+User agent session statuses:
+    Deleted = 9
+*/
+CREATE OR REPLACE FUNCTION public.user_agent_session_exists(
+    _user_id public.user_agent_sessions.user_id%TYPE,
+    _client_id public.user_agent_sessions.client_id%TYPE,
+    _user_agent_id public.user_agent_sessions.user_agent_id%TYPE
+) RETURNS boolean AS $$
+BEGIN
+    -- user agent session status: Deleted(9)
+    RETURN EXISTS (SELECT 1 FROM public.user_agent_sessions WHERE (user_id = _user_id AND client_id = _client_id OR user_agent_id = _user_agent_id) AND status <> 9 LIMIT 1);
+END;
+$$ LANGUAGE plpgsql;
+
 -- PROCEDURE: public.create_and_start_user_agent_session(bigint, bigint, bigint, bigint, bigint, text, character varying)
 /*
 User agent statuses:
