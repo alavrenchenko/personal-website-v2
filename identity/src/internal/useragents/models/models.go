@@ -54,5 +54,6 @@ const (
 	UserAgentStatusLockedOut            UserAgentStatus = 4
 	UserAgentStatusTemporarilyLockedOut UserAgentStatus = 5
 	UserAgentStatusDisabled             UserAgentStatus = 6
-	UserAgentStatusDeleted              UserAgentStatus = 7
+	UserAgentStatusDeleting             UserAgentStatus = 7
+	UserAgentStatusDeleted              UserAgentStatus = 8
 )
