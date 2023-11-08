@@ -61,7 +61,9 @@ const (
 	DbErrorCodePermissionGroupAlreadyExists errors.DbErrorCode = 12001
 
 	// User agent error codes (12200-12399).
-	DbErrorCodeUserAgentNotFound errors.DbErrorCode = 12200
+	DbErrorCodeUserAgentNotFound      errors.DbErrorCode = 12200
+	DbErrorCodeInvalidUserAgentId     errors.DbErrorCode = 12201
+	DbErrorCodeUserAgentAlreadyExists errors.DbErrorCode = 12202
 
 	// User session error codes (12400-12599).
 	DbErrorCodeUserSessionNotFound errors.DbErrorCode = 12400
