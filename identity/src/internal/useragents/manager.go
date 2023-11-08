@@ -29,6 +29,9 @@ type UserAgentManager interface {
 	// CreateMobileUserAgent creates a mobile user agent and returns the user agent ID if the operation is successful.
 	CreateMobileUserAgent(ctx *actions.OperationContext, data *useragents.CreateMobileUserAgentOperationData) (uint64, error)
 
+	// Delete deletes a user agent by the specified user agent ID.
+	Delete(ctx *actions.OperationContext, id uint64) error
+
 	// FindById finds and returns a user agent, if any, by the specified user agent ID.
 	FindById(ctx *actions.OperationContext, id uint64) (*dbmodels.UserAgent, error)
 

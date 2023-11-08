@@ -84,9 +84,17 @@ const (
 	OperationTypeUserAgentManager_Create                  actions.OperationType = 14000
 	OperationTypeUserAgentManager_CreateWebUserAgent      actions.OperationType = 14001
 	OperationTypeUserAgentManager_CreateMobileUserAgent   actions.OperationType = 14002
-	OperationTypeUserAgentManager_FindById                actions.OperationType = 14003
-	OperationTypeUserAgentManager_FindByUserIdAndClientId actions.OperationType = 14004
-	OperationTypeUserAgentManager_GetStatusById           actions.OperationType = 14005
+	OperationTypeUserAgentManager_Delete                  actions.OperationType = 14003
+	OperationTypeUserAgentManager_DeleteAllByUserId       actions.OperationType = 14004
+	OperationTypeUserAgentManager_DeleteAllByClientId     actions.OperationType = 14005
+	OperationTypeUserAgentManager_FindById                actions.OperationType = 14006
+	OperationTypeUserAgentManager_FindByUserIdAndClientId actions.OperationType = 14007
+	OperationTypeUserAgentManager_GetAllByUserId          actions.OperationType = 14008
+	OperationTypeUserAgentManager_GetAllByClientId        actions.OperationType = 14009
+	OperationTypeUserAgentManager_Exists                  actions.OperationType = 14010
+	OperationTypeUserAgentManager_GetStatusById           actions.OperationType = 14011
+	OperationTypeUserAgentManager_GetAllIdsByUserId       actions.OperationType = 14012
+	OperationTypeUserAgentManager_GetAllIdsByClientId     actions.OperationType = 14013
 
 	// UserSessionManager operation types (14500-14999).
 	OperationTypeUserSessionManager_CreateAndStart              actions.OperationType = 14500

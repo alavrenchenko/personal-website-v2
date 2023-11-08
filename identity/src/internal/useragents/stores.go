@@ -25,6 +25,12 @@ type UserAgentStore interface {
 	// Create creates a user agent and returns the user agent ID if the operation is successful.
 	Create(ctx *actions.OperationContext, data *useragents.CreateOperationData) (uint64, error)
 
+	// StartDeleting starts deleting a user agent by the specified user agent ID.
+	StartDeleting(ctx *actions.OperationContext, id uint64) error
+
+	// Delete deletes a user agent by the specified user agent ID.
+	Delete(ctx *actions.OperationContext, id uint64) error
+
 	// FindById finds and returns a user agent, if any, by the specified user agent ID.
 	FindById(ctx *actions.OperationContext, id uint64) (*dbmodels.UserAgent, error)
 

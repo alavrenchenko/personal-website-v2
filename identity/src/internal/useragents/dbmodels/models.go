@@ -46,7 +46,7 @@ type UserAgent struct {
 	// The user ID to identify the user who updated the user agent.
 	UpdatedBy uint64 `db:"updated_by"`
 
-	// The user agent status can be New(1), PendingApproval(2), Active(3), LockedOut(4), TemporarilyLockedOut(5), Disabled(6), or Deleted(7).
+	// The user agent status.
 	Status models.UserAgentStatus `db:"status"`
 
 	// It stores the date and time at which the user agent status was updated.

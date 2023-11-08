@@ -158,6 +158,48 @@ func (m *UserAgentManager) CreateMobileUserAgent(ctx *actions.OperationContext, 
 	return id, nil
 }
 
+// Delete deletes a user agent by the specified user agent ID.
+func (m *UserAgentManager) Delete(ctx *actions.OperationContext, id uint64) error {
+	err := m.opExecutor.Exec(ctx, iactions.OperationTypeUserAgentManager_Delete, []*actions.OperationParam{actions.NewOperationParam("id", id)},
+		func(opCtx *actions.OperationContext) error {
+			t, err := m.GetTypeById(id)
+			if err != nil {
+				return fmt.Errorf("[manager.UserAgentManager.Delete] get a user agent type by id: %w", err)
+			}
+
+			var store useragents.UserAgentStore
+			switch t {
+			case models.UserAgentTypeWeb:
+				store = m.webUserAgentStore
+			case models.UserAgentTypeMobile:
+				store = m.mobileUserAgentStore
+			default:
+				return fmt.Errorf("[manager.UserAgentManager.Delete] '%s' user agent type isn't supported", t)
+			}
+
+			if err := store.StartDeleting(opCtx, id); err != nil {
+				return fmt.Errorf("[manager.UserAgentManager.Delete] start deleting a %s user agent: %w", t, err)
+			}
+
+			if err := store.Delete(opCtx, id); err != nil {
+				return fmt.Errorf("[manager.UserAgentManager.Delete] delete a %s user agent: %w", t, err)
+			}
+
+			m.logger.InfoWithEvent(
+				opCtx.CreateLogEntryContext(),
+				events.UserAgentEvent,
+				"[manager.UserAgentManager.Delete] user agent has been deleted",
+				logging.NewField("id", id),
+			)
+			return nil
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("[manager.UserAgentManager.Delete] execute an operation: %w", err)
+	}
+	return nil
+}
+
 // FindById finds and returns a user agent, if any, by the specified user agent ID.
 func (m *UserAgentManager) FindById(ctx *actions.OperationContext, id uint64) (*dbmodels.UserAgent, error) {
 	var ua *dbmodels.UserAgent
