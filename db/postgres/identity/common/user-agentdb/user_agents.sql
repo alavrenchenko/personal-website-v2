@@ -12,6 +12,21 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
+-- FUNCTION: public.user_agent_exists(bigint, bigint)
+/*
+User agent statuses:
+    Deleted = 8
+*/
+CREATE OR REPLACE FUNCTION public.user_agent_exists(
+    _user_id public.user_agents.user_id%TYPE,
+    _client_id public.user_agents.client_id%TYPE
+) RETURNS boolean AS $$
+BEGIN
+   -- user agent status: Deleted(8)
+    RETURN EXISTS (SELECT 1 FROM public.user_agents WHERE user_id = _user_id AND client_id = _client_id AND status <> 8 LIMIT 1);
+END;
+$$ LANGUAGE plpgsql;
+
 -- PROCEDURE: public.create_user_agent(bigint, bigint, bigint, smallint, text, bigint, text)
 /*
 Error codes:
