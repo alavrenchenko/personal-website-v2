@@ -30,8 +30,10 @@ $$ LANGUAGE plpgsql;
 -- PROCEDURE: public.create_user_agent(bigint, bigint, bigint, smallint, text, bigint, text)
 /*
 Error codes:
-    NoError = 0
+    NoError                = 0
+    UserAgentAlreadyExists = 12202
 */
+-- Minimum transaction isolation level: Read committed.
 CREATE OR REPLACE PROCEDURE public.create_user_agent(
     IN _user_id public.user_agents.user_id%TYPE,
     IN _client_id public.user_agents.client_id%TYPE,
@@ -50,11 +52,26 @@ BEGIN
     err_code := 0; -- NoError
     err_msg := '';
 
+    IF public.user_agent_exists(_user_id, _client_id) THEN
+        err_code := 12202; -- UserAgentAlreadyExists
+        err_msg := 'user agent with the same params already exists';
+        RETURN;
+    END IF;
+
     _time := (clock_timestamp() AT TIME ZONE 'UTC');
     INSERT INTO public.user_agents(user_id, client_id, created_at, created_by, updated_at, updated_by, status, status_updated_at,
             status_updated_by, status_comment, app_id, first_user_agent, last_user_agent, _version_stamp, _timestamp)
         VALUES (_user_id, _client_id, _time, _created_by, _time, _created_by, _status, _time, _created_by, _status_comment,
             _app_id, _user_agent, _user_agent, 1, _time)
         RETURNING id INTO _id;
+
+    EXCEPTION
+        WHEN unique_violation THEN
+            IF public.user_agent_exists(_user_id, _client_id) THEN
+                err_code := 12202; -- UserAgentAlreadyExists
+                err_msg := 'user agent with the same params already exists';
+                RETURN;
+            END IF;
+            RAISE;
 END;
 $$ LANGUAGE plpgsql;
