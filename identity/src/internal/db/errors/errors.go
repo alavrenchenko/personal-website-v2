@@ -28,7 +28,8 @@ const (
 	DbErrorCodeUserPersonalInfoNotFound errors.DbErrorCode = 11003
 
 	// Client error codes (11200-11399).
-	DbErrorCodeClientNotFound errors.DbErrorCode = 11200
+	DbErrorCodeClientNotFound  errors.DbErrorCode = 11200
+	DbErrorCodeInvalidClientId errors.DbErrorCode = 11201
 
 	// User group error codes (11400-11599).
 
