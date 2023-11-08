@@ -115,26 +115,27 @@ func (s *ClientStore) Create(ctx *actions.OperationContext, data *clientoperatio
 	var id uint64
 	err := s.opExecutor.Exec(ctx, s.createOpType, []*actions.OperationParam{actions.NewOperationParam("data", data)},
 		func(opCtx *actions.OperationContext) error {
-			var errCode dberrors.DbErrorCode
-			var errMsg string
-			// public.create_client(IN _created_by, IN _status, IN _status_comment, IN _app_id, IN _user_agent, IN _ip, OUT _id, OUT err_code, OUT err_msg)
-			const query = "CALL public.create_client($1, $2, NULL, $3, $4, $5, NULL, NULL, NULL)"
-
 			err := s.txManager.ExecWithReadCommittedLevel(opCtx.Ctx, func(txCtx context.Context, tx pgx.Tx) error {
+				var errCode dberrors.DbErrorCode
+				var errMsg string
+				// PROCEDURE: public.create_client(IN _created_by, IN _status, IN _status_comment, IN _app_id, IN _user_agent, IN _ip,
+				// OUT _id, OUT err_code, OUT err_msg)
+				// Minimum transaction isolation level: Read committed.
+				const query = "CALL public.create_client($1, $2, NULL, $3, $4, $5, NULL, NULL, NULL)"
 				r := tx.QueryRow(txCtx, query, opCtx.UserId.Value, data.Status, data.AppId.Ptr(), data.UserAgent.Ptr(), data.IP)
 
 				if err := r.Scan(&id, &errCode, &errMsg); err != nil {
 					return fmt.Errorf("[stores.ClientStore.Create] execute a query (create_client): %w", err)
 				}
+
+				if errCode != dberrors.DbErrorCodeNoError {
+					// unknown error
+					return fmt.Errorf("[stores.ClientStore.Create] invalid operation: %w", dberrors.NewDbError(errCode, errMsg))
+				}
 				return nil
 			})
 			if err != nil {
-				return fmt.Errorf("[stores.ClientStore.Create] execute a transaction with the 'read committed' isolation level: %w", err)
-			}
-
-			if errCode != dberrors.DbErrorCodeNoError {
-				// unknown error
-				return fmt.Errorf("[stores.ClientStore.Create] invalid operation: %w", dberrors.NewDbError(errCode, errMsg))
+				return fmt.Errorf("[stores.ClientStore.Create] execute a transaction: %w", err)
 			}
 			return nil
 		},
