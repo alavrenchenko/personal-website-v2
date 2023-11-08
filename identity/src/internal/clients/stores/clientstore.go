@@ -41,37 +41,48 @@ const (
 	clientsTable = "public.clients"
 )
 
+const (
+	opTypeClientStore_Create = iota
+	opTypeClientStore_StartDeleting
+	opTypeClientStore_Delete
+	opTypeClientStore_FindById
+	opTypeClientStore_GetStatusById
+)
+
+var webClientStoreOpTypes = []actions.OperationType{
+	opTypeClientStore_Create:        iactions.OperationTypeWebClientStore_Create,
+	opTypeClientStore_StartDeleting: iactions.OperationTypeWebClientStore_StartDeleting,
+	opTypeClientStore_Delete:        iactions.OperationTypeWebClientStore_Delete,
+	opTypeClientStore_FindById:      iactions.OperationTypeWebClientStore_FindById,
+	opTypeClientStore_GetStatusById: iactions.OperationTypeWebClientStore_GetStatusById,
+}
+
+var mobileClientStoreOpTypes = []actions.OperationType{
+	opTypeClientStore_Create:        iactions.OperationTypeMobileClientStore_Create,
+	opTypeClientStore_StartDeleting: iactions.OperationTypeMobileClientStore_StartDeleting,
+	opTypeClientStore_Delete:        iactions.OperationTypeMobileClientStore_Delete,
+	opTypeClientStore_FindById:      iactions.OperationTypeMobileClientStore_FindById,
+	opTypeClientStore_GetStatusById: iactions.OperationTypeMobileClientStore_GetStatusById,
+}
+
 type ClientStore struct {
-	db                  *postgres.Database
-	opExecutor          *actionhelper.OperationExecutor
-	store               *postgres.Store[dbmodels.Client]
-	txManager           *postgres.TxManager
-	logger              logging.Logger[*lcontext.LogEntryContext]
-	createOpType        actions.OperationType
-	startDeletingOpType actions.OperationType
-	deleteOpType        actions.OperationType
-	findByIdOpType      actions.OperationType
-	getStatusByIdOpType actions.OperationType
+	db         *postgres.Database
+	opExecutor *actionhelper.OperationExecutor
+	store      *postgres.Store[dbmodels.Client]
+	txManager  *postgres.TxManager
+	logger     logging.Logger[*lcontext.LogEntryContext]
+	opTypes    []actions.OperationType
 }
 
 var _ clients.ClientStore = (*ClientStore)(nil)
 
 func NewClientStore(ctype models.ClientType, db *postgres.Database, loggerFactory logging.LoggerFactory[*lcontext.LogEntryContext]) (*ClientStore, error) {
-	var createOpType, startDeletingOpType, deleteOpType, findByIdOpType, getStatusByIdOpType actions.OperationType
-
+	var opTypes []actions.OperationType
 	switch ctype {
 	case models.ClientTypeWeb:
-		createOpType = iactions.OperationTypeClientStore_CreateWebClient
-		startDeletingOpType = iactions.OperationTypeClientStore_StartDeletingWebClient
-		deleteOpType = iactions.OperationTypeClientStore_DeleteWebClient
-		findByIdOpType = iactions.OperationTypeClientStore_FindWebClientById
-		getStatusByIdOpType = iactions.OperationTypeClientStore_GetWebClientStatusById
+		opTypes = webClientStoreOpTypes
 	case models.ClientTypeMobile:
-		createOpType = iactions.OperationTypeClientStore_CreateMobileClient
-		startDeletingOpType = iactions.OperationTypeClientStore_StartDeletingMobileClient
-		deleteOpType = iactions.OperationTypeClientStore_DeleteMobileClient
-		findByIdOpType = iactions.OperationTypeClientStore_FindMobileClientById
-		getStatusByIdOpType = iactions.OperationTypeClientStore_GetMobileClientStatusById
+		opTypes = mobileClientStoreOpTypes
 	default:
 		return nil, fmt.Errorf("[stores.NewClientStore] '%s' client type isn't supported", ctype)
 	}
@@ -97,23 +108,19 @@ func NewClientStore(ctype models.ClientType, db *postgres.Database, loggerFactor
 	}
 
 	return &ClientStore{
-		db:                  db,
-		opExecutor:          e,
-		store:               postgres.NewStore[dbmodels.Client](db),
-		txManager:           txm,
-		logger:              l,
-		createOpType:        createOpType,
-		startDeletingOpType: startDeletingOpType,
-		deleteOpType:        deleteOpType,
-		findByIdOpType:      findByIdOpType,
-		getStatusByIdOpType: getStatusByIdOpType,
+		db:         db,
+		opExecutor: e,
+		store:      postgres.NewStore[dbmodels.Client](db),
+		txManager:  txm,
+		logger:     l,
+		opTypes:    opTypes,
 	}, nil
 }
 
 // Create creates a client and returns the client ID if the operation is successful.
 func (s *ClientStore) Create(ctx *actions.OperationContext, data *clientoperations.CreateOperationData) (uint64, error) {
 	var id uint64
-	err := s.opExecutor.Exec(ctx, s.createOpType, []*actions.OperationParam{actions.NewOperationParam("data", data)},
+	err := s.opExecutor.Exec(ctx, s.opTypes[opTypeClientStore_Create], []*actions.OperationParam{actions.NewOperationParam("data", data)},
 		func(opCtx *actions.OperationContext) error {
 			err := s.txManager.ExecWithReadCommittedLevel(opCtx.Ctx, func(txCtx context.Context, tx pgx.Tx) error {
 				var errCode dberrors.DbErrorCode
@@ -148,7 +155,7 @@ func (s *ClientStore) Create(ctx *actions.OperationContext, data *clientoperatio
 
 // StartDeleting starts deleting a client by the specified client ID.
 func (s *ClientStore) StartDeleting(ctx *actions.OperationContext, id uint64) error {
-	err := s.opExecutor.Exec(ctx, s.startDeletingOpType, []*actions.OperationParam{actions.NewOperationParam("id", id)},
+	err := s.opExecutor.Exec(ctx, s.opTypes[opTypeClientStore_StartDeleting], []*actions.OperationParam{actions.NewOperationParam("id", id)},
 		func(opCtx *actions.OperationContext) error {
 			err := s.txManager.ExecWithReadCommittedLevel(opCtx.Ctx, func(txCtx context.Context, tx pgx.Tx) error {
 				var errCode dberrors.DbErrorCode
@@ -186,7 +193,7 @@ func (s *ClientStore) StartDeleting(ctx *actions.OperationContext, id uint64) er
 
 // Delete deletes a client by the specified client ID.
 func (s *ClientStore) Delete(ctx *actions.OperationContext, id uint64) error {
-	err := s.opExecutor.Exec(ctx, s.deleteOpType, []*actions.OperationParam{actions.NewOperationParam("id", id)},
+	err := s.opExecutor.Exec(ctx, s.opTypes[opTypeClientStore_Delete], []*actions.OperationParam{actions.NewOperationParam("id", id)},
 		func(opCtx *actions.OperationContext) error {
 			err := s.txManager.ExecWithReadCommittedLevel(opCtx.Ctx, func(txCtx context.Context, tx pgx.Tx) error {
 				var errCode dberrors.DbErrorCode
@@ -225,8 +232,7 @@ func (s *ClientStore) Delete(ctx *actions.OperationContext, id uint64) error {
 // FindById finds and returns a client, if any, by the specified client ID.
 func (s *ClientStore) FindById(ctx *actions.OperationContext, id uint64) (*dbmodels.Client, error) {
 	var c *dbmodels.Client
-	err := s.opExecutor.Exec(ctx, s.findByIdOpType,
-		[]*actions.OperationParam{actions.NewOperationParam("id", id)},
+	err := s.opExecutor.Exec(ctx, s.opTypes[opTypeClientStore_FindById], []*actions.OperationParam{actions.NewOperationParam("id", id)},
 		func(opCtx *actions.OperationContext) error {
 			const query = "SELECT * FROM " + clientsTable + " WHERE id = $1 LIMIT 1"
 			var err error
@@ -245,8 +251,7 @@ func (s *ClientStore) FindById(ctx *actions.OperationContext, id uint64) (*dbmod
 // GetStatusById gets a client status by the specified client ID.
 func (s *ClientStore) GetStatusById(ctx *actions.OperationContext, id uint64) (models.ClientStatus, error) {
 	var status models.ClientStatus
-	err := s.opExecutor.Exec(ctx, s.getStatusByIdOpType,
-		[]*actions.OperationParam{actions.NewOperationParam("id", id)},
+	err := s.opExecutor.Exec(ctx, s.opTypes[opTypeClientStore_GetStatusById], []*actions.OperationParam{actions.NewOperationParam("id", id)},
 		func(opCtx *actions.OperationContext) error {
 			conn, err := s.db.ConnPool.Acquire(opCtx.Ctx)
 			if err != nil {
