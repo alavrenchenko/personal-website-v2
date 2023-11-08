@@ -217,22 +217,26 @@ const (
 	OperationTypeUserStore_GetTypeAndStatusById  actions.OperationType = 31013
 	OperationTypeUserStore_GetGroupAndStatusById actions.OperationType = 31014
 
-	// ClientStore operation types (31500-31999).
-	OperationTypeClientStore_Create                    actions.OperationType = 31500
-	OperationTypeClientStore_CreateWebClient           actions.OperationType = 31501
-	OperationTypeClientStore_CreateMobileClient        actions.OperationType = 31502
-	OperationTypeClientStore_StartDeleting             actions.OperationType = 31503
-	OperationTypeClientStore_StartDeletingWebClient    actions.OperationType = 31504
-	OperationTypeClientStore_StartDeletingMobileClient actions.OperationType = 31505
-	OperationTypeClientStore_Delete                    actions.OperationType = 31506
-	OperationTypeClientStore_DeleteWebClient           actions.OperationType = 31507
-	OperationTypeClientStore_DeleteMobileClient        actions.OperationType = 31508
-	OperationTypeClientStore_FindById                  actions.OperationType = 31509
-	OperationTypeClientStore_FindWebClientById         actions.OperationType = 31510
-	OperationTypeClientStore_FindMobileClientById      actions.OperationType = 31511
-	OperationTypeClientStore_GetStatusById             actions.OperationType = 31512
-	OperationTypeClientStore_GetWebClientStatusById    actions.OperationType = 31513
-	OperationTypeClientStore_GetMobileClientStatusById actions.OperationType = 31514
+	// ClientStore operation types (31500-31599).
+	OperationTypeClientStore_Create        actions.OperationType = 31500
+	OperationTypeClientStore_StartDeleting actions.OperationType = 31501
+	OperationTypeClientStore_Delete        actions.OperationType = 31502
+	OperationTypeClientStore_FindById      actions.OperationType = 31503
+	OperationTypeClientStore_GetStatusById actions.OperationType = 31504
+
+	// WebClientStore operation types (31600-31699).
+	OperationTypeWebClientStore_Create        actions.OperationType = 31600
+	OperationTypeWebClientStore_StartDeleting actions.OperationType = 31601
+	OperationTypeWebClientStore_Delete        actions.OperationType = 31602
+	OperationTypeWebClientStore_FindById      actions.OperationType = 31603
+	OperationTypeWebClientStore_GetStatusById actions.OperationType = 31604
+
+	// MobileClientStore operation types (31700-31799).
+	OperationTypeMobileClientStore_Create        actions.OperationType = 31700
+	OperationTypeMobileClientStore_StartDeleting actions.OperationType = 31701
+	OperationTypeMobileClientStore_Delete        actions.OperationType = 31702
+	OperationTypeMobileClientStore_FindById      actions.OperationType = 31703
+	OperationTypeMobileClientStore_GetStatusById actions.OperationType = 31704
 
 	// UserGroupStore operation types (32000-32499).
 
@@ -270,19 +274,47 @@ const (
 	OperationTypePermissionGroupStore_Exists        actions.OperationType = 33507
 	OperationTypePermissionGroupStore_GetStatusById actions.OperationType = 33508
 
-	// UserAgentStore operation types (34000-34499).
-	OperationTypeUserAgentStore_Create                                 actions.OperationType = 34000
-	OperationTypeUserAgentStore_CreateWebUserAgent                     actions.OperationType = 34001
-	OperationTypeUserAgentStore_CreateMobileUserAgent                  actions.OperationType = 34002
-	OperationTypeUserAgentStore_FindById                               actions.OperationType = 34003
-	OperationTypeUserAgentStore_FindWebUserAgentById                   actions.OperationType = 34004
-	OperationTypeUserAgentStore_FindMobileUserAgentById                actions.OperationType = 34005
-	OperationTypeUserAgentStore_FindByUserIdAndClientId                actions.OperationType = 34006
-	OperationTypeUserAgentStore_FindWebUserAgentByUserIdAndClientId    actions.OperationType = 34007
-	OperationTypeUserAgentStore_FindMobileUserAgentByUserIdAndClientId actions.OperationType = 34008
-	OperationTypeUserAgentStore_GetStatusById                          actions.OperationType = 34009
-	OperationTypeUserAgentStore_GetWebUserAgentStatusById              actions.OperationType = 34010
-	OperationTypeUserAgentStore_GetMobileUserAgentStatusById           actions.OperationType = 34011
+	// UserAgentStore operation types (34000-34199).
+	OperationTypeUserAgentStore_Create                  actions.OperationType = 34000
+	OperationTypeUserAgentStore_Delete                  actions.OperationType = 34001
+	OperationTypeUserAgentStore_DeleteAllByUserId       actions.OperationType = 34002
+	OperationTypeUserAgentStore_DeleteAllByClientId     actions.OperationType = 34003
+	OperationTypeUserAgentStore_FindById                actions.OperationType = 34004
+	OperationTypeUserAgentStore_FindByUserIdAndClientId actions.OperationType = 34005
+	OperationTypeUserAgentStore_GetAllByUserId          actions.OperationType = 34006
+	OperationTypeUserAgentStore_GetAllByClientId        actions.OperationType = 34007
+	OperationTypeUserAgentStore_Exists                  actions.OperationType = 34008
+	OperationTypeUserAgentStore_GetStatusById           actions.OperationType = 34009
+	OperationTypeUserAgentStore_GetAllIdsByUserId       actions.OperationType = 34010
+	OperationTypeUserAgentStore_GetAllIdsByClientId     actions.OperationType = 34011
+
+	// WebUserAgentStore operation types (34200-34399).
+	OperationTypeWebUserAgentStore_Create                  actions.OperationType = 34200
+	OperationTypeWebUserAgentStore_Delete                  actions.OperationType = 34201
+	OperationTypeWebUserAgentStore_DeleteAllByUserId       actions.OperationType = 34202
+	OperationTypeWebUserAgentStore_DeleteAllByClientId     actions.OperationType = 34203
+	OperationTypeWebUserAgentStore_FindById                actions.OperationType = 34204
+	OperationTypeWebUserAgentStore_FindByUserIdAndClientId actions.OperationType = 34205
+	OperationTypeWebUserAgentStore_GetAllByUserId          actions.OperationType = 34206
+	OperationTypeWebUserAgentStore_GetAllByClientId        actions.OperationType = 34207
+	OperationTypeWebUserAgentStore_Exists                  actions.OperationType = 34208
+	OperationTypeWebUserAgentStore_GetStatusById           actions.OperationType = 34209
+	OperationTypeWebUserAgentStore_GetAllIdsByUserId       actions.OperationType = 34210
+	OperationTypeWebUserAgentStore_GetAllIdsByClientId     actions.OperationType = 34211
+
+	// MobileUserAgentStore operation types (34400-34599).
+	OperationTypeMobileUserAgentStore_Create                  actions.OperationType = 34400
+	OperationTypeMobileUserAgentStore_Delete                  actions.OperationType = 34401
+	OperationTypeMobileUserAgentStore_DeleteAllByUserId       actions.OperationType = 34402
+	OperationTypeMobileUserAgentStore_DeleteAllByClientId     actions.OperationType = 34403
+	OperationTypeMobileUserAgentStore_FindById                actions.OperationType = 34404
+	OperationTypeMobileUserAgentStore_FindByUserIdAndClientId actions.OperationType = 34405
+	OperationTypeMobileUserAgentStore_GetAllByUserId          actions.OperationType = 34406
+	OperationTypeMobileUserAgentStore_GetAllByClientId        actions.OperationType = 34407
+	OperationTypeMobileUserAgentStore_Exists                  actions.OperationType = 34408
+	OperationTypeMobileUserAgentStore_GetStatusById           actions.OperationType = 34409
+	OperationTypeMobileUserAgentStore_GetAllIdsByUserId       actions.OperationType = 34410
+	OperationTypeMobileUserAgentStore_GetAllIdsByClientId     actions.OperationType = 34411
 
 	// UserSessionStore operation types (34500-34999).
 	OperationTypeUserSessionStore_CreateAndStart              actions.OperationType = 34500
