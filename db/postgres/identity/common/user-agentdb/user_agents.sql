@@ -75,3 +75,114 @@ BEGIN
             RAISE;
 END;
 $$ LANGUAGE plpgsql;
+
+-- PROCEDURE: public.start_deleting_user_agent(bigint, bigint, text)
+/*
+User agent statuses:
+    Deleting = 7
+    Deleted  = 8
+
+Error codes:
+    NoError           = 0
+    InvalidOperation  = 3
+    UserAgentNotFound = 12200
+*/
+-- Minimum transaction isolation level: Read committed.
+CREATE OR REPLACE PROCEDURE public.start_deleting_user_agent(
+    IN _id public.user_agents.id%TYPE,
+    IN _deleted_by public.user_agents.updated_by%TYPE,
+    IN _status_comment public.user_agents.status_comment%TYPE,
+    OUT err_code bigint,
+    OUT err_msg text) AS $$
+DECLARE
+    _time timestamp(6) without time zone;
+    _status public.user_agents.status%TYPE;
+BEGIN
+    err_code := 0; -- NoError
+    err_msg := '';
+
+    SELECT status INTO _status FROM public.user_agents WHERE id = _id LIMIT 1 FOR UPDATE;
+    IF NOT FOUND THEN
+        err_code := 12200; -- UserAgentNotFound
+        err_msg := 'user agent not found';
+        RETURN;
+    END IF;
+
+    -- user agent statuses: Deleting(7), Deleted(8)
+    IF _status = 7 OR _status = 8 THEN
+        err_code := 3; -- InvalidOperation
+        err_msg := format('invalid user agent status (%s)', _status);
+        RETURN;
+    END IF;
+
+    _time := (clock_timestamp() AT TIME ZONE 'UTC');
+    -- user agent status: Deleting(7)
+    UPDATE public.user_agents
+        SET updated_at = _time, updated_by = _deleted_by, status = 7, status_updated_at = _time, status_updated_by = _deleted_by,
+            status_comment = _status_comment, _version_stamp = _version_stamp + 1, _timestamp = _time
+        WHERE id = _id;
+END;
+$$ LANGUAGE plpgsql;
+
+-- PROCEDURE: public.delete_user_agent(bigint, bigint, text)
+/*
+User agent statuses:
+    Deleting = 7
+    Deleted  = 8
+
+User agent session statuses:
+    Deleted = 9
+
+Error codes:
+    NoError            = 0
+    InvalidOperation   = 3
+    UserAgentNotFound = 12200
+*/
+-- Minimum transaction isolation level: Read committed.
+CREATE OR REPLACE PROCEDURE public.delete_user_agent(
+    IN _id public.user_agents.id%TYPE,
+    IN _deleted_by public.user_agents.updated_by%TYPE,
+    IN _status_comment public.user_agents.status_comment%TYPE,
+    OUT err_code bigint,
+    OUT err_msg text) AS $$
+DECLARE
+    _time timestamp(6) without time zone;
+    _status public.user_agents.status%TYPE;
+BEGIN
+    err_code := 0; -- NoError
+    err_msg := '';
+
+    SELECT status INTO _status FROM public.user_agents WHERE id = _id LIMIT 1 FOR UPDATE;
+    IF NOT FOUND THEN
+        err_code := 12200; -- UserAgentNotFound
+        err_msg := 'user agent not found';
+        RETURN;
+    END IF;
+
+    -- user agent status: Deleting(7)
+    IF _status <> 7 THEN
+        err_code := 3; -- InvalidOperation
+        -- user agent status: Deleted(8)
+        IF _status = 8 THEN
+            err_msg := 'user agent has already been deleted';
+        ELSE
+            err_msg := format('invalid user agent status (%s)', _status);
+        END IF;
+        RETURN;
+    END IF;
+
+    -- user agent session status: Deleted(9)
+    IF EXISTS (SELECT 1 FROM public.user_agent_sessions WHERE user_agent_id = _id AND status <> 9 LIMIT 1) THEN
+        err_code := 3; -- InvalidOperation
+        err_msg := 'user agent session exists';
+        RETURN;
+    END IF;
+
+    _time := (clock_timestamp() AT TIME ZONE 'UTC');
+    -- user agent status: Deleted(8)
+    UPDATE public.user_agents
+        SET updated_at = _time, updated_by = _deleted_by, status = 8, status_updated_at = _time, status_updated_by = _deleted_by,
+            status_comment = _status_comment, _version_stamp = _version_stamp + 1, _timestamp = _time
+        WHERE id = _id;
+END;
+$$ LANGUAGE plpgsql;
