@@ -82,6 +82,9 @@ $$ LANGUAGE plpgsql;
 Permission group statuses:
     Deleted = 5
 
+Permission statuses:
+    Deleted = 5
+
 Error codes:
     NoError                 = 0
     InvalidOperation        = 3
@@ -115,6 +118,7 @@ BEGIN
         RETURN;
     END IF;
 
+    -- permission status: Deleted(5)
     IF EXISTS (SELECT 1 FROM public.permissions WHERE group_id = _id AND status <> 5 LIMIT 1) THEN
         err_code := 3; -- InvalidOperation
         err_msg := 'permission group contains permissions';
