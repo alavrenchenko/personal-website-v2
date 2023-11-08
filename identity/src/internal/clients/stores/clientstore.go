@@ -26,10 +26,12 @@ import (
 	"personal-website-v2/identity/src/internal/clients/dbmodels"
 	"personal-website-v2/identity/src/internal/clients/models"
 	clientoperations "personal-website-v2/identity/src/internal/clients/operations/clients"
+	idberrors "personal-website-v2/identity/src/internal/db/errors"
 	ierrors "personal-website-v2/identity/src/internal/errors"
 	"personal-website-v2/pkg/actions"
 	dberrors "personal-website-v2/pkg/db/errors"
 	"personal-website-v2/pkg/db/postgres"
+	errs "personal-website-v2/pkg/errors"
 	actionhelper "personal-website-v2/pkg/helper/actions"
 	"personal-website-v2/pkg/logging"
 	lcontext "personal-website-v2/pkg/logging/context"
@@ -46,6 +48,8 @@ type ClientStore struct {
 	txManager           *postgres.TxManager
 	logger              logging.Logger[*lcontext.LogEntryContext]
 	createOpType        actions.OperationType
+	startDeletingOpType actions.OperationType
+	deleteOpType        actions.OperationType
 	findByIdOpType      actions.OperationType
 	getStatusByIdOpType actions.OperationType
 }
@@ -53,15 +57,19 @@ type ClientStore struct {
 var _ clients.ClientStore = (*ClientStore)(nil)
 
 func NewClientStore(ctype models.ClientType, db *postgres.Database, loggerFactory logging.LoggerFactory[*lcontext.LogEntryContext]) (*ClientStore, error) {
-	var createOpType, findByIdOpType, getStatusByIdOpType actions.OperationType
+	var createOpType, startDeletingOpType, deleteOpType, findByIdOpType, getStatusByIdOpType actions.OperationType
 
 	switch ctype {
 	case models.ClientTypeWeb:
 		createOpType = iactions.OperationTypeClientStore_CreateWebClient
+		startDeletingOpType = iactions.OperationTypeClientStore_StartDeletingWebClient
+		deleteOpType = iactions.OperationTypeClientStore_DeleteWebClient
 		findByIdOpType = iactions.OperationTypeClientStore_FindWebClientById
 		getStatusByIdOpType = iactions.OperationTypeClientStore_GetWebClientStatusById
 	case models.ClientTypeMobile:
 		createOpType = iactions.OperationTypeClientStore_CreateMobileClient
+		startDeletingOpType = iactions.OperationTypeClientStore_StartDeletingMobileClient
+		deleteOpType = iactions.OperationTypeClientStore_DeleteMobileClient
 		findByIdOpType = iactions.OperationTypeClientStore_FindMobileClientById
 		getStatusByIdOpType = iactions.OperationTypeClientStore_GetMobileClientStatusById
 	default:
@@ -78,7 +86,6 @@ func NewClientStore(ctype models.ClientType, db *postgres.Database, loggerFactor
 		DefaultGroup:    iactions.OperationGroupClient,
 		StopAppIfError:  true,
 	}
-
 	e, err := actionhelper.NewOperationExecutor(c, loggerFactory)
 	if err != nil {
 		return nil, fmt.Errorf("[stores.NewClientStore] new operation executor: %w", err)
@@ -96,6 +103,8 @@ func NewClientStore(ctype models.ClientType, db *postgres.Database, loggerFactor
 		txManager:           txm,
 		logger:              l,
 		createOpType:        createOpType,
+		startDeletingOpType: startDeletingOpType,
+		deleteOpType:        deleteOpType,
 		findByIdOpType:      findByIdOpType,
 		getStatusByIdOpType: getStatusByIdOpType,
 	}, nil
@@ -134,6 +143,82 @@ func (s *ClientStore) Create(ctx *actions.OperationContext, data *clientoperatio
 		return 0, fmt.Errorf("[stores.ClientStore.Create] execute an operation: %w", err)
 	}
 	return id, nil
+}
+
+// StartDeleting starts deleting a client by the specified client ID.
+func (s *ClientStore) StartDeleting(ctx *actions.OperationContext, id uint64) error {
+	err := s.opExecutor.Exec(ctx, s.startDeletingOpType, []*actions.OperationParam{actions.NewOperationParam("id", id)},
+		func(opCtx *actions.OperationContext) error {
+			err := s.txManager.ExecWithReadCommittedLevel(opCtx.Ctx, func(txCtx context.Context, tx pgx.Tx) error {
+				var errCode dberrors.DbErrorCode
+				var errMsg string
+				// PROCEDURE: public.start_deleting_client(IN _id, IN _deleted_by, IN _status_comment, OUT err_code, OUT err_msg)
+				// Minimum transaction isolation level: Read committed.
+				const query = "CALL public.start_deleting_client($1, $2, 'deletion', NULL, NULL)"
+
+				if err := tx.QueryRow(txCtx, query, id, opCtx.UserId.Value).Scan(&errCode, &errMsg); err != nil {
+					return fmt.Errorf("[stores.ClientStore.StartDeleting] execute a query (start_deleting_client): %w", err)
+				}
+
+				switch errCode {
+				case dberrors.DbErrorCodeNoError:
+					return nil
+				case dberrors.DbErrorCodeInvalidOperation:
+					return errs.NewError(errs.ErrorCodeInvalidOperation, errMsg)
+				case idberrors.DbErrorCodeClientNotFound:
+					return ierrors.ErrClientNotFound
+				}
+				// unknown error
+				return fmt.Errorf("[stores.ClientStore.StartDeleting] invalid operation: %w", dberrors.NewDbError(errCode, errMsg))
+			})
+			if err != nil {
+				return fmt.Errorf("[stores.ClientStore.StartDeleting] execute a transaction: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("[stores.ClientStore.StartDeleting] execute an operation: %w", err)
+	}
+	return nil
+}
+
+// Delete deletes a client by the specified client ID.
+func (s *ClientStore) Delete(ctx *actions.OperationContext, id uint64) error {
+	err := s.opExecutor.Exec(ctx, s.deleteOpType, []*actions.OperationParam{actions.NewOperationParam("id", id)},
+		func(opCtx *actions.OperationContext) error {
+			err := s.txManager.ExecWithReadCommittedLevel(opCtx.Ctx, func(txCtx context.Context, tx pgx.Tx) error {
+				var errCode dberrors.DbErrorCode
+				var errMsg string
+				// PROCEDURE: public.delete_client(IN _id, IN _deleted_by, IN _status_comment, OUT err_code, OUT err_msg)
+				// Minimum transaction isolation level: Read committed.
+				const query = "CALL public.delete_client($1, $2, 'deletion', NULL, NULL)"
+
+				if err := tx.QueryRow(txCtx, query, id, opCtx.UserId.Value).Scan(&errCode, &errMsg); err != nil {
+					return fmt.Errorf("[stores.ClientStore.Delete] execute a query (delete_client): %w", err)
+				}
+
+				switch errCode {
+				case dberrors.DbErrorCodeNoError:
+					return nil
+				case dberrors.DbErrorCodeInvalidOperation:
+					return errs.NewError(errs.ErrorCodeInvalidOperation, errMsg)
+				case idberrors.DbErrorCodeClientNotFound:
+					return ierrors.ErrClientNotFound
+				}
+				// unknown error
+				return fmt.Errorf("[stores.ClientStore.Delete] invalid operation: %w", dberrors.NewDbError(errCode, errMsg))
+			})
+			if err != nil {
+				return fmt.Errorf("[stores.ClientStore.Delete] execute a transaction: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("[stores.ClientStore.Delete] execute an operation: %w", err)
+	}
+	return nil
 }
 
 // FindById finds and returns a client, if any, by the specified client ID.

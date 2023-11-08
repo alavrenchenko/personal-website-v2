@@ -213,12 +213,18 @@ const (
 	OperationTypeClientStore_Create                    actions.OperationType = 31500
 	OperationTypeClientStore_CreateWebClient           actions.OperationType = 31501
 	OperationTypeClientStore_CreateMobileClient        actions.OperationType = 31502
-	OperationTypeClientStore_FindById                  actions.OperationType = 31503
-	OperationTypeClientStore_FindWebClientById         actions.OperationType = 31504
-	OperationTypeClientStore_FindMobileClientById      actions.OperationType = 31505
-	OperationTypeClientStore_GetStatusById             actions.OperationType = 31506
-	OperationTypeClientStore_GetWebClientStatusById    actions.OperationType = 31507
-	OperationTypeClientStore_GetMobileClientStatusById actions.OperationType = 31508
+	OperationTypeClientStore_StartDeleting             actions.OperationType = 31503
+	OperationTypeClientStore_StartDeletingWebClient    actions.OperationType = 31504
+	OperationTypeClientStore_StartDeletingMobileClient actions.OperationType = 31505
+	OperationTypeClientStore_Delete                    actions.OperationType = 31506
+	OperationTypeClientStore_DeleteWebClient           actions.OperationType = 31507
+	OperationTypeClientStore_DeleteMobileClient        actions.OperationType = 31508
+	OperationTypeClientStore_FindById                  actions.OperationType = 31509
+	OperationTypeClientStore_FindWebClientById         actions.OperationType = 31510
+	OperationTypeClientStore_FindMobileClientById      actions.OperationType = 31511
+	OperationTypeClientStore_GetStatusById             actions.OperationType = 31512
+	OperationTypeClientStore_GetWebClientStatusById    actions.OperationType = 31513
+	OperationTypeClientStore_GetMobileClientStatusById actions.OperationType = 31514
 
 	// UserGroupStore operation types (32000-32499).
 
