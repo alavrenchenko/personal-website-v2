@@ -42,7 +42,8 @@ User agent statuses:
     LockedOut            = 4
     TemporarilyLockedOut = 5
     Disabled             = 6
-    Deleted              = 7
+    Deleting             = 7
+    Deleted              = 8
 
 id:
 increment: 1<<8 = 256
@@ -84,9 +85,24 @@ CREATE TABLE IF NOT EXISTS public.user_agents
     last_activity_ip character varying(64) COLLATE pg_catalog."default",
     _version_stamp bigint NOT NULL,
     _timestamp timestamp(6) without time zone NOT NULL DEFAULT (clock_timestamp() AT TIME ZONE 'UTC'::text),
-    CONSTRAINT user_agents_pkey PRIMARY KEY (id)
+    CONSTRAINT user_agents_pkey PRIMARY KEY (id),
+    CONSTRAINT user_agents_status_check CHECK (status >= 1 AND status <= 8)
 )
 TABLESPACE pg_default;
+
+CREATE INDEX IF NOT EXISTS user_agents_user_id_idx ON public.user_agents (user_id);
+CREATE INDEX IF NOT EXISTS user_agents_client_id_idx ON public.user_agents (client_id);
+CREATE INDEX IF NOT EXISTS user_agents_created_at_idx ON public.user_agents (created_at);
+CREATE INDEX IF NOT EXISTS user_agents_updated_at_idx ON public.user_agents (updated_at);
+CREATE INDEX IF NOT EXISTS user_agents_status_idx ON public.user_agents (status);
+CREATE INDEX IF NOT EXISTS user_agents_status_updated_at_idx ON public.user_agents (status_updated_at);
+CREATE INDEX IF NOT EXISTS user_agents_app_id_idx ON public.user_agents (app_id);
+CREATE INDEX IF NOT EXISTS user_agents_first_sign_in_time_idx ON public.user_agents (first_sign_in_time);
+CREATE INDEX IF NOT EXISTS user_agents_first_sign_in_ip_idx ON public.user_agents (first_sign_in_ip);
+CREATE INDEX IF NOT EXISTS user_agents_last_sign_in_time_idx ON public.user_agents (last_sign_in_time);
+CREATE INDEX IF NOT EXISTS user_agents_last_sign_in_ip_idx ON public.user_agents (last_sign_in_ip);
+CREATE INDEX IF NOT EXISTS user_agents_last_activity_time_idx ON public.user_agents (last_activity_time);
+CREATE INDEX IF NOT EXISTS user_agents_last_activity_ip_idx ON public.user_agents (last_activity_ip);
 
 -- Table: public.user_agent_sessions
 /*
