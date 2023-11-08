@@ -57,8 +57,9 @@ const (
 	ErrorCodePermissionGroupAlreadyExists errors.ErrorCode = 32001
 
 	// User agent error codes (32200-32399).
-	ErrorCodeUserAgentNotFound  errors.ErrorCode = 32200
-	ErrorCodeInvalidUserAgentId errors.ErrorCode = 32201
+	ErrorCodeUserAgentNotFound      errors.ErrorCode = 32200
+	ErrorCodeInvalidUserAgentId     errors.ErrorCode = 32201
+	ErrorCodeUserAgentAlreadyExists errors.ErrorCode = 32202
 
 	// User session error codes (32400-32599).
 	ErrorCodeUserSessionNotFound  errors.ErrorCode = 32400
@@ -123,8 +124,9 @@ var (
 	ErrPermissionGroupAlreadyExists = errors.NewError(ErrorCodePermissionGroupAlreadyExists, "permission group with the same name already exists")
 
 	// User agent errors.
-	ErrUserAgentNotFound  = errors.NewError(ErrorCodeUserAgentNotFound, "user agent not found")
-	ErrInvalidUserAgentId = errors.NewError(ErrorCodeInvalidUserAgentId, "invalid user agent id")
+	ErrUserAgentNotFound      = errors.NewError(ErrorCodeUserAgentNotFound, "user agent not found")
+	ErrInvalidUserAgentId     = errors.NewError(ErrorCodeInvalidUserAgentId, "invalid user agent id")
+	ErrUserAgentAlreadyExists = errors.NewError(ErrorCodeUserAgentAlreadyExists, "user agent with the same params already exists")
 
 	// User session errors.
 	ErrUserSessionNotFound  = errors.NewError(ErrorCodeUserSessionNotFound, "user's session not found")
