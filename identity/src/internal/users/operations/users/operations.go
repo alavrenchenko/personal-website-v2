@@ -59,6 +59,9 @@ func (d *CreateOperationData) Validate() *errors.Error {
 	if !d.Group.IsValid() || d.Group == groupmodels.UserGroupAnonymousUsers {
 		return errors.NewError(errors.ErrorCodeInvalidData, "invalid group")
 	}
+	if d.Status != models.UserStatusPendingApproval && d.Status != models.UserStatusActive {
+		return errors.NewError(errors.ErrorCodeInvalidData, "invalid status")
+	}
 
 	if d.Type == models.UserTypeSystemUser {
 		if d.Group != groupmodels.UserGroupSystemUsers {
