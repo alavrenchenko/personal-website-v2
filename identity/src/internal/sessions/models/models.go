@@ -92,5 +92,6 @@ const (
 	UserAgentSessionStatusLockedOut            UserAgentSessionStatus = 5
 	UserAgentSessionStatusTemporarilyLockedOut UserAgentSessionStatus = 6
 	UserAgentSessionStatusDisabled             UserAgentSessionStatus = 7
-	UserAgentSessionStatusDeleted              UserAgentSessionStatus = 8
+	UserAgentSessionStatusDeleting             UserAgentSessionStatus = 8
+	UserAgentSessionStatusDeleted              UserAgentSessionStatus = 9
 )

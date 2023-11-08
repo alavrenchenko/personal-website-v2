@@ -49,7 +49,7 @@ type UserSessionInfo struct {
 	// The user ID to identify the user who updated the session.
 	UpdatedBy uint64 `db:"updated_by"`
 
-	// The user's session status be New(1), Active(2), or Ended(3).
+	// The user's session status.
 	Status models.UserSessionStatus `db:"status"`
 
 	// It stores the date and time at which the session status was updated.
