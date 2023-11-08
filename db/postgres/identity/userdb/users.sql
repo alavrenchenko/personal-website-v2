@@ -42,9 +42,6 @@ $$ LANGUAGE plpgsql;
 
 -- PROCEDURE: public.create_user(smallint, bigint, bigint, smallint, text, character varying, character varying, character varying, character varying, timestamp without time zone, smallint)
 /*
-User statuses:
-    Active = 3
-
 Error codes:
     NoError                = 0
     UserEmailAlreadyExists = 11002
@@ -79,10 +76,9 @@ BEGIN
     END IF;
 
     _time := (clock_timestamp() AT TIME ZONE 'UTC');
-    -- user's status: Active(3)
     INSERT INTO public.users(type, "group", created_at, created_by, updated_at, updated_by, status, status_updated_at, status_updated_by,
             status_comment, email, _version_stamp, _timestamp)
-        VALUES (_type, _group, _time, _created_by, _time, _created_by, 3, _time, _created_by, _status_comment, _email, 1, _time)
+        VALUES (_type, _group, _time, _created_by, _time, _created_by, _status, _time, _created_by, _status_comment, _email, 1, _time)
         RETURNING id INTO _id;
 
     INSERT INTO public.personal_info(user_id, created_at, created_by, updated_at, updated_by, first_name, last_name, display_name,
