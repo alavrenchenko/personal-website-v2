@@ -85,8 +85,8 @@ Permission statuses:
 CREATE TABLE IF NOT EXISTS public.permissions
 (
     id bigint NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 9223372036854775807 CACHE 1 ),
-    group_id bigint NOT NULL,
     name character varying(256) COLLATE pg_catalog."default" NOT NULL,
+    group_id bigint NOT NULL,
     created_at timestamp(6) without time zone NOT NULL,
     created_by bigint NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL DEFAULT (clock_timestamp() AT TIME ZONE 'UTC'::text),
