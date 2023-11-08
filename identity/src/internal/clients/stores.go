@@ -25,6 +25,12 @@ type ClientStore interface {
 	// Create creates a client and returns the client ID if the operation is successful.
 	Create(ctx *actions.OperationContext, data *clients.CreateOperationData) (uint64, error)
 
+	// StartDeleting starts deleting a client by the specified client ID.
+	StartDeleting(ctx *actions.OperationContext, id uint64) error
+
+	// Delete deletes a client by the specified client ID.
+	Delete(ctx *actions.OperationContext, id uint64) error
+
 	// FindById finds and returns a client, if any, by the specified client ID.
 	FindById(ctx *actions.OperationContext, id uint64) (*dbmodels.Client, error)
 

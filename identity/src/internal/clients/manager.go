@@ -29,6 +29,9 @@ type ClientManager interface {
 	// CreateMobileClient creates a mobile client and returns the client ID if the operation is successful.
 	CreateMobileClient(ctx *actions.OperationContext, data *clients.CreateMobileClientOperationData) (uint64, error)
 
+	// Delete deletes a client by the specified client ID.
+	Delete(ctx *actions.OperationContext, id uint64) error
+
 	// FindById finds and returns a client, if any, by the specified client ID.
 	FindById(ctx *actions.OperationContext, id uint64) (*dbmodels.Client, error)
 

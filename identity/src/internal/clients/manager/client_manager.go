@@ -143,6 +143,48 @@ func (m *ClientManager) CreateMobileClient(ctx *actions.OperationContext, data *
 	return id, nil
 }
 
+// Delete deletes a client by the specified client ID.
+func (m *ClientManager) Delete(ctx *actions.OperationContext, id uint64) error {
+	err := m.opExecutor.Exec(ctx, iactions.OperationTypeClientManager_Delete, []*actions.OperationParam{actions.NewOperationParam("id", id)},
+		func(opCtx *actions.OperationContext) error {
+			t, err := m.GetTypeById(id)
+			if err != nil {
+				return fmt.Errorf("[manager.ClientManager.Delete] get a client type by id: %w", err)
+			}
+
+			var store clients.ClientStore
+			switch t {
+			case models.ClientTypeWeb:
+				store = m.webClientStore
+			case models.ClientTypeMobile:
+				store = m.mobileClientStore
+			default:
+				return fmt.Errorf("[manager.ClientManager.Delete] '%s' client type isn't supported", t)
+			}
+
+			if err := store.StartDeleting(opCtx, id); err != nil {
+				return fmt.Errorf("[manager.ClientManager.Delete] start deleting a %s client: %w", t, err)
+			}
+
+			if err := store.Delete(opCtx, id); err != nil {
+				return fmt.Errorf("[manager.ClientManager.Delete] delete a %s client: %w", t, err)
+			}
+
+			m.logger.InfoWithEvent(
+				opCtx.CreateLogEntryContext(),
+				events.ClientEvent,
+				"[manager.ClientManager.Delete] client has been deleted",
+				logging.NewField("id", id),
+			)
+			return nil
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("[manager.ClientManager.Delete] execute an operation: %w", err)
+	}
+	return nil
+}
+
 // FindById finds and returns a client, if any, by the specified client ID.
 func (m *ClientManager) FindById(ctx *actions.OperationContext, id uint64) (*dbmodels.Client, error) {
 	op, err := ctx.Action.Operations.CreateAndStart(

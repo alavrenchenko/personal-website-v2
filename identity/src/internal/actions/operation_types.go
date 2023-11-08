@@ -43,6 +43,7 @@ const (
 	OperationTypeClientManager_Create             actions.OperationType = 11500
 	OperationTypeClientManager_CreateWebClient    actions.OperationType = 11501
 	OperationTypeClientManager_CreateMobileClient actions.OperationType = 11502
+	OperationTypeClientManager_Delete             actions.OperationType = 11502
 	OperationTypeClientManager_FindById           actions.OperationType = 11503
 	OperationTypeClientManager_GetStatusById      actions.OperationType = 11504
 
