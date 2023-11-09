@@ -23,7 +23,7 @@ CREATE OR REPLACE FUNCTION public.user_session_exists(
     _user_agent_id public.user_sessions.user_agent_id%TYPE
 ) RETURNS boolean AS $$
 BEGIN
-    -- user session status: Ended(3)
+    -- user's session status: Ended(3)
     RETURN EXISTS (SELECT 1 FROM public.user_sessions WHERE (user_id = _user_id AND client_id = _client_id OR user_agent_id = _user_agent_id) AND status <> 3 LIMIT 1);
 END;
 $$ LANGUAGE plpgsql;
@@ -34,14 +34,17 @@ User session statuses:
     Active = 2
 
 Error codes:
-    NoError = 0
+    NoError                  = 0
+    UserSessionAlreadyExists = 12402
 */
+-- Minimum transaction isolation level: Read committed.
 CREATE OR REPLACE PROCEDURE public.create_and_start_user_session(
     IN _user_id public.user_sessions.user_id%TYPE,
     IN _client_id public.user_sessions.client_id%TYPE,
     IN _user_agent_id public.user_sessions.user_agent_id%TYPE,
     IN _created_by public.user_sessions.created_by%TYPE,
     IN _status_comment public.user_sessions.status_comment%TYPE,
+    IN _app_id public.user_sessions.app_id%TYPE,
     IN _first_ip public.user_sessions.first_ip%TYPE,
     OUT _id public.user_sessions.id%TYPE,
     OUT err_code bigint,
@@ -53,12 +56,28 @@ BEGIN
     err_code := 0; -- NoError
     err_msg := '';
 
+    IF public.user_session_exists(_user_id, _client_id, _user_agent_id) THEN
+        err_code := 12402; -- UserSessionAlreadyExists
+        err_msg := 'user''s session with the same params already exists';
+        RETURN;
+    END IF;
+
     _time := (clock_timestamp() AT TIME ZONE 'UTC');
     -- user's session status: Active(2)
-    INSERT INTO public.user_sessions(user_id, client_id, user_agent_id, created_at, created_by, updated_at, updated_by, status, status_updated_at, status_updated_by,
-            status_comment, start_time, first_ip, last_activity_time, last_activity_ip, _version_stamp, _timestamp)
-        VALUES (_user_id, _client_id, _user_agent_id, _time, _created_by, _time, _created_by, 2, _time, _created_by, _status_comment, _time, _first_ip, _time, _first_ip, 1, _time)
+    INSERT INTO public.user_sessions(user_id, client_id, user_agent_id, created_at, created_by, updated_at, updated_by, status, status_updated_at,
+            status_updated_by, status_comment, app_id, start_time, first_ip, last_activity_time, last_activity_ip, _version_stamp, _timestamp)
+        VALUES (_user_id, _client_id, _user_agent_id, _time, _created_by, _time, _created_by, 2, _time, _created_by, _status_comment,
+            _app_id, _time, _first_ip, _time, _first_ip, 1, _time)
         RETURNING id INTO _id;
+
+    EXCEPTION
+        WHEN unique_violation THEN
+            IF public.user_session_exists(_user_id, _client_id, _user_agent_id) THEN
+                err_code := 12402; -- UserSessionAlreadyExists
+                err_msg := 'user''s session with the same params already exists';
+                RETURN;
+            END IF;
+            RAISE;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -73,6 +92,7 @@ Error codes:
     InvalidOperation   = 3
     UserSessionNotFound = 12400
 */
+-- Minimum transaction isolation level: Read committed.
 CREATE OR REPLACE PROCEDURE public.terminate_user_session(
     IN _id public.user_sessions.id%TYPE,
     IN _updated_by public.user_sessions.updated_by%TYPE,
