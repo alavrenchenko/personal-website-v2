@@ -16,6 +16,7 @@ package manager
 
 import (
 	"fmt"
+	"sync"
 
 	iactions "personal-website-v2/identity/src/internal/actions"
 	"personal-website-v2/identity/src/internal/clients"
@@ -261,6 +262,54 @@ func (m *UserAgentManager) FindByUserIdAndClientId(ctx *actions.OperationContext
 		return nil, fmt.Errorf("[manager.UserAgentManager.FindByUserIdAndClientId] execute an operation: %w", err)
 	}
 	return ua, nil
+}
+
+// GetAllByUserId gets all user agents by the specified user ID.
+func (m *UserAgentManager) GetAllByUserId(ctx *actions.OperationContext, userId uint64, onlyExisting bool) ([]*dbmodels.UserAgent, error) {
+	var uas []*dbmodels.UserAgent
+	err := m.opExecutor.Exec(ctx, iactions.OperationTypeUserAgentManager_GetAllByUserId,
+		[]*actions.OperationParam{actions.NewOperationParam("userId", userId), actions.NewOperationParam("onlyExisting", onlyExisting)},
+		func(opCtx *actions.OperationContext) error {
+			var wuas, muas []*dbmodels.UserAgent
+			var errs [2]error
+			var wg sync.WaitGroup
+			wg.Add(2)
+
+			go func() {
+				if wuas, errs[0] = m.webUserAgentStore.GetAllByUserId(opCtx, userId, onlyExisting); errs[0] != nil {
+					msg := "[manager.UserAgentManager.GetAllByUserId]  get all web user agents by user id"
+					m.logger.ErrorWithEvent(ctx.CreateLogEntryContext(), events.UserAgentEvent, errs[0], msg, logging.NewField("userId", userId), logging.NewField("onlyExisting", onlyExisting))
+					errs[0] = fmt.Errorf("%s: %w", msg, errs[0])
+				}
+				wg.Done()
+			}()
+			go func() {
+				if muas, errs[1] = m.mobileUserAgentStore.GetAllByUserId(opCtx, userId, onlyExisting); errs[1] != nil {
+					msg := "[manager.UserAgentManager.GetAllByUserId]  get all mobile user agents by user id"
+					m.logger.ErrorWithEvent(ctx.CreateLogEntryContext(), events.UserAgentEvent, errs[1], msg, logging.NewField("userId", userId), logging.NewField("onlyExisting", onlyExisting))
+					errs[1] = fmt.Errorf("%s: %w", msg, errs[1])
+				}
+				wg.Done()
+			}()
+			wg.Wait()
+
+			if errs[0] != nil {
+				return errs[0]
+			} else if errs[1] != nil {
+				return errs[1]
+			}
+
+			uas = wuas
+			if len(muas) > 0 {
+				uas = append(uas, muas...)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("[manager.UserAgentManager.GetAllByUserId] execute an operation: %w", err)
+	}
+	return uas, nil
 }
 
 // GetTypeById gets a user agent type by the specified user agent ID.

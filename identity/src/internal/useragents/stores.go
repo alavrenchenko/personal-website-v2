@@ -37,6 +37,9 @@ type UserAgentStore interface {
 	// FindByUserIdAndClientId finds and returns a user agent, if any, by the specified user ID and client ID.
 	FindByUserIdAndClientId(ctx *actions.OperationContext, userId, clientId uint64) (*dbmodels.UserAgent, error)
 
+	// GetAllByUserId gets all user agents by the specified user ID.
+	GetAllByUserId(ctx *actions.OperationContext, userId uint64, onlyExisting bool) ([]*dbmodels.UserAgent, error)
+
 	// GetStatusById gets a user agent status by the specified user agent ID.
 	GetStatusById(ctx *actions.OperationContext, id uint64) (models.UserAgentStatus, error)
 }

@@ -281,6 +281,35 @@ func (s *UserAgentStore) FindById(ctx *actions.OperationContext, id uint64) (*db
 	return ua, nil
 }
 
+// GetAllByUserId gets all user agents by the specified user ID.
+func (s *UserAgentStore) GetAllByUserId(ctx *actions.OperationContext, userId uint64, onlyExisting bool) ([]*dbmodels.UserAgent, error) {
+	var uas []*dbmodels.UserAgent
+	err := s.opExecutor.Exec(ctx, s.opTypes[opTypeUserAgentStore_GetAllByUserId],
+		[]*actions.OperationParam{actions.NewOperationParam("userId", userId), actions.NewOperationParam("onlyExisting", onlyExisting)},
+		func(opCtx *actions.OperationContext) error {
+			var query string
+			var args []any
+			if onlyExisting {
+				query = "SELECT * FROM " + userAgentsTable + " WHERE user_id = $1 AND status <> $2"
+				args = []any{userId, models.UserAgentStatusDeleted}
+			} else {
+				query = "SELECT * FROM " + userAgentsTable + " WHERE user_id = $1"
+				args = []any{userId}
+			}
+
+			var err error
+			if uas, err = s.store.FindAll(opCtx.Ctx, query, args...); err != nil {
+				return fmt.Errorf("[stores.UserAgentStore.GetAllByUserId] find all user agents by user id: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("[stores.UserAgentStore.GetAllByUserId] execute an operation: %w", err)
+	}
+	return uas, nil
+}
+
 // FindByUserIdAndClientId finds and returns a user agent, if any, by the specified user ID and client ID.
 func (s *UserAgentStore) FindByUserIdAndClientId(ctx *actions.OperationContext, userId, clientId uint64) (*dbmodels.UserAgent, error) {
 	var ua *dbmodels.UserAgent
