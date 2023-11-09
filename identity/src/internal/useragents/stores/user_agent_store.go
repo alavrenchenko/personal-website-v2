@@ -359,6 +359,33 @@ func (s *UserAgentStore) FindByUserIdAndClientId(ctx *actions.OperationContext, 
 	return ua, nil
 }
 
+// Exists returns true if the user agent exists.
+func (s *UserAgentStore) Exists(ctx *actions.OperationContext, userId, clientId uint64) (bool, error) {
+	var exists bool
+	err := s.opExecutor.Exec(ctx, iactions.OperationTypeUserAgentStore_Exists,
+		[]*actions.OperationParam{actions.NewOperationParam("userId", userId), actions.NewOperationParam("clientId", clientId)},
+		func(opCtx *actions.OperationContext) error {
+			conn, err := s.db.ConnPool.Acquire(opCtx.Ctx)
+			if err != nil {
+				return fmt.Errorf("[stores.UserAgentStore.Exists] acquire a connection: %w", err)
+			}
+			defer conn.Release()
+
+			// FUNCTION: public.user_agent_exists(_user_id, _client_id) RETURNS boolean
+			const query = "SELECT public.user_agent_exists($1, $2)"
+
+			if err = conn.QueryRow(opCtx.Ctx, query, userId, clientId).Scan(&exists); err != nil {
+				return fmt.Errorf("[stores.UserAgentStore.Exists] execute a query (user_agent_exists): %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return false, fmt.Errorf("[stores.UserAgentStore.Exists] execute an operation: %w", err)
+	}
+	return exists, nil
+}
+
 // GetStatusById gets a user agent status by the specified user agent ID.
 func (s *UserAgentStore) GetStatusById(ctx *actions.OperationContext, id uint64) (models.UserAgentStatus, error) {
 	var status models.UserAgentStatus

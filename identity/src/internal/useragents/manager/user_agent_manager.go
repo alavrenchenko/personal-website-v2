@@ -344,6 +344,38 @@ func (m *UserAgentManager) GetAllByClientId(ctx *actions.OperationContext, clien
 	return uas, nil
 }
 
+// Exists returns true if the user agent exists.
+func (m *UserAgentManager) Exists(ctx *actions.OperationContext, userId, clientId uint64) (bool, error) {
+	var exists bool
+	err := m.opExecutor.Exec(ctx, iactions.OperationTypeUserAgentManager_Exists,
+		[]*actions.OperationParam{actions.NewOperationParam("userId", userId), actions.NewOperationParam("clientId", clientId)},
+		func(opCtx *actions.OperationContext) error {
+			t, err := m.clientManager.GetTypeById(clientId)
+			if err != nil {
+				return fmt.Errorf("[manager.UserAgentManager.Exists] get a client type by id: %w", err)
+			}
+
+			switch t {
+			case clientmodels.ClientTypeWeb:
+				if exists, err = m.webUserAgentStore.Exists(opCtx, userId, clientId); err != nil {
+					return fmt.Errorf("[manager.UserAgentManager.Exists] web user agent exists: %w", err)
+				}
+			case clientmodels.ClientTypeMobile:
+				if exists, err = m.mobileUserAgentStore.Exists(opCtx, userId, clientId); err != nil {
+					return fmt.Errorf("[manager.UserAgentManager.Exists] mobile user agent exists: %w", err)
+				}
+			default:
+				return fmt.Errorf("[manager.UserAgentManager.Exists] '%s' client type isn't supported", t)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return false, fmt.Errorf("[manager.UserAgentManager.Exists] execute an operation: %w", err)
+	}
+	return exists, nil
+}
+
 // GetTypeById gets a user agent type by the specified user agent ID.
 func (m *UserAgentManager) GetTypeById(id uint64) (models.UserAgentType, error) {
 	t := models.UserAgentType(byte(id))
