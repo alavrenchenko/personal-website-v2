@@ -265,6 +265,7 @@ func (m *UserAgentManager) FindByUserIdAndClientId(ctx *actions.OperationContext
 }
 
 // GetAllByUserId gets all user agents by the specified user ID.
+// If onlyExisting is true, then it returns only existing user agents.
 func (m *UserAgentManager) GetAllByUserId(ctx *actions.OperationContext, userId uint64, onlyExisting bool) ([]*dbmodels.UserAgent, error) {
 	var uas []*dbmodels.UserAgent
 	err := m.opExecutor.Exec(ctx, iactions.OperationTypeUserAgentManager_GetAllByUserId,
@@ -313,6 +314,7 @@ func (m *UserAgentManager) GetAllByUserId(ctx *actions.OperationContext, userId 
 }
 
 // GetAllByClientId gets all user agents by the specified client ID.
+// If onlyExisting is true, then it returns only existing user agents.
 func (m *UserAgentManager) GetAllByClientId(ctx *actions.OperationContext, clientId uint64, onlyExisting bool) ([]*dbmodels.UserAgent, error) {
 	var uas []*dbmodels.UserAgent
 	err := m.opExecutor.Exec(ctx, iactions.OperationTypeUserAgentManager_GetAllByClientId,
@@ -374,6 +376,55 @@ func (m *UserAgentManager) Exists(ctx *actions.OperationContext, userId, clientI
 		return false, fmt.Errorf("[manager.UserAgentManager.Exists] execute an operation: %w", err)
 	}
 	return exists, nil
+}
+
+// GetAllIdsByUserId gets all user agent IDs by the specified user ID.
+// If onlyExisting is true, then it returns the IDs of only existing user agents.
+func (m *UserAgentManager) GetAllIdsByUserId(ctx *actions.OperationContext, userId uint64, onlyExisting bool) ([]uint64, error) {
+	var ids []uint64
+	err := m.opExecutor.Exec(ctx, iactions.OperationTypeUserAgentManager_GetAllIdsByUserId,
+		[]*actions.OperationParam{actions.NewOperationParam("userId", userId), actions.NewOperationParam("onlyExisting", onlyExisting)},
+		func(opCtx *actions.OperationContext) error {
+			var wids, mids []uint64
+			var errs [2]error
+			var wg sync.WaitGroup
+			wg.Add(2)
+
+			go func() {
+				if wids, errs[0] = m.webUserAgentStore.GetAllIdsByUserId(opCtx, userId, onlyExisting); errs[0] != nil {
+					msg := "[manager.UserAgentManager.GetAllIdsByUserId]  get all web user agent ids by user id"
+					m.logger.ErrorWithEvent(ctx.CreateLogEntryContext(), events.UserAgentEvent, errs[0], msg, logging.NewField("userId", userId), logging.NewField("onlyExisting", onlyExisting))
+					errs[0] = fmt.Errorf("%s: %w", msg, errs[0])
+				}
+				wg.Done()
+			}()
+			go func() {
+				if mids, errs[1] = m.mobileUserAgentStore.GetAllIdsByUserId(opCtx, userId, onlyExisting); errs[1] != nil {
+					msg := "[manager.UserAgentManager.GetAllIdsByUserId]  get all mobile user agent ids by user id"
+					m.logger.ErrorWithEvent(ctx.CreateLogEntryContext(), events.UserAgentEvent, errs[1], msg, logging.NewField("userId", userId), logging.NewField("onlyExisting", onlyExisting))
+					errs[1] = fmt.Errorf("%s: %w", msg, errs[1])
+				}
+				wg.Done()
+			}()
+			wg.Wait()
+
+			if errs[0] != nil {
+				return errs[0]
+			} else if errs[1] != nil {
+				return errs[1]
+			}
+
+			ids = wids
+			if len(mids) > 0 {
+				ids = append(ids, mids...)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("[manager.UserAgentManager.GetAllIdsByUserId] execute an operation: %w", err)
+	}
+	return ids, nil
 }
 
 // GetTypeById gets a user agent type by the specified user agent ID.

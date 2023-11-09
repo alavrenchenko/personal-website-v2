@@ -50,9 +50,9 @@ const (
 	opTypeUserAgentStore_GetAllByUserId
 	opTypeUserAgentStore_GetAllByClientId
 	opTypeUserAgentStore_Exists
-	opTypeUserAgentStore_GetStatusById
 	opTypeUserAgentStore_GetAllIdsByUserId
 	opTypeUserAgentStore_GetAllIdsByClientId
+	opTypeUserAgentStore_GetStatusById
 )
 
 var webUserAgentStoreOpTypes = []actions.OperationType{
@@ -68,9 +68,9 @@ var webUserAgentStoreOpTypes = []actions.OperationType{
 	opTypeUserAgentStore_GetAllByUserId:             iactions.OperationTypeWebUserAgentStore_GetAllByUserId,
 	opTypeUserAgentStore_GetAllByClientId:           iactions.OperationTypeWebUserAgentStore_GetAllByClientId,
 	opTypeUserAgentStore_Exists:                     iactions.OperationTypeWebUserAgentStore_Exists,
-	opTypeUserAgentStore_GetStatusById:              iactions.OperationTypeWebUserAgentStore_GetStatusById,
 	opTypeUserAgentStore_GetAllIdsByUserId:          iactions.OperationTypeWebUserAgentStore_GetAllIdsByUserId,
 	opTypeUserAgentStore_GetAllIdsByClientId:        iactions.OperationTypeWebUserAgentStore_GetAllIdsByClientId,
+	opTypeUserAgentStore_GetStatusById:              iactions.OperationTypeWebUserAgentStore_GetStatusById,
 }
 
 var mobileUserAgentStoreOpTypes = []actions.OperationType{
@@ -86,9 +86,9 @@ var mobileUserAgentStoreOpTypes = []actions.OperationType{
 	opTypeUserAgentStore_GetAllByUserId:             iactions.OperationTypeMobileUserAgentStore_GetAllByUserId,
 	opTypeUserAgentStore_GetAllByClientId:           iactions.OperationTypeMobileUserAgentStore_GetAllByClientId,
 	opTypeUserAgentStore_Exists:                     iactions.OperationTypeMobileUserAgentStore_Exists,
-	opTypeUserAgentStore_GetStatusById:              iactions.OperationTypeMobileUserAgentStore_GetStatusById,
 	opTypeUserAgentStore_GetAllIdsByUserId:          iactions.OperationTypeMobileUserAgentStore_GetAllIdsByUserId,
 	opTypeUserAgentStore_GetAllIdsByClientId:        iactions.OperationTypeMobileUserAgentStore_GetAllIdsByClientId,
+	opTypeUserAgentStore_GetStatusById:              iactions.OperationTypeMobileUserAgentStore_GetStatusById,
 }
 
 const (
@@ -302,6 +302,7 @@ func (s *UserAgentStore) FindByUserIdAndClientId(ctx *actions.OperationContext, 
 }
 
 // GetAllByUserId gets all user agents by the specified user ID.
+// If onlyExisting is true, then it returns only existing user agents.
 func (s *UserAgentStore) GetAllByUserId(ctx *actions.OperationContext, userId uint64, onlyExisting bool) ([]*dbmodels.UserAgent, error) {
 	var uas []*dbmodels.UserAgent
 	err := s.opExecutor.Exec(ctx, s.opTypes[opTypeUserAgentStore_GetAllByUserId],
@@ -331,6 +332,7 @@ func (s *UserAgentStore) GetAllByUserId(ctx *actions.OperationContext, userId ui
 }
 
 // GetAllByClientId gets all user agents by the specified client ID.
+// If onlyExisting is true, then it returns only existing user agents.
 func (s *UserAgentStore) GetAllByClientId(ctx *actions.OperationContext, clientId uint64, onlyExisting bool) ([]*dbmodels.UserAgent, error) {
 	var uas []*dbmodels.UserAgent
 	err := s.opExecutor.Exec(ctx, s.opTypes[opTypeUserAgentStore_GetAllByClientId],
@@ -384,6 +386,47 @@ func (s *UserAgentStore) Exists(ctx *actions.OperationContext, userId, clientId 
 		return false, fmt.Errorf("[stores.UserAgentStore.Exists] execute an operation: %w", err)
 	}
 	return exists, nil
+}
+
+// GetAllIdsByUserId gets all user agent IDs by the specified user ID.
+// If onlyExisting is true, then it returns the IDs of only existing user agents.
+func (s *UserAgentStore) GetAllIdsByUserId(ctx *actions.OperationContext, userId uint64, onlyExisting bool) ([]uint64, error) {
+	var ids []uint64
+	err := s.opExecutor.Exec(ctx, s.opTypes[opTypeUserAgentStore_GetAllIdsByUserId],
+		[]*actions.OperationParam{actions.NewOperationParam("userId", userId), actions.NewOperationParam("onlyExisting", onlyExisting)},
+		func(opCtx *actions.OperationContext) error {
+			conn, err := s.db.ConnPool.Acquire(opCtx.Ctx)
+			if err != nil {
+				return fmt.Errorf("[stores.UserAgentStore.GetAllIdsByUserId] acquire a connection: %w", err)
+			}
+			defer conn.Release()
+
+			var query string
+			var args []any
+			if onlyExisting {
+				query = "SELECT id FROM " + userAgentsTable + " WHERE user_id = $1 AND status <> $2"
+				args = []any{userId, models.UserAgentStatusDeleted}
+			} else {
+				query = "SELECT id FROM " + userAgentsTable + " WHERE user_id = $1"
+				args = []any{userId}
+			}
+
+			rows, err := conn.Query(opCtx.Ctx, query, args...)
+			if err != nil {
+				return fmt.Errorf("[stores.UserAgentStore.GetAllIdsByUserId] execute a query: %w", err)
+			}
+			defer rows.Close()
+
+			if ids, err = pgx.CollectRows(rows, pgx.RowTo[uint64]); err != nil {
+				return fmt.Errorf("[stores.UserAgentStore.GetAllIdsByUserId] collect rows: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("[stores.UserAgentStore.GetAllIdsByUserId] execute an operation: %w", err)
+	}
+	return ids, nil
 }
 
 // GetStatusById gets a user agent status by the specified user agent ID.

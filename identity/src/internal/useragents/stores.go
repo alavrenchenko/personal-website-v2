@@ -38,13 +38,19 @@ type UserAgentStore interface {
 	FindByUserIdAndClientId(ctx *actions.OperationContext, userId, clientId uint64) (*dbmodels.UserAgent, error)
 
 	// GetAllByUserId gets all user agents by the specified user ID.
+	// If onlyExisting is true, then it returns only existing user agents.
 	GetAllByUserId(ctx *actions.OperationContext, userId uint64, onlyExisting bool) ([]*dbmodels.UserAgent, error)
 
 	// GetAllByClientId gets all user agents by the specified client ID.
+	// If onlyExisting is true, then it returns only existing user agents.
 	GetAllByClientId(ctx *actions.OperationContext, clientId uint64, onlyExisting bool) ([]*dbmodels.UserAgent, error)
 
 	// Exists returns true if the user agent exists.
 	Exists(ctx *actions.OperationContext, userId, clientId uint64) (bool, error)
+
+	// GetAllIdsByUserId gets all user agent IDs by the specified user ID.
+	// If onlyExisting is true, then it returns the IDs of only existing user agents.
+	GetAllIdsByUserId(ctx *actions.OperationContext, userId uint64, onlyExisting bool) ([]uint64, error)
 
 	// GetStatusById gets a user agent status by the specified user agent ID.
 	GetStatusById(ctx *actions.OperationContext, id uint64) (models.UserAgentStatus, error)
