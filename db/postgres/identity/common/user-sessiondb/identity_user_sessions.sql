@@ -53,13 +53,35 @@ CREATE TABLE IF NOT EXISTS public.user_sessions
     status_updated_at timestamp(6) without time zone NOT NULL DEFAULT (clock_timestamp() AT TIME ZONE 'UTC'::text),
     status_updated_by bigint NOT NULL,
     status_comment text COLLATE pg_catalog."default",
+    app_id bigint,
     start_time timestamp(6) without time zone,
     end_time timestamp(6) without time zone,
     first_ip character varying(64) COLLATE pg_catalog."default" NOT NULL,
-    last_activity_time timestamp(6) without time zone NOT NULL,
-    last_activity_ip character varying(64) COLLATE pg_catalog."default" NOT NULL,
+    last_activity_time timestamp(6) without time zone,
+    last_activity_ip character varying(64) COLLATE pg_catalog."default",
     _version_stamp bigint NOT NULL,
     _timestamp timestamp(6) without time zone NOT NULL DEFAULT (clock_timestamp() AT TIME ZONE 'UTC'::text),
-    CONSTRAINT user_sessions_pkey PRIMARY KEY (id)
+    CONSTRAINT user_sessions_pkey PRIMARY KEY (id),
+    CONSTRAINT user_sessions_status_check CHECK (status >= 1 AND status <= 3)
 )
 TABLESPACE pg_default;
+
+CREATE UNIQUE INDEX IF NOT EXISTS user_sessions_user_id_client_id_idx
+    ON public.user_sessions (user_id, client_id)
+    WHERE status <> 3;
+
+CREATE UNIQUE INDEX IF NOT EXISTS user_sessions_user_agent_id_uidx
+    ON public.user_sessions (user_agent_id)
+    WHERE status <> 3;
+
+CREATE INDEX IF NOT EXISTS user_sessions_user_id_idx ON public.user_sessions (user_id);
+CREATE INDEX IF NOT EXISTS user_sessions_client_id_idx ON public.user_sessions (client_id);
+CREATE INDEX IF NOT EXISTS user_sessions_user_agent_id_idx ON public.user_sessions (user_agent_id);
+CREATE INDEX IF NOT EXISTS user_sessions_created_at_idx ON public.user_sessions (created_at);
+CREATE INDEX IF NOT EXISTS user_sessions_updated_at_idx ON public.user_sessions (updated_at);
+CREATE INDEX IF NOT EXISTS user_sessions_status_idx ON public.user_sessions (status);
+CREATE INDEX IF NOT EXISTS user_sessions_status_updated_at_idx ON public.user_sessions (status_updated_at);
+CREATE INDEX IF NOT EXISTS user_sessions_app_id_idx ON public.user_sessions (app_id);
+CREATE INDEX IF NOT EXISTS user_sessions_first_ip_idx ON public.user_sessions (first_ip);
+CREATE INDEX IF NOT EXISTS user_sessions_last_activity_time_idx ON public.user_sessions (last_activity_time);
+CREATE INDEX IF NOT EXISTS user_sessions_last_activity_ip_idx ON public.user_sessions (last_activity_ip);
