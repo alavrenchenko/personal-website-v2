@@ -22,6 +22,7 @@ import (
 	"github.com/jackc/pgx/v5"
 
 	iactions "personal-website-v2/identity/src/internal/actions"
+	idberrors "personal-website-v2/identity/src/internal/db/errors"
 	ierrors "personal-website-v2/identity/src/internal/errors"
 	"personal-website-v2/identity/src/internal/useragents"
 	"personal-website-v2/identity/src/internal/useragents/dbmodels"
@@ -150,27 +151,30 @@ func (s *UserAgentStore) Create(ctx *actions.OperationContext, data *useragentop
 	var id uint64
 	err := s.opExecutor.Exec(ctx, s.opTypes[opTypeUserAgentStore_Create], []*actions.OperationParam{actions.NewOperationParam("data", data)},
 		func(opCtx *actions.OperationContext) error {
-			var errCode dberrors.DbErrorCode
-			var errMsg string
-			// public.create_user_agent(IN _user_id, IN _client_id, IN _created_by, IN _status, IN _status_comment, IN _app_id, IN _user_agent,
-			// OUT _id, OUT err_code, OUT err_msg)
-			const query = "CALL public.create_user_agent($1, $2, $3, $4, NULL, $5, $6, NULL, NULL, NULL)"
-
 			err := s.txManager.ExecWithReadCommittedLevel(opCtx.Ctx, func(txCtx context.Context, tx pgx.Tx) error {
+				var errCode dberrors.DbErrorCode
+				var errMsg string
+				// PROCEDURE: public.create_user_agent(IN _user_id, IN _client_id, IN _created_by, IN _status, IN _status_comment, IN _app_id, IN _user_agent,
+				// OUT _id, OUT err_code, OUT err_msg)
+				// Minimum transaction isolation level: Read committed.
+				const query = "CALL public.create_user_agent($1, $2, $3, $4, NULL, $5, $6, NULL, NULL, NULL)"
 				r := tx.QueryRow(txCtx, query, data.UserId, data.ClientId, opCtx.UserId.Value, data.Status, data.AppId.Ptr(), data.UserAgent.Ptr())
 
 				if err := r.Scan(&id, &errCode, &errMsg); err != nil {
 					return fmt.Errorf("[stores.UserAgentStore.Create] execute a query (create_user_agent): %w", err)
 				}
-				return nil
-			})
-			if err != nil {
-				return fmt.Errorf("[stores.UserAgentStore.Create] execute a transaction with the 'read committed' isolation level: %w", err)
-			}
 
-			if errCode != dberrors.DbErrorCodeNoError {
+				switch errCode {
+				case dberrors.DbErrorCodeNoError:
+					return nil
+				case idberrors.DbErrorCodeUserAgentAlreadyExists:
+					return ierrors.ErrUserAgentAlreadyExists
+				}
 				// unknown error
 				return fmt.Errorf("[stores.UserAgentStore.Create] invalid operation: %w", dberrors.NewDbError(errCode, errMsg))
+			})
+			if err != nil {
+				return fmt.Errorf("[stores.UserAgentStore.Create] execute a transaction: %w", err)
 			}
 			return nil
 		},
