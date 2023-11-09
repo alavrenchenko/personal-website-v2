@@ -427,6 +427,39 @@ func (m *UserAgentManager) GetAllIdsByUserId(ctx *actions.OperationContext, user
 	return ids, nil
 }
 
+// GetAllIdsByClientId gets all user agent IDs by the specified client ID.
+// If onlyExisting is true, then it returns the IDs of only existing user agents.
+func (m *UserAgentManager) GetAllIdsByClientId(ctx *actions.OperationContext, clientId uint64, onlyExisting bool) ([]uint64, error) {
+	var ids []uint64
+	err := m.opExecutor.Exec(ctx, iactions.OperationTypeUserAgentManager_GetAllIdsByClientId,
+		[]*actions.OperationParam{actions.NewOperationParam("clientId", clientId), actions.NewOperationParam("onlyExisting", onlyExisting)},
+		func(opCtx *actions.OperationContext) error {
+			t, err := m.clientManager.GetTypeById(clientId)
+			if err != nil {
+				return fmt.Errorf("[manager.UserAgentManager.GetAllIdsByClientId] get a client type by id: %w", err)
+			}
+
+			switch t {
+			case clientmodels.ClientTypeWeb:
+				if ids, err = m.webUserAgentStore.GetAllIdsByClientId(opCtx, clientId, onlyExisting); err != nil {
+					return fmt.Errorf("[manager.UserAgentManager.GetAllIdsByClientId] get all web user agent ids by client id: %w", err)
+				}
+			case clientmodels.ClientTypeMobile:
+				if ids, err = m.mobileUserAgentStore.GetAllIdsByClientId(opCtx, clientId, onlyExisting); err != nil {
+					return fmt.Errorf("[manager.UserAgentManager.GetAllIdsByClientId] get all mobile user agent ids by client id: %w", err)
+				}
+			default:
+				return fmt.Errorf("[manager.UserAgentManager.GetAllIdsByClientId] '%s' client type isn't supported", t)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("[manager.UserAgentManager.GetAllIdsByClientId] execute an operation: %w", err)
+	}
+	return ids, nil
+}
+
 // GetTypeById gets a user agent type by the specified user agent ID.
 func (m *UserAgentManager) GetTypeById(id uint64) (models.UserAgentType, error) {
 	t := models.UserAgentType(byte(id))

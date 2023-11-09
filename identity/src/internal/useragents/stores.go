@@ -52,6 +52,10 @@ type UserAgentStore interface {
 	// If onlyExisting is true, then it returns the IDs of only existing user agents.
 	GetAllIdsByUserId(ctx *actions.OperationContext, userId uint64, onlyExisting bool) ([]uint64, error)
 
+	// GetAllIdsByClientId gets all user agent IDs by the specified client ID.
+	// If onlyExisting is true, then it returns the IDs of only existing user agents.
+	GetAllIdsByClientId(ctx *actions.OperationContext, clientId uint64, onlyExisting bool) ([]uint64, error)
+
 	// GetStatusById gets a user agent status by the specified user agent ID.
 	GetStatusById(ctx *actions.OperationContext, id uint64) (models.UserAgentStatus, error)
 }

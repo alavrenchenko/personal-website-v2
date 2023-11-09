@@ -429,6 +429,47 @@ func (s *UserAgentStore) GetAllIdsByUserId(ctx *actions.OperationContext, userId
 	return ids, nil
 }
 
+// GetAllIdsByClientId gets all user agent IDs by the specified client ID.
+// If onlyExisting is true, then it returns the IDs of only existing user agents.
+func (s *UserAgentStore) GetAllIdsByClientId(ctx *actions.OperationContext, clientId uint64, onlyExisting bool) ([]uint64, error) {
+	var ids []uint64
+	err := s.opExecutor.Exec(ctx, s.opTypes[opTypeUserAgentStore_GetAllIdsByClientId],
+		[]*actions.OperationParam{actions.NewOperationParam("clientId", clientId), actions.NewOperationParam("onlyExisting", onlyExisting)},
+		func(opCtx *actions.OperationContext) error {
+			conn, err := s.db.ConnPool.Acquire(opCtx.Ctx)
+			if err != nil {
+				return fmt.Errorf("[stores.UserAgentStore.GetAllIdsByClientId] acquire a connection: %w", err)
+			}
+			defer conn.Release()
+
+			var query string
+			var args []any
+			if onlyExisting {
+				query = "SELECT id FROM " + userAgentsTable + " WHERE client_id = $1 AND status <> $2"
+				args = []any{clientId, models.UserAgentStatusDeleted}
+			} else {
+				query = "SELECT id FROM " + userAgentsTable + " WHERE client_id = $1"
+				args = []any{clientId}
+			}
+
+			rows, err := conn.Query(opCtx.Ctx, query, args...)
+			if err != nil {
+				return fmt.Errorf("[stores.UserAgentStore.GetAllIdsByClientId] execute a query: %w", err)
+			}
+			defer rows.Close()
+
+			if ids, err = pgx.CollectRows(rows, pgx.RowTo[uint64]); err != nil {
+				return fmt.Errorf("[stores.UserAgentStore.GetAllIdsByClientId] collect rows: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("[stores.UserAgentStore.GetAllIdsByClientId] execute an operation: %w", err)
+	}
+	return ids, nil
+}
+
 // GetStatusById gets a user agent status by the specified user agent ID.
 func (s *UserAgentStore) GetStatusById(ctx *actions.OperationContext, id uint64) (models.UserAgentStatus, error) {
 	var status models.UserAgentStatus
