@@ -62,7 +62,6 @@ func NewUserAgentManager(
 		DefaultGroup:    iactions.OperationGroupUserAgent,
 		StopAppIfError:  true,
 	}
-
 	e, err := actionhelper.NewOperationExecutor(c, loggerFactory)
 	if err != nil {
 		return nil, fmt.Errorf("[manager.NewUserAgentManager] new operation executor: %w", err)
@@ -278,7 +277,7 @@ func (m *UserAgentManager) GetAllByUserId(ctx *actions.OperationContext, userId 
 
 			go func() {
 				if wuas, errs[0] = m.webUserAgentStore.GetAllByUserId(opCtx, userId, onlyExisting); errs[0] != nil {
-					msg := "[manager.UserAgentManager.GetAllByUserId]  get all web user agents by user id"
+					msg := "[manager.UserAgentManager.GetAllByUserId] get all web user agents by user id"
 					m.logger.ErrorWithEvent(ctx.CreateLogEntryContext(), events.UserAgentEvent, errs[0], msg, logging.NewField("userId", userId), logging.NewField("onlyExisting", onlyExisting))
 					errs[0] = fmt.Errorf("%s: %w", msg, errs[0])
 				}
@@ -286,7 +285,7 @@ func (m *UserAgentManager) GetAllByUserId(ctx *actions.OperationContext, userId 
 			}()
 			go func() {
 				if muas, errs[1] = m.mobileUserAgentStore.GetAllByUserId(opCtx, userId, onlyExisting); errs[1] != nil {
-					msg := "[manager.UserAgentManager.GetAllByUserId]  get all mobile user agents by user id"
+					msg := "[manager.UserAgentManager.GetAllByUserId] get all mobile user agents by user id"
 					m.logger.ErrorWithEvent(ctx.CreateLogEntryContext(), events.UserAgentEvent, errs[1], msg, logging.NewField("userId", userId), logging.NewField("onlyExisting", onlyExisting))
 					errs[1] = fmt.Errorf("%s: %w", msg, errs[1])
 				}
@@ -392,7 +391,7 @@ func (m *UserAgentManager) GetAllIdsByUserId(ctx *actions.OperationContext, user
 
 			go func() {
 				if wids, errs[0] = m.webUserAgentStore.GetAllIdsByUserId(opCtx, userId, onlyExisting); errs[0] != nil {
-					msg := "[manager.UserAgentManager.GetAllIdsByUserId]  get all web user agent ids by user id"
+					msg := "[manager.UserAgentManager.GetAllIdsByUserId] get all web user agent ids by user id"
 					m.logger.ErrorWithEvent(ctx.CreateLogEntryContext(), events.UserAgentEvent, errs[0], msg, logging.NewField("userId", userId), logging.NewField("onlyExisting", onlyExisting))
 					errs[0] = fmt.Errorf("%s: %w", msg, errs[0])
 				}
@@ -400,7 +399,7 @@ func (m *UserAgentManager) GetAllIdsByUserId(ctx *actions.OperationContext, user
 			}()
 			go func() {
 				if mids, errs[1] = m.mobileUserAgentStore.GetAllIdsByUserId(opCtx, userId, onlyExisting); errs[1] != nil {
-					msg := "[manager.UserAgentManager.GetAllIdsByUserId]  get all mobile user agent ids by user id"
+					msg := "[manager.UserAgentManager.GetAllIdsByUserId] get all mobile user agent ids by user id"
 					m.logger.ErrorWithEvent(ctx.CreateLogEntryContext(), events.UserAgentEvent, errs[1], msg, logging.NewField("userId", userId), logging.NewField("onlyExisting", onlyExisting))
 					errs[1] = fmt.Errorf("%s: %w", msg, errs[1])
 				}
