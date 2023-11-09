@@ -312,6 +312,38 @@ func (m *UserAgentManager) GetAllByUserId(ctx *actions.OperationContext, userId 
 	return uas, nil
 }
 
+// GetAllByClientId gets all user agents by the specified client ID.
+func (m *UserAgentManager) GetAllByClientId(ctx *actions.OperationContext, clientId uint64, onlyExisting bool) ([]*dbmodels.UserAgent, error) {
+	var uas []*dbmodels.UserAgent
+	err := m.opExecutor.Exec(ctx, iactions.OperationTypeUserAgentManager_GetAllByClientId,
+		[]*actions.OperationParam{actions.NewOperationParam("clientId", clientId), actions.NewOperationParam("onlyExisting", onlyExisting)},
+		func(opCtx *actions.OperationContext) error {
+			t, err := m.clientManager.GetTypeById(clientId)
+			if err != nil {
+				return fmt.Errorf("[manager.UserAgentManager.GetAllByClientId] get a client type by id: %w", err)
+			}
+
+			switch t {
+			case clientmodels.ClientTypeWeb:
+				if uas, err = m.webUserAgentStore.GetAllByClientId(opCtx, clientId, onlyExisting); err != nil {
+					return fmt.Errorf("[manager.UserAgentManager.GetAllByClientId] get all web user agents by client id: %w", err)
+				}
+			case clientmodels.ClientTypeMobile:
+				if uas, err = m.mobileUserAgentStore.GetAllByClientId(opCtx, clientId, onlyExisting); err != nil {
+					return fmt.Errorf("[manager.UserAgentManager.GetAllByClientId] get all mobile user agents by client id: %w", err)
+				}
+			default:
+				return fmt.Errorf("[manager.UserAgentManager.GetAllByClientId] '%s' client type isn't supported", t)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("[manager.UserAgentManager.GetAllByClientId] execute an operation: %w", err)
+	}
+	return uas, nil
+}
+
 // GetTypeById gets a user agent type by the specified user agent ID.
 func (m *UserAgentManager) GetTypeById(id uint64) (models.UserAgentType, error) {
 	t := models.UserAgentType(byte(id))
