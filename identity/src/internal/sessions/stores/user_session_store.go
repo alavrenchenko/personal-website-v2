@@ -177,31 +177,31 @@ func (s *UserSessionStore) CreateAndStart(ctx *actions.OperationContext, data *u
 func (s *UserSessionStore) Terminate(ctx *actions.OperationContext, id uint64) error {
 	err := s.opExecutor.Exec(ctx, s.opTypes[opTypeUserSessionStore_Terminate], []*actions.OperationParam{actions.NewOperationParam("id", id)},
 		func(opCtx *actions.OperationContext) error {
-			var errCode dberrors.DbErrorCode
-			var errMsg string
-			// public.terminate_user_session(IN _id, IN _updated_by, IN _status_comment, OUT err_code, OUT err_msg)
-			const query = "CALL public.terminate_user_session($1, $2, 'termination', NULL, NULL)"
-
-			err := s.txManager.ExecWithSerializableLevel(opCtx.Ctx, func(txCtx context.Context, tx pgx.Tx) error {
+			err := s.txManager.ExecWithReadCommittedLevel(opCtx.Ctx, func(txCtx context.Context, tx pgx.Tx) error {
+				var errCode dberrors.DbErrorCode
+				var errMsg string
+				// PROCEDURE: public.terminate_user_session(IN _id, IN _updated_by, IN _status_comment, OUT err_code, OUT err_msg)
+				// Minimum transaction isolation level: Read committed.
+				const query = "CALL public.terminate_user_session($1, $2, 'termination', NULL, NULL)"
 				if err := tx.QueryRow(txCtx, query, id, opCtx.UserId.Value).Scan(&errCode, &errMsg); err != nil {
 					return fmt.Errorf("[stores.UserSessionStore.Terminate] execute a query (terminate_user_session): %w", err)
 				}
-				return nil
+
+				switch errCode {
+				case dberrors.DbErrorCodeNoError:
+					return nil
+				case dberrors.DbErrorCodeInvalidOperation:
+					return errs.NewError(errs.ErrorCodeInvalidOperation, errMsg)
+				case idberrors.DbErrorCodeUserSessionNotFound:
+					return ierrors.ErrUserSessionNotFound
+				}
+				// unknown error
+				return fmt.Errorf("[stores.UserSessionStore.Terminate] invalid operation: %w", dberrors.NewDbError(errCode, errMsg))
 			})
 			if err != nil {
-				return fmt.Errorf("[stores.UserSessionStore.Terminate] execute a transaction with the 'serializable' isolation level: %w", err)
+				return fmt.Errorf("[stores.UserSessionStore.Terminate] execute a transaction: %w", err)
 			}
-
-			switch errCode {
-			case dberrors.DbErrorCodeNoError:
-				return nil
-			case idberrors.DbErrorCodeUserSessionNotFound:
-				return ierrors.ErrUserSessionNotFound
-			case dberrors.DbErrorCodeInvalidOperation:
-				return errs.NewError(errs.ErrorCodeInvalidOperation, errMsg)
-			}
-			// unknown error
-			return fmt.Errorf("[stores.UserSessionStore.Terminate] invalid operation: %w", dberrors.NewDbError(errCode, errMsg))
+			return nil
 		},
 	)
 	if err != nil {
