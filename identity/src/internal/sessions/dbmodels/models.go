@@ -61,6 +61,9 @@ type UserSessionInfo struct {
 	// The session status comment.
 	StatusComment *string `db:"status_comment"`
 
+	// The app ID.
+	AppId *uint64 `db:"app_id"`
+
 	// The start time of the user's session.
 	StartTime *time.Time `db:"start_time"`
 
@@ -71,10 +74,10 @@ type UserSessionInfo struct {
 	FirstIP string `db:"first_ip"`
 
 	// The last activity time.
-	LastActivityTime time.Time `db:"last_activity_time"`
+	LastActivityTime *time.Time `db:"last_activity_time"`
 
 	// The last activity IP address.
-	LastActivityIP string `db:"last_activity_ip"`
+	LastActivityIP *string `db:"last_activity_ip"`
 
 	// rowversion
 	VersionStamp uint64 `db:"_version_stamp"`
