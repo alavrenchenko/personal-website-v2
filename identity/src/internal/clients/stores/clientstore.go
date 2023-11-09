@@ -38,10 +38,6 @@ import (
 )
 
 const (
-	clientsTable = "public.clients"
-)
-
-const (
 	opTypeClientStore_Create = iota
 	opTypeClientStore_StartDeleting
 	opTypeClientStore_Delete
@@ -64,6 +60,10 @@ var mobileClientStoreOpTypes = []actions.OperationType{
 	opTypeClientStore_FindById:      iactions.OperationTypeMobileClientStore_FindById,
 	opTypeClientStore_GetStatusById: iactions.OperationTypeMobileClientStore_GetStatusById,
 }
+
+const (
+	clientsTable = "public.clients"
+)
 
 type ClientStore struct {
 	db         *postgres.Database
