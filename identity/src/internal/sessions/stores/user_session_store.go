@@ -38,37 +38,67 @@ import (
 )
 
 const (
+	opTypeUserSessionStore_Create = iota
+	opTypeUserSessionStore_Start
+	opTypeUserSessionStore_CreateAndStart
+	opTypeUserSessionStore_Terminate
+	opTypeUserSessionStore_FindById
+	opTypeUserSessionStore_GetAllByUserId
+	opTypeUserSessionStore_GetAllByClientId
+	opTypeUserSessionStore_GetAllByUserIdAndClientId
+	opTypeUserSessionStore_GetAllByUserAgentId
+	opTypeUserSessionStore_GetStatusById
+)
+
+var userWebSessionStoreOpTypes = []actions.OperationType{
+	opTypeUserSessionStore_Create:                    iactions.OperationTypeUserWebSessionStore_Create,
+	opTypeUserSessionStore_Start:                     iactions.OperationTypeUserWebSessionStore_Start,
+	opTypeUserSessionStore_CreateAndStart:            iactions.OperationTypeUserWebSessionStore_CreateAndStart,
+	opTypeUserSessionStore_Terminate:                 iactions.OperationTypeUserWebSessionStore_Terminate,
+	opTypeUserSessionStore_FindById:                  iactions.OperationTypeUserWebSessionStore_FindById,
+	opTypeUserSessionStore_GetAllByUserId:            iactions.OperationTypeUserWebSessionStore_GetAllByUserId,
+	opTypeUserSessionStore_GetAllByClientId:          iactions.OperationTypeUserWebSessionStore_GetAllByClientId,
+	opTypeUserSessionStore_GetAllByUserIdAndClientId: iactions.OperationTypeUserWebSessionStore_GetAllByUserIdAndClientId,
+	opTypeUserSessionStore_GetAllByUserAgentId:       iactions.OperationTypeUserWebSessionStore_GetAllByUserAgentId,
+	opTypeUserSessionStore_GetStatusById:             iactions.OperationTypeUserWebSessionStore_GetStatusById,
+}
+
+var userMobileSessionStoreOpTypes = []actions.OperationType{
+	opTypeUserSessionStore_Create:                    iactions.OperationTypeUserMobileSessionStore_Create,
+	opTypeUserSessionStore_Start:                     iactions.OperationTypeUserMobileSessionStore_Start,
+	opTypeUserSessionStore_CreateAndStart:            iactions.OperationTypeUserMobileSessionStore_CreateAndStart,
+	opTypeUserSessionStore_Terminate:                 iactions.OperationTypeUserMobileSessionStore_Terminate,
+	opTypeUserSessionStore_FindById:                  iactions.OperationTypeUserMobileSessionStore_FindById,
+	opTypeUserSessionStore_GetAllByUserId:            iactions.OperationTypeUserMobileSessionStore_GetAllByUserId,
+	opTypeUserSessionStore_GetAllByClientId:          iactions.OperationTypeUserMobileSessionStore_GetAllByClientId,
+	opTypeUserSessionStore_GetAllByUserIdAndClientId: iactions.OperationTypeUserMobileSessionStore_GetAllByUserIdAndClientId,
+	opTypeUserSessionStore_GetAllByUserAgentId:       iactions.OperationTypeUserMobileSessionStore_GetAllByUserAgentId,
+	opTypeUserSessionStore_GetStatusById:             iactions.OperationTypeUserMobileSessionStore_GetStatusById,
+}
+
+const (
 	userSessionsTable = "public.user_sessions"
 )
 
+// UserSessionStore is a user session store.
 type UserSessionStore struct {
-	db                   *postgres.Database
-	opExecutor           *actionhelper.OperationExecutor
-	store                *postgres.Store[dbmodels.UserSessionInfo]
-	txManager            *postgres.TxManager
-	logger               logging.Logger[*lcontext.LogEntryContext]
-	createAndStartOpType actions.OperationType
-	terminateOpType      actions.OperationType
-	findByIdOpType       actions.OperationType
-	getStatusByIdOpType  actions.OperationType
+	db         *postgres.Database
+	opExecutor *actionhelper.OperationExecutor
+	store      *postgres.Store[dbmodels.UserSessionInfo]
+	txManager  *postgres.TxManager
+	logger     logging.Logger[*lcontext.LogEntryContext]
+	opTypes    []actions.OperationType
 }
 
 var _ sessions.UserSessionStore = (*UserSessionStore)(nil)
 
 func NewUserSessionStore(stype models.UserSessionType, db *postgres.Database, loggerFactory logging.LoggerFactory[*lcontext.LogEntryContext]) (*UserSessionStore, error) {
-	var createAndStartOpType, terminateOpType, findByIdOpType, getStatusByIdOpType actions.OperationType
-
+	var opTypes []actions.OperationType
 	switch stype {
 	case models.UserSessionTypeWeb:
-		createAndStartOpType = iactions.OperationTypeUserSessionStore_CreateAndStartWebSession
-		terminateOpType = iactions.OperationTypeUserSessionStore_TerminateWebSession
-		findByIdOpType = iactions.OperationTypeUserSessionStore_FindWebSessionById
-		getStatusByIdOpType = iactions.OperationTypeUserSessionStore_GetWebSessionStatusById
+		opTypes = userWebSessionStoreOpTypes
 	case models.UserSessionTypeMobile:
-		createAndStartOpType = iactions.OperationTypeUserSessionStore_CreateAndStartMobileSession
-		terminateOpType = iactions.OperationTypeUserSessionStore_TerminateMobileSession
-		findByIdOpType = iactions.OperationTypeUserSessionStore_FindMobileSessionById
-		getStatusByIdOpType = iactions.OperationTypeUserSessionStore_GetMobileSessionStatusById
+		opTypes = userMobileSessionStoreOpTypes
 	default:
 		return nil, fmt.Errorf("[stores.NewUserSessionStore] user's '%s' session type isn't supported", stype)
 	}
@@ -83,7 +113,6 @@ func NewUserSessionStore(stype models.UserSessionType, db *postgres.Database, lo
 		DefaultGroup:    iactions.OperationGroupUserSession,
 		StopAppIfError:  true,
 	}
-
 	e, err := actionhelper.NewOperationExecutor(c, loggerFactory)
 	if err != nil {
 		return nil, fmt.Errorf("[stores.NewUserSessionStore] new operation executor: %w", err)
@@ -95,15 +124,12 @@ func NewUserSessionStore(stype models.UserSessionType, db *postgres.Database, lo
 	}
 
 	return &UserSessionStore{
-		db:                   db,
-		opExecutor:           e,
-		store:                postgres.NewStore[dbmodels.UserSessionInfo](db),
-		txManager:            txm,
-		logger:               l,
-		createAndStartOpType: createAndStartOpType,
-		terminateOpType:      terminateOpType,
-		findByIdOpType:       findByIdOpType,
-		getStatusByIdOpType:  getStatusByIdOpType,
+		db:         db,
+		opExecutor: e,
+		store:      postgres.NewStore[dbmodels.UserSessionInfo](db),
+		txManager:  txm,
+		logger:     l,
+		opTypes:    opTypes,
 	}, nil
 }
 
@@ -111,7 +137,7 @@ func NewUserSessionStore(stype models.UserSessionType, db *postgres.Database, lo
 // if the operation is successful.
 func (s *UserSessionStore) CreateAndStart(ctx *actions.OperationContext, data *usersessions.CreateAndStartOperationData) (uint64, error) {
 	var id uint64
-	err := s.opExecutor.Exec(ctx, s.createAndStartOpType, []*actions.OperationParam{actions.NewOperationParam("data", data)},
+	err := s.opExecutor.Exec(ctx, s.opTypes[opTypeUserSessionStore_CreateAndStart], []*actions.OperationParam{actions.NewOperationParam("data", data)},
 		func(opCtx *actions.OperationContext) error {
 			var errCode dberrors.DbErrorCode
 			var errMsg string
@@ -145,7 +171,7 @@ func (s *UserSessionStore) CreateAndStart(ctx *actions.OperationContext, data *u
 
 // Terminate terminates a user's session by the specified user session ID.
 func (s *UserSessionStore) Terminate(ctx *actions.OperationContext, id uint64) error {
-	err := s.opExecutor.Exec(ctx, s.terminateOpType, []*actions.OperationParam{actions.NewOperationParam("id", id)},
+	err := s.opExecutor.Exec(ctx, s.opTypes[opTypeUserSessionStore_Terminate], []*actions.OperationParam{actions.NewOperationParam("id", id)},
 		func(opCtx *actions.OperationContext) error {
 			var errCode dberrors.DbErrorCode
 			var errMsg string
@@ -183,7 +209,7 @@ func (s *UserSessionStore) Terminate(ctx *actions.OperationContext, id uint64) e
 // FindById finds and returns user's session info, if any, by the specified user session ID.
 func (s *UserSessionStore) FindById(ctx *actions.OperationContext, id uint64) (*dbmodels.UserSessionInfo, error) {
 	var us *dbmodels.UserSessionInfo
-	err := s.opExecutor.Exec(ctx, s.findByIdOpType, []*actions.OperationParam{actions.NewOperationParam("id", id)},
+	err := s.opExecutor.Exec(ctx, s.opTypes[opTypeUserSessionStore_FindById], []*actions.OperationParam{actions.NewOperationParam("id", id)},
 		func(opCtx *actions.OperationContext) error {
 			const query = "SELECT * FROM " + userSessionsTable + " WHERE id = $1 LIMIT 1"
 			var err error
@@ -202,7 +228,7 @@ func (s *UserSessionStore) FindById(ctx *actions.OperationContext, id uint64) (*
 // GetStatusById gets a user's session status by the specified user session ID.
 func (s *UserSessionStore) GetStatusById(ctx *actions.OperationContext, id uint64) (models.UserSessionStatus, error) {
 	var status models.UserSessionStatus
-	err := s.opExecutor.Exec(ctx, s.getStatusByIdOpType, []*actions.OperationParam{actions.NewOperationParam("id", id)},
+	err := s.opExecutor.Exec(ctx, s.opTypes[opTypeUserSessionStore_GetStatusById], []*actions.OperationParam{actions.NewOperationParam("id", id)},
 		func(opCtx *actions.OperationContext) error {
 			conn, err := s.db.ConnPool.Acquire(opCtx.Ctx)
 			if err != nil {
