@@ -31,6 +31,7 @@ import (
 	"personal-website-v2/pkg/actions"
 	dberrors "personal-website-v2/pkg/db/errors"
 	"personal-website-v2/pkg/db/postgres"
+	errs "personal-website-v2/pkg/errors"
 	actionhelper "personal-website-v2/pkg/helper/actions"
 	"personal-website-v2/pkg/logging"
 	lcontext "personal-website-v2/pkg/logging/context"
@@ -183,6 +184,82 @@ func (s *UserAgentStore) Create(ctx *actions.OperationContext, data *useragentop
 		return 0, fmt.Errorf("[stores.UserAgentStore.Create] execute an operation: %w", err)
 	}
 	return id, nil
+}
+
+// StartDeleting starts deleting a user agent by the specified user agent ID.
+func (s *UserAgentStore) StartDeleting(ctx *actions.OperationContext, id uint64) error {
+	err := s.opExecutor.Exec(ctx, s.opTypes[opTypeUserAgentStore_StartDeleting], []*actions.OperationParam{actions.NewOperationParam("id", id)},
+		func(opCtx *actions.OperationContext) error {
+			err := s.txManager.ExecWithReadCommittedLevel(opCtx.Ctx, func(txCtx context.Context, tx pgx.Tx) error {
+				var errCode dberrors.DbErrorCode
+				var errMsg string
+				// PROCEDURE: public.start_deleting_user_agent(IN _id, IN _deleted_by, IN _status_comment, OUT err_code, OUT err_msg)
+				// Minimum transaction isolation level: Read committed.
+				const query = "CALL public.start_deleting_user_agent($1, $2, 'deletion', NULL, NULL)"
+
+				if err := tx.QueryRow(txCtx, query, id, opCtx.UserId.Value).Scan(&errCode, &errMsg); err != nil {
+					return fmt.Errorf("[stores.UserAgentStore.StartDeleting] execute a query (start_deleting_user_agent): %w", err)
+				}
+
+				switch errCode {
+				case dberrors.DbErrorCodeNoError:
+					return nil
+				case dberrors.DbErrorCodeInvalidOperation:
+					return errs.NewError(errs.ErrorCodeInvalidOperation, errMsg)
+				case idberrors.DbErrorCodeUserAgentNotFound:
+					return ierrors.ErrUserAgentNotFound
+				}
+				// unknown error
+				return fmt.Errorf("[stores.UserAgentStore.StartDeleting] invalid operation: %w", dberrors.NewDbError(errCode, errMsg))
+			})
+			if err != nil {
+				return fmt.Errorf("[stores.UserAgentStore.StartDeleting] execute a transaction: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("[stores.UserAgentStore.StartDeleting] execute an operation: %w", err)
+	}
+	return nil
+}
+
+// Delete deletes a user agent by the specified user agent ID.
+func (s *UserAgentStore) Delete(ctx *actions.OperationContext, id uint64) error {
+	err := s.opExecutor.Exec(ctx, s.opTypes[opTypeUserAgentStore_Delete], []*actions.OperationParam{actions.NewOperationParam("id", id)},
+		func(opCtx *actions.OperationContext) error {
+			err := s.txManager.ExecWithReadCommittedLevel(opCtx.Ctx, func(txCtx context.Context, tx pgx.Tx) error {
+				var errCode dberrors.DbErrorCode
+				var errMsg string
+				// PROCEDURE: public.delete_user_agent(IN _id, IN _deleted_by, IN _status_comment, OUT err_code, OUT err_msg)
+				// Minimum transaction isolation level: Read committed.
+				const query = "CALL public.delete_user_agent($1, $2, 'deletion', NULL, NULL)"
+
+				if err := tx.QueryRow(txCtx, query, id, opCtx.UserId.Value).Scan(&errCode, &errMsg); err != nil {
+					return fmt.Errorf("[stores.UserAgentStore.Delete] execute a query (delete_user_agent): %w", err)
+				}
+
+				switch errCode {
+				case dberrors.DbErrorCodeNoError:
+					return nil
+				case dberrors.DbErrorCodeInvalidOperation:
+					return errs.NewError(errs.ErrorCodeInvalidOperation, errMsg)
+				case idberrors.DbErrorCodeUserAgentNotFound:
+					return ierrors.ErrUserAgentNotFound
+				}
+				// unknown error
+				return fmt.Errorf("[stores.UserAgentStore.Delete] invalid operation: %w", dberrors.NewDbError(errCode, errMsg))
+			})
+			if err != nil {
+				return fmt.Errorf("[stores.UserAgentStore.Delete] execute a transaction: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("[stores.UserAgentStore.Delete] execute an operation: %w", err)
+	}
+	return nil
 }
 
 // FindById finds and returns a user agent, if any, by the specified user agent ID.
