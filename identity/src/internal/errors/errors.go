@@ -62,8 +62,9 @@ const (
 	ErrorCodeUserAgentAlreadyExists errors.ErrorCode = 32202
 
 	// User session error codes (32400-32599).
-	ErrorCodeUserSessionNotFound  errors.ErrorCode = 32400
-	ErrorCodeInvalidUserSessionId errors.ErrorCode = 32401
+	ErrorCodeUserSessionNotFound      errors.ErrorCode = 32400
+	ErrorCodeInvalidUserSessionId     errors.ErrorCode = 32401
+	ErrorCodeUserSessionAlreadyExists errors.ErrorCode = 32402
 
 	// User agent session error codes (32600-32799).
 	ErrorCodeUserAgentSessionNotFound  errors.ErrorCode = 32600
@@ -129,8 +130,9 @@ var (
 	ErrUserAgentAlreadyExists = errors.NewError(ErrorCodeUserAgentAlreadyExists, "user agent with the same params already exists")
 
 	// User session errors.
-	ErrUserSessionNotFound  = errors.NewError(ErrorCodeUserSessionNotFound, "user's session not found")
-	ErrInvalidUserSessionId = errors.NewError(ErrorCodeInvalidUserSessionId, "invalid user session id")
+	ErrUserSessionNotFound      = errors.NewError(ErrorCodeUserSessionNotFound, "user's session not found")
+	ErrInvalidUserSessionId     = errors.NewError(ErrorCodeInvalidUserSessionId, "invalid user session id")
+	ErrUserSessionAlreadyExists = errors.NewError(ErrorCodeUserSessionAlreadyExists, "user's session with the same params already exists")
 
 	// User agent session errors.
 	ErrUserAgentSessionNotFound  = errors.NewError(ErrorCodeUserAgentSessionNotFound, "user agent session not found")
