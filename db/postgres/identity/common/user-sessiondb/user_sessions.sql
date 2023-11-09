@@ -12,6 +12,22 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
+-- FUNCTION: public.user_session_exists(bigint, bigint, bigint)
+/*
+User session statuses:
+    Ended = 3
+*/
+CREATE OR REPLACE FUNCTION public.user_session_exists(
+    _user_id public.user_sessions.user_id%TYPE,
+    _client_id public.user_sessions.client_id%TYPE,
+    _user_agent_id public.user_sessions.user_agent_id%TYPE
+) RETURNS boolean AS $$
+BEGIN
+    -- user session status: Ended(3)
+    RETURN EXISTS (SELECT 1 FROM public.user_sessions WHERE (user_id = _user_id AND client_id = _client_id OR user_agent_id = _user_agent_id) AND status <> 3 LIMIT 1);
+END;
+$$ LANGUAGE plpgsql;
+
 -- PROCEDURE: public.create_and_start_user_session(bigint, bigint, bigint, bigint, text, character varying)
 /*
 User session statuses:
