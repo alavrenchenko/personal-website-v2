@@ -67,10 +67,13 @@ const (
 	DbErrorCodeUserAgentAlreadyExists errors.DbErrorCode = 12202
 
 	// User session error codes (12400-12599).
-	DbErrorCodeUserSessionNotFound errors.DbErrorCode = 12400
+	DbErrorCodeUserSessionNotFound      errors.DbErrorCode = 12400
+	DbErrorCodeInvalidUserSessionId     errors.DbErrorCode = 12401
+	DbErrorCodeUserSessionAlreadyExists errors.DbErrorCode = 12402
 
 	// User agent session error codes (12600-12799).
-	DbErrorCodeUserAgentSessionNotFound errors.DbErrorCode = 12600
+	DbErrorCodeUserAgentSessionNotFound  errors.DbErrorCode = 12600
+	DbErrorCodeInvalidUserAgentSessionId errors.DbErrorCode = 12601
 
 	// Authentication error codes (12800-12999).
 	// Authorization error codes (13000-13199).
