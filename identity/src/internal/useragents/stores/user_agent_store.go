@@ -281,6 +281,26 @@ func (s *UserAgentStore) FindById(ctx *actions.OperationContext, id uint64) (*db
 	return ua, nil
 }
 
+// FindByUserIdAndClientId finds and returns a user agent, if any, by the specified user ID and client ID.
+func (s *UserAgentStore) FindByUserIdAndClientId(ctx *actions.OperationContext, userId, clientId uint64) (*dbmodels.UserAgent, error) {
+	var ua *dbmodels.UserAgent
+	err := s.opExecutor.Exec(ctx, s.opTypes[opTypeUserAgentStore_FindByUserIdAndClientId],
+		[]*actions.OperationParam{actions.NewOperationParam("userId", userId), actions.NewOperationParam("clientId", clientId)},
+		func(opCtx *actions.OperationContext) error {
+			const query = "SELECT * FROM " + userAgentsTable + " WHERE user_id = $1 AND client_id = $2 AND status <> $3 LIMIT 1"
+			var err error
+			if ua, err = s.store.Find(opCtx.Ctx, query, userId, clientId, models.UserAgentStatusDeleted); err != nil {
+				return fmt.Errorf("[stores.UserAgentStore.FindByUserIdAndClientId] find a user agent by user id and client id: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("[stores.UserAgentStore.FindByUserIdAndClientId] execute an operation: %w", err)
+	}
+	return ua, nil
+}
+
 // GetAllByUserId gets all user agents by the specified user ID.
 func (s *UserAgentStore) GetAllByUserId(ctx *actions.OperationContext, userId uint64, onlyExisting bool) ([]*dbmodels.UserAgent, error) {
 	var uas []*dbmodels.UserAgent
@@ -337,26 +357,6 @@ func (s *UserAgentStore) GetAllByClientId(ctx *actions.OperationContext, clientI
 		return nil, fmt.Errorf("[stores.UserAgentStore.GetAllByClientId] execute an operation: %w", err)
 	}
 	return uas, nil
-}
-
-// FindByUserIdAndClientId finds and returns a user agent, if any, by the specified user ID and client ID.
-func (s *UserAgentStore) FindByUserIdAndClientId(ctx *actions.OperationContext, userId, clientId uint64) (*dbmodels.UserAgent, error) {
-	var ua *dbmodels.UserAgent
-	err := s.opExecutor.Exec(ctx, s.opTypes[opTypeUserAgentStore_FindByUserIdAndClientId],
-		[]*actions.OperationParam{actions.NewOperationParam("userId", userId), actions.NewOperationParam("clientId", clientId)},
-		func(opCtx *actions.OperationContext) error {
-			const query = "SELECT * FROM " + userAgentsTable + " WHERE user_id = $1 AND client_id = $2 AND status <> $3 LIMIT 1"
-			var err error
-			if ua, err = s.store.Find(opCtx.Ctx, query, userId, clientId, models.UserAgentStatusDeleted); err != nil {
-				return fmt.Errorf("[stores.UserAgentStore.FindByUserIdAndClientId] find a user agent by user id and client id: %w", err)
-			}
-			return nil
-		},
-	)
-	if err != nil {
-		return nil, fmt.Errorf("[stores.UserAgentStore.FindByUserIdAndClientId] execute an operation: %w", err)
-	}
-	return ua, nil
 }
 
 // Exists returns true if the user agent exists.
