@@ -36,37 +36,81 @@ import (
 )
 
 const (
+	opTypeUserAgentStore_Create = iota
+	opTypeUserAgentStore_StartDeleting
+	opTypeUserAgentStore_Delete
+	opTypeUserAgentStore_StartDeletingAllByUserId
+	opTypeUserAgentStore_DeleteAllByUserId
+	opTypeUserAgentStore_StartDeletingAllByClientId
+	opTypeUserAgentStore_DeleteAllByClientId
+	opTypeUserAgentStore_FindById
+	opTypeUserAgentStore_FindByUserIdAndClientId
+	opTypeUserAgentStore_GetAllByUserId
+	opTypeUserAgentStore_GetAllByClientId
+	opTypeUserAgentStore_Exists
+	opTypeUserAgentStore_GetStatusById
+	opTypeUserAgentStore_GetAllIdsByUserId
+	opTypeUserAgentStore_GetAllIdsByClientId
+)
+
+var webUserAgentStoreOpTypes = []actions.OperationType{
+	opTypeUserAgentStore_Create:                     iactions.OperationTypeWebUserAgentStore_Create,
+	opTypeUserAgentStore_StartDeleting:              iactions.OperationTypeWebUserAgentStore_StartDeleting,
+	opTypeUserAgentStore_Delete:                     iactions.OperationTypeWebUserAgentStore_Delete,
+	opTypeUserAgentStore_StartDeletingAllByUserId:   iactions.OperationTypeWebUserAgentStore_StartDeletingAllByUserId,
+	opTypeUserAgentStore_DeleteAllByUserId:          iactions.OperationTypeWebUserAgentStore_DeleteAllByUserId,
+	opTypeUserAgentStore_StartDeletingAllByClientId: iactions.OperationTypeWebUserAgentStore_StartDeletingAllByClientId,
+	opTypeUserAgentStore_DeleteAllByClientId:        iactions.OperationTypeWebUserAgentStore_DeleteAllByClientId,
+	opTypeUserAgentStore_FindById:                   iactions.OperationTypeWebUserAgentStore_FindById,
+	opTypeUserAgentStore_FindByUserIdAndClientId:    iactions.OperationTypeWebUserAgentStore_FindByUserIdAndClientId,
+	opTypeUserAgentStore_GetAllByUserId:             iactions.OperationTypeWebUserAgentStore_GetAllByUserId,
+	opTypeUserAgentStore_GetAllByClientId:           iactions.OperationTypeWebUserAgentStore_GetAllByClientId,
+	opTypeUserAgentStore_Exists:                     iactions.OperationTypeWebUserAgentStore_Exists,
+	opTypeUserAgentStore_GetStatusById:              iactions.OperationTypeWebUserAgentStore_GetStatusById,
+	opTypeUserAgentStore_GetAllIdsByUserId:          iactions.OperationTypeWebUserAgentStore_GetAllIdsByUserId,
+	opTypeUserAgentStore_GetAllIdsByClientId:        iactions.OperationTypeWebUserAgentStore_GetAllIdsByClientId,
+}
+
+var mobileUserAgentStoreOpTypes = []actions.OperationType{
+	opTypeUserAgentStore_Create:                     iactions.OperationTypeMobileUserAgentStore_Create,
+	opTypeUserAgentStore_StartDeleting:              iactions.OperationTypeMobileUserAgentStore_StartDeleting,
+	opTypeUserAgentStore_Delete:                     iactions.OperationTypeMobileUserAgentStore_Delete,
+	opTypeUserAgentStore_StartDeletingAllByUserId:   iactions.OperationTypeMobileUserAgentStore_StartDeletingAllByUserId,
+	opTypeUserAgentStore_DeleteAllByUserId:          iactions.OperationTypeMobileUserAgentStore_DeleteAllByUserId,
+	opTypeUserAgentStore_StartDeletingAllByClientId: iactions.OperationTypeMobileUserAgentStore_StartDeletingAllByClientId,
+	opTypeUserAgentStore_DeleteAllByClientId:        iactions.OperationTypeMobileUserAgentStore_DeleteAllByClientId,
+	opTypeUserAgentStore_FindById:                   iactions.OperationTypeMobileUserAgentStore_FindById,
+	opTypeUserAgentStore_FindByUserIdAndClientId:    iactions.OperationTypeMobileUserAgentStore_FindByUserIdAndClientId,
+	opTypeUserAgentStore_GetAllByUserId:             iactions.OperationTypeMobileUserAgentStore_GetAllByUserId,
+	opTypeUserAgentStore_GetAllByClientId:           iactions.OperationTypeMobileUserAgentStore_GetAllByClientId,
+	opTypeUserAgentStore_Exists:                     iactions.OperationTypeMobileUserAgentStore_Exists,
+	opTypeUserAgentStore_GetStatusById:              iactions.OperationTypeMobileUserAgentStore_GetStatusById,
+	opTypeUserAgentStore_GetAllIdsByUserId:          iactions.OperationTypeMobileUserAgentStore_GetAllIdsByUserId,
+	opTypeUserAgentStore_GetAllIdsByClientId:        iactions.OperationTypeMobileUserAgentStore_GetAllIdsByClientId,
+}
+
+const (
 	userAgentsTable = "public.user_agents"
 )
 
 type UserAgentStore struct {
-	db                            *postgres.Database
-	opExecutor                    *actionhelper.OperationExecutor
-	store                         *postgres.Store[dbmodels.UserAgent]
-	txManager                     *postgres.TxManager
-	logger                        logging.Logger[*lcontext.LogEntryContext]
-	createOpType                  actions.OperationType
-	findByIdOpType                actions.OperationType
-	findByUserIdAndClientIdOpType actions.OperationType
-	getStatusByIdOpType           actions.OperationType
+	db         *postgres.Database
+	opExecutor *actionhelper.OperationExecutor
+	store      *postgres.Store[dbmodels.UserAgent]
+	txManager  *postgres.TxManager
+	logger     logging.Logger[*lcontext.LogEntryContext]
+	opTypes    []actions.OperationType
 }
 
 var _ useragents.UserAgentStore = (*UserAgentStore)(nil)
 
 func NewUserAgentStore(uatype models.UserAgentType, db *postgres.Database, loggerFactory logging.LoggerFactory[*lcontext.LogEntryContext]) (*UserAgentStore, error) {
-	var createOpType, findByIdOpType, findByUserIdAndClientIdOpType, getStatusByIdOpType actions.OperationType
-
+	var opTypes []actions.OperationType
 	switch uatype {
 	case models.UserAgentTypeWeb:
-		createOpType = iactions.OperationTypeUserAgentStore_CreateWebUserAgent
-		findByIdOpType = iactions.OperationTypeUserAgentStore_FindWebUserAgentById
-		findByUserIdAndClientIdOpType = iactions.OperationTypeUserAgentStore_FindWebUserAgentByUserIdAndClientId
-		getStatusByIdOpType = iactions.OperationTypeUserAgentStore_GetWebUserAgentStatusById
+		opTypes = webUserAgentStoreOpTypes
 	case models.UserAgentTypeMobile:
-		createOpType = iactions.OperationTypeUserAgentStore_CreateMobileUserAgent
-		findByIdOpType = iactions.OperationTypeUserAgentStore_FindMobileUserAgentById
-		findByUserIdAndClientIdOpType = iactions.OperationTypeUserAgentStore_FindMobileUserAgentByUserIdAndClientId
-		getStatusByIdOpType = iactions.OperationTypeUserAgentStore_GetMobileUserAgentStatusById
+		opTypes = mobileUserAgentStoreOpTypes
 	default:
 		return nil, fmt.Errorf("[stores.NewUserAgentStore] '%s' user agent type isn't supported", uatype)
 	}
@@ -81,7 +125,6 @@ func NewUserAgentStore(uatype models.UserAgentType, db *postgres.Database, logge
 		DefaultGroup:    iactions.OperationGroupUserAgent,
 		StopAppIfError:  true,
 	}
-
 	e, err := actionhelper.NewOperationExecutor(c, loggerFactory)
 	if err != nil {
 		return nil, fmt.Errorf("[stores.NewUserAgentStore] new operation executor: %w", err)
@@ -93,22 +136,19 @@ func NewUserAgentStore(uatype models.UserAgentType, db *postgres.Database, logge
 	}
 
 	return &UserAgentStore{
-		db:                            db,
-		opExecutor:                    e,
-		store:                         postgres.NewStore[dbmodels.UserAgent](db),
-		txManager:                     txm,
-		logger:                        l,
-		createOpType:                  createOpType,
-		findByIdOpType:                findByIdOpType,
-		findByUserIdAndClientIdOpType: findByUserIdAndClientIdOpType,
-		getStatusByIdOpType:           getStatusByIdOpType,
+		db:         db,
+		opExecutor: e,
+		store:      postgres.NewStore[dbmodels.UserAgent](db),
+		txManager:  txm,
+		logger:     l,
+		opTypes:    opTypes,
 	}, nil
 }
 
 // Create creates a user agent and returns the user agent ID if the operation is successful.
 func (s *UserAgentStore) Create(ctx *actions.OperationContext, data *useragentoperations.CreateOperationData) (uint64, error) {
 	var id uint64
-	err := s.opExecutor.Exec(ctx, s.createOpType, []*actions.OperationParam{actions.NewOperationParam("data", data)},
+	err := s.opExecutor.Exec(ctx, s.opTypes[opTypeUserAgentStore_Create], []*actions.OperationParam{actions.NewOperationParam("data", data)},
 		func(opCtx *actions.OperationContext) error {
 			var errCode dberrors.DbErrorCode
 			var errMsg string
@@ -144,7 +184,7 @@ func (s *UserAgentStore) Create(ctx *actions.OperationContext, data *useragentop
 // FindById finds and returns a user agent, if any, by the specified user agent ID.
 func (s *UserAgentStore) FindById(ctx *actions.OperationContext, id uint64) (*dbmodels.UserAgent, error) {
 	var ua *dbmodels.UserAgent
-	err := s.opExecutor.Exec(ctx, s.findByIdOpType, []*actions.OperationParam{actions.NewOperationParam("id", id)},
+	err := s.opExecutor.Exec(ctx, s.opTypes[opTypeUserAgentStore_FindById], []*actions.OperationParam{actions.NewOperationParam("id", id)},
 		func(opCtx *actions.OperationContext) error {
 			const query = "SELECT * FROM " + userAgentsTable + " WHERE id = $1 LIMIT 1"
 			var err error
@@ -163,7 +203,7 @@ func (s *UserAgentStore) FindById(ctx *actions.OperationContext, id uint64) (*db
 // FindByUserIdAndClientId finds and returns a user agent, if any, by the specified user ID and client ID.
 func (s *UserAgentStore) FindByUserIdAndClientId(ctx *actions.OperationContext, userId, clientId uint64) (*dbmodels.UserAgent, error) {
 	var ua *dbmodels.UserAgent
-	err := s.opExecutor.Exec(ctx, s.findByUserIdAndClientIdOpType,
+	err := s.opExecutor.Exec(ctx, s.opTypes[opTypeUserAgentStore_FindByUserIdAndClientId],
 		[]*actions.OperationParam{actions.NewOperationParam("userId", userId), actions.NewOperationParam("clientId", clientId)},
 		func(opCtx *actions.OperationContext) error {
 			const query = "SELECT * FROM " + userAgentsTable + " WHERE user_id = $1 AND client_id = $2 LIMIT 1"
@@ -183,7 +223,7 @@ func (s *UserAgentStore) FindByUserIdAndClientId(ctx *actions.OperationContext, 
 // GetStatusById gets a user agent status by the specified user agent ID.
 func (s *UserAgentStore) GetStatusById(ctx *actions.OperationContext, id uint64) (models.UserAgentStatus, error) {
 	var status models.UserAgentStatus
-	err := s.opExecutor.Exec(ctx, s.getStatusByIdOpType, []*actions.OperationParam{actions.NewOperationParam("id", id)},
+	err := s.opExecutor.Exec(ctx, s.opTypes[opTypeUserAgentStore_GetStatusById], []*actions.OperationParam{actions.NewOperationParam("id", id)},
 		func(opCtx *actions.OperationContext) error {
 			conn, err := s.db.ConnPool.Acquire(opCtx.Ctx)
 			if err != nil {
