@@ -248,13 +248,43 @@ func (s *UserSessionStore) GetAllByUserId(ctx *actions.OperationContext, userId 
 
 			var err error
 			if uss, err = s.store.FindAll(opCtx.Ctx, query, args...); err != nil {
-				return fmt.Errorf("[stores.UserSessionStore.GetAllByUserId] find all user agents by user id: %w", err)
+				return fmt.Errorf("[stores.UserSessionStore.GetAllByUserId] find all user's sessions by user id: %w", err)
 			}
 			return nil
 		},
 	)
 	if err != nil {
 		return nil, fmt.Errorf("[stores.UserSessionStore.GetAllByUserId] execute an operation: %w", err)
+	}
+	return uss, nil
+}
+
+// GetAllByClientId gets all user's sessions by the specified client ID.
+// If onlyExisting is true, then it returns only user's existing sessions.
+func (s *UserSessionStore) GetAllByClientId(ctx *actions.OperationContext, clientId uint64, onlyExisting bool) ([]*dbmodels.UserSessionInfo, error) {
+	var uss []*dbmodels.UserSessionInfo
+	err := s.opExecutor.Exec(ctx, s.opTypes[opTypeUserSessionStore_GetAllByClientId],
+		[]*actions.OperationParam{actions.NewOperationParam("clientId", clientId), actions.NewOperationParam("onlyExisting", onlyExisting)},
+		func(opCtx *actions.OperationContext) error {
+			var query string
+			var args []any
+			if onlyExisting {
+				query = "SELECT * FROM " + userSessionsTable + " WHERE client_id = $1 AND status <> $2"
+				args = []any{clientId, models.UserSessionStatusEnded}
+			} else {
+				query = "SELECT * FROM " + userSessionsTable + " WHERE client_id = $1"
+				args = []any{clientId}
+			}
+
+			var err error
+			if uss, err = s.store.FindAll(opCtx.Ctx, query, args...); err != nil {
+				return fmt.Errorf("[stores.UserSessionStore.GetAllByClientId] find all user's sessions by client id: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("[stores.UserSessionStore.GetAllByClientId] execute an operation: %w", err)
 	}
 	return uss, nil
 }
