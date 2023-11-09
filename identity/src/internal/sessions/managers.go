@@ -26,11 +26,11 @@ import (
 type UserSessionManager interface {
 	// CreateAndStartWebSession creates and starts a user's web session and returns the user's session ID
 	// if the operation is successful.
-	CreateAndStartWebSession(ctx *actions.OperationContext, data *usersessions.CreateAndStartOperationData) (uint64, error)
+	CreateAndStartWebSession(ctx *actions.OperationContext, data *usersessions.CreateAndStartWebSessionOperationData) (uint64, error)
 
 	// CreateAndStartMobileSession creates and starts a user's mobile session and returns the user's session ID
 	// if the operation is successful.
-	CreateAndStartMobileSession(ctx *actions.OperationContext, data *usersessions.CreateAndStartOperationData) (uint64, error)
+	CreateAndStartMobileSession(ctx *actions.OperationContext, data *usersessions.CreateAndStartMobileSessionOperationData) (uint64, error)
 
 	// Terminate terminates a user's session by the specified user session ID.
 	Terminate(ctx *actions.OperationContext, id uint64) error

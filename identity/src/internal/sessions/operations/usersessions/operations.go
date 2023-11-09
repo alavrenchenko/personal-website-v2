@@ -15,6 +15,7 @@
 package usersessions
 
 import (
+	"personal-website-v2/pkg/base/nullable"
 	"personal-website-v2/pkg/base/strings"
 	"personal-website-v2/pkg/errors"
 )
@@ -29,11 +30,55 @@ type CreateAndStartOperationData struct {
 	// The user agent ID.
 	UserAgentId uint64 `json:"userAgentId"`
 
+	// The app ID.
+	AppId nullable.Nullable[uint64] `json:"appId"`
+
 	// The first IP address (sign-in IP address).
 	FirstIP string `json:"firstIP"`
 }
 
-func (d *CreateAndStartOperationData) Validate() *errors.Error {
+type CreateAndStartWebSessionOperationData struct {
+	// The user ID who owns the session.
+	UserId uint64 `json:"userId"`
+
+	// The client ID.
+	ClientId uint64 `json:"clientId"`
+
+	// The user agent ID.
+	UserAgentId uint64 `json:"userAgentId"`
+
+	// The app ID.
+	AppId nullable.Nullable[uint64] `json:"appId"`
+
+	// The first IP address (sign-in IP address).
+	FirstIP string `json:"firstIP"`
+}
+
+func (d *CreateAndStartWebSessionOperationData) Validate() *errors.Error {
+	if strings.IsEmptyOrWhitespace(d.FirstIP) {
+		return errors.NewError(errors.ErrorCodeInvalidData, "firstIP is empty")
+	}
+	return nil
+}
+
+type CreateAndStartMobileSessionOperationData struct {
+	// The user ID who owns the session.
+	UserId uint64 `json:"userId"`
+
+	// The client ID.
+	ClientId uint64 `json:"clientId"`
+
+	// The user agent ID.
+	UserAgentId uint64 `json:"userAgentId"`
+
+	// The app ID.
+	AppId uint64 `json:"appId"`
+
+	// The first IP address (sign-in IP address).
+	FirstIP string `json:"firstIP"`
+}
+
+func (d *CreateAndStartMobileSessionOperationData) Validate() *errors.Error {
 	if strings.IsEmptyOrWhitespace(d.FirstIP) {
 		return errors.NewError(errors.ErrorCodeInvalidData, "firstIP is empty")
 	}
