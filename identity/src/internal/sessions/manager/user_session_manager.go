@@ -29,6 +29,7 @@ import (
 	"personal-website-v2/identity/src/internal/useragents"
 	useragentmodels "personal-website-v2/identity/src/internal/useragents/models"
 	"personal-website-v2/pkg/actions"
+	"personal-website-v2/pkg/base/nullable"
 	"personal-website-v2/pkg/errors"
 	actionhelper "personal-website-v2/pkg/helper/actions"
 	"personal-website-v2/pkg/logging"
@@ -132,7 +133,7 @@ func (m *UserSessionManager) CreateAndStartWebSession(ctx *actions.OperationCont
 
 // CreateAndStartMobileSession creates and starts a user's mobile session and returns user's session ID
 // if the operation is successful.
-func (m *UserSessionManager) CreateAndStartMobileSession(ctx *actions.OperationContext, data *usersessions.CreateAndStartOperationData) (uint64, error) {
+func (m *UserSessionManager) CreateAndStartMobileSession(ctx *actions.OperationContext, data *usersessions.CreateAndStartMobileSessionOperationData) (uint64, error) {
 	var id uint64
 	err := m.opExecutor.Exec(ctx, iactions.OperationTypeUserSessionManager_CreateAndStartMobileSession,
 		[]*actions.OperationParam{actions.NewOperationParam("data", data)},
@@ -141,8 +142,28 @@ func (m *UserSessionManager) CreateAndStartMobileSession(ctx *actions.OperationC
 				return fmt.Errorf("[manager.UserSessionManager.CreateAndStartMobileSession] validate data: %w", err)
 			}
 
+			if t, err := m.clientManager.GetTypeById(data.ClientId); err != nil {
+				return fmt.Errorf("[manager.UserSessionManager.CreateAndStartWebSession] get a client type by id: %w", err)
+			} else if t != clientmodels.ClientTypeMobile {
+				return errors.NewError(errors.ErrorCodeInvalidOperation, fmt.Sprintf("invalid client type (%s)", t))
+			}
+
+			if t, err := m.userAgentManager.GetTypeById(data.UserAgentId); err != nil {
+				return fmt.Errorf("[manager.UserSessionManager.CreateAndStartWebSession] get a user agent type by id: %w", err)
+			} else if t != useragentmodels.UserAgentTypeMobile {
+				return errors.NewError(errors.ErrorCodeInvalidOperation, fmt.Sprintf("invalid user agent type (%s)", t))
+			}
+
+			d := &usersessions.CreateAndStartOperationData{
+				UserId:      data.UserId,
+				ClientId:    data.ClientId,
+				UserAgentId: data.UserAgentId,
+				AppId:       nullable.NewNullable(data.AppId),
+				FirstIP:     data.FirstIP,
+			}
+
 			var err error
-			if id, err = m.mobileSessionStore.CreateAndStart(opCtx, data); err != nil {
+			if id, err = m.mobileSessionStore.CreateAndStart(opCtx, d); err != nil {
 				return fmt.Errorf("[manager.UserSessionManager.CreateAndStartMobileSession] create and start a user's mobile session: %w", err)
 			}
 
