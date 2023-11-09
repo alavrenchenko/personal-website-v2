@@ -18,13 +18,18 @@ import (
 	"fmt"
 
 	iactions "personal-website-v2/identity/src/internal/actions"
-	"personal-website-v2/identity/src/internal/errors"
+	"personal-website-v2/identity/src/internal/clients"
+	clientmodels "personal-website-v2/identity/src/internal/clients/models"
+	ierrors "personal-website-v2/identity/src/internal/errors"
 	"personal-website-v2/identity/src/internal/logging/events"
 	"personal-website-v2/identity/src/internal/sessions"
 	"personal-website-v2/identity/src/internal/sessions/dbmodels"
 	"personal-website-v2/identity/src/internal/sessions/models"
 	"personal-website-v2/identity/src/internal/sessions/operations/usersessions"
+	"personal-website-v2/identity/src/internal/useragents"
+	useragentmodels "personal-website-v2/identity/src/internal/useragents/models"
 	"personal-website-v2/pkg/actions"
+	"personal-website-v2/pkg/errors"
 	actionhelper "personal-website-v2/pkg/helper/actions"
 	"personal-website-v2/pkg/logging"
 	"personal-website-v2/pkg/logging/context"
@@ -33,6 +38,8 @@ import (
 // UserSessionManager is a user session manager.
 type UserSessionManager struct {
 	opExecutor         *actionhelper.OperationExecutor
+	clientManager      clients.ClientManager
+	userAgentManager   useragents.UserAgentManager
 	webSessionStore    sessions.UserSessionStore
 	mobileSessionStore sessions.UserSessionStore
 	logger             logging.Logger[*context.LogEntryContext]
@@ -40,7 +47,13 @@ type UserSessionManager struct {
 
 var _ sessions.UserSessionManager = (*UserSessionManager)(nil)
 
-func NewUserSessionManager(webSessionStore sessions.UserSessionStore, mobileSessionStore sessions.UserSessionStore, loggerFactory logging.LoggerFactory[*context.LogEntryContext]) (*UserSessionManager, error) {
+func NewUserSessionManager(
+	clientManager clients.ClientManager,
+	userAgentManager useragents.UserAgentManager,
+	webSessionStore sessions.UserSessionStore,
+	mobileSessionStore sessions.UserSessionStore,
+	loggerFactory logging.LoggerFactory[*context.LogEntryContext],
+) (*UserSessionManager, error) {
 	l, err := loggerFactory.CreateLogger("internal.sessions.manager.UserSessionManager")
 	if err != nil {
 		return nil, fmt.Errorf("[manager.NewUserSessionManager] create a logger: %w", err)
@@ -51,7 +64,6 @@ func NewUserSessionManager(webSessionStore sessions.UserSessionStore, mobileSess
 		DefaultGroup:    iactions.OperationGroupUserSession,
 		StopAppIfError:  true,
 	}
-
 	e, err := actionhelper.NewOperationExecutor(c, loggerFactory)
 	if err != nil {
 		return nil, fmt.Errorf("[manager.NewUserSessionManager] new operation executor: %w", err)
@@ -59,6 +71,8 @@ func NewUserSessionManager(webSessionStore sessions.UserSessionStore, mobileSess
 
 	return &UserSessionManager{
 		opExecutor:         e,
+		clientManager:      clientManager,
+		userAgentManager:   userAgentManager,
 		webSessionStore:    webSessionStore,
 		mobileSessionStore: mobileSessionStore,
 		logger:             l,
@@ -67,7 +81,7 @@ func NewUserSessionManager(webSessionStore sessions.UserSessionStore, mobileSess
 
 // CreateAndStartWebSession creates and starts a user's web session and returns user's session ID
 // if the operation is successful.
-func (m *UserSessionManager) CreateAndStartWebSession(ctx *actions.OperationContext, data *usersessions.CreateAndStartOperationData) (uint64, error) {
+func (m *UserSessionManager) CreateAndStartWebSession(ctx *actions.OperationContext, data *usersessions.CreateAndStartWebSessionOperationData) (uint64, error) {
 	var id uint64
 	err := m.opExecutor.Exec(ctx, iactions.OperationTypeUserSessionManager_CreateAndStartWebSession,
 		[]*actions.OperationParam{actions.NewOperationParam("data", data)},
@@ -76,8 +90,28 @@ func (m *UserSessionManager) CreateAndStartWebSession(ctx *actions.OperationCont
 				return fmt.Errorf("[manager.UserSessionManager.CreateAndStartWebSession] validate data: %w", err)
 			}
 
+			if t, err := m.clientManager.GetTypeById(data.ClientId); err != nil {
+				return fmt.Errorf("[manager.UserSessionManager.CreateAndStartWebSession] get a client type by id: %w", err)
+			} else if t != clientmodels.ClientTypeWeb {
+				return errors.NewError(errors.ErrorCodeInvalidOperation, fmt.Sprintf("invalid client type (%s)", t))
+			}
+
+			if t, err := m.userAgentManager.GetTypeById(data.UserAgentId); err != nil {
+				return fmt.Errorf("[manager.UserSessionManager.CreateAndStartWebSession] get a user agent type by id: %w", err)
+			} else if t != useragentmodels.UserAgentTypeWeb {
+				return errors.NewError(errors.ErrorCodeInvalidOperation, fmt.Sprintf("invalid user agent type (%s)", t))
+			}
+
+			d := &usersessions.CreateAndStartOperationData{
+				UserId:      data.UserId,
+				ClientId:    data.ClientId,
+				UserAgentId: data.UserAgentId,
+				AppId:       data.AppId,
+				FirstIP:     data.FirstIP,
+			}
+
 			var err error
-			if id, err = m.webSessionStore.CreateAndStart(opCtx, data); err != nil {
+			if id, err = m.webSessionStore.CreateAndStart(opCtx, d); err != nil {
 				return fmt.Errorf("[manager.UserSessionManager.CreateAndStartWebSession] create and start a user's web session: %w", err)
 			}
 
@@ -201,7 +235,7 @@ func (m *UserSessionManager) FindById(ctx *actions.OperationContext, id uint64) 
 func (m *UserSessionManager) GetTypeById(id uint64) (models.UserSessionType, error) {
 	t := models.UserSessionType(byte(id))
 	if !t.IsValid() {
-		return models.UserSessionTypeWeb, errors.ErrInvalidUserSessionId
+		return models.UserSessionTypeWeb, ierrors.ErrInvalidUserSessionId
 	}
 	return t, nil
 }
