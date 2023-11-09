@@ -16,6 +16,7 @@ package manager
 
 import (
 	"fmt"
+	"sync"
 
 	iactions "personal-website-v2/identity/src/internal/actions"
 	"personal-website-v2/identity/src/internal/clients"
@@ -250,6 +251,55 @@ func (m *UserSessionManager) FindById(ctx *actions.OperationContext, id uint64) 
 		return nil, fmt.Errorf("[manager.UserSessionManager.FindById] execute an operation: %w", err)
 	}
 	return s, nil
+}
+
+// GetAllByUserId gets all user's sessions by the specified user ID.
+// If onlyExisting is true, then it returns only user's existing sessions.
+func (m *UserSessionManager) GetAllByUserId(ctx *actions.OperationContext, userId uint64, onlyExisting bool) ([]*dbmodels.UserSessionInfo, error) {
+	var ss []*dbmodels.UserSessionInfo
+	err := m.opExecutor.Exec(ctx, iactions.OperationTypeUserSessionManager_GetAllByUserId,
+		[]*actions.OperationParam{actions.NewOperationParam("userId", userId), actions.NewOperationParam("onlyExisting", onlyExisting)},
+		func(opCtx *actions.OperationContext) error {
+			var wss, mss []*dbmodels.UserSessionInfo
+			var errs [2]error
+			var wg sync.WaitGroup
+			wg.Add(2)
+
+			go func() {
+				if wss, errs[0] = m.webSessionStore.GetAllByUserId(opCtx, userId, onlyExisting); errs[0] != nil {
+					msg := "[manager.UserSessionManager.GetAllByUserId] get all user's web sessions by user id"
+					m.logger.ErrorWithEvent(ctx.CreateLogEntryContext(), events.UserAgentEvent, errs[0], msg, logging.NewField("userId", userId), logging.NewField("onlyExisting", onlyExisting))
+					errs[0] = fmt.Errorf("%s: %w", msg, errs[0])
+				}
+				wg.Done()
+			}()
+			go func() {
+				if mss, errs[1] = m.mobileSessionStore.GetAllByUserId(opCtx, userId, onlyExisting); errs[1] != nil {
+					msg := "[manager.UserSessionManager.GetAllByUserId] get all user's mobile sessions by user id"
+					m.logger.ErrorWithEvent(ctx.CreateLogEntryContext(), events.UserAgentEvent, errs[1], msg, logging.NewField("userId", userId), logging.NewField("onlyExisting", onlyExisting))
+					errs[1] = fmt.Errorf("%s: %w", msg, errs[1])
+				}
+				wg.Done()
+			}()
+			wg.Wait()
+
+			if errs[0] != nil {
+				return errs[0]
+			} else if errs[1] != nil {
+				return errs[1]
+			}
+
+			ss = wss
+			if len(mss) > 0 {
+				ss = append(ss, mss...)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("[manager.UserSessionManager.GetAllByUserId] execute an operation: %w", err)
+	}
+	return ss, nil
 }
 
 // GetTypeById gets a user's session type by the specified user session ID.

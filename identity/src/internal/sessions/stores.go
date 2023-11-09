@@ -22,6 +22,7 @@ import (
 	"personal-website-v2/pkg/actions"
 )
 
+// UserSessionStore is a user session store.
 type UserSessionStore interface {
 	// CreateAndStart creates and starts a user's session and returns the user's session ID
 	// if the operation is successful.
@@ -33,10 +34,15 @@ type UserSessionStore interface {
 	// FindById finds and returns user's session info, if any, by the specified user session ID.
 	FindById(ctx *actions.OperationContext, id uint64) (*dbmodels.UserSessionInfo, error)
 
+	// GetAllByUserId gets all user's sessions by the specified user ID.
+	// If onlyExisting is true, then it returns only user's existing sessions.
+	GetAllByUserId(ctx *actions.OperationContext, userId uint64, onlyExisting bool) ([]*dbmodels.UserSessionInfo, error)
+
 	// GetStatusById gets a user's session status by the specified user session ID.
 	GetStatusById(ctx *actions.OperationContext, id uint64) (models.UserSessionStatus, error)
 }
 
+// UserAgentSessionStore is a user agent session store.
 type UserAgentSessionStore interface {
 	// CreateAndStart creates and starts a user agent session and returns the user agent session ID
 	// if the operation is successful.

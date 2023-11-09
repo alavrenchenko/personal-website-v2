@@ -38,6 +38,10 @@ type UserSessionManager interface {
 	// FindById finds and returns user's session info, if any, by the specified user session ID.
 	FindById(ctx *actions.OperationContext, id uint64) (*dbmodels.UserSessionInfo, error)
 
+	// GetAllByUserId gets all user's sessions by the specified user ID.
+	// If onlyExisting is true, then it returns only user's existing sessions.
+	GetAllByUserId(ctx *actions.OperationContext, userId uint64, onlyExisting bool) ([]*dbmodels.UserSessionInfo, error)
+
 	// GetTypeById gets a user's session type by the specified user session ID.
 	GetTypeById(id uint64) (models.UserSessionType, error)
 
