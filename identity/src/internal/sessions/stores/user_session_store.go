@@ -139,26 +139,30 @@ func (s *UserSessionStore) CreateAndStart(ctx *actions.OperationContext, data *u
 	var id uint64
 	err := s.opExecutor.Exec(ctx, s.opTypes[opTypeUserSessionStore_CreateAndStart], []*actions.OperationParam{actions.NewOperationParam("data", data)},
 		func(opCtx *actions.OperationContext) error {
-			var errCode dberrors.DbErrorCode
-			var errMsg string
-			// public.create_and_start_user_session(IN _user_id, IN _client_id, IN _user_agent_id, IN _created_by, IN _status_comment, IN _first_ip, OUT _id, OUT err_code, OUT err_msg)
-			const query = "CALL public.create_and_start_user_session($1, $2, $3, $4, NULL, $5, NULL, NULL, NULL)"
-
 			err := s.txManager.ExecWithReadCommittedLevel(opCtx.Ctx, func(txCtx context.Context, tx pgx.Tx) error {
-				r := tx.QueryRow(txCtx, query, data.UserId, data.ClientId, data.UserAgentId, opCtx.UserId.Value, data.FirstIP)
+				var errCode dberrors.DbErrorCode
+				var errMsg string
+				// PROCEDURE: public.create_and_start_user_session(IN _user_id, IN _client_id, IN _user_agent_id, IN _created_by, IN _status_comment,
+				// IN _app_id, IN _first_ip, OUT _id, OUT err_code, OUT err_msg)
+				// Minimum transaction isolation level: Read committed.
+				const query = "CALL public.create_and_start_user_session($1, $2, $3, $4, NULL, $5, $6, NULL, NULL, NULL)"
+				r := tx.QueryRow(txCtx, query, data.UserId, data.ClientId, data.UserAgentId, opCtx.UserId.Value, data.AppId.Ptr(), data.FirstIP)
 
 				if err := r.Scan(&id, &errCode, &errMsg); err != nil {
 					return fmt.Errorf("[stores.UserSessionStore.CreateAndStart] execute a query (create_and_start_user_session): %w", err)
 				}
-				return nil
-			})
-			if err != nil {
-				return fmt.Errorf("[stores.UserSessionStore.CreateAndStart] execute a transaction with the 'read committed' isolation level: %w", err)
-			}
 
-			if errCode != dberrors.DbErrorCodeNoError {
+				switch errCode {
+				case dberrors.DbErrorCodeNoError:
+					return nil
+				case idberrors.DbErrorCodeUserSessionAlreadyExists:
+					return ierrors.ErrUserSessionAlreadyExists
+				}
 				// unknown error
 				return fmt.Errorf("[stores.UserSessionStore.CreateAndStart] invalid operation: %w", dberrors.NewDbError(errCode, errMsg))
+			})
+			if err != nil {
+				return fmt.Errorf("[stores.UserSessionStore.CreateAndStart] execute a transaction: %w", err)
 			}
 			return nil
 		},
