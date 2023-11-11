@@ -335,6 +335,39 @@ func (m *UserSessionManager) GetAllByClientId(ctx *actions.OperationContext, cli
 	return ss, nil
 }
 
+// GetAllByUserIdAndClientId gets all user's sessions by the specified user ID and client ID.
+// If onlyExisting is true, then it returns only user's existing sessions.
+func (m *UserSessionManager) GetAllByUserIdAndClientId(ctx *actions.OperationContext, userId, clientId uint64, onlyExisting bool) ([]*dbmodels.UserSessionInfo, error) {
+	var ss []*dbmodels.UserSessionInfo
+	err := m.opExecutor.Exec(ctx, iactions.OperationTypeUserSessionManager_GetAllByUserIdAndClientId,
+		[]*actions.OperationParam{actions.NewOperationParam("userId", userId), actions.NewOperationParam("clientId", clientId), actions.NewOperationParam("onlyExisting", onlyExisting)},
+		func(opCtx *actions.OperationContext) error {
+			t, err := m.clientManager.GetTypeById(clientId)
+			if err != nil {
+				return fmt.Errorf("[manager.UserSessionManager.GetAllByUserIdAndClientId] get a client type by id: %w", err)
+			}
+
+			switch t {
+			case clientmodels.ClientTypeWeb:
+				if ss, err = m.webSessionStore.GetAllByUserIdAndClientId(opCtx, userId, clientId, onlyExisting); err != nil {
+					return fmt.Errorf("[manager.UserSessionManager.GetAllByUserIdAndClientId] get all user's web sessions by user id and client id: %w", err)
+				}
+			case clientmodels.ClientTypeMobile:
+				if ss, err = m.mobileSessionStore.GetAllByUserIdAndClientId(opCtx, userId, clientId, onlyExisting); err != nil {
+					return fmt.Errorf("[manager.UserSessionManager.GetAllByUserIdAndClientId] get all user's mobile sessions by user id and client id: %w", err)
+				}
+			default:
+				return fmt.Errorf("[manager.UserSessionManager.GetAllByUserIdAndClientId] '%s' client type isn't supported", t)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("[manager.UserSessionManager.GetAllByUserIdAndClientId] execute an operation: %w", err)
+	}
+	return ss, nil
+}
+
 // GetTypeById gets a user's session type by the specified user session ID.
 func (m *UserSessionManager) GetTypeById(id uint64) (models.UserSessionType, error) {
 	t := models.UserSessionType(byte(id))

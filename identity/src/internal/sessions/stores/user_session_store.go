@@ -295,6 +295,36 @@ func (s *UserSessionStore) GetAllByClientId(ctx *actions.OperationContext, clien
 	return uss, nil
 }
 
+// GetAllByUserIdAndClientId gets all user's sessions by the specified user ID and client ID.
+// If onlyExisting is true, then it returns only user's existing sessions.
+func (s *UserSessionStore) GetAllByUserIdAndClientId(ctx *actions.OperationContext, userId, clientId uint64, onlyExisting bool) ([]*dbmodels.UserSessionInfo, error) {
+	var uss []*dbmodels.UserSessionInfo
+	err := s.opExecutor.Exec(ctx, s.opTypes[opTypeUserSessionStore_GetAllByUserIdAndClientId],
+		[]*actions.OperationParam{actions.NewOperationParam("userId", userId), actions.NewOperationParam("clientId", clientId), actions.NewOperationParam("onlyExisting", onlyExisting)},
+		func(opCtx *actions.OperationContext) error {
+			var query string
+			var args []any
+			if onlyExisting {
+				query = "SELECT * FROM " + userSessionsTable + " WHERE user_id = $1 AND client_id = $2 AND status <> $3 AND status <> $4"
+				args = []any{userId, clientId, models.UserSessionStatusEnded, models.UserSessionStatusDeleted}
+			} else {
+				query = "SELECT * FROM " + userSessionsTable + " WHERE user_id = $1 AND client_id = $2"
+				args = []any{userId, clientId}
+			}
+
+			var err error
+			if uss, err = s.store.FindAll(opCtx.Ctx, query, args...); err != nil {
+				return fmt.Errorf("[stores.UserSessionStore.GetAllByUserIdAndClientId] find all user's sessions by user id: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("[stores.UserSessionStore.GetAllByUserIdAndClientId] execute an operation: %w", err)
+	}
+	return uss, nil
+}
+
 // GetStatusById gets a user's session status by the specified user session ID.
 func (s *UserSessionStore) GetStatusById(ctx *actions.OperationContext, id uint64) (models.UserSessionStatus, error) {
 	var status models.UserSessionStatus
