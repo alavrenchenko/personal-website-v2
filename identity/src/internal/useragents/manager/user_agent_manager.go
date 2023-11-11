@@ -231,7 +231,7 @@ func (m *UserAgentManager) FindById(ctx *actions.OperationContext, id uint64) (*
 	return ua, nil
 }
 
-// FindByUserIdAndClientId finds and returns a user agent, if any, by the specified user ID and client ID.
+// FindByUserIdAndClientId finds and returns an existing user agent, if any, by the specified user ID and client ID.
 func (m *UserAgentManager) FindByUserIdAndClientId(ctx *actions.OperationContext, userId, clientId uint64) (*dbmodels.UserAgent, error) {
 	var ua *dbmodels.UserAgent
 	err := m.opExecutor.Exec(ctx, iactions.OperationTypeUserAgentManager_FindByUserIdAndClientId,

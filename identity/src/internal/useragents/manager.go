@@ -35,7 +35,7 @@ type UserAgentManager interface {
 	// FindById finds and returns a user agent, if any, by the specified user agent ID.
 	FindById(ctx *actions.OperationContext, id uint64) (*dbmodels.UserAgent, error)
 
-	// FindByUserIdAndClientId finds and returns a user agent, if any, by the specified user ID and client ID.
+	// FindByUserIdAndClientId finds and returns an existing user agent, if any, by the specified user ID and client ID.
 	FindByUserIdAndClientId(ctx *actions.OperationContext, userId, clientId uint64) (*dbmodels.UserAgent, error)
 
 	// GetAllByUserId gets all user agents by the specified user ID.
