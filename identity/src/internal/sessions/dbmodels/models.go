@@ -131,25 +131,25 @@ type UserAgentSessionInfo struct {
 	StatusComment *string `db:"status_comment"`
 
 	// The first sign-in time.
-	FirstSignInTime time.Time `db:"first_sign_in_time"`
+	FirstSignInTime *time.Time `db:"first_sign_in_time"`
 
 	// The first sign-in IP address.
-	FirstSignInIP string `db:"first_sign_in_ip"`
+	FirstSignInIP *string `db:"first_sign_in_ip"`
 
 	// The last sign-in time.
-	LastSignInTime time.Time `db:"last_sign_in_time"`
+	LastSignInTime *time.Time `db:"last_sign_in_time"`
 
 	// The last sign-in IP address.
-	LastSignInIP string `db:"last_sign_in_ip"`
+	LastSignInIP *string `db:"last_sign_in_ip"`
 
 	// The last sign-out time.
 	LastSignOutTime *time.Time `db:"last_sign_out_time"`
 
 	// The last activity time.
-	LastActivityTime time.Time `db:"last_activity_time"`
+	LastActivityTime *time.Time `db:"last_activity_time"`
 
 	// The last activity IP address.
-	LastActivityIP string `db:"last_activity_ip"`
+	LastActivityIP *string `db:"last_activity_ip"`
 
 	// rowversion
 	VersionStamp uint64 `db:"_version_stamp"`
