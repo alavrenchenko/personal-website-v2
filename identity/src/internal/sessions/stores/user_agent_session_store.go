@@ -38,37 +38,79 @@ import (
 )
 
 const (
+	opTypeUserAgentSessionStore_Create = iota
+	opTypeUserAgentSessionStore_Start
+	opTypeUserAgentSessionStore_CreateAndStart
+	opTypeUserAgentSessionStore_SignOut
+	opTypeUserAgentSessionStore_Terminate
+	opTypeUserAgentSessionStore_StartDeleting
+	opTypeUserAgentSessionStore_Delete
+	opTypeUserAgentSessionStore_FindById
+	opTypeUserAgentSessionStore_FindByUserIdAndClientId
+	opTypeUserAgentSessionStore_FindByUserAgentId
+	opTypeUserAgentSessionStore_GetAllByUserId
+	opTypeUserAgentSessionStore_GetAllByClientId
+	opTypeUserAgentSessionStore_Exists
+	opTypeUserAgentSessionStore_GetStatusById
+)
+
+var webUserAgentSessionStoreOpTypes = []actions.OperationType{
+	opTypeUserAgentSessionStore_Create:                  iactions.OperationTypeWebUserAgentSessionStore_Create,
+	opTypeUserAgentSessionStore_Start:                   iactions.OperationTypeWebUserAgentSessionStore_Start,
+	opTypeUserAgentSessionStore_CreateAndStart:          iactions.OperationTypeWebUserAgentSessionStore_CreateAndStart,
+	opTypeUserAgentSessionStore_SignOut:                 iactions.OperationTypeWebUserAgentSessionStore_SignOut,
+	opTypeUserAgentSessionStore_Terminate:               iactions.OperationTypeWebUserAgentSessionStore_Terminate,
+	opTypeUserAgentSessionStore_StartDeleting:           iactions.OperationTypeWebUserAgentSessionStore_StartDeleting,
+	opTypeUserAgentSessionStore_Delete:                  iactions.OperationTypeWebUserAgentSessionStore_Delete,
+	opTypeUserAgentSessionStore_FindById:                iactions.OperationTypeWebUserAgentSessionStore_FindById,
+	opTypeUserAgentSessionStore_FindByUserIdAndClientId: iactions.OperationTypeWebUserAgentSessionStore_FindByUserIdAndClientId,
+	opTypeUserAgentSessionStore_FindByUserAgentId:       iactions.OperationTypeWebUserAgentSessionStore_FindByUserAgentId,
+	opTypeUserAgentSessionStore_GetAllByUserId:          iactions.OperationTypeWebUserAgentSessionStore_GetAllByUserId,
+	opTypeUserAgentSessionStore_GetAllByClientId:        iactions.OperationTypeWebUserAgentSessionStore_GetAllByClientId,
+	opTypeUserAgentSessionStore_Exists:                  iactions.OperationTypeWebUserAgentSessionStore_Exists,
+	opTypeUserAgentSessionStore_GetStatusById:           iactions.OperationTypeWebUserAgentSessionStore_GetStatusById,
+}
+
+var mobileUserAgentSessionStoreOpTypes = []actions.OperationType{
+	opTypeUserAgentSessionStore_Create:                  iactions.OperationTypeMobileUserAgentSessionStore_Create,
+	opTypeUserAgentSessionStore_Start:                   iactions.OperationTypeMobileUserAgentSessionStore_Start,
+	opTypeUserAgentSessionStore_CreateAndStart:          iactions.OperationTypeMobileUserAgentSessionStore_CreateAndStart,
+	opTypeUserAgentSessionStore_SignOut:                 iactions.OperationTypeMobileUserAgentSessionStore_SignOut,
+	opTypeUserAgentSessionStore_Terminate:               iactions.OperationTypeMobileUserAgentSessionStore_Terminate,
+	opTypeUserAgentSessionStore_StartDeleting:           iactions.OperationTypeMobileUserAgentSessionStore_StartDeleting,
+	opTypeUserAgentSessionStore_Delete:                  iactions.OperationTypeMobileUserAgentSessionStore_Delete,
+	opTypeUserAgentSessionStore_FindById:                iactions.OperationTypeMobileUserAgentSessionStore_FindById,
+	opTypeUserAgentSessionStore_FindByUserIdAndClientId: iactions.OperationTypeMobileUserAgentSessionStore_FindByUserIdAndClientId,
+	opTypeUserAgentSessionStore_FindByUserAgentId:       iactions.OperationTypeMobileUserAgentSessionStore_FindByUserAgentId,
+	opTypeUserAgentSessionStore_GetAllByUserId:          iactions.OperationTypeMobileUserAgentSessionStore_GetAllByUserId,
+	opTypeUserAgentSessionStore_GetAllByClientId:        iactions.OperationTypeMobileUserAgentSessionStore_GetAllByClientId,
+	opTypeUserAgentSessionStore_Exists:                  iactions.OperationTypeMobileUserAgentSessionStore_Exists,
+	opTypeUserAgentSessionStore_GetStatusById:           iactions.OperationTypeMobileUserAgentSessionStore_GetStatusById,
+}
+
+const (
 	userAgentSessionsTable = "public.user_agent_sessions"
 )
 
+// UserAgentSessionStore is a user agent session store.
 type UserAgentSessionStore struct {
-	db                   *postgres.Database
-	opExecutor           *actionhelper.OperationExecutor
-	store                *postgres.Store[dbmodels.UserAgentSessionInfo]
-	txManager            *postgres.TxManager
-	logger               logging.Logger[*lcontext.LogEntryContext]
-	createAndStartOpType actions.OperationType
-	terminateOpType      actions.OperationType
-	findByIdOpType       actions.OperationType
-	getStatusByIdOpType  actions.OperationType
+	db         *postgres.Database
+	opExecutor *actionhelper.OperationExecutor
+	store      *postgres.Store[dbmodels.UserAgentSessionInfo]
+	txManager  *postgres.TxManager
+	logger     logging.Logger[*lcontext.LogEntryContext]
+	opTypes    []actions.OperationType
 }
 
 var _ sessions.UserAgentSessionStore = (*UserAgentSessionStore)(nil)
 
 func NewUserAgentSessionStore(stype models.UserAgentSessionType, db *postgres.Database, loggerFactory logging.LoggerFactory[*lcontext.LogEntryContext]) (*UserAgentSessionStore, error) {
-	var createAndStartOpType, terminateOpType, findByIdOpType, getStatusByIdOpType actions.OperationType
-
+	var opTypes []actions.OperationType
 	switch stype {
 	case models.UserAgentSessionTypeWeb:
-		createAndStartOpType = iactions.OperationTypeUserAgentSessionStore_CreateAndStartWebSession
-		terminateOpType = iactions.OperationTypeUserAgentSessionStore_TerminateWebSession
-		findByIdOpType = iactions.OperationTypeUserAgentSessionStore_FindWebSessionById
-		getStatusByIdOpType = iactions.OperationTypeUserAgentSessionStore_GetWebSessionStatusById
+		opTypes = webUserAgentSessionStoreOpTypes
 	case models.UserAgentSessionTypeMobile:
-		createAndStartOpType = iactions.OperationTypeUserAgentSessionStore_CreateAndStartMobileSession
-		terminateOpType = iactions.OperationTypeUserAgentSessionStore_TerminateMobileSession
-		findByIdOpType = iactions.OperationTypeUserAgentSessionStore_FindMobileSessionById
-		getStatusByIdOpType = iactions.OperationTypeUserAgentSessionStore_GetMobileSessionStatusById
+		opTypes = mobileUserAgentSessionStoreOpTypes
 	default:
 		return nil, fmt.Errorf("[stores.NewUserAgentSessionStore] '%s' session type of the user agent isn't supported", stype)
 	}
@@ -83,7 +125,6 @@ func NewUserAgentSessionStore(stype models.UserAgentSessionType, db *postgres.Da
 		DefaultGroup:    iactions.OperationGroupUserAgentSession,
 		StopAppIfError:  true,
 	}
-
 	e, err := actionhelper.NewOperationExecutor(c, loggerFactory)
 	if err != nil {
 		return nil, fmt.Errorf("[stores.NewUserAgentSessionStore] new operation executor: %w", err)
@@ -95,15 +136,12 @@ func NewUserAgentSessionStore(stype models.UserAgentSessionType, db *postgres.Da
 	}
 
 	return &UserAgentSessionStore{
-		db:                   db,
-		opExecutor:           e,
-		store:                postgres.NewStore[dbmodels.UserAgentSessionInfo](db),
-		txManager:            txm,
-		logger:               l,
-		createAndStartOpType: createAndStartOpType,
-		terminateOpType:      terminateOpType,
-		findByIdOpType:       findByIdOpType,
-		getStatusByIdOpType:  getStatusByIdOpType,
+		db:         db,
+		opExecutor: e,
+		store:      postgres.NewStore[dbmodels.UserAgentSessionInfo](db),
+		txManager:  txm,
+		logger:     l,
+		opTypes:    opTypes,
 	}, nil
 }
 
@@ -111,7 +149,7 @@ func NewUserAgentSessionStore(stype models.UserAgentSessionType, db *postgres.Da
 // if the operation is successful.
 func (s *UserAgentSessionStore) CreateAndStart(ctx *actions.OperationContext, data *useragentsessions.CreateAndStartOperationData) (uint64, error) {
 	var id uint64
-	err := s.opExecutor.Exec(ctx, s.createAndStartOpType, []*actions.OperationParam{actions.NewOperationParam("data", data)},
+	err := s.opExecutor.Exec(ctx, s.opTypes[opTypeUserAgentSessionStore_CreateAndStart], []*actions.OperationParam{actions.NewOperationParam("data", data)},
 		func(opCtx *actions.OperationContext) error {
 			var errCode dberrors.DbErrorCode
 			var errMsg string
@@ -151,7 +189,7 @@ func (s *UserAgentSessionStore) CreateAndStart(ctx *actions.OperationContext, da
 
 // Terminate terminates a user agent session by the specified user agent session ID.
 func (s *UserAgentSessionStore) Terminate(ctx *actions.OperationContext, id uint64) error {
-	err := s.opExecutor.Exec(ctx, s.terminateOpType, []*actions.OperationParam{actions.NewOperationParam("id", id)},
+	err := s.opExecutor.Exec(ctx, s.opTypes[opTypeUserAgentSessionStore_Terminate], []*actions.OperationParam{actions.NewOperationParam("id", id)},
 		func(opCtx *actions.OperationContext) error {
 			var errCode dberrors.DbErrorCode
 			var errMsg string
@@ -189,7 +227,7 @@ func (s *UserAgentSessionStore) Terminate(ctx *actions.OperationContext, id uint
 // FindById finds and returns user agent session info, if any, by the specified user agent session ID.
 func (s *UserAgentSessionStore) FindById(ctx *actions.OperationContext, id uint64) (*dbmodels.UserAgentSessionInfo, error) {
 	var uas *dbmodels.UserAgentSessionInfo
-	err := s.opExecutor.Exec(ctx, s.findByIdOpType, []*actions.OperationParam{actions.NewOperationParam("id", id)},
+	err := s.opExecutor.Exec(ctx, s.opTypes[opTypeUserAgentSessionStore_FindById], []*actions.OperationParam{actions.NewOperationParam("id", id)},
 		func(opCtx *actions.OperationContext) error {
 			const query = "SELECT * FROM " + userAgentSessionsTable + " WHERE id = $1 LIMIT 1"
 			var err error
@@ -208,7 +246,7 @@ func (s *UserAgentSessionStore) FindById(ctx *actions.OperationContext, id uint6
 // GetStatusById gets a user agent session status by the specified user agent session ID.
 func (s *UserAgentSessionStore) GetStatusById(ctx *actions.OperationContext, id uint64) (models.UserAgentSessionStatus, error) {
 	var status models.UserAgentSessionStatus
-	err := s.opExecutor.Exec(ctx, s.getStatusByIdOpType, []*actions.OperationParam{actions.NewOperationParam("id", id)},
+	err := s.opExecutor.Exec(ctx, s.opTypes[opTypeUserAgentSessionStore_GetStatusById], []*actions.OperationParam{actions.NewOperationParam("id", id)},
 		func(opCtx *actions.OperationContext) error {
 			conn, err := s.db.ConnPool.Acquire(opCtx.Ctx)
 			if err != nil {
