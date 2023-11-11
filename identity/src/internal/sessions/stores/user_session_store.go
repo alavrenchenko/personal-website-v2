@@ -239,8 +239,8 @@ func (s *UserSessionStore) GetAllByUserId(ctx *actions.OperationContext, userId 
 			var query string
 			var args []any
 			if onlyExisting {
-				query = "SELECT * FROM " + userSessionsTable + " WHERE user_id = $1 AND status <> $2"
-				args = []any{userId, models.UserSessionStatusEnded}
+				query = "SELECT * FROM " + userSessionsTable + " WHERE user_id = $1 AND status <> $2 AND status <> $3"
+				args = []any{userId, models.UserSessionStatusEnded, models.UserSessionStatusDeleted}
 			} else {
 				query = "SELECT * FROM " + userSessionsTable + " WHERE user_id = $1"
 				args = []any{userId}
@@ -269,8 +269,8 @@ func (s *UserSessionStore) GetAllByClientId(ctx *actions.OperationContext, clien
 			var query string
 			var args []any
 			if onlyExisting {
-				query = "SELECT * FROM " + userSessionsTable + " WHERE client_id = $1 AND status <> $2"
-				args = []any{clientId, models.UserSessionStatusEnded}
+				query = "SELECT * FROM " + userSessionsTable + " WHERE client_id = $1 AND status <> $2 AND status <> $3"
+				args = []any{clientId, models.UserSessionStatusEnded, models.UserSessionStatusDeleted}
 			} else {
 				query = "SELECT * FROM " + userSessionsTable + " WHERE client_id = $1"
 				args = []any{clientId}
