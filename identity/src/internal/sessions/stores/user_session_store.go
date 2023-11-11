@@ -42,6 +42,8 @@ const (
 	opTypeUserSessionStore_Start
 	opTypeUserSessionStore_CreateAndStart
 	opTypeUserSessionStore_Terminate
+	opTypeUserSessionStore_StartDeleting
+	opTypeUserSessionStore_Delete
 	opTypeUserSessionStore_FindById
 	opTypeUserSessionStore_GetAllByUserId
 	opTypeUserSessionStore_GetAllByClientId
@@ -55,6 +57,8 @@ var userWebSessionStoreOpTypes = []actions.OperationType{
 	opTypeUserSessionStore_Start:                     iactions.OperationTypeUserWebSessionStore_Start,
 	opTypeUserSessionStore_CreateAndStart:            iactions.OperationTypeUserWebSessionStore_CreateAndStart,
 	opTypeUserSessionStore_Terminate:                 iactions.OperationTypeUserWebSessionStore_Terminate,
+	opTypeUserSessionStore_StartDeleting:             iactions.OperationTypeUserWebSessionStore_StartDeleting,
+	opTypeUserSessionStore_Delete:                    iactions.OperationTypeUserWebSessionStore_Delete,
 	opTypeUserSessionStore_FindById:                  iactions.OperationTypeUserWebSessionStore_FindById,
 	opTypeUserSessionStore_GetAllByUserId:            iactions.OperationTypeUserWebSessionStore_GetAllByUserId,
 	opTypeUserSessionStore_GetAllByClientId:          iactions.OperationTypeUserWebSessionStore_GetAllByClientId,
@@ -68,6 +72,8 @@ var userMobileSessionStoreOpTypes = []actions.OperationType{
 	opTypeUserSessionStore_Start:                     iactions.OperationTypeUserMobileSessionStore_Start,
 	opTypeUserSessionStore_CreateAndStart:            iactions.OperationTypeUserMobileSessionStore_CreateAndStart,
 	opTypeUserSessionStore_Terminate:                 iactions.OperationTypeUserMobileSessionStore_Terminate,
+	opTypeUserSessionStore_StartDeleting:             iactions.OperationTypeUserMobileSessionStore_StartDeleting,
+	opTypeUserSessionStore_Delete:                    iactions.OperationTypeUserMobileSessionStore_Delete,
 	opTypeUserSessionStore_FindById:                  iactions.OperationTypeUserMobileSessionStore_FindById,
 	opTypeUserSessionStore_GetAllByUserId:            iactions.OperationTypeUserMobileSessionStore_GetAllByUserId,
 	opTypeUserSessionStore_GetAllByClientId:          iactions.OperationTypeUserMobileSessionStore_GetAllByClientId,
