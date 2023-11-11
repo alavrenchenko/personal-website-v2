@@ -368,6 +368,39 @@ func (m *UserSessionManager) GetAllByUserIdAndClientId(ctx *actions.OperationCon
 	return ss, nil
 }
 
+// GetAllByUserAgentId gets all user's sessions by the specified user agent ID.
+// If onlyExisting is true, then it returns only user's existing sessions.
+func (m *UserSessionManager) GetAllByUserAgentId(ctx *actions.OperationContext, userAgentId uint64, onlyExisting bool) ([]*dbmodels.UserSessionInfo, error) {
+	var ss []*dbmodels.UserSessionInfo
+	err := m.opExecutor.Exec(ctx, iactions.OperationTypeUserSessionManager_GetAllByUserAgentId,
+		[]*actions.OperationParam{actions.NewOperationParam("userAgentId", userAgentId), actions.NewOperationParam("onlyExisting", onlyExisting)},
+		func(opCtx *actions.OperationContext) error {
+			t, err := m.userAgentManager.GetTypeById(userAgentId)
+			if err != nil {
+				return fmt.Errorf("[manager.UserSessionManager.GetAllByUserAgentId] get a user agent type by id: %w", err)
+			}
+
+			switch t {
+			case useragentmodels.UserAgentTypeWeb:
+				if ss, err = m.webSessionStore.GetAllByUserAgentId(opCtx, userAgentId, onlyExisting); err != nil {
+					return fmt.Errorf("[manager.UserSessionManager.GetAllByUserAgentId] get all user's web sessions by user agent id: %w", err)
+				}
+			case useragentmodels.UserAgentTypeMobile:
+				if ss, err = m.mobileSessionStore.GetAllByUserAgentId(opCtx, userAgentId, onlyExisting); err != nil {
+					return fmt.Errorf("[manager.UserSessionManager.GetAllByUserAgentId] get all user's mobile sessions by user agent id: %w", err)
+				}
+			default:
+				return fmt.Errorf("[manager.UserSessionManager.GetAllByUserAgentId] '%s' user agent type isn't supported", t)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("[manager.UserSessionManager.GetAllByUserAgentId] execute an operation: %w", err)
+	}
+	return ss, nil
+}
+
 // GetTypeById gets a user's session type by the specified user session ID.
 func (m *UserSessionManager) GetTypeById(id uint64) (models.UserSessionType, error) {
 	t := models.UserSessionType(byte(id))

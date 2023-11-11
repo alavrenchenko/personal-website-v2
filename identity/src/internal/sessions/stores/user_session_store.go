@@ -314,13 +314,43 @@ func (s *UserSessionStore) GetAllByUserIdAndClientId(ctx *actions.OperationConte
 
 			var err error
 			if uss, err = s.store.FindAll(opCtx.Ctx, query, args...); err != nil {
-				return fmt.Errorf("[stores.UserSessionStore.GetAllByUserIdAndClientId] find all user's sessions by user id: %w", err)
+				return fmt.Errorf("[stores.UserSessionStore.GetAllByUserIdAndClientId] find all user's sessions by user id and client id: %w", err)
 			}
 			return nil
 		},
 	)
 	if err != nil {
 		return nil, fmt.Errorf("[stores.UserSessionStore.GetAllByUserIdAndClientId] execute an operation: %w", err)
+	}
+	return uss, nil
+}
+
+// GetAllByUserAgentId gets all user's sessions by the specified user agent ID.
+// If onlyExisting is true, then it returns only user's existing sessions.
+func (s *UserSessionStore) GetAllByUserAgentId(ctx *actions.OperationContext, userAgentId uint64, onlyExisting bool) ([]*dbmodels.UserSessionInfo, error) {
+	var uss []*dbmodels.UserSessionInfo
+	err := s.opExecutor.Exec(ctx, s.opTypes[opTypeUserSessionStore_GetAllByUserAgentId],
+		[]*actions.OperationParam{actions.NewOperationParam("userAgentId", userAgentId), actions.NewOperationParam("onlyExisting", onlyExisting)},
+		func(opCtx *actions.OperationContext) error {
+			var query string
+			var args []any
+			if onlyExisting {
+				query = "SELECT * FROM " + userSessionsTable + " WHERE user_agent_id = $1 AND status <> $2 AND status <> $3"
+				args = []any{userAgentId, models.UserSessionStatusEnded, models.UserSessionStatusDeleted}
+			} else {
+				query = "SELECT * FROM " + userSessionsTable + " WHERE user_agent_id = $1"
+				args = []any{userAgentId}
+			}
+
+			var err error
+			if uss, err = s.store.FindAll(opCtx.Ctx, query, args...); err != nil {
+				return fmt.Errorf("[stores.UserSessionStore.GetAllByUserAgentId] find all user's sessions by user agent id: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("[stores.UserSessionStore.GetAllByUserAgentId] execute an operation: %w", err)
 	}
 	return uss, nil
 }
