@@ -302,8 +302,8 @@ func (m *UserSessionManager) GetAllByUserId(ctx *actions.OperationContext, userI
 	return ss, nil
 }
 
-// GetAllByClientId gets all user's sessions by the specified client ID.
-// If onlyExisting is true, then it returns only user's existing sessions.
+// GetAllByClientId gets all sessions of users by the specified client ID.
+// If onlyExisting is true, then it returns only existing sessions of users.
 func (m *UserSessionManager) GetAllByClientId(ctx *actions.OperationContext, clientId uint64, onlyExisting bool) ([]*dbmodels.UserSessionInfo, error) {
 	var ss []*dbmodels.UserSessionInfo
 	err := m.opExecutor.Exec(ctx, iactions.OperationTypeUserSessionManager_GetAllByClientId,
@@ -317,11 +317,11 @@ func (m *UserSessionManager) GetAllByClientId(ctx *actions.OperationContext, cli
 			switch t {
 			case clientmodels.ClientTypeWeb:
 				if ss, err = m.webSessionStore.GetAllByClientId(opCtx, clientId, onlyExisting); err != nil {
-					return fmt.Errorf("[manager.UserSessionManager.GetAllByClientId] get all user's web sessions by client id: %w", err)
+					return fmt.Errorf("[manager.UserSessionManager.GetAllByClientId] get all web sessions of users by client id: %w", err)
 				}
 			case clientmodels.ClientTypeMobile:
 				if ss, err = m.mobileSessionStore.GetAllByClientId(opCtx, clientId, onlyExisting); err != nil {
-					return fmt.Errorf("[manager.UserSessionManager.GetAllByClientId] get all user's mobile sessions by client id: %w", err)
+					return fmt.Errorf("[manager.UserSessionManager.GetAllByClientId] get all mobile sessions of users by client id: %w", err)
 				}
 			default:
 				return fmt.Errorf("[manager.UserSessionManager.GetAllByClientId] '%s' client type isn't supported", t)

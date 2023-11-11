@@ -265,8 +265,8 @@ func (s *UserSessionStore) GetAllByUserId(ctx *actions.OperationContext, userId 
 	return uss, nil
 }
 
-// GetAllByClientId gets all user's sessions by the specified client ID.
-// If onlyExisting is true, then it returns only user's existing sessions.
+// GetAllByClientId gets all sessions of users by the specified client ID.
+// If onlyExisting is true, then it returns only existing sessions of users.
 func (s *UserSessionStore) GetAllByClientId(ctx *actions.OperationContext, clientId uint64, onlyExisting bool) ([]*dbmodels.UserSessionInfo, error) {
 	var uss []*dbmodels.UserSessionInfo
 	err := s.opExecutor.Exec(ctx, s.opTypes[opTypeUserSessionStore_GetAllByClientId],
@@ -284,7 +284,7 @@ func (s *UserSessionStore) GetAllByClientId(ctx *actions.OperationContext, clien
 
 			var err error
 			if uss, err = s.store.FindAll(opCtx.Ctx, query, args...); err != nil {
-				return fmt.Errorf("[stores.UserSessionStore.GetAllByClientId] find all user's sessions by client id: %w", err)
+				return fmt.Errorf("[stores.UserSessionStore.GetAllByClientId] find all sessions of users by client id: %w", err)
 			}
 			return nil
 		},

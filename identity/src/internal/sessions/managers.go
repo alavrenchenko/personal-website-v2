@@ -42,8 +42,8 @@ type UserSessionManager interface {
 	// If onlyExisting is true, then it returns only user's existing sessions.
 	GetAllByUserId(ctx *actions.OperationContext, userId uint64, onlyExisting bool) ([]*dbmodels.UserSessionInfo, error)
 
-	// GetAllByClientId gets all user's sessions by the specified client ID.
-	// If onlyExisting is true, then it returns only user's existing sessions.
+	// GetAllByClientId gets all sessions of users by the specified client ID.
+	// If onlyExisting is true, then it returns only existing sessions of users.
 	GetAllByClientId(ctx *actions.OperationContext, clientId uint64, onlyExisting bool) ([]*dbmodels.UserSessionInfo, error)
 
 	// GetAllByUserIdAndClientId gets all user's sessions by the specified user ID and client ID.
