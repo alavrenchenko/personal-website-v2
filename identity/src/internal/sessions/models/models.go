@@ -51,6 +51,12 @@ const (
 	UserSessionStatusNew    UserSessionStatus = 1
 	UserSessionStatusActive UserSessionStatus = 2
 	UserSessionStatusEnded  UserSessionStatus = 3
+
+	// UserSessionStatusDeleting is used when the user's session status is 'New'.
+	UserSessionStatusDeleting UserSessionStatus = 4
+
+	// UserSessionStatusDeleted is used when the user's session status is 'New' or 'Deleting'.
+	UserSessionStatusDeleted UserSessionStatus = 5
 )
 
 // The user agent session type.
