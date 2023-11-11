@@ -39,6 +39,8 @@ User session statuses:
     New         = 1
     Active      = 2
     Ended       = 3
+    Deleting    = 4
+    Deleted     = 5
 
 id:
 increment: 1<<8 = 256
@@ -78,17 +80,17 @@ CREATE TABLE IF NOT EXISTS public.user_sessions
     _version_stamp bigint NOT NULL,
     _timestamp timestamp(6) without time zone NOT NULL DEFAULT (clock_timestamp() AT TIME ZONE 'UTC'::text),
     CONSTRAINT user_sessions_pkey PRIMARY KEY (id),
-    CONSTRAINT user_sessions_status_check CHECK (status >= 1 AND status <= 3)
+    CONSTRAINT user_sessions_status_check CHECK (status >= 1 AND status <= 5)
 )
 TABLESPACE pg_default;
 
 CREATE UNIQUE INDEX IF NOT EXISTS user_sessions_user_id_client_id_idx
     ON public.user_sessions (user_id, client_id)
-    WHERE status <> 3;
+    WHERE status <> 3 AND status <> 5;
 
 CREATE UNIQUE INDEX IF NOT EXISTS user_sessions_user_agent_id_uidx
     ON public.user_sessions (user_agent_id)
-    WHERE status <> 3;
+    WHERE status <> 3 AND status <> 5;
 
 CREATE INDEX IF NOT EXISTS user_sessions_user_id_idx ON public.user_sessions (user_id);
 CREATE INDEX IF NOT EXISTS user_sessions_client_id_idx ON public.user_sessions (client_id);
