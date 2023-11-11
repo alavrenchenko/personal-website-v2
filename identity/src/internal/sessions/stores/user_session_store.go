@@ -49,6 +49,7 @@ const (
 	opTypeUserSessionStore_GetAllByClientId
 	opTypeUserSessionStore_GetAllByUserIdAndClientId
 	opTypeUserSessionStore_GetAllByUserAgentId
+	opTypeUserSessionStore_Exists
 	opTypeUserSessionStore_GetStatusById
 )
 
@@ -64,6 +65,7 @@ var userWebSessionStoreOpTypes = []actions.OperationType{
 	opTypeUserSessionStore_GetAllByClientId:          iactions.OperationTypeUserWebSessionStore_GetAllByClientId,
 	opTypeUserSessionStore_GetAllByUserIdAndClientId: iactions.OperationTypeUserWebSessionStore_GetAllByUserIdAndClientId,
 	opTypeUserSessionStore_GetAllByUserAgentId:       iactions.OperationTypeUserWebSessionStore_GetAllByUserAgentId,
+	opTypeUserSessionStore_Exists:                    iactions.OperationTypeUserWebSessionStore_Exists,
 	opTypeUserSessionStore_GetStatusById:             iactions.OperationTypeUserWebSessionStore_GetStatusById,
 }
 
@@ -79,6 +81,7 @@ var userMobileSessionStoreOpTypes = []actions.OperationType{
 	opTypeUserSessionStore_GetAllByClientId:          iactions.OperationTypeUserMobileSessionStore_GetAllByClientId,
 	opTypeUserSessionStore_GetAllByUserIdAndClientId: iactions.OperationTypeUserMobileSessionStore_GetAllByUserIdAndClientId,
 	opTypeUserSessionStore_GetAllByUserAgentId:       iactions.OperationTypeUserMobileSessionStore_GetAllByUserAgentId,
+	opTypeUserSessionStore_Exists:                    iactions.OperationTypeUserMobileSessionStore_Exists,
 	opTypeUserSessionStore_GetStatusById:             iactions.OperationTypeUserMobileSessionStore_GetStatusById,
 }
 
@@ -353,6 +356,33 @@ func (s *UserSessionStore) GetAllByUserAgentId(ctx *actions.OperationContext, us
 		return nil, fmt.Errorf("[stores.UserSessionStore.GetAllByUserAgentId] execute an operation: %w", err)
 	}
 	return uss, nil
+}
+
+// Exists returns true if the user's session exists.
+func (s *UserSessionStore) Exists(ctx *actions.OperationContext, userId, clientId, userAgentId uint64) (bool, error) {
+	var exists bool
+	err := s.opExecutor.Exec(ctx, s.opTypes[opTypeUserSessionStore_Exists],
+		[]*actions.OperationParam{actions.NewOperationParam("userId", userId), actions.NewOperationParam("clientId", clientId), actions.NewOperationParam("userAgentId", userAgentId)},
+		func(opCtx *actions.OperationContext) error {
+			conn, err := s.db.ConnPool.Acquire(opCtx.Ctx)
+			if err != nil {
+				return fmt.Errorf("[stores.UserSessionStore.Exists] acquire a connection: %w", err)
+			}
+			defer conn.Release()
+
+			// FUNCTION: public.user_session_exists(_user_id, _client_id, _user_agent_id) RETURNS boolean
+			const query = "SELECT public.user_session_exists($1, $2, $3)"
+
+			if err = conn.QueryRow(opCtx.Ctx, query, userId, clientId, userAgentId).Scan(&exists); err != nil {
+				return fmt.Errorf("[stores.UserSessionStore.Exists] execute a query (user_session_exists): %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return false, fmt.Errorf("[stores.UserSessionStore.Exists] execute an operation: %w", err)
+	}
+	return exists, nil
 }
 
 // GetStatusById gets a user's session status by the specified user session ID.

@@ -401,6 +401,51 @@ func (m *UserSessionManager) GetAllByUserAgentId(ctx *actions.OperationContext, 
 	return ss, nil
 }
 
+// Exists returns true if the user's session exists.
+func (m *UserSessionManager) Exists(ctx *actions.OperationContext, userId, clientId, userAgentId uint64) (bool, error) {
+	var exists bool
+	err := m.opExecutor.Exec(ctx, iactions.OperationTypeUserSessionManager_Exists,
+		[]*actions.OperationParam{actions.NewOperationParam("userId", userId), actions.NewOperationParam("clientId", clientId), actions.NewOperationParam("userAgentId", userAgentId)},
+		func(opCtx *actions.OperationContext) error {
+			ct, err := m.clientManager.GetTypeById(clientId)
+			if err != nil {
+				return fmt.Errorf("[manager.UserSessionManager.Exists] get a client type by id: %w", err)
+			}
+
+			uat, err := m.userAgentManager.GetTypeById(userAgentId)
+			if err != nil {
+				return fmt.Errorf("[manager.UserSessionManager.Exists] get a user agent type by id: %w", err)
+			}
+
+			switch ct {
+			case clientmodels.ClientTypeWeb:
+				if uat != useragentmodels.UserAgentTypeWeb {
+					return errors.NewError(errors.ErrorCodeInvalidOperation, fmt.Sprintf("invalid user agent type (%s)", uat))
+				}
+
+				if exists, err = m.webSessionStore.Exists(opCtx, userId, clientId, userAgentId); err != nil {
+					return fmt.Errorf("[manager.UserSessionManager.Exists] user's web session exists: %w", err)
+				}
+			case clientmodels.ClientTypeMobile:
+				if uat != useragentmodels.UserAgentTypeMobile {
+					return errors.NewError(errors.ErrorCodeInvalidOperation, fmt.Sprintf("invalid user agent type (%s)", uat))
+				}
+
+				if exists, err = m.mobileSessionStore.Exists(opCtx, userId, clientId, userAgentId); err != nil {
+					return fmt.Errorf("[manager.UserSessionManager.Exists] user's mobile session exists: %w", err)
+				}
+			default:
+				return fmt.Errorf("[manager.UserSessionManager.Exists] '%s' client type isn't supported", ct)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return false, fmt.Errorf("[manager.UserSessionManager.Exists] execute an operation: %w", err)
+	}
+	return exists, nil
+}
+
 // GetTypeById gets a user's session type by the specified user session ID.
 func (m *UserSessionManager) GetTypeById(id uint64) (models.UserSessionType, error) {
 	t := models.UserSessionType(byte(id))
