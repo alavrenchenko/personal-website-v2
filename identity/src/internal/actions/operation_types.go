@@ -115,12 +115,23 @@ const (
 	OperationTypeUserSessionManager_GetStatusById               actions.OperationType = 14515
 
 	// UserAgentSessionManager operation types (15000-15499).
-	OperationTypeUserAgentSessionManager_CreateAndStart              actions.OperationType = 15000
-	OperationTypeUserAgentSessionManager_CreateAndStartWebSession    actions.OperationType = 15001
-	OperationTypeUserAgentSessionManager_CreateAndStartMobileSession actions.OperationType = 15002
-	OperationTypeUserAgentSessionManager_Terminate                   actions.OperationType = 15003
-	OperationTypeUserAgentSessionManager_FindById                    actions.OperationType = 15004
-	OperationTypeUserAgentSessionManager_GetStatusById               actions.OperationType = 15005
+	OperationTypeUserAgentSessionManager_Create                      actions.OperationType = 15000
+	OperationTypeUserAgentSessionManager_CreateWebSession            actions.OperationType = 15001
+	OperationTypeUserAgentSessionManager_CreateMobileSession         actions.OperationType = 15002
+	OperationTypeUserAgentSessionManager_Start                       actions.OperationType = 15003
+	OperationTypeUserAgentSessionManager_CreateAndStart              actions.OperationType = 15004
+	OperationTypeUserAgentSessionManager_CreateAndStartWebSession    actions.OperationType = 15005
+	OperationTypeUserAgentSessionManager_CreateAndStartMobileSession actions.OperationType = 15006
+	OperationTypeUserAgentSessionManager_SignOut                     actions.OperationType = 15007
+	OperationTypeUserAgentSessionManager_Terminate                   actions.OperationType = 15008
+	OperationTypeUserAgentSessionManager_Delete                      actions.OperationType = 15009
+	OperationTypeUserAgentSessionManager_FindById                    actions.OperationType = 15010
+	OperationTypeUserAgentSessionManager_FindByUserIdAndClientId     actions.OperationType = 15011
+	OperationTypeUserAgentSessionManager_FindByUserAgentId           actions.OperationType = 15012
+	OperationTypeUserAgentSessionManager_GetAllByUserId              actions.OperationType = 15013
+	OperationTypeUserAgentSessionManager_GetAllByClientId            actions.OperationType = 15014
+	OperationTypeUserAgentSessionManager_Exists                      actions.OperationType = 15015
+	OperationTypeUserAgentSessionManager_GetStatusById               actions.OperationType = 15016
 
 	// AuthenticationManager operation types (15500-15999).
 	OperationTypeAuthenticationManager_CreateUserToken    actions.OperationType = 15500
@@ -381,22 +392,52 @@ const (
 	OperationTypeUserMobileSessionStore_GetStatusById             actions.OperationType = 35012
 
 	// UserAgentSessionStore operation types (35200-35399).
-	OperationTypeUserAgentSessionStore_CreateAndStart actions.OperationType = 35200
-	OperationTypeUserAgentSessionStore_Terminate      actions.OperationType = 35201
-	OperationTypeUserAgentSessionStore_FindById       actions.OperationType = 35202
-	OperationTypeUserAgentSessionStore_GetStatusById  actions.OperationType = 35203
+	OperationTypeUserAgentSessionStore_Create                  actions.OperationType = 35200
+	OperationTypeUserAgentSessionStore_Start                   actions.OperationType = 35201
+	OperationTypeUserAgentSessionStore_CreateAndStart          actions.OperationType = 35202
+	OperationTypeUserAgentSessionStore_SignOut                 actions.OperationType = 35203
+	OperationTypeUserAgentSessionStore_Terminate               actions.OperationType = 35204
+	OperationTypeUserAgentSessionStore_StartDeleting           actions.OperationType = 35205
+	OperationTypeUserAgentSessionStore_Delete                  actions.OperationType = 35206
+	OperationTypeUserAgentSessionStore_FindById                actions.OperationType = 35207
+	OperationTypeUserAgentSessionStore_FindByUserIdAndClientId actions.OperationType = 35208
+	OperationTypeUserAgentSessionStore_FindByUserAgentId       actions.OperationType = 35209
+	OperationTypeUserAgentSessionStore_GetAllByUserId          actions.OperationType = 35210
+	OperationTypeUserAgentSessionStore_GetAllByClientId        actions.OperationType = 35211
+	OperationTypeUserAgentSessionStore_Exists                  actions.OperationType = 35212
+	OperationTypeUserAgentSessionStore_GetStatusById           actions.OperationType = 35213
 
 	// WebUserAgentSessionStore operation types (35400-35599).
-	OperationTypeWebUserAgentSessionStore_CreateAndStart actions.OperationType = 35400
-	OperationTypeWebUserAgentSessionStore_Terminate      actions.OperationType = 35401
-	OperationTypeWebUserAgentSessionStore_FindById       actions.OperationType = 35402
-	OperationTypeWebUserAgentSessionStore_GetStatusById  actions.OperationType = 35403
+	OperationTypeWebUserAgentSessionStore_Create                  actions.OperationType = 35400
+	OperationTypeWebUserAgentSessionStore_Start                   actions.OperationType = 35401
+	OperationTypeWebUserAgentSessionStore_CreateAndStart          actions.OperationType = 35402
+	OperationTypeWebUserAgentSessionStore_SignOut                 actions.OperationType = 35403
+	OperationTypeWebUserAgentSessionStore_Terminate               actions.OperationType = 35404
+	OperationTypeWebUserAgentSessionStore_StartDeleting           actions.OperationType = 35405
+	OperationTypeWebUserAgentSessionStore_Delete                  actions.OperationType = 35406
+	OperationTypeWebUserAgentSessionStore_FindById                actions.OperationType = 35407
+	OperationTypeWebUserAgentSessionStore_FindByUserIdAndClientId actions.OperationType = 35408
+	OperationTypeWebUserAgentSessionStore_FindByUserAgentId       actions.OperationType = 35409
+	OperationTypeWebUserAgentSessionStore_GetAllByUserId          actions.OperationType = 35410
+	OperationTypeWebUserAgentSessionStore_GetAllByClientId        actions.OperationType = 35411
+	OperationTypeWebUserAgentSessionStore_Exists                  actions.OperationType = 35412
+	OperationTypeWebUserAgentSessionStore_GetStatusById           actions.OperationType = 35413
 
 	// MobileUserAgentSessionStore operation types (35600-35799).
-	OperationTypeMobileUserAgentSessionStore_CreateAndStart actions.OperationType = 35600
-	OperationTypeMobileUserAgentSessionStore_Terminate      actions.OperationType = 35601
-	OperationTypeMobileUserAgentSessionStore_FindById       actions.OperationType = 35602
-	OperationTypeMobileUserAgentSessionStore_GetStatusById  actions.OperationType = 35603
+	OperationTypeMobileUserAgentSessionStore_Create                  actions.OperationType = 35600
+	OperationTypeMobileUserAgentSessionStore_Start                   actions.OperationType = 35601
+	OperationTypeMobileUserAgentSessionStore_CreateAndStart          actions.OperationType = 35602
+	OperationTypeMobileUserAgentSessionStore_SignOut                 actions.OperationType = 35603
+	OperationTypeMobileUserAgentSessionStore_Terminate               actions.OperationType = 35604
+	OperationTypeMobileUserAgentSessionStore_StartDeleting           actions.OperationType = 35605
+	OperationTypeMobileUserAgentSessionStore_Delete                  actions.OperationType = 35606
+	OperationTypeMobileUserAgentSessionStore_FindById                actions.OperationType = 35607
+	OperationTypeMobileUserAgentSessionStore_FindByUserIdAndClientId actions.OperationType = 35608
+	OperationTypeMobileUserAgentSessionStore_FindByUserAgentId       actions.OperationType = 35609
+	OperationTypeMobileUserAgentSessionStore_GetAllByUserId          actions.OperationType = 35610
+	OperationTypeMobileUserAgentSessionStore_GetAllByClientId        actions.OperationType = 35611
+	OperationTypeMobileUserAgentSessionStore_Exists                  actions.OperationType = 35612
+	OperationTypeMobileUserAgentSessionStore_GetStatusById           actions.OperationType = 35613
 
 	// AuthenticationStore operation types (35800-35999).
 
