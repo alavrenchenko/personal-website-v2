@@ -39,7 +39,7 @@ User agent session statuses:
 Error codes:
     NoError                       = 0
     InvalidOperation              = 3
-    UserAgentNotFound             = 11400
+    UserAgentNotFound             = 12200
     UserAgentSessionAlreadyExists = 12602
 */
 -- Minimum transaction isolation level: Read committed.
@@ -64,7 +64,7 @@ BEGIN
 
     SELECT status INTO _status FROM public.user_agents WHERE id = _user_agent_id LIMIT 1 FOR UPDATE;
     IF NOT FOUND THEN
-        err_code := 11400; -- UserAgentNotFound
+        err_code := 12200; -- UserAgentNotFound
         err_msg := 'user agent not found';
         RETURN;
     END IF;
@@ -116,7 +116,7 @@ User agent session statuses:
 Error codes:
     NoError                  = 0
     InvalidOperation         = 3
-    UserAgentNotFound        = 11400
+    UserAgentNotFound        = 12200
     UserAgentSessionNotFound = 12600
 */
 -- Minimum transaction isolation level: Read committed.
@@ -154,7 +154,7 @@ BEGIN
 
     SELECT status, first_sign_in_time INTO _ua_status, _ua_first_sign_in_time FROM public.user_agents WHERE id = _ua_id LIMIT 1 FOR UPDATE;
     IF NOT FOUND THEN
-        err_code := 11400; -- UserAgentNotFound
+        err_code := 12200; -- UserAgentNotFound
         err_msg := 'user agent not found';
         RETURN;
     END IF;
