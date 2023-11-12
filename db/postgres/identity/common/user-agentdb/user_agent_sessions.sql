@@ -31,16 +31,18 @@ $$ LANGUAGE plpgsql;
 -- PROCEDURE: public.create_and_start_user_agent_session(bigint, bigint, bigint, bigint, bigint, text, character varying)
 /*
 User agent statuses:
-    Active = 2
+    Active = 3
 
 User agent session statuses:
     Active = 2
 
 Error codes:
-    NoError           = 0
-    InvalidOperation  = 3
-    UserAgentNotFound = 11400
+    NoError                       = 0
+    InvalidOperation              = 3
+    UserAgentNotFound             = 11400
+    UserAgentSessionAlreadyExists = 12602
 */
+-- Minimum transaction isolation level: Read committed.
 CREATE OR REPLACE PROCEDURE public.create_and_start_user_agent_session(
     IN _user_id public.user_agent_sessions.user_id%TYPE,
     IN _client_id public.user_agent_sessions.client_id%TYPE,
@@ -67,10 +69,16 @@ BEGIN
         RETURN;
     END IF;
 
-    -- user agent status: Active(2)
-    IF _status <> 2 THEN
+    -- user agent status: Active(3)
+    IF _status <> 3 THEN
         err_code := 3; -- InvalidOperation
         err_msg := format('invalid user agent status (%s)', _status);
+        RETURN;
+    END IF;
+
+    IF public.user_agent_session_exists(_user_id, _client_id, _user_agent_id) THEN
+        err_code := 12602; -- UserAgentSessionAlreadyExists
+        err_msg := 'user agent session with the same params already exists';
         RETURN;
     END IF;
 
@@ -82,6 +90,15 @@ BEGIN
         VALUES (_user_id, _client_id, _user_agent_id, user_session_id, _time, _created_by, _time, _created_by, 2, _time, _created_by, _status_comment,
             _time, _ip, _time, _ip, _time, _ip, 1, _time)
         RETURNING id INTO _id;
+
+    EXCEPTION
+        WHEN unique_violation THEN
+            IF public.user_agent_session_exists(_user_id, _client_id, _user_agent_id) THEN
+                err_code := 12602; -- UserAgentSessionAlreadyExists
+                err_msg := 'user agent session with the same params already exists';
+                RETURN;
+            END IF;
+            RAISE;
 END;
 $$ LANGUAGE plpgsql;
 
