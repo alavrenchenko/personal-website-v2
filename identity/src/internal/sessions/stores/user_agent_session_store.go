@@ -41,7 +41,6 @@ const (
 	opTypeUserAgentSessionStore_Create = iota
 	opTypeUserAgentSessionStore_Start
 	opTypeUserAgentSessionStore_CreateAndStart
-	opTypeUserAgentSessionStore_SignOut
 	opTypeUserAgentSessionStore_Terminate
 	opTypeUserAgentSessionStore_StartDeleting
 	opTypeUserAgentSessionStore_Delete
@@ -58,7 +57,6 @@ var webUserAgentSessionStoreOpTypes = []actions.OperationType{
 	opTypeUserAgentSessionStore_Create:                  iactions.OperationTypeWebUserAgentSessionStore_Create,
 	opTypeUserAgentSessionStore_Start:                   iactions.OperationTypeWebUserAgentSessionStore_Start,
 	opTypeUserAgentSessionStore_CreateAndStart:          iactions.OperationTypeWebUserAgentSessionStore_CreateAndStart,
-	opTypeUserAgentSessionStore_SignOut:                 iactions.OperationTypeWebUserAgentSessionStore_SignOut,
 	opTypeUserAgentSessionStore_Terminate:               iactions.OperationTypeWebUserAgentSessionStore_Terminate,
 	opTypeUserAgentSessionStore_StartDeleting:           iactions.OperationTypeWebUserAgentSessionStore_StartDeleting,
 	opTypeUserAgentSessionStore_Delete:                  iactions.OperationTypeWebUserAgentSessionStore_Delete,
@@ -75,7 +73,6 @@ var mobileUserAgentSessionStoreOpTypes = []actions.OperationType{
 	opTypeUserAgentSessionStore_Create:                  iactions.OperationTypeMobileUserAgentSessionStore_Create,
 	opTypeUserAgentSessionStore_Start:                   iactions.OperationTypeMobileUserAgentSessionStore_Start,
 	opTypeUserAgentSessionStore_CreateAndStart:          iactions.OperationTypeMobileUserAgentSessionStore_CreateAndStart,
-	opTypeUserAgentSessionStore_SignOut:                 iactions.OperationTypeMobileUserAgentSessionStore_SignOut,
 	opTypeUserAgentSessionStore_Terminate:               iactions.OperationTypeMobileUserAgentSessionStore_Terminate,
 	opTypeUserAgentSessionStore_StartDeleting:           iactions.OperationTypeMobileUserAgentSessionStore_StartDeleting,
 	opTypeUserAgentSessionStore_Delete:                  iactions.OperationTypeMobileUserAgentSessionStore_Delete,
