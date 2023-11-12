@@ -187,34 +187,45 @@ func (s *UserAgentSessionStore) CreateAndStart(ctx *actions.OperationContext, da
 }
 
 // Terminate terminates a user agent session by the specified user agent session ID.
-func (s *UserAgentSessionStore) Terminate(ctx *actions.OperationContext, id uint64) error {
-	err := s.opExecutor.Exec(ctx, s.opTypes[opTypeUserAgentSessionStore_Terminate], []*actions.OperationParam{actions.NewOperationParam("id", id)},
+// If signOut is true, then the user agent session is terminated with the status 'SignedOut',
+// otherwise with the status 'Ended'.
+func (s *UserAgentSessionStore) Terminate(ctx *actions.OperationContext, id uint64, signOut bool) error {
+	err := s.opExecutor.Exec(ctx, s.opTypes[opTypeUserAgentSessionStore_Terminate],
+		[]*actions.OperationParam{actions.NewOperationParam("id", id), actions.NewOperationParam("signOut", signOut)},
 		func(opCtx *actions.OperationContext) error {
-			var errCode dberrors.DbErrorCode
-			var errMsg string
-			// public.terminate_user_agent_session(IN _id, IN _updated_by, IN _status_comment, OUT err_code, OUT err_msg)
-			const query = "CALL public.terminate_user_agent_session($1, $2, 'termination', NULL, NULL)"
+			err := s.txManager.ExecWithReadCommittedLevel(opCtx.Ctx, func(txCtx context.Context, tx pgx.Tx) error {
+				var errCode dberrors.DbErrorCode
+				var errMsg string
+				// PROCEDURE: public.terminate_user_agent_session(IN _id, IN _sign_out, IN _updated_by, IN _status_comment, OUT err_code, OUT err_msg)
+				// Minimum transaction isolation level: Read committed.
+				const query = "CALL public.terminate_user_agent_session($1, $2, $3, $4, NULL, NULL)"
 
-			err := s.txManager.ExecWithSerializableLevel(opCtx.Ctx, func(txCtx context.Context, tx pgx.Tx) error {
-				if err := tx.QueryRow(txCtx, query, id, opCtx.UserId.Value).Scan(&errCode, &errMsg); err != nil {
+				var sc string
+				if signOut {
+					sc = "sign-out"
+				} else {
+					sc = "termination"
+				}
+
+				if err := tx.QueryRow(txCtx, query, id, signOut, opCtx.UserId.Value, sc).Scan(&errCode, &errMsg); err != nil {
 					return fmt.Errorf("[stores.UserAgentSessionStore.Terminate] execute a query (terminate_user_agent_session): %w", err)
 				}
-				return nil
+
+				switch errCode {
+				case dberrors.DbErrorCodeNoError:
+					return nil
+				case dberrors.DbErrorCodeInvalidOperation:
+					return errs.NewError(errs.ErrorCodeInvalidOperation, errMsg)
+				case idberrors.DbErrorCodeUserAgentSessionNotFound:
+					return ierrors.ErrUserAgentSessionNotFound
+				}
+				// unknown error
+				return fmt.Errorf("[stores.UserAgentSessionStore.Terminate] invalid operation: %w", dberrors.NewDbError(errCode, errMsg))
 			})
 			if err != nil {
-				return fmt.Errorf("[stores.UserAgentSessionStore.Terminate] execute a transaction with the 'serializable' isolation level: %w", err)
+				return fmt.Errorf("[stores.UserAgentSessionStore.Terminate] execute a transaction: %w", err)
 			}
-
-			switch errCode {
-			case dberrors.DbErrorCodeNoError:
-				return nil
-			case idberrors.DbErrorCodeUserAgentSessionNotFound:
-				return ierrors.ErrUserAgentSessionNotFound
-			case dberrors.DbErrorCodeInvalidOperation:
-				return errs.NewError(errs.ErrorCodeInvalidOperation, errMsg)
-			}
-			// unknown error
-			return fmt.Errorf("[stores.UserAgentSessionStore.Terminate] invalid operation: %w", dberrors.NewDbError(errCode, errMsg))
+			return nil
 		},
 	)
 	if err != nil {

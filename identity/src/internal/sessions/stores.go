@@ -64,7 +64,9 @@ type UserAgentSessionStore interface {
 	CreateAndStart(ctx *actions.OperationContext, data *useragentsessions.CreateAndStartOperationData) (uint64, error)
 
 	// Terminate terminates a user agent session by the specified user agent session ID.
-	Terminate(ctx *actions.OperationContext, id uint64) error
+	// If signOut is true, then the user agent session is terminated with the status 'SignedOut',
+	// otherwise with the status 'Ended'.
+	Terminate(ctx *actions.OperationContext, id uint64, signOut bool) error
 
 	// FindById finds and returns user agent session info, if any, by the specified user agent session ID.
 	FindById(ctx *actions.OperationContext, id uint64) (*dbmodels.UserAgentSessionInfo, error)

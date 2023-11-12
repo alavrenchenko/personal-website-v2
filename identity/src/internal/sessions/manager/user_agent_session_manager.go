@@ -167,9 +167,11 @@ func (m *UserAgentSessionManager) CreateAndStartMobileSession(ctx *actions.Opera
 }
 
 // Terminate terminates a user agent session by the specified user agent session ID.
-func (m *UserAgentSessionManager) Terminate(ctx *actions.OperationContext, id uint64) error {
+// If signOut is true, then the user agent session is terminated with the status 'SignedOut',
+// otherwise with the status 'Ended'.
+func (m *UserAgentSessionManager) Terminate(ctx *actions.OperationContext, id uint64, signOut bool) error {
 	err := m.opExecutor.Exec(ctx, iactions.OperationTypeUserAgentSessionManager_Terminate,
-		[]*actions.OperationParam{actions.NewOperationParam("id", id)},
+		[]*actions.OperationParam{actions.NewOperationParam("id", id), actions.NewOperationParam("signOut", signOut)},
 		func(opCtx *actions.OperationContext) error {
 			t, err := m.GetTypeById(id)
 			if err != nil {
@@ -178,11 +180,11 @@ func (m *UserAgentSessionManager) Terminate(ctx *actions.OperationContext, id ui
 
 			switch t {
 			case models.UserAgentSessionTypeWeb:
-				if err := m.webSessionStore.Terminate(opCtx, id); err != nil {
+				if err := m.webSessionStore.Terminate(opCtx, id, signOut); err != nil {
 					return fmt.Errorf("[manager.UserAgentSessionManager.Terminate] terminate a web session of the user agent: %w", err)
 				}
 			case models.UserAgentSessionTypeMobile:
-				if err := m.mobileSessionStore.Terminate(opCtx, id); err != nil {
+				if err := m.mobileSessionStore.Terminate(opCtx, id, signOut); err != nil {
 					return fmt.Errorf("[manager.UserAgentSessionManager.Terminate] terminate a mobile session of the user agent: %w", err)
 				}
 			default:
