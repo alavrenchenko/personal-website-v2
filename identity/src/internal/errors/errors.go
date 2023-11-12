@@ -67,8 +67,9 @@ const (
 	ErrorCodeUserSessionAlreadyExists errors.ErrorCode = 32402
 
 	// User agent session error codes (32600-32799).
-	ErrorCodeUserAgentSessionNotFound  errors.ErrorCode = 32600
-	ErrorCodeInvalidUserAgentSessionId errors.ErrorCode = 32601
+	ErrorCodeUserAgentSessionNotFound      errors.ErrorCode = 32600
+	ErrorCodeInvalidUserAgentSessionId     errors.ErrorCode = 32601
+	ErrorCodeUserAgentSessionAlreadyExists errors.ErrorCode = 32602
 
 	// Authentication error codes (32800-32999).
 	ErrorCodeInvalidAuthToken       errors.ErrorCode = 32800
@@ -135,8 +136,9 @@ var (
 	ErrUserSessionAlreadyExists = errors.NewError(ErrorCodeUserSessionAlreadyExists, "user's session with the same params already exists")
 
 	// User agent session errors.
-	ErrUserAgentSessionNotFound  = errors.NewError(ErrorCodeUserAgentSessionNotFound, "user agent session not found")
-	ErrInvalidUserAgentSessionId = errors.NewError(ErrorCodeInvalidUserAgentSessionId, "invalid user agent session id")
+	ErrUserAgentSessionNotFound      = errors.NewError(ErrorCodeUserAgentSessionNotFound, "user agent session not found")
+	ErrInvalidUserAgentSessionId     = errors.NewError(ErrorCodeInvalidUserAgentSessionId, "invalid user agent session id")
+	ErrUserAgentSessionAlreadyExists = errors.NewError(ErrorCodeUserAgentSessionAlreadyExists, "user agent session with the same params already exists")
 
 	// Authentication errors.
 	ErrInvalidAuthToken       = errors.NewError(ErrorCodeInvalidAuthToken, "invalid authentication token")

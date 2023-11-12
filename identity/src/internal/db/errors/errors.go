@@ -72,8 +72,9 @@ const (
 	DbErrorCodeUserSessionAlreadyExists errors.DbErrorCode = 12402
 
 	// User agent session error codes (12600-12799).
-	DbErrorCodeUserAgentSessionNotFound  errors.DbErrorCode = 12600
-	DbErrorCodeInvalidUserAgentSessionId errors.DbErrorCode = 12601
+	DbErrorCodeUserAgentSessionNotFound      errors.DbErrorCode = 12600
+	DbErrorCodeInvalidUserAgentSessionId     errors.DbErrorCode = 12601
+	DbErrorCodeUserAgentSessionAlreadyExists errors.DbErrorCode = 12602
 
 	// Authentication error codes (12800-12999).
 	// Authorization error codes (13000-13199).
