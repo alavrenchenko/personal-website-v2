@@ -211,6 +211,7 @@ Error codes:
     InvalidOperation         = 3
     UserAgentSessionNotFound = 12600
 */
+-- Minimum transaction isolation level: Read committed.
 CREATE OR REPLACE PROCEDURE public.terminate_user_agent_session(
     IN _id public.user_agent_sessions.id%TYPE,
     IN _sign_out boolean,
