@@ -213,7 +213,7 @@ Error codes:
 */
 CREATE OR REPLACE PROCEDURE public.terminate_user_agent_session(
     IN _id public.user_agent_sessions.id%TYPE,
-    IN _signed_out boolean,
+    IN _sign_out boolean,
     IN _updated_by public.user_agent_sessions.updated_by%TYPE,
     IN _status_comment public.user_agent_sessions.status_comment%TYPE,
     OUT err_code bigint,
@@ -239,7 +239,7 @@ BEGIN
         RETURN;
     END IF;
 
-    IF _signed_out THEN
+    IF _sign_out THEN
         -- user agent session status: SignedOut(3)
         _status := 3;
     ELSE
