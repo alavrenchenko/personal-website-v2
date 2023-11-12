@@ -102,6 +102,103 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- PROCEDURE: public.start_user_agent_session(bigint, bigint, text, character varying, bigint)
+/*
+User agent statuses:
+    Active = 3
+
+User agent session statuses:
+    New       = 1
+    Active    = 2
+    SignedOut = 3
+    Ended     = 4
+
+Error codes:
+    NoError                  = 0
+    InvalidOperation         = 3
+    UserAgentNotFound        = 11400
+    UserAgentSessionNotFound = 12600
+*/
+-- Minimum transaction isolation level: Read committed.
+CREATE OR REPLACE PROCEDURE public.start_user_agent_session(
+    IN _id public.user_agent_sessions.id%TYPE,
+    IN _user_session_id public.user_agent_sessions.user_session_id%TYPE,
+    IN _status_comment public.user_agent_sessions.status_comment%TYPE,
+    IN _ip public.user_agent_sessions.last_sign_in_ip%TYPE,
+    IN _operation_user_id public.user_agent_sessions.updated_by%TYPE,
+    OUT err_code bigint,
+    OUT err_msg text) AS $$
+DECLARE
+    _time timestamp(6) without time zone;
+    _ua_id public.user_agents.id%TYPE;
+    _uas_status public.user_agent_sessions.status%TYPE;
+    _ua_status public.user_agents.status%TYPE;
+    _ua_first_sign_in_time public.user_agents.status%TYPE;
+BEGIN
+    err_code := 0; -- NoError
+    err_msg := '';
+
+    SELECT user_agent_id, status INTO _ua_id, _uas_status FROM public.user_agent_sessions WHERE id = _id LIMIT 1 FOR UPDATE;
+    IF NOT FOUND THEN
+        err_code := 12600; -- UserAgentSessionNotFound
+        err_msg := 'user agent session not found';
+        RETURN;
+    END IF;
+
+    -- user agent session status: New(1), SignedOut(3), Ended(4)
+    IF _uas_status <> 1 AND _uas_status <> 3 AND _uas_status <> 4 THEN
+        err_code := 3; -- InvalidOperation
+        err_msg := format('invalid user agent session status (%s)', _uas_status);
+        RETURN;
+    END IF;
+
+    SELECT status, first_sign_in_time INTO _ua_status, _ua_first_sign_in_time FROM public.user_agents WHERE id = _ua_id LIMIT 1 FOR UPDATE;
+    IF NOT FOUND THEN
+        err_code := 11400; -- UserAgentNotFound
+        err_msg := 'user agent not found';
+        RETURN;
+    END IF;
+
+    -- user agent status: Active(3)
+    IF _status <> 3 THEN
+        err_code := 3; -- InvalidOperation
+        err_msg := format('invalid user agent status (%s)', _status);
+        RETURN;
+    END IF;
+
+    _time := (clock_timestamp() AT TIME ZONE 'UTC');
+    -- user agent session status: New(1)
+    IF _uas_status = 1 THEN
+        -- user agent session status: Active(2)
+        UPDATE public.user_agent_sessions
+            SET user_session_id = _user_session_id, updated_at = _time, updated_by = _operation_user_id, status = 2, status_updated_at = _time,
+                status_updated_by = _operation_user_id, status_comment = _status_comment, first_sign_in_time = _time, first_sign_in_ip = _ip,
+                last_sign_in_time = _time, last_sign_in_ip = _ip, last_activity_time = _time, last_activity_ip = _ip,
+                _version_stamp = _version_stamp + 1, _timestamp = _time
+            WHERE id = _id;
+    ELSE
+        -- user agent session status: Active(2)
+        UPDATE public.user_agent_sessions
+            SET user_session_id = _user_session_id, updated_at = _time, updated_by = _operation_user_id, status = 2, status_updated_at = _time,
+                status_updated_by = _operation_user_id, status_comment = _status_comment, last_sign_in_time = _time, last_sign_in_ip = _ip,
+                last_activity_time = _time, last_activity_ip = _ip, _version_stamp = _version_stamp + 1, _timestamp = _time
+            WHERE id = _id;
+    END IF;
+
+    IF _ua_first_sign_in_time IS NOT NULL THEN
+        UPDATE public.user_agents
+            SET updated_at = _time, updated_by = _operation_user_id, last_sign_in_time = _time, last_sign_in_ip = _ip, last_activity_time = _time,
+                last_activity_ip = _ip, _version_stamp = _version_stamp + 1, _timestamp = _time
+            WHERE id = _ua_id;
+    ELSE
+        UPDATE public.user_agents
+            SET updated_at = _time, updated_by = _operation_user_id, first_sign_in_time = _time, first_sign_in_ip = _ip, last_sign_in_time = _time,
+                last_sign_in_ip = _ip, last_activity_time = _time, last_activity_ip = _ip, _version_stamp = _version_stamp + 1, _timestamp = _time
+            WHERE id = _ua_id;
+    END IF;
+END;
+$$ LANGUAGE plpgsql;
+
 -- PROCEDURE: public.terminate_user_agent_session(bigint, bigint, text)
 /*
 User agent session statuses:
