@@ -199,13 +199,12 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- PROCEDURE: public.terminate_user_agent_session(bigint, bigint, text)
+-- PROCEDURE: public.terminate_user_agent_session(bigint, boolean, bigint, text)
 /*
 User agent session statuses:
-    Active               = 2
-    Ended                = 4
-    LockedOut            = 5
-    TemporarilyLockedOut = 6
+    Active    = 2
+    SignedOut = 3
+    Ended     = 4
 
 Error codes:
     NoError                  = 0
@@ -214,6 +213,7 @@ Error codes:
 */
 CREATE OR REPLACE PROCEDURE public.terminate_user_agent_session(
     IN _id public.user_agent_sessions.id%TYPE,
+    IN _signed_out boolean,
     IN _updated_by public.user_agent_sessions.updated_by%TYPE,
     IN _status_comment public.user_agent_sessions.status_comment%TYPE,
     OUT err_code bigint,
@@ -232,17 +232,24 @@ BEGIN
         RETURN;
     END IF;
 
-    -- user agent session statuses: Active(2), LockedOut(5), TemporarilyLockedOut(6)
-    IF _status <> 2 AND _status <> 5 AND _status <> 6 THEN
+    -- user agent session status: Active(2)
+    IF _status <> 2 THEN
         err_code := 3; -- InvalidOperation
         err_msg := format('invalid user agent session status (%s)', _status);
         RETURN;
     END IF;
 
+    IF _signed_out THEN
+        -- user agent session status: SignedOut(3)
+        _status := 3;
+    ELSE
+        -- user agent session status: Ended(4)
+        _status := 4;
+    END IF;
+
     _time := (clock_timestamp() AT TIME ZONE 'UTC');
-    -- user agent session status: Ended(4)
     UPDATE public.user_agent_sessions
-        SET updated_at = _time, updated_by = _updated_by, status = 4, status_updated_at = _time, status_updated_by = _updated_by,
+        SET updated_at = _time, updated_by = _updated_by, status = _status, status_updated_at = _time, status_updated_by = _updated_by,
             status_comment = _status_comment, _version_stamp = _version_stamp + 1, _timestamp = _time
         WHERE id = _id;
 END;
