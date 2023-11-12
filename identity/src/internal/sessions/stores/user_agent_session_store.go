@@ -148,34 +148,36 @@ func (s *UserAgentSessionStore) CreateAndStart(ctx *actions.OperationContext, da
 	var id uint64
 	err := s.opExecutor.Exec(ctx, s.opTypes[opTypeUserAgentSessionStore_CreateAndStart], []*actions.OperationParam{actions.NewOperationParam("data", data)},
 		func(opCtx *actions.OperationContext) error {
-			var errCode dberrors.DbErrorCode
-			var errMsg string
-			// public.create_and_start_user_agent_session(IN _user_id, IN _client_id, IN _user_agent_id, IN _user_session_id, IN _created_by,
-			// IN _status_comment, IN _ip, OUT _id, OUT err_code, OUT err_msg)
-			const query = "CALL public.create_and_start_user_agent_session($1, $2, $3, $4, $5, NULL, $6, NULL, NULL, NULL)"
-
-			err := s.txManager.ExecWithSerializableLevel(opCtx.Ctx, func(txCtx context.Context, tx pgx.Tx) error {
+			err := s.txManager.ExecWithReadCommittedLevel(opCtx.Ctx, func(txCtx context.Context, tx pgx.Tx) error {
+				var errCode dberrors.DbErrorCode
+				var errMsg string
+				// PROCEDURE: public.create_and_start_user_agent_session(IN _user_id, IN _client_id, IN _user_agent_id, IN _user_session_id, IN _created_by,
+				// IN _status_comment, IN _ip, OUT _id, OUT err_code, OUT err_msg)
+				// Minimum transaction isolation level: Read committed.
+				const query = "CALL public.create_and_start_user_agent_session($1, $2, $3, $4, $5, NULL, $6, NULL, NULL, NULL)"
 				r := tx.QueryRow(txCtx, query, data.UserId, data.ClientId, data.UserAgentId, data.UserSessionId, opCtx.UserId.Value, data.IP)
 
 				if err := r.Scan(&id, &errCode, &errMsg); err != nil {
 					return fmt.Errorf("[stores.UserAgentSessionStore.CreateAndStart] execute a query (create_and_start_user_agent_session): %w", err)
 				}
-				return nil
+
+				switch errCode {
+				case dberrors.DbErrorCodeNoError:
+					return nil
+				case dberrors.DbErrorCodeInvalidOperation:
+					return errs.NewError(errs.ErrorCodeInvalidOperation, errMsg)
+				case idberrors.DbErrorCodeUserAgentNotFound:
+					return ierrors.ErrUserAgentNotFound
+				case idberrors.DbErrorCodeUserAgentSessionAlreadyExists:
+					return ierrors.ErrUserAgentSessionAlreadyExists
+				}
+				// unknown error
+				return fmt.Errorf("[stores.UserAgentSessionStore.CreateAndStart] invalid operation: %w", dberrors.NewDbError(errCode, errMsg))
 			})
 			if err != nil {
-				return fmt.Errorf("[stores.UserAgentSessionStore.CreateAndStart] execute a transaction with the 'serializable' isolation level: %w", err)
+				return fmt.Errorf("[stores.UserAgentSessionStore.CreateAndStart] execute a transaction: %w", err)
 			}
-
-			switch errCode {
-			case dberrors.DbErrorCodeNoError:
-				return nil
-			case idberrors.DbErrorCodeUserAgentNotFound:
-				return ierrors.ErrUserAgentNotFound
-			case dberrors.DbErrorCodeInvalidOperation:
-				return errs.NewError(errs.ErrorCodeInvalidOperation, errMsg)
-			}
-			// unknown error
-			return fmt.Errorf("[stores.UserAgentSessionStore.CreateAndStart] invalid operation: %w", dberrors.NewDbError(errCode, errMsg))
+			return nil
 		},
 	)
 	if err != nil {
