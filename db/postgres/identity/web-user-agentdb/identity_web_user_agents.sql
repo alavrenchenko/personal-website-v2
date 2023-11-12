@@ -179,6 +179,10 @@ CREATE UNIQUE INDEX IF NOT EXISTS user_agent_sessions_user_agent_id_uidx
     ON public.user_agent_sessions (user_agent_id)
     WHERE status <> 9;
 
+CREATE UNIQUE INDEX IF NOT EXISTS user_agent_sessions_user_session_id_idx
+    ON public.user_agent_sessions (user_session_id)
+    WHERE status <> 1;
+
 CREATE INDEX IF NOT EXISTS user_agent_sessions_user_id_idx ON public.user_agent_sessions (user_id);
 CREATE INDEX IF NOT EXISTS user_agent_sessions_client_id_idx ON public.user_agent_sessions (client_id);
 CREATE INDEX IF NOT EXISTS user_agent_sessions_user_agent_id_idx ON public.user_agent_sessions (user_agent_id);
