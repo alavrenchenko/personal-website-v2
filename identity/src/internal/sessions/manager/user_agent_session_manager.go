@@ -40,6 +40,7 @@ type UserAgentSessionManager struct {
 	opExecutor         *actionhelper.OperationExecutor
 	clientManager      clients.ClientManager
 	userAgentManager   useragents.UserAgentManager
+	userSessionManager sessions.UserSessionManager
 	webSessionStore    sessions.UserAgentSessionStore
 	mobileSessionStore sessions.UserAgentSessionStore
 	logger             logging.Logger[*context.LogEntryContext]
@@ -50,6 +51,7 @@ var _ sessions.UserAgentSessionManager = (*UserAgentSessionManager)(nil)
 func NewUserAgentSessionManager(
 	clientManager clients.ClientManager,
 	userAgentManager useragents.UserAgentManager,
+	userSessionManager sessions.UserSessionManager,
 	webSessionStore sessions.UserAgentSessionStore,
 	mobileSessionStore sessions.UserAgentSessionStore,
 	loggerFactory logging.LoggerFactory[*context.LogEntryContext],
@@ -74,6 +76,7 @@ func NewUserAgentSessionManager(
 		opExecutor:         e,
 		clientManager:      clientManager,
 		userAgentManager:   userAgentManager,
+		userSessionManager: userSessionManager,
 		webSessionStore:    webSessionStore,
 		mobileSessionStore: mobileSessionStore,
 		logger:             l,
@@ -101,6 +104,12 @@ func (m *UserAgentSessionManager) CreateAndStartWebSession(ctx *actions.Operatio
 				return fmt.Errorf("[manager.UserAgentSessionManager.CreateAndStartWebSession] get a user agent type by id: %w", err)
 			} else if t != useragentmodels.UserAgentTypeWeb {
 				return errors.NewError(errors.ErrorCodeInvalidOperation, fmt.Sprintf("invalid user agent type (%s)", t))
+			}
+
+			if t, err := m.userSessionManager.GetTypeById(data.UserSessionId); err != nil {
+				return fmt.Errorf("[manager.UserAgentSessionManager.CreateAndStartWebSession] get a user's session type by id: %w", err)
+			} else if t != models.UserSessionTypeWeb {
+				return errors.NewError(errors.ErrorCodeInvalidOperation, fmt.Sprintf("invalid user session type (%s)", t))
 			}
 
 			var err error
@@ -144,6 +153,12 @@ func (m *UserAgentSessionManager) CreateAndStartMobileSession(ctx *actions.Opera
 				return fmt.Errorf("[manager.UserAgentSessionManager.CreateAndStartMobileSession] get a user agent type by id: %w", err)
 			} else if t != useragentmodels.UserAgentTypeMobile {
 				return errors.NewError(errors.ErrorCodeInvalidOperation, fmt.Sprintf("invalid user agent type (%s)", t))
+			}
+
+			if t, err := m.userSessionManager.GetTypeById(data.UserSessionId); err != nil {
+				return fmt.Errorf("[manager.UserAgentSessionManager.CreateAndStartMobileSession] get a user's session type by id: %w", err)
+			} else if t != models.UserSessionTypeMobile {
+				return errors.NewError(errors.ErrorCodeInvalidOperation, fmt.Sprintf("invalid user session type (%s)", t))
 			}
 
 			var err error
