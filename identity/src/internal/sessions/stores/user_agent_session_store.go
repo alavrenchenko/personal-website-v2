@@ -186,6 +186,51 @@ func (s *UserAgentSessionStore) CreateAndStart(ctx *actions.OperationContext, da
 	return id, nil
 }
 
+// Start starts a user agent session by the specified user agent session ID.
+//
+//	ip - the IP address (sign-in IP address).
+func (s *UserAgentSessionStore) Start(ctx *actions.OperationContext, id, userSessionId uint64, ip string) error {
+	err := s.opExecutor.Exec(ctx, s.opTypes[opTypeUserAgentSessionStore_Start],
+		[]*actions.OperationParam{actions.NewOperationParam("id", id), actions.NewOperationParam("userSessionId", userSessionId), actions.NewOperationParam("ip", ip)},
+		func(opCtx *actions.OperationContext) error {
+			err := s.txManager.ExecWithReadCommittedLevel(opCtx.Ctx, func(txCtx context.Context, tx pgx.Tx) error {
+				var errCode dberrors.DbErrorCode
+				var errMsg string
+				// PROCEDURE: public.start_user_agent_session(IN _id, IN _user_session_id, IN _status_comment, IN _ip, IN _operation_user_id,
+				// OUT err_code, OUT err_msg)
+				// Minimum transaction isolation level: Read committed.
+				const query = "CALL public.start_user_agent_session($1, $2, NULL, $3, $4, NULL, NULL)"
+				r := tx.QueryRow(txCtx, query, id, userSessionId, ip, opCtx.UserId.Value)
+
+				if err := r.Scan(&errCode, &errMsg); err != nil {
+					return fmt.Errorf("[stores.UserAgentSessionStore.Start] execute a query (start_user_agent_session): %w", err)
+				}
+
+				switch errCode {
+				case dberrors.DbErrorCodeNoError:
+					return nil
+				case dberrors.DbErrorCodeInvalidOperation:
+					return errs.NewError(errs.ErrorCodeInvalidOperation, errMsg)
+				case idberrors.DbErrorCodeUserAgentNotFound:
+					return ierrors.ErrUserAgentNotFound
+				case idberrors.DbErrorCodeUserAgentSessionNotFound:
+					return ierrors.ErrUserAgentSessionNotFound
+				}
+				// unknown error
+				return fmt.Errorf("[stores.UserAgentSessionStore.Start] invalid operation: %w", dberrors.NewDbError(errCode, errMsg))
+			})
+			if err != nil {
+				return fmt.Errorf("[stores.UserAgentSessionStore.Start] execute a transaction: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("[stores.UserAgentSessionStore.Start] execute an operation: %w", err)
+	}
+	return nil
+}
+
 // Terminate terminates a user agent session by the specified user agent session ID.
 // If signOut is true, then the user agent session is terminated with the status 'SignedOut',
 // otherwise with the status 'Ended'.

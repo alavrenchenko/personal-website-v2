@@ -29,6 +29,7 @@ import (
 	"personal-website-v2/identity/src/internal/useragents"
 	useragentmodels "personal-website-v2/identity/src/internal/useragents/models"
 	"personal-website-v2/pkg/actions"
+	"personal-website-v2/pkg/base/strings"
 	"personal-website-v2/pkg/errors"
 	actionhelper "personal-website-v2/pkg/helper/actions"
 	"personal-website-v2/pkg/logging"
@@ -179,6 +180,64 @@ func (m *UserAgentSessionManager) CreateAndStartMobileSession(ctx *actions.Opera
 		return 0, fmt.Errorf("[manager.UserAgentSessionManager.CreateAndStartMobileSession] execute an operation: %w", err)
 	}
 	return id, nil
+}
+
+// Start starts a user agent session by the specified user agent session ID.
+//
+//	ip - the IP address (sign-in IP address).
+func (m *UserAgentSessionManager) Start(ctx *actions.OperationContext, id, userSessionId uint64, ip string) error {
+	err := m.opExecutor.Exec(ctx, iactions.OperationTypeUserAgentSessionManager_Start,
+		[]*actions.OperationParam{actions.NewOperationParam("id", id), actions.NewOperationParam("userSessionId", userSessionId), actions.NewOperationParam("ip", ip)},
+		func(opCtx *actions.OperationContext) error {
+			if strings.IsEmptyOrWhitespace(ip) {
+				return errors.NewError(errors.ErrorCodeInvalidData, "ip is empty")
+			}
+
+			uast, err := m.GetTypeById(id)
+			if err != nil {
+				return fmt.Errorf("[manager.UserAgentSessionManager.Start] get a user agent session type by id: %w", err)
+			}
+
+			ust, err := m.userSessionManager.GetTypeById(userSessionId)
+			if err != nil {
+				return fmt.Errorf("[manager.UserAgentSessionManager.CreateAndStartMobileSession] get a user's session type by id: %w", err)
+			}
+
+			switch uast {
+			case models.UserAgentSessionTypeWeb:
+				if ust != models.UserSessionTypeWeb {
+					return errors.NewError(errors.ErrorCodeInvalidOperation, fmt.Sprintf("invalid user session type (%s)", ust))
+				}
+
+				if err := m.webSessionStore.Start(opCtx, id, userSessionId, ip); err != nil {
+					return fmt.Errorf("[manager.UserAgentSessionManager.Start] start a web session of the user agent: %w", err)
+				}
+			case models.UserAgentSessionTypeMobile:
+				if ust != models.UserSessionTypeMobile {
+					return errors.NewError(errors.ErrorCodeInvalidOperation, fmt.Sprintf("invalid user session type (%s)", ust))
+				}
+
+				if err := m.mobileSessionStore.Start(opCtx, id, userSessionId, ip); err != nil {
+					return fmt.Errorf("[manager.UserAgentSessionManager.Start] start a mobile session of the user agent: %w", err)
+				}
+			default:
+				return fmt.Errorf("[manager.UserAgentSessionManager.Start] '%s' session type of the user agent isn't supported", uast)
+			}
+
+			m.logger.InfoWithEvent(
+				opCtx.CreateLogEntryContext(),
+				events.UserAgentSessionEvent,
+				"[manager.UserAgentSessionManager.Start] user agent session has been started",
+				logging.NewField("id", id),
+				logging.NewField("userSessionId", userSessionId),
+			)
+			return nil
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("[manager.UserAgentSessionManager.Start] execute an operation: %w", err)
+	}
+	return nil
 }
 
 // Terminate terminates a user agent session by the specified user agent session ID.

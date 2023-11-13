@@ -74,6 +74,10 @@ type UserAgentSessionManager interface {
 	// and returns the user agent session ID if the operation is successful.
 	CreateAndStartMobileSession(ctx *actions.OperationContext, data *useragentsessions.CreateAndStartOperationData) (uint64, error)
 
+	// Start starts a user agent session by the specified user agent session ID.
+	//	ip - the IP address (sign-in IP address).
+	Start(ctx *actions.OperationContext, id, userSessionId uint64, ip string) error
+
 	// Terminate terminates a user agent session by the specified user agent session ID.
 	// If signOut is true, then the user agent session is terminated with the status 'SignedOut',
 	// otherwise with the status 'Ended'.
