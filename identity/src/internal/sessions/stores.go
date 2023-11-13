@@ -72,6 +72,12 @@ type UserAgentSessionStore interface {
 	// otherwise with the status 'Ended'.
 	Terminate(ctx *actions.OperationContext, id uint64, signOut bool) error
 
+	// StartDeleting starts deleting a user agent session by the specified user agent session ID.
+	StartDeleting(ctx *actions.OperationContext, id uint64) error
+
+	// Delete deletes a user agent session by the specified user agent session ID.
+	Delete(ctx *actions.OperationContext, id uint64) error
+
 	// FindById finds and returns user agent session info, if any, by the specified user agent session ID.
 	FindById(ctx *actions.OperationContext, id uint64) (*dbmodels.UserAgentSessionInfo, error)
 

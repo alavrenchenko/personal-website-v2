@@ -282,6 +282,48 @@ func (m *UserAgentSessionManager) Terminate(ctx *actions.OperationContext, id ui
 	return nil
 }
 
+// Delete deletes a user agent session by the specified user agent session ID.
+func (m *UserAgentSessionManager) Delete(ctx *actions.OperationContext, id uint64) error {
+	err := m.opExecutor.Exec(ctx, iactions.OperationTypeUserAgentSessionManager_Delete, []*actions.OperationParam{actions.NewOperationParam("id", id)},
+		func(opCtx *actions.OperationContext) error {
+			t, err := m.GetTypeById(id)
+			if err != nil {
+				return fmt.Errorf("[manager.UserAgentSessionManager.Delete] get a user agent session type by id: %w", err)
+			}
+
+			var store sessions.UserAgentSessionStore
+			switch t {
+			case models.UserAgentSessionTypeWeb:
+				store = m.webSessionStore
+			case models.UserAgentSessionTypeMobile:
+				store = m.mobileSessionStore
+			default:
+				return fmt.Errorf("[manager.UserAgentSessionManager.Delete] '%s' session type of the user agent isn't supported", t)
+			}
+
+			if err := store.StartDeleting(opCtx, id); err != nil {
+				return fmt.Errorf("[manager.UserAgentSessionManager.Delete] start deleting a %s session of the user agent: %w", t, err)
+			}
+
+			if err := store.Delete(opCtx, id); err != nil {
+				return fmt.Errorf("[manager.UserAgentSessionManager.Delete] delete a %s session of the user agent: %w", t, err)
+			}
+
+			m.logger.InfoWithEvent(
+				opCtx.CreateLogEntryContext(),
+				events.UserAgentSessionEvent,
+				"[manager.UserAgentSessionManager.Delete] user agent session has been deleted",
+				logging.NewField("id", id),
+			)
+			return nil
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("[manager.UserAgentSessionManager.Delete] execute an operation: %w", err)
+	}
+	return nil
+}
+
 // FindById finds and returns user agent session info, if any, by the specified user agent session ID.
 func (m *UserAgentSessionManager) FindById(ctx *actions.OperationContext, id uint64) (*dbmodels.UserAgentSessionInfo, error) {
 	var s *dbmodels.UserAgentSessionInfo

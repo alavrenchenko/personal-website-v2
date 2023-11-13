@@ -83,6 +83,9 @@ type UserAgentSessionManager interface {
 	// otherwise with the status 'Ended'.
 	Terminate(ctx *actions.OperationContext, id uint64, signOut bool) error
 
+	// Delete deletes a user agent session by the specified user agent session ID.
+	Delete(ctx *actions.OperationContext, id uint64) error
+
 	// FindById finds and returns user agent session info, if any, by the specified user agent session ID.
 	FindById(ctx *actions.OperationContext, id uint64) (*dbmodels.UserAgentSessionInfo, error)
 
