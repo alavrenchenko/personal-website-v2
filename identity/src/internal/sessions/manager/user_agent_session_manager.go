@@ -123,6 +123,7 @@ func (m *UserAgentSessionManager) CreateAndStartWebSession(ctx *actions.Operatio
 				events.UserAgentSessionEvent,
 				"[manager.UserAgentSessionManager.CreateAndStartWebSession] web session of the user agent has been created and started",
 				logging.NewField("id", id),
+				logging.NewField("userSessionId", data.UserSessionId),
 			)
 			return nil
 		},
@@ -172,6 +173,7 @@ func (m *UserAgentSessionManager) CreateAndStartMobileSession(ctx *actions.Opera
 				events.UserAgentSessionEvent,
 				"[manager.UserAgentSessionManager.CreateAndStartMobileSession] mobile session of the user agent has been created and started",
 				logging.NewField("id", id),
+				logging.NewField("userSessionId", data.UserSessionId),
 			)
 			return nil
 		},
