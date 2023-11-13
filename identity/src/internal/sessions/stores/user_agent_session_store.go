@@ -279,6 +279,82 @@ func (s *UserAgentSessionStore) Terminate(ctx *actions.OperationContext, id uint
 	return nil
 }
 
+// StartDeleting starts deleting a user agent session by the specified user agent session ID.
+func (s *UserAgentSessionStore) StartDeleting(ctx *actions.OperationContext, id uint64) error {
+	err := s.opExecutor.Exec(ctx, s.opTypes[opTypeUserAgentSessionStore_StartDeleting], []*actions.OperationParam{actions.NewOperationParam("id", id)},
+		func(opCtx *actions.OperationContext) error {
+			err := s.txManager.ExecWithReadCommittedLevel(opCtx.Ctx, func(txCtx context.Context, tx pgx.Tx) error {
+				var errCode dberrors.DbErrorCode
+				var errMsg string
+				// PROCEDURE: public.start_deleting_user_agent_session(IN _id, IN _deleted_by, IN _status_comment, OUT err_code, OUT err_msg)
+				// Minimum transaction isolation level: Read committed.
+				const query = "CALL public.start_deleting_user_agent_session($1, $2, 'deletion', NULL, NULL)"
+
+				if err := tx.QueryRow(txCtx, query, id, opCtx.UserId.Value).Scan(&errCode, &errMsg); err != nil {
+					return fmt.Errorf("[stores.UserAgentSessionStore.StartDeleting] execute a query (start_deleting_user_agent_session): %w", err)
+				}
+
+				switch errCode {
+				case dberrors.DbErrorCodeNoError:
+					return nil
+				case dberrors.DbErrorCodeInvalidOperation:
+					return errs.NewError(errs.ErrorCodeInvalidOperation, errMsg)
+				case idberrors.DbErrorCodeUserAgentSessionNotFound:
+					return ierrors.ErrUserAgentSessionNotFound
+				}
+				// unknown error
+				return fmt.Errorf("[stores.UserAgentSessionStore.StartDeleting] invalid operation: %w", dberrors.NewDbError(errCode, errMsg))
+			})
+			if err != nil {
+				return fmt.Errorf("[stores.UserAgentSessionStore.StartDeleting] execute a transaction: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("[stores.UserAgentSessionStore.StartDeleting] execute an operation: %w", err)
+	}
+	return nil
+}
+
+// Delete deletes a user agent session by the specified user agent session ID.
+func (s *UserAgentSessionStore) Delete(ctx *actions.OperationContext, id uint64) error {
+	err := s.opExecutor.Exec(ctx, s.opTypes[opTypeUserAgentSessionStore_Delete], []*actions.OperationParam{actions.NewOperationParam("id", id)},
+		func(opCtx *actions.OperationContext) error {
+			err := s.txManager.ExecWithReadCommittedLevel(opCtx.Ctx, func(txCtx context.Context, tx pgx.Tx) error {
+				var errCode dberrors.DbErrorCode
+				var errMsg string
+				// PROCEDURE: public.delete_user_agent_session(IN _id, IN _deleted_by, IN _status_comment, OUT err_code, OUT err_msg)
+				// Minimum transaction isolation level: Read committed.
+				const query = "CALL public.delete_user_agent_session($1, $2, 'deletion', NULL, NULL)"
+
+				if err := tx.QueryRow(txCtx, query, id, opCtx.UserId.Value).Scan(&errCode, &errMsg); err != nil {
+					return fmt.Errorf("[stores.UserAgentSessionStore.Delete] execute a query (delete_user_agent_session): %w", err)
+				}
+
+				switch errCode {
+				case dberrors.DbErrorCodeNoError:
+					return nil
+				case dberrors.DbErrorCodeInvalidOperation:
+					return errs.NewError(errs.ErrorCodeInvalidOperation, errMsg)
+				case idberrors.DbErrorCodeUserAgentSessionNotFound:
+					return ierrors.ErrUserAgentSessionNotFound
+				}
+				// unknown error
+				return fmt.Errorf("[stores.UserAgentSessionStore.Delete] invalid operation: %w", dberrors.NewDbError(errCode, errMsg))
+			})
+			if err != nil {
+				return fmt.Errorf("[stores.UserAgentSessionStore.Delete] execute a transaction: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("[stores.UserAgentSessionStore.Delete] execute an operation: %w", err)
+	}
+	return nil
+}
+
 // FindById finds and returns user agent session info, if any, by the specified user agent session ID.
 func (s *UserAgentSessionStore) FindById(ctx *actions.OperationContext, id uint64) (*dbmodels.UserAgentSessionInfo, error) {
 	var uas *dbmodels.UserAgentSessionInfo
