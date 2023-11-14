@@ -97,6 +97,9 @@ type UserAgentSessionStore interface {
 	// If onlyExisting is true, then it returns only existing sessions of user agents.
 	GetAllByClientId(ctx *actions.OperationContext, clientId uint64, onlyExisting bool) ([]*dbmodels.UserAgentSessionInfo, error)
 
+	// Exists returns true if the user agent session exists.
+	Exists(ctx *actions.OperationContext, userId, clientId, userAgentId uint64) (bool, error)
+
 	// GetStatusById gets a user agent session status by the specified user agent session ID.
 	GetStatusById(ctx *actions.OperationContext, id uint64) (models.UserAgentSessionStatus, error)
 }
