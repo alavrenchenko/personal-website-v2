@@ -415,6 +415,36 @@ func (s *UserAgentSessionStore) FindByUserAgentId(ctx *actions.OperationContext,
 	return uas, nil
 }
 
+// GetAllByUserId gets all user agent sessions by the specified user ID.
+// If onlyExisting is true, then it returns only existing sessions of user agents.
+func (s *UserAgentSessionStore) GetAllByUserId(ctx *actions.OperationContext, userId uint64, onlyExisting bool) ([]*dbmodels.UserAgentSessionInfo, error) {
+	var uass []*dbmodels.UserAgentSessionInfo
+	err := s.opExecutor.Exec(ctx, s.opTypes[opTypeUserAgentSessionStore_GetAllByUserId],
+		[]*actions.OperationParam{actions.NewOperationParam("userId", userId), actions.NewOperationParam("onlyExisting", onlyExisting)},
+		func(opCtx *actions.OperationContext) error {
+			var query string
+			var args []any
+			if onlyExisting {
+				query = "SELECT * FROM " + userSessionsTable + " WHERE user_id = $1 AND status <> $2"
+				args = []any{userId, models.UserAgentSessionStatusDeleted}
+			} else {
+				query = "SELECT * FROM " + userSessionsTable + " WHERE user_id = $1"
+				args = []any{userId}
+			}
+
+			var err error
+			if uass, err = s.store.FindAll(opCtx.Ctx, query, args...); err != nil {
+				return fmt.Errorf("[stores.UserAgentSessionStore.GetAllByUserId] find all user agent sessions by user id: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("[stores.UserAgentSessionStore.GetAllByUserId] execute an operation: %w", err)
+	}
+	return uass, nil
+}
+
 // GetStatusById gets a user agent session status by the specified user agent session ID.
 func (s *UserAgentSessionStore) GetStatusById(ctx *actions.OperationContext, id uint64) (models.UserAgentSessionStatus, error) {
 	var status models.UserAgentSessionStatus
