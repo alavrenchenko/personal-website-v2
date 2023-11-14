@@ -395,6 +395,26 @@ func (s *UserAgentSessionStore) FindByUserIdAndClientId(ctx *actions.OperationCo
 	return uas, nil
 }
 
+// FindByUserAgentId finds and returns an existing session of the user agent, if any,
+// by the specified user agent ID.
+func (s *UserAgentSessionStore) FindByUserAgentId(ctx *actions.OperationContext, userAgentId uint64) (*dbmodels.UserAgentSessionInfo, error) {
+	var uas *dbmodels.UserAgentSessionInfo
+	err := s.opExecutor.Exec(ctx, s.opTypes[opTypeUserAgentSessionStore_FindByUserAgentId], []*actions.OperationParam{actions.NewOperationParam("userAgentId", userAgentId)},
+		func(opCtx *actions.OperationContext) error {
+			const query = "SELECT * FROM " + userAgentSessionsTable + " WHERE user_agent_id = $1 AND status <> $2 LIMIT 1"
+			var err error
+			if uas, err = s.store.Find(opCtx.Ctx, query, userAgentId, models.UserAgentSessionStatusDeleted); err != nil {
+				return fmt.Errorf("[stores.UserAgentSessionStore.FindByUserAgentId] find a user agent session by user agent id: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("[stores.UserAgentSessionStore.FindByUserAgentId] execute an operation: %w", err)
+	}
+	return uas, nil
+}
+
 // GetStatusById gets a user agent session status by the specified user agent session ID.
 func (s *UserAgentSessionStore) GetStatusById(ctx *actions.OperationContext, id uint64) (models.UserAgentSessionStatus, error) {
 	var status models.UserAgentSessionStatus

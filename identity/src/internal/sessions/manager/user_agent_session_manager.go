@@ -389,6 +389,38 @@ func (m *UserAgentSessionManager) FindByUserIdAndClientId(ctx *actions.Operation
 	return s, nil
 }
 
+// FindByUserAgentId finds and returns an existing session of the user agent, if any,
+// by the specified user agent ID.
+func (m *UserAgentSessionManager) FindByUserAgentId(ctx *actions.OperationContext, userAgentId uint64) (*dbmodels.UserAgentSessionInfo, error) {
+	var s *dbmodels.UserAgentSessionInfo
+	err := m.opExecutor.Exec(ctx, iactions.OperationTypeUserAgentSessionManager_FindByUserAgentId, []*actions.OperationParam{actions.NewOperationParam("userAgentId", userAgentId)},
+		func(opCtx *actions.OperationContext) error {
+			t, err := m.userAgentManager.GetTypeById(userAgentId)
+			if err != nil {
+				return fmt.Errorf("[manager.UserAgentSessionManager.FindByUserAgentId] get a user agent type by id: %w", err)
+			}
+
+			switch t {
+			case useragentmodels.UserAgentTypeWeb:
+				if s, err = m.webSessionStore.FindByUserAgentId(opCtx, userAgentId); err != nil {
+					return fmt.Errorf("[manager.UserAgentSessionManager.FindByUserAgentId] find a web session of the user agent by user agent id: %w", err)
+				}
+			case useragentmodels.UserAgentTypeMobile:
+				if s, err = m.mobileSessionStore.FindByUserAgentId(opCtx, userAgentId); err != nil {
+					return fmt.Errorf("[manager.UserAgentSessionManager.FindByUserAgentId] find a mobile session of the user agent by user agent id: %w", err)
+				}
+			default:
+				return fmt.Errorf("[manager.UserAgentSessionManager.FindByUserAgentId] '%s' user agent type isn't supported", t)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("[manager.UserAgentSessionManager.FindByUserAgentId] execute an operation: %w", err)
+	}
+	return s, nil
+}
+
 // GetTypeById gets a user agent session type by the specified user agent session ID.
 func (m *UserAgentSessionManager) GetTypeById(id uint64) (models.UserAgentSessionType, error) {
 	t := models.UserAgentSessionType(byte(id))

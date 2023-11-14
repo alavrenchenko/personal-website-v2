@@ -93,6 +93,10 @@ type UserAgentSessionManager interface {
 	// by the specified user ID and client ID.
 	FindByUserIdAndClientId(ctx *actions.OperationContext, userId, clientId uint64) (*dbmodels.UserAgentSessionInfo, error)
 
+	// FindByUserAgentId finds and returns an existing session of the user agent, if any,
+	// by the specified user agent ID.
+	FindByUserAgentId(ctx *actions.OperationContext, userAgentId uint64) (*dbmodels.UserAgentSessionInfo, error)
+
 	// GetTypeById gets a user agent session type by the specified user agent session ID.
 	GetTypeById(id uint64) (models.UserAgentSessionType, error)
 
