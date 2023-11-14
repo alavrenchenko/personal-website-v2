@@ -356,6 +356,39 @@ func (m *UserAgentSessionManager) FindById(ctx *actions.OperationContext, id uin
 	return s, nil
 }
 
+// FindByUserIdAndClientId finds and returns an existing session of the user agent, if any,
+// by the specified user ID and client ID.
+func (m *UserAgentSessionManager) FindByUserIdAndClientId(ctx *actions.OperationContext, userId, clientId uint64) (*dbmodels.UserAgentSessionInfo, error) {
+	var s *dbmodels.UserAgentSessionInfo
+	err := m.opExecutor.Exec(ctx, iactions.OperationTypeUserAgentSessionManager_FindByUserIdAndClientId,
+		[]*actions.OperationParam{actions.NewOperationParam("userId", userId), actions.NewOperationParam("clientId", clientId)},
+		func(opCtx *actions.OperationContext) error {
+			t, err := m.clientManager.GetTypeById(clientId)
+			if err != nil {
+				return fmt.Errorf("[manager.UserAgentSessionManager.FindByUserIdAndClientId] get a client type by id: %w", err)
+			}
+
+			switch t {
+			case clientmodels.ClientTypeWeb:
+				if s, err = m.webSessionStore.FindByUserIdAndClientId(opCtx, userId, clientId); err != nil {
+					return fmt.Errorf("[manager.UserAgentSessionManager.FindByUserIdAndClientId] find a web session of the user agent by user id and client id: %w", err)
+				}
+			case clientmodels.ClientTypeMobile:
+				if s, err = m.mobileSessionStore.FindByUserIdAndClientId(opCtx, userId, clientId); err != nil {
+					return fmt.Errorf("[manager.UserAgentSessionManager.FindByUserIdAndClientId] find a mobile session of the user agent by user id and client id: %w", err)
+				}
+			default:
+				return fmt.Errorf("[manager.UserAgentSessionManager.FindByUserIdAndClientId] '%s' client type isn't supported", t)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("[manager.UserAgentSessionManager.FindByUserIdAndClientId] execute an operation: %w", err)
+	}
+	return s, nil
+}
+
 // GetTypeById gets a user agent session type by the specified user agent session ID.
 func (m *UserAgentSessionManager) GetTypeById(id uint64) (models.UserAgentSessionType, error) {
 	t := models.UserAgentSessionType(byte(id))

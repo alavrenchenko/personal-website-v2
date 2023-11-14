@@ -81,6 +81,10 @@ type UserAgentSessionStore interface {
 	// FindById finds and returns user agent session info, if any, by the specified user agent session ID.
 	FindById(ctx *actions.OperationContext, id uint64) (*dbmodels.UserAgentSessionInfo, error)
 
+	// FindByUserIdAndClientId finds and returns an existing session of the user agent, if any,
+	// by the specified user ID and client ID.
+	FindByUserIdAndClientId(ctx *actions.OperationContext, userId, clientId uint64) (*dbmodels.UserAgentSessionInfo, error)
+
 	// GetStatusById gets a user agent session status by the specified user agent session ID.
 	GetStatusById(ctx *actions.OperationContext, id uint64) (models.UserAgentSessionStatus, error)
 }
