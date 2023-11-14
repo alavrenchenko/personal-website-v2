@@ -477,6 +477,39 @@ func (m *UserAgentSessionManager) GetAllByUserId(ctx *actions.OperationContext, 
 	return ss, nil
 }
 
+// GetAllByClientId gets all user agent sessions by the specified client ID.
+// If onlyExisting is true, then it returns only existing sessions of user agents.
+func (m *UserAgentSessionManager) GetAllByClientId(ctx *actions.OperationContext, clientId uint64, onlyExisting bool) ([]*dbmodels.UserAgentSessionInfo, error) {
+	var ss []*dbmodels.UserAgentSessionInfo
+	err := m.opExecutor.Exec(ctx, iactions.OperationTypeUserAgentSessionManager_GetAllByClientId,
+		[]*actions.OperationParam{actions.NewOperationParam("clientId", clientId), actions.NewOperationParam("onlyExisting", onlyExisting)},
+		func(opCtx *actions.OperationContext) error {
+			t, err := m.clientManager.GetTypeById(clientId)
+			if err != nil {
+				return fmt.Errorf("[manager.UserAgentSessionManager.GetAllByClientId] get a client type by id: %w", err)
+			}
+
+			switch t {
+			case clientmodels.ClientTypeWeb:
+				if ss, err = m.webSessionStore.GetAllByClientId(opCtx, clientId, onlyExisting); err != nil {
+					return fmt.Errorf("[manager.UserAgentSessionManager.GetAllByClientId] get all web sessions of user agents by client id: %w", err)
+				}
+			case clientmodels.ClientTypeMobile:
+				if ss, err = m.mobileSessionStore.GetAllByClientId(opCtx, clientId, onlyExisting); err != nil {
+					return fmt.Errorf("[manager.UserAgentSessionManager.GetAllByClientId] get all mobile sessions of user agents by client id: %w", err)
+				}
+			default:
+				return fmt.Errorf("[manager.UserAgentSessionManager.GetAllByClientId] '%s' client type isn't supported", t)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("[manager.UserAgentSessionManager.GetAllByClientId] execute an operation: %w", err)
+	}
+	return ss, nil
+}
+
 // GetTypeById gets a user agent session type by the specified user agent session ID.
 func (m *UserAgentSessionManager) GetTypeById(id uint64) (models.UserAgentSessionType, error) {
 	t := models.UserAgentSessionType(byte(id))
