@@ -92,9 +92,9 @@ func NewAuthorizationManager(
 	}, nil
 }
 
-// Authorize authorizes a user and returns the authorization info if the operation is successful.
-func (m *AuthorizationManager) Authorize(ctx *actions.OperationContext, userId, clientId nullable.Nullable[uint64], requiredPermissionIds []uint64) (*models.AuthorizationInfo, error) {
-	var info *models.AuthorizationInfo
+// Authorize authorizes a user and returns the authorization result if the operation is successful.
+func (m *AuthorizationManager) Authorize(ctx *actions.OperationContext, userId, clientId nullable.Nullable[uint64], requiredPermissionIds []uint64) (*models.AuthorizationResult, error) {
+	var result *models.AuthorizationResult
 	err := m.opExecutor.Exec(ctx, iactions.OperationTypeAuthorizationManager_Authorize,
 		[]*actions.OperationParam{
 			actions.NewOperationParam("userId", userId.Ptr()),
@@ -108,10 +108,10 @@ func (m *AuthorizationManager) Authorize(ctx *actions.OperationContext, userId, 
 
 			var err error
 			if userId.HasValue {
-				if info, err = m.authorizeUser(opCtx, userId.Value, requiredPermissionIds); err != nil {
+				if result, err = m.authorizeUser(opCtx, userId.Value, requiredPermissionIds); err != nil {
 					return fmt.Errorf("[manager.AuthorizationManager.Authorize] authorize a user: %w", err)
 				}
-			} else if info, err = m.authorizeAsAnonymousUser(opCtx, clientId, requiredPermissionIds); err != nil {
+			} else if result, err = m.authorizeAsAnonymousUser(opCtx, clientId, requiredPermissionIds); err != nil {
 				return fmt.Errorf("[manager.AuthorizationManager.Authorize] authorize as an anonymous user: %w", err)
 			}
 
@@ -121,8 +121,8 @@ func (m *AuthorizationManager) Authorize(ctx *actions.OperationContext, userId, 
 				"[manager.AuthorizationManager.Authorize] user has been authorized",
 				logging.NewField("userId", userId.Ptr()),
 				logging.NewField("clientId", clientId.Ptr()),
-				logging.NewField("userGroup", info.Group),
-				logging.NewField("permissionRoles", info.PermissionRoles),
+				logging.NewField("userGroup", result.Group),
+				logging.NewField("permissionRoles", result.PermissionRoles),
 			)
 			return nil
 		},
@@ -130,10 +130,10 @@ func (m *AuthorizationManager) Authorize(ctx *actions.OperationContext, userId, 
 	if err != nil {
 		return nil, fmt.Errorf("[manager.AuthorizationManager.Authorize] execute an operation: %w", err)
 	}
-	return info, nil
+	return result, nil
 }
 
-func (m *AuthorizationManager) authorizeUser(ctx *actions.OperationContext, userId uint64, requiredPermissionIds []uint64) (*models.AuthorizationInfo, error) {
+func (m *AuthorizationManager) authorizeUser(ctx *actions.OperationContext, userId uint64, requiredPermissionIds []uint64) (*models.AuthorizationResult, error) {
 	ug, us, err := m.userManager.GetGroupAndStatusById(ctx, userId)
 	if err != nil {
 		return nil, fmt.Errorf("[manager.AuthorizationManager.authorizeUser] get a group and a status of the user by id: %w", err)
@@ -226,13 +226,13 @@ func (m *AuthorizationManager) authorizeUser(ctx *actions.OperationContext, user
 		prs2[i] = &models.PermissionWithRoles{PermissionId: requiredPermissionIds[i], RoleIds: prs[i]}
 	}
 
-	return &models.AuthorizationInfo{
+	return &models.AuthorizationResult{
 		Group:           ug,
 		PermissionRoles: prs2,
 	}, nil
 }
 
-func (m *AuthorizationManager) authorizeAsAnonymousUser(ctx *actions.OperationContext, clientId nullable.Nullable[uint64], requiredPermissionIds []uint64) (*models.AuthorizationInfo, error) {
+func (m *AuthorizationManager) authorizeAsAnonymousUser(ctx *actions.OperationContext, clientId nullable.Nullable[uint64], requiredPermissionIds []uint64) (*models.AuthorizationResult, error) {
 	if clientId.HasValue {
 		cs, err := m.clientManager.GetStatusById(ctx, clientId.Value)
 		if err != nil {
@@ -257,7 +257,7 @@ func (m *AuthorizationManager) authorizeAsAnonymousUser(ctx *actions.OperationCo
 		prs[i] = &models.PermissionWithRoles{PermissionId: requiredPermissionIds[i], RoleIds: []uint64{anonymousUserRoleId}}
 	}
 
-	return &models.AuthorizationInfo{
+	return &models.AuthorizationResult{
 		Group:           groupmodels.UserGroupAnonymousUsers,
 		PermissionRoles: prs,
 	}, nil

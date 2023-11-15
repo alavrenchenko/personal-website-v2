@@ -22,6 +22,6 @@ import (
 
 // AuthorizationManager is an authorization manager.
 type AuthorizationManager interface {
-	// Authorize authorizes a user and returns the authorization info if the operation is successful.
-	Authorize(ctx *actions.OperationContext, userId, clientId nullable.Nullable[uint64], requiredPermissionIds []uint64) (*models.AuthorizationInfo, error)
+	// Authorize authorizes a user and returns the authorization result if the operation is successful.
+	Authorize(ctx *actions.OperationContext, userId, clientId nullable.Nullable[uint64], requiredPermissionIds []uint64) (*models.AuthorizationResult, error)
 }

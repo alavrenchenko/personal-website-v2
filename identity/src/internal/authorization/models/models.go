@@ -18,8 +18,8 @@ import (
 	"personal-website-v2/identity/src/internal/groups/models"
 )
 
-// The authorization info.
-type AuthorizationInfo struct {
+// The authorization result.
+type AuthorizationResult struct {
 	// The user's group.
 	Group models.UserGroup
 
