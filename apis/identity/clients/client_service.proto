@@ -1,0 +1,124 @@
+// Copyright 2023 Alexey Lavrenchenko. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// 	http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+
+package personalwebsite.identity.clients;
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/wrappers.proto";
+import "apis/identity/clients/client.proto";
+
+option go_package = "personal-website-v2/go-apis/identity/clients;clients";
+
+// Proto file describing the Client service.
+
+// The client service definition.
+service ClientService {
+    // Creates a web client and returns the client ID if the operation is successful.
+    rpc CreateWebClient(CreateWebClientRequest) returns (CreateWebClientResponse) {}
+
+    // Creates a mobile client and returns the client ID if the operation is successful.
+    rpc CreateMobileClient(CreateMobileClientRequest) returns (CreateMobileClientResponse) {}
+
+    // Deletes a client by the specified client ID.
+    rpc Delete(DeleteRequest) returns (google.protobuf.Empty) {}
+
+    // Gets a client by the specified client ID.
+    rpc GetById(GetByIdRequest) returns (GetByIdResponse) {}
+
+    // Gets a client type by the specified client ID.
+    rpc GetTypeById(GetTypeByIdRequest) returns (GetTypeByIdResponse) {}
+
+    // Gets a client status by the specified client ID.
+    rpc GetStatusById(GetStatusByIdRequest) returns (GetStatusByIdResponse) {}
+}
+
+// Request message for 'ClientService.CreateWebClient'.
+message CreateWebClientRequest {
+    // Optional. The app ID.
+    google.protobuf.UInt64Value app_id = 1;
+
+    // The User-Agent.
+    string user_agent = 2;
+
+    // The IP address.
+    string ip = 3;
+}
+
+// Response message for 'ClientService.CreateWebClient'.
+message CreateWebClientResponse {
+    // The client ID.
+    uint64 id = 1;
+}
+
+// Request message for 'ClientService.CreateMobileClient'.
+message CreateMobileClientRequest {
+    // The app ID.
+    uint64 app_id = 1;
+
+    // Optional. The User-Agent.
+    google.protobuf.StringValue user_agent = 2;
+
+    // The IP address.
+    string ip = 3;
+}
+
+// Response message for 'ClientService.CreateMobileClient'.
+message CreateMobileClientResponse {
+    // The client ID.
+    uint64 id = 1;
+}
+
+// Request message for 'ClientService.Delete'.
+message DeleteRequest {
+    // The client ID.
+    uint64 id = 1;
+}
+
+// Request message for 'ClientService.GetById'.
+message GetByIdRequest {
+    // The client ID.
+    uint64 id = 1;
+}
+
+// Response message for 'ClientService.GetById'.
+message GetByIdResponse {
+    // The client.
+    Client client = 1;
+}
+
+// Request message for 'ClientService.GetTypeById'.
+message GetTypeByIdRequest {
+    // The client ID.
+    uint64 id = 1;
+}
+
+// Response message for 'ClientService.GetTypeById'.
+message GetTypeByIdResponse {
+    // The client type.
+    ClientTypeEnum.ClientType type = 2;
+}
+
+// Request message for 'ClientService.GetStatusById'.
+message GetStatusByIdRequest {
+    // The client ID.
+    uint64 id = 1;
+}
+
+// Response message for 'ClientService.GetStatusById'.
+message GetStatusByIdResponse {
+    // The client status.
+    ClientStatus status = 1;
+}
