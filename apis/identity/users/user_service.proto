@@ -1,0 +1,265 @@
+// Copyright 2023 Alexey Lavrenchenko. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// 	http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+
+package personalwebsite.identity.users;
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/wrappers.proto";
+import "apis/identity/groups/user_group.proto";
+import "apis/identity/users/personal_info.proto";
+import "apis/identity/users/user.proto";
+
+option go_package = "personal-website-v2/go-apis/identity/users;users";
+
+// Proto file describing the User service.
+
+// The user service definition.
+service UserService {
+	// Creates a user and returns the user ID if the operation is successful.
+    rpc Create(CreateRequest) returns (CreateResponse) {}
+
+	// Deletes a user by the specified user ID.
+    rpc Delete(DeleteRequest) returns (google.protobuf.Empty) {}
+
+    // Gets a user by the specified user ID.
+    rpc GetById(GetByIdRequest) returns (GetByIdResponse) {}
+
+    // Gets a user by the specified user name.
+    rpc GetByName(GetByNameRequest) returns (GetByNameResponse) {}
+
+    // Gets a user by the specified user's email.
+    rpc GetByEmail(GetByEmailRequest) returns (GetByEmailResponse) {}
+
+	// Gets the user ID by the specified user name.
+    rpc GetIdByName(GetIdByNameRequest) returns (GetIdByNameResponse) {}
+
+	// Gets a user name by the specified user ID.
+    rpc GetNameById(GetNameByIdRequest) returns (GetNameByIdResponse) {}
+
+	// Sets a user name by the specified user ID.
+    rpc SetNameById(SetNameByIdRequest) returns (google.protobuf.Empty) {}
+
+	// Returns true if the user name exists.
+    rpc NameExists(NameExistsRequest) returns (NameExistsResponse) {}
+
+	// Gets a user's type by the specified user ID.
+    rpc GetTypeById(GetTypeByIdRequest) returns (GetTypeByIdResponse) {}
+
+	// Gets a user's group by the specified user ID.
+    rpc GetGroupById(GetGroupByIdRequest) returns (GetGroupByIdResponse) {}
+
+	// Gets a user's status by the specified user ID.
+    rpc GetStatusById(GetStatusByIdRequest) returns (GetStatusByIdResponse) {}
+
+	// Gets a type and a status of the user by the specified user ID.
+    rpc GetTypeAndStatusById(GetTypeAndStatusByIdRequest) returns (GetTypeAndStatusByIdResponse) {}
+
+	// Gets a group and a status of the user by the specified user ID.
+    rpc GetGroupAndStatusById(GetGroupAndStatusByIdRequest) returns (GetGroupAndStatusByIdResponse) {}
+}
+
+// Request message for 'UserService.Create'.
+message CreateRequest {
+    // The user's type (account type).
+    UserTypeEnum.UserType type = 1;
+
+	// The user's group.
+    personalwebsite.identity.groups.UserGroup group = 2;
+
+	// The user's status.
+    UserStatus status = 3;
+
+    // Optional. The user's email.
+    google.protobuf.StringValue email = 4;
+
+	// The first name.
+    string first_name = 5;
+
+	// The last name.
+    string last_name = 6;
+
+	// The display name.
+    string display_name = 7;
+
+    // Optional. The user's date of birth.
+    google.protobuf.Timestamp birth_date = 8;
+
+	// The user's gender.
+    GenderEnum.Gender gender = 9;
+}
+
+// Response message for 'UserService.Create'.
+message CreateResponse {
+    // The user ID.
+    uint64 id = 1;
+}
+
+// Request message for 'UserService.Delete'.
+message DeleteRequest {
+    // The user ID.
+    uint64 id = 1;
+}
+
+// Request message for 'UserService.GetById'.
+message GetByIdRequest {
+    // The user ID.
+    uint64 id = 1;
+}
+
+// Response message for 'UserService.GetById'.
+message GetByIdResponse {
+    // The user.
+    User user = 1;
+}
+
+// Request message for 'UserService.GetByName'.
+message GetByNameRequest {
+    // The user name.
+    string name = 1;
+    bool is_case_sensitive = 2;
+}
+
+// Response message for 'UserService.GetByName'.
+message GetByNameResponse {
+    // The user.
+    User user = 1;
+}
+
+// Request message for 'UserService.GetByEmail'.
+message GetByEmailRequest {
+    // The user's email.
+    string email = 1;
+    bool is_case_sensitive = 2;
+}
+
+// Response message for 'UserService.GetByEmail'.
+message GetByEmailResponse {
+    // The user.
+    User user = 1;
+}
+
+// Request message for 'UserService.GetIdByName'.
+message GetIdByNameRequest {
+    // The user name.
+    string name = 1;
+    bool is_case_sensitive = 2;
+}
+
+// Response message for 'UserService.GetIdByName'.
+message GetIdByNameResponse {
+    // The user ID.
+    uint64 id = 1;
+}
+
+// Request message for 'UserService.GetNameById'.
+message GetNameByIdRequest {
+    // The user ID.
+    uint64 id = 1;
+}
+
+// Response message for 'UserService.GetNameById'.
+message GetNameByIdResponse {
+    // The user name.
+    string name = 1;
+}
+
+// Request message for 'UserService.SetNameById'.
+message SetNameByIdRequest {
+    // The user ID.
+    uint64 id = 1;
+
+    // The user name.
+    google.protobuf.StringValue name = 2;
+}
+
+// Request message for 'UserService.NameExists'.
+message NameExistsRequest {
+    // The user name.
+    string name = 1;
+}
+
+// Response message for 'UserService.NameExists'.
+message NameExistsResponse {
+    // The user name exists.
+    bool exists = 1;
+}
+
+// Request message for 'UserService.GetTypeById'.
+message GetTypeByIdRequest {
+    // The user ID.
+    uint64 id = 1;
+}
+
+// Response message for 'UserService.GetTypeById'.
+message GetTypeByIdResponse {
+    // The user's type.
+    UserTypeEnum.UserType type = 1;
+}
+
+// Request message for 'UserService.GetGroupById'.
+message GetGroupByIdRequest {
+    // The user ID.
+    uint64 id = 1;
+}
+
+// Response message for 'UserService.GetGroupById'.
+message GetGroupByIdResponse {
+	// The user's group.
+    personalwebsite.identity.groups.UserGroup group = 1;
+}
+
+// Request message for 'UserService.GetStatusById'.
+message GetStatusByIdRequest {
+    // The user ID.
+    uint64 id = 1;
+}
+
+// Response message for 'UserService.GetStatusById'.
+message GetStatusByIdResponse {
+	// The user's status.
+    UserStatus status = 1;
+}
+
+// Request message for 'UserService.GetTypeAndStatusById'.
+message GetTypeAndStatusByIdRequest {
+    // The user ID.
+    uint64 id = 1;
+}
+
+// Response message for 'UserService.GetTypeAndStatusById'.
+message GetTypeAndStatusByIdResponse {
+    // The user's type.
+    UserTypeEnum.UserType type = 1;
+
+	// The user's status.
+    UserStatus status = 2;
+}
+
+// Request message for 'UserService.GetGroupAndStatusById'.
+message GetGroupAndStatusByIdRequest {
+    // The user ID.
+    uint64 id = 1;
+}
+
+// Response message for 'UserService.GetGroupAndStatusById'.
+message GetGroupAndStatusByIdResponse {
+	// The user's group.
+    personalwebsite.identity.groups.UserGroup group = 1;
+
+	// The user's status.
+    UserStatus status = 2;
+}
