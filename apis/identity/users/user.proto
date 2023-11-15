@@ -18,6 +18,7 @@ package personalwebsite.identity.users;
 
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/wrappers.proto";
+import "apis/identity/groups/user_group.proto";
 
 option go_package = "personal-website-v2/go-apis/identity/users;users";
 
@@ -34,53 +35,56 @@ message User {
     // The user's type (account type).
     UserTypeEnum.UserType type = 3;
 
+	// The user's group.
+    personalwebsite.identity.groups.UserGroup group = 4;
+
 	// It stores the date and time at which the user was created.
-    google.protobuf.Timestamp created_at = 4;
+    google.protobuf.Timestamp created_at = 5;
 
 	// The user ID to identify the user who created this user.
-    uint64 created_by = 5;
+    uint64 created_by = 6;
 
 	// It stores the date and time at which the user was updated.
-    google.protobuf.Timestamp updated_at = 6;
+    google.protobuf.Timestamp updated_at = 7;
 
 	// The user ID to identify the user who updated this user.
-    uint64 updated_by = 7;
+    uint64 updated_by = 8;
 
 	// The user's status.
-    UserStatus status = 8;
+    UserStatus status = 9;
 
 	// It stores the date and time at which the user's status was updated.
-    google.protobuf.Timestamp status_updated_at = 9;
+    google.protobuf.Timestamp status_updated_at = 10;
 
 	// The user ID to identify the user who updated this user's status.
-    uint64 status_updated_by = 10;
+    uint64 status_updated_by = 11;
 
     // Optional. The user's status comment.
-    google.protobuf.StringValue status_comment = 11;
+    google.protobuf.StringValue status_comment = 12;
 
     // Optional. The user's email.
-    google.protobuf.StringValue email = 12;
+    google.protobuf.StringValue email = 13;
 
     // Optional. The first sign-in time.
-    google.protobuf.Timestamp first_sign_in_time = 13;
+    google.protobuf.Timestamp first_sign_in_time = 14;
 
     // Optional. The first sign-in IP address.
-    google.protobuf.StringValue first_sign_in_ip = 14;
+    google.protobuf.StringValue first_sign_in_ip = 15;
 
     // Optional. The last sign-in time.
-    google.protobuf.Timestamp last_sign_in_time = 15;
+    google.protobuf.Timestamp last_sign_in_time = 16;
 
     // Optional. The last sign-in IP address.
-    google.protobuf.StringValue last_sign_in_ip = 16;
+    google.protobuf.StringValue last_sign_in_ip = 17;
 
     // Optional. The last sign-out time.
-    google.protobuf.Timestamp last_sign_out_time = 17;
+    google.protobuf.Timestamp last_sign_out_time = 18;
 
     // Optional. The last activity time.
-    google.protobuf.Timestamp last_activity_time = 18;
+    google.protobuf.Timestamp last_activity_time = 19;
 
     // Optional. The last activity IP address.
-    google.protobuf.StringValue last_activity_ip = 19;
+    google.protobuf.StringValue last_activity_ip = 20;
 }
 
 // Container for enum describing the user's type.
