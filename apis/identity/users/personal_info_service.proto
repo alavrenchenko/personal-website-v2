@@ -1,0 +1,41 @@
+// Copyright 2023 Alexey Lavrenchenko. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// 	http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+
+package personalwebsite.identity.users;
+
+import "apis/identity/users/personal_info.proto";
+
+option go_package = "personal-website-v2/go-apis/identity/users;users";
+
+// Proto file describing the User personal info service.
+
+// The user personal info service definition.
+service UserPersonalInfoService {
+	// Gets user's personal info by the specified user ID.
+    rpc GetByUserId(GetByUserIdRequest) returns (GetByUserIdResponse) {}
+}
+
+// Request message for 'UserPersonalInfoService.GetByUserId'.
+message GetByUserIdRequest {
+    // The user ID.
+    uint64 user_id = 1;
+}
+
+// Response message for 'UserPersonalInfoService.GetByUserId'.
+message GetByUserIdResponse {
+    // The user's personal info.
+    PersonalInfo info = 1;
+}
