@@ -57,7 +57,7 @@ message CreateRequest {
     string name = 1;
 
 	// The permission group ID.
-    string group_id = 2;
+    uint64 group_id = 2;
 
     // Optional. The app ID.
     google.protobuf.UInt64Value app_id = 3;
