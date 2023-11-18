@@ -1,0 +1,78 @@
+// Copyright 2023 Alexey Lavrenchenko. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// 	http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+
+package personalwebsite.identity.roles;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/wrappers.proto";
+import "apis/identity/groups/user_group.proto";
+
+option go_package = "personal-website-v2/go-apis/identity/roles;roles";
+
+// Proto file describing the Group role assignment.
+
+// The group role assignment.
+message GroupRoleAssignment {
+    // The unique ID to identify the group role assignment.
+    uint64 id = 1;
+
+    // The role assignment ID.
+    uint64 role_assignment_id = 2;
+
+	// The user's group.
+    personalwebsite.identity.groups.UserGroup group = 3;
+
+    // The role ID.
+    uint64 role_id = 4;
+
+    // It stores the date and time at which the group role assignment was created.
+    google.protobuf.Timestamp created_at = 5;
+
+    // The user ID to identify the user who created the group role assignment.
+    uint64 created_by = 6;
+
+    // It stores the date and time at which the group role assignment was updated.
+    google.protobuf.Timestamp updated_at = 7;
+
+    // The user ID to identify the user who updated the group role assignment.
+    uint64 updated_by = 8;
+
+    // The group role assignment status.
+    GroupRoleAssignmentStatusEnum.GroupRoleAssignmentStatus status = 9;
+
+    // It stores the date and time at which the group role assignment status was updated.
+    google.protobuf.Timestamp status_updated_at = 10;
+
+	// The user ID to identify the user who updated the group role assignment status.
+    uint64 status_updated_by = 11;
+
+    // Optional. The group role assignment status comment.
+    google.protobuf.StringValue status_comment = 12;
+}
+
+// Container for enum describing the group role assignment status.
+message GroupRoleAssignmentStatusEnum {
+    // The group role assignment status.
+    enum GroupRoleAssignmentStatus {
+        // Unspecified. Do not use.
+        UNSPECIFIED = 0;
+        NEW = 1;
+        ACTIVE = 2;
+        INACTIVE = 3;
+        DELETING = 4;
+        DELETED = 5;
+    }
+}
