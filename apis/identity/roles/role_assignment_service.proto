@@ -1,0 +1,190 @@
+// Copyright 2023 Alexey Lavrenchenko. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// 	http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+
+package personalwebsite.identity.roles;
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/wrappers.proto";
+import "apis/identity/roles/role_assignment.proto";
+
+option go_package = "personal-website-v2/go-apis/identity/roles;roles";
+
+// Proto file describing the Role assignment service.
+
+// The role assignment service definition.
+service RoleAssignmentService {
+	// Creates a role assignment and returns the role assignment ID if the operation is successful.
+    rpc Create(CreateRequest) returns (CreateResponse) {}
+
+	// Deletes a role assignment by the specified role assignment ID.
+    rpc Delete(DeleteRequest) returns (google.protobuf.Empty) {}
+
+    // Gets a role assignment by the specified role assignment ID.
+    rpc GetById(GetByIdRequest) returns (GetByIdResponse) {}
+
+    // Gets a role assignment by the specified role ID and assignee.
+    rpc GetByRoleIdAndAssignee(GetByRoleIdAndAssigneeRequest) returns (GetByRoleIdAndAssigneeResponse) {}
+
+	// Returns true if the role assignment exists.
+    rpc Exists(ExistsRequest) returns (ExistsResponse) {}
+	
+    // Returns true if the role is assigned.
+    rpc IsAssigned(IsAssignedRequest) returns (IsAssignedResponse) {}
+
+    // Gets a role assignment assignee type by the specified role assignment ID.
+    rpc GetAssigneeTypeById(GetAssigneeTypeByIdRequest) returns (GetAssigneeTypeByIdResponse) {}
+
+	// Gets a role assignment status by the specified role assignment ID.
+    rpc GetStatusById(GetStatusByIdRequest) returns (GetStatusByIdResponse) {}
+
+	// Gets the role ID and assignee by the specified role assignment ID.
+    rpc GetRoleIdAndAssigneeById(GetRoleIdAndAssigneeByIdRequest) returns (GetRoleIdAndAssigneeByIdResponse) {}
+}
+
+// Request message for 'RoleAssignmentService.Create'.
+message CreateRequest {
+    // The role ID.
+    uint64 role_id = 1;
+
+	// The unique ID of the entity the role is assigned to - either the userId of a user
+	// or the groupId of a group.
+    uint64 assigned_to = 2;
+
+    // The type of the assignee.
+    AssigneeTypeEnum.AssigneeType assignee_type = 3;
+
+    // Optional. The role assignment description.
+    google.protobuf.StringValue description = 4;
+}
+
+// Response message for 'RoleAssignmentService.Create'.
+message CreateResponse {
+    // The role assignment ID.
+    uint64 id = 1;
+}
+
+// Request message for 'RoleAssignmentService.Delete'.
+message DeleteRequest {
+    // The role assignment ID.
+    uint64 id = 1;
+}
+
+// Request message for 'RoleAssignmentService.GetById'.
+message GetByIdRequest {
+    // The role assignment ID.
+    uint64 id = 1;
+}
+
+// Response message for 'RoleAssignmentService.GetById'.
+message GetByIdResponse {
+    // The role assignment.
+    RoleAssignment assignment = 1;
+}
+
+// Request message for 'RoleAssignmentService.GetByRoleIdAndAssignee'.
+message GetByRoleIdAndAssigneeRequest {
+    // The role ID.
+    uint64 role_id = 1;
+
+    // The assignee ID.
+    uint64 assignee_id = 2;
+
+    // The assignee type.
+    AssigneeTypeEnum.AssigneeType assignee_type = 3;
+}
+
+// Response message for 'RoleAssignmentService.GetByRoleIdAndAssignee'.
+message GetByRoleIdAndAssigneeResponse {
+    // The role assignment.
+    RoleAssignment assignment = 1;
+}
+
+// Request message for 'RoleAssignmentService.Exists'.
+message ExistsRequest {
+    // The role ID.
+    uint64 role_id = 1;
+
+    // The assignee ID.
+    uint64 assignee_id = 2;
+
+    // The assignee type.
+    AssigneeTypeEnum.AssigneeType assignee_type = 3;
+}
+
+// Response message for 'RoleAssignmentService.Exists'.
+message ExistsResponse {
+    // The role assignment exists.
+    bool exists = 1;
+}
+
+// Request message for 'RoleAssignmentService.IsAssigned'.
+message IsAssignedRequest {
+    // The role ID.
+    uint64 role_id = 1;
+
+    // The assignee ID.
+    uint64 assignee_id = 2;
+
+    // The assignee type.
+    AssigneeTypeEnum.AssigneeType assignee_type = 3;
+}
+
+// Response message for 'RoleAssignmentService.IsAssigned'.
+message IsAssignedResponse {
+    bool is_assigned = 1;
+}
+
+// Request message for 'RoleAssignmentService.GetAssigneeTypeById'.
+message GetAssigneeTypeByIdRequest {
+    // The role assignment ID.
+    uint64 id = 1;
+}
+
+// Response message for 'RoleAssignmentService.GetAssigneeTypeById'.
+message GetAssigneeTypeByIdResponse {
+	// The type of the assignee.
+    AssigneeTypeEnum.AssigneeType assignee_type = 1;
+}
+
+// Request message for 'RoleAssignmentService.GetStatusById'.
+message GetStatusByIdRequest {
+    // The role assignment ID.
+    uint64 id = 1;
+}
+
+// Response message for 'RoleAssignmentService.GetStatusById'.
+message GetStatusByIdResponse {
+    // The role assignment status.
+    RoleAssignmentStatusEnum.RoleAssignmentStatus status = 1;
+}
+
+// Request message for 'RoleAssignmentService.GetRoleIdAndAssigneeById'.
+message GetRoleIdAndAssigneeByIdRequest {
+    // The role assignment ID.
+    uint64 id = 1;
+}
+
+// Response message for 'RoleAssignmentService.GetRoleIdAndAssigneeById'.
+message GetRoleIdAndAssigneeByIdResponse {
+    // The role ID.
+    uint64 role_id = 1;
+
+    // The assignee ID.
+    uint64 assignee_id = 2;
+
+    // The assignee type.
+    AssigneeTypeEnum.AssigneeType assignee_type = 3;
+}
