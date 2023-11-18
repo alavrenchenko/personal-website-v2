@@ -1,0 +1,172 @@
+// Copyright 2023 Alexey Lavrenchenko. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// 	http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+
+package personalwebsite.identity.roles;
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/wrappers.proto";
+import "apis/identity/roles/role.proto";
+
+option go_package = "personal-website-v2/go-apis/identity/roles;roles";
+
+// Proto file describing the Role service.
+
+// The role service definition.
+service RoleService {
+	// Creates a role and returns the role ID if the operation is successful.
+    rpc Create(CreateRequest) returns (CreateResponse) {}
+
+	// Deletes a role by the specified role ID.
+    rpc Delete(DeleteRequest) returns (google.protobuf.Empty) {}
+
+    // Gets a role by the specified role ID.
+    rpc GetById(GetByIdRequest) returns (GetByIdResponse) {}
+
+    // Gets a role by the specified role name.
+    rpc GetByName(GetByNameRequest) returns (GetByNameResponse) {}
+
+	// Gets all roles by the specified role IDs.
+    rpc GetAllByIds(GetAllByIdsRequest) returns (GetAllByIdsResponse) {}
+
+	// Gets all roles by the specified role names.
+    rpc GetAllByNames(GetAllByNamesRequest) returns (GetAllByNamesResponse) {}
+
+	// Returns true if the role exists.
+    rpc Exists(ExistsRequest) returns (ExistsResponse) {}
+
+    // Gets a role type by the specified role ID.
+    rpc GetTypeById(GetTypeByIdRequest) returns (GetTypeByIdResponse) {}
+
+	// Gets a role status by the specified role ID.
+    rpc GetStatusById(GetStatusByIdRequest) returns (GetStatusByIdResponse) {}
+}
+
+// Request message for 'RoleService.Create'.
+message CreateRequest {
+    // The role name.
+    string name = 1;
+
+    // The role type.
+    RoleTypeEnum.RoleType type = 2;
+
+    // The role title.
+    string title = 3;
+
+    // Optional. The app ID.
+    google.protobuf.UInt64Value app_id = 4;
+
+    // Optional. The app group ID.
+    google.protobuf.UInt64Value app_group_id = 5;
+
+	// The role description.
+    string description = 6;
+}
+
+// Response message for 'RoleService.Create'.
+message CreateResponse {
+    // The role ID.
+    uint64 id = 1;
+}
+
+// Request message for 'RoleService.Delete'.
+message DeleteRequest {
+    // The role ID.
+    uint64 id = 1;
+}
+
+// Request message for 'RoleService.GetById'.
+message GetByIdRequest {
+    // The role ID.
+    uint64 id = 1;
+}
+
+// Response message for 'RoleService.GetById'.
+message GetByIdResponse {
+    // The role.
+    Role role = 1;
+}
+
+// Request message for 'RoleService.GetByName'.
+message GetByNameRequest {
+    // The role name.
+    string name = 1;
+}
+
+// Response message for 'RoleService.GetByName'.
+message GetByNameResponse {
+    // The role.
+    Role role = 1;
+}
+
+// Request message for 'RoleService.GetAllByIds'.
+message GetAllByIdsRequest {
+    // The role IDs.
+    repeated uint64 ids = 1;
+}
+
+// Response message for 'RoleService.GetAllByIds'.
+message GetAllByIdsResponse {
+    // The roles.
+    repeated Role roles = 1;
+}
+
+// Request message for 'RoleService.GetAllByNames'.
+message GetAllByNamesRequest {
+    // The role names.
+    repeated string names = 1;
+}
+
+// Response message for 'RoleService.GetAllByNames'.
+message GetAllByNamesResponse {
+    // The roles.
+    repeated Role roles = 1;
+}
+
+// Request message for 'RoleService.Exists'.
+message ExistsRequest {
+    // The role name.
+    string name = 1;
+}
+
+// Response message for 'RoleService.Exists'.
+message ExistsResponse {
+    // The role exists.
+    bool exists = 1;
+}
+
+// Request message for 'RoleService.GetTypeById'.
+message GetTypeByIdRequest {
+    // The role ID.
+    uint64 id = 1;
+}
+
+// Response message for 'RoleService.GetTypeById'.
+message GetTypeByIdResponse {
+	// The role type.
+    RoleTypeEnum.RoleType type = 1;
+}
+
+// Request message for 'RoleService.GetStatusById'.
+message GetStatusByIdRequest {
+    // The role ID.
+    uint64 id = 1;
+}
+
+// Response message for 'RoleService.GetStatusById'.
+message GetStatusByIdResponse {
+	// The role status.
+    RoleStatusEnum.RoleStatus status = 1;
+}
