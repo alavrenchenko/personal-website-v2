@@ -1,0 +1,172 @@
+// Copyright 2023 Alexey Lavrenchenko. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// 	http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+
+package personalwebsite.identity.roles;
+
+import "apis/identity/groups/user_group.proto";
+import "apis/identity/roles/group_role_assignment.proto";
+
+option go_package = "personal-website-v2/go-apis/identity/roles;roles";
+
+// Proto file describing the Group role assignment service.
+
+// The group role assignment service definition.
+service GroupRoleAssignmentService {
+    // Gets a group role assignment by the specified group role assignment ID.
+    rpc GetById(GetByIdRequest) returns (GetByIdResponse) {}
+
+    // Gets a group role assignment by the specified role assignment ID.
+    rpc GetByRoleAssignmentId(GetByRoleAssignmentIdRequest) returns (GetByRoleAssignmentIdResponse) {}
+
+    // Gets all role assignments of the group by the specified group.
+    rpc GetAllByGroup(GetAllByGroupRequest) returns (GetAllByGroupResponse) {}
+
+	// Returns true if the group role assignment exists.
+    rpc Exists(ExistsRequest) returns (ExistsResponse) {}
+	
+    // Returns true if the role is assigned to the group.
+    rpc IsAssigned(IsAssignedRequest) returns (IsAssignedResponse) {}
+
+    // Gets the group role assignment ID by the specified role assignment ID.
+    rpc GetIdByRoleAssignmentId(GetIdByRoleAssignmentIdRequest) returns (GetIdByRoleAssignmentIdResponse) {}
+
+	// Gets a group role assignment status by the specified group role assignment ID.
+    rpc GetStatusById(GetStatusByIdRequest) returns (GetStatusByIdResponse) {}
+
+	// Gets a group role assignment status by the specified role assignment ID.
+    rpc GetStatusByRoleAssignmentId(GetStatusByRoleAssignmentIdRequest) returns (GetStatusByRoleAssignmentIdResponse) {}
+	
+	// Gets the IDs of the roles assigned to the group by the specified group.
+	// If the role filter is empty, then all assigned roles are returned, otherwise only the roles
+	// specified in the filter, if any, are returned.
+    rpc GetGroupRoleIdsByGroup(GetGroupRoleIdsByGroupRequest) returns (GetGroupRoleIdsByGroupResponse) {}
+}
+
+// Request message for 'GroupRoleAssignmentService.GetById'.
+message GetByIdRequest {
+    // The group role assignment ID.
+    uint64 id = 1;
+}
+
+// Response message for 'GroupRoleAssignmentService.GetById'.
+message GetByIdResponse {
+    // The group role assignment.
+    GroupRoleAssignment assignment = 1;
+}
+
+// Request message for 'GroupRoleAssignmentService.GetByRoleAssignmentId'.
+message GetByRoleAssignmentIdRequest {
+    // The role assignment ID.
+    uint64 role_assignment_id = 1;
+}
+
+// Response message for 'GroupRoleAssignmentService.GetByRoleAssignmentId'.
+message GetByRoleAssignmentIdResponse {
+    // The group role assignment.
+    GroupRoleAssignment assignment = 1;
+}
+
+// Request message for 'GroupRoleAssignmentService.GetAllByGroup'.
+message GetAllByGroupRequest {
+	// The user's group.
+    personalwebsite.identity.groups.UserGroup group = 1;
+}
+
+// Response message for 'GroupRoleAssignmentService.GetAllByGroup'.
+message GetAllByGroupResponse {
+    // The role assignments of the group.
+    repeated GroupRoleAssignment assignments = 1;
+}
+
+// Request message for 'GroupRoleAssignmentService.Exists'.
+message ExistsRequest {
+	// The user's group.
+    personalwebsite.identity.groups.UserGroup group = 1;
+    
+    // The role ID.
+    uint64 role_id = 2;
+}
+
+// Response message for 'GroupRoleAssignmentService.Exists'.
+message ExistsResponse {
+    // The group role assignment exists.
+    bool exists = 1;
+}
+
+// Request message for 'GroupRoleAssignmentService.IsAssigned'.
+message IsAssignedRequest {
+	// The user's group.
+    personalwebsite.identity.groups.UserGroup group = 1;
+    
+    // The role ID.
+    uint64 role_id = 2;
+}
+
+// Response message for 'GroupRoleAssignmentService.IsAssigned'.
+message IsAssignedResponse {
+    bool is_assigned = 1;
+}
+
+// Request message for 'GroupRoleAssignmentService.GetIdByRoleAssignmentId'.
+message GetIdByRoleAssignmentIdRequest {
+    // The role assignment ID.
+    uint64 role_assignment_id = 1;
+}
+
+// Response message for 'GroupRoleAssignmentService.GetIdByRoleAssignmentId'.
+message GetIdByRoleAssignmentIdResponse {
+    // The group role assignment ID.
+    uint64 id = 1;
+}
+
+// Request message for 'GroupRoleAssignmentService.GetStatusById'.
+message GetStatusByIdRequest {
+    // The group role assignment ID.
+    uint64 id = 1;
+}
+
+// Response message for 'GroupRoleAssignmentService.GetStatusById'.
+message GetStatusByIdResponse {
+    // The group role assignment status.
+    GroupRoleAssignmentStatusEnum.GroupRoleAssignmentStatus status = 1;
+}
+
+// Request message for 'GroupRoleAssignmentService.GetStatusByRoleAssignmentId'.
+message GetStatusByRoleAssignmentIdRequest {
+    // The role assignment ID.
+    uint64 role_assignment_id = 1;
+}
+
+// Response message for 'GroupRoleAssignmentService.GetStatusByRoleAssignmentId'.
+message GetStatusByRoleAssignmentIdResponse {
+    // The group role assignment status.
+    GroupRoleAssignmentStatusEnum.GroupRoleAssignmentStatus status = 1;
+}
+
+// Request message for 'GroupRoleAssignmentService.GetGroupRoleIdsByGroup'.
+message GetGroupRoleIdsByGroupRequest {
+	// The user's group.
+    personalwebsite.identity.groups.UserGroup group = 1;
+
+    // The role filter.
+    repeated uint64 role_filter = 2;
+}
+
+// Response message for 'GroupRoleAssignmentService.GetGroupRoleIdsByGroup'.
+message GetGroupRoleIdsByGroupResponse {
+    // The role IDs.
+    repeated uint64 role_ids = 1;
+}
