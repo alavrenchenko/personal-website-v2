@@ -1,0 +1,151 @@
+// Copyright 2023 Alexey Lavrenchenko. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// 	http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+
+package personalwebsite.identity.permissions;
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/wrappers.proto";
+import "apis/identity/permissions/permission_group.proto";
+
+option go_package = "personal-website-v2/go-apis/identity/permissions;permissions";
+
+// Proto file describing the Permission group service.
+
+// The permission group service definition.
+service PermissionGroupService {
+	// Creates a permission group and returns the permission group ID if the operation is successful.
+    rpc Create(CreateRequest) returns (CreateResponse) {}
+
+	// Deletes a permission group by the specified permission group ID.
+    rpc Delete(DeleteRequest) returns (google.protobuf.Empty) {}
+
+    // Gets a permission group by the specified permission group ID.
+    rpc GetById(GetByIdRequest) returns (GetByIdResponse) {}
+
+    // Gets a permission group by the specified permission group name.
+    rpc GetByName(GetByNameRequest) returns (GetByNameResponse) {}
+
+	// Gets all permission groups by the specified permission group IDs.
+    rpc GetAllByIds(GetAllByIdsRequest) returns (GetAllByIdsResponse) {}
+
+	// Gets all permission groups by the specified permission group names.
+    rpc GetAllByNames(GetAllByNamesRequest) returns (GetAllByNamesResponse) {}
+
+	// Returns true if the permission group exists.
+    rpc Exists(ExistsRequest) returns (ExistsResponse) {}
+
+	// Gets a permission group status by the specified permission group ID.
+    rpc GetStatusById(GetStatusByIdRequest) returns (GetStatusByIdResponse) {}
+}
+
+// Request message for 'PermissionGroupService.Create'.
+message CreateRequest {
+	// The permission group name.
+    string name = 1;
+
+    // Optional. The app ID.
+    google.protobuf.UInt64Value app_id = 2;
+
+    // Optional. The app group ID.
+    google.protobuf.UInt64Value app_group_id = 3;
+
+	// The permission group description.
+    string description = 4;
+}
+
+// Response message for 'PermissionGroupService.Create'.
+message CreateResponse {
+    // The permission group ID.
+    uint64 id = 1;
+}
+
+// Request message for 'PermissionGroupService.Delete'.
+message DeleteRequest {
+    // The permission group ID.
+    uint64 id = 1;
+}
+
+// Request message for 'PermissionGroupService.GetById'.
+message GetByIdRequest {
+    // The permission group ID.
+    uint64 id = 1;
+}
+
+// Response message for 'PermissionGroupService.GetById'.
+message GetByIdResponse {
+    // The permission group.
+    PermissionGroup group = 1;
+}
+
+// Request message for 'PermissionGroupService.GetByName'.
+message GetByNameRequest {
+    // The permission group name.
+    string name = 1;
+}
+
+// Response message for 'PermissionGroupService.GetByName'.
+message GetByNameResponse {
+    // The permission group.
+    PermissionGroup group = 1;
+}
+
+// Request message for 'PermissionGroupService.GetAllByIds'.
+message GetAllByIdsRequest {
+    // The permission group IDs.
+    repeated uint64 ids = 1;
+}
+
+// Response message for 'PermissionGroupService.GetAllByIds'.
+message GetAllByIdsResponse {
+    // The permission groups.
+    repeated PermissionGroup groups = 1;
+}
+
+// Request message for 'PermissionGroupService.GetAllByNames'.
+message GetAllByNamesRequest {
+    // The permission group names.
+    repeated string names = 1;
+}
+
+// Response message for 'PermissionGroupService.GetAllByNames'.
+message GetAllByNamesResponse {
+    // The permission groups.
+    repeated PermissionGroup groups = 1;
+}
+
+// Request message for 'PermissionGroupService.Exists'.
+message ExistsRequest {
+    // The permission group name.
+    string name = 1;
+}
+
+// Response message for 'PermissionGroupService.Exists'.
+message ExistsResponse {
+    // The permission group exists.
+    bool exists = 1;
+}
+
+// Request message for 'PermissionGroupService.GetStatusById'.
+message GetStatusByIdRequest {
+    // The permission group ID.
+    uint64 id = 1;
+}
+
+// Response message for 'PermissionGroupService.GetStatusById'.
+message GetStatusByIdResponse {
+	// The permission group status.
+    PermissionGroupStatusEnum.PermissionGroupStatus status = 1;
+}
