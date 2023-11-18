@@ -1,0 +1,154 @@
+// Copyright 2023 Alexey Lavrenchenko. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// 	http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+
+package personalwebsite.identity.permissions;
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/wrappers.proto";
+import "apis/identity/permissions/permission.proto";
+
+option go_package = "personal-website-v2/go-apis/identity/permissions;permissions";
+
+// Proto file describing the Permission service.
+
+// The permission service definition.
+service PermissionService {
+	// Creates a permission and returns the permission ID if the operation is successful.
+    rpc Create(CreateRequest) returns (CreateResponse) {}
+
+	// Deletes a permission by the specified permission ID.
+    rpc Delete(DeleteRequest) returns (google.protobuf.Empty) {}
+
+    // Gets a permission by the specified permission ID.
+    rpc GetById(GetByIdRequest) returns (GetByIdResponse) {}
+
+    // Gets a permission by the specified permission name.
+    rpc GetByName(GetByNameRequest) returns (GetByNameResponse) {}
+
+	// Gets all permissions by the specified permission IDs.
+    rpc GetAllByIds(GetAllByIdsRequest) returns (GetAllByIdsResponse) {}
+
+	// Gets all permissions by the specified permission names.
+    rpc GetAllByNames(GetAllByNamesRequest) returns (GetAllByNamesResponse) {}
+
+	// Returns true if the permission exists.
+    rpc Exists(ExistsRequest) returns (ExistsResponse) {}
+
+	// Gets a permission status by the specified permission ID.
+    rpc GetStatusById(GetStatusByIdRequest) returns (GetStatusByIdResponse) {}
+}
+
+// Request message for 'PermissionService.Create'.
+message CreateRequest {
+	// The permission name.
+    string name = 1;
+
+	// The permission group ID.
+    string group_id = 2;
+
+    // Optional. The app ID.
+    google.protobuf.UInt64Value app_id = 3;
+
+    // Optional. The app group ID.
+    google.protobuf.UInt64Value app_group_id = 4;
+
+	// The permission description.
+    string description = 5;
+}
+
+// Response message for 'PermissionService.Create'.
+message CreateResponse {
+    // The permission ID.
+    uint64 id = 1;
+}
+
+// Request message for 'PermissionService.Delete'.
+message DeleteRequest {
+    // The permission ID.
+    uint64 id = 1;
+}
+
+// Request message for 'PermissionService.GetById'.
+message GetByIdRequest {
+    // The permission ID.
+    uint64 id = 1;
+}
+
+// Response message for 'PermissionService.GetById'.
+message GetByIdResponse {
+    // The permission.
+    Permission permission = 1;
+}
+
+// Request message for 'PermissionService.GetByName'.
+message GetByNameRequest {
+    // The permission name.
+    string name = 1;
+}
+
+// Response message for 'PermissionService.GetByName'.
+message GetByNameResponse {
+    // The permission.
+    Permission permission = 1;
+}
+
+// Request message for 'PermissionService.GetAllByIds'.
+message GetAllByIdsRequest {
+    // The permission IDs.
+    repeated uint64 ids = 1;
+}
+
+// Response message for 'PermissionService.GetAllByIds'.
+message GetAllByIdsResponse {
+    // The permissions.
+    repeated Permission permissions = 1;
+}
+
+// Request message for 'PermissionService.GetAllByNames'.
+message GetAllByNamesRequest {
+    // The permission names.
+    repeated string names = 1;
+}
+
+// Response message for 'PermissionService.GetAllByNames'.
+message GetAllByNamesResponse {
+    // The permissions.
+    repeated Permission permissions = 1;
+}
+
+// Request message for 'PermissionService.Exists'.
+message ExistsRequest {
+    // The permission name.
+    string name = 1;
+}
+
+// Response message for 'PermissionService.Exists'.
+message ExistsResponse {
+    // The permission exists.
+    bool exists = 1;
+}
+
+// Request message for 'PermissionService.GetStatusById'.
+message GetStatusByIdRequest {
+    // The permission ID.
+    uint64 id = 1;
+}
+
+// Response message for 'PermissionService.GetStatusById'.
+message GetStatusByIdResponse {
+	// The permission status.
+    PermissionStatusEnum.PermissionStatus status = 1;
+}
