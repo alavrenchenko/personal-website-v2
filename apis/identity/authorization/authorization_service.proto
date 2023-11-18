@@ -1,0 +1,59 @@
+// Copyright 2023 Alexey Lavrenchenko. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// 	http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+
+package personalwebsite.identity.authorization;
+
+import "google/protobuf/wrappers.proto";
+import "apis/identity/groups/user_group.proto";
+
+option go_package = "personal-website-v2/go-apis/identity/authorization;authorization";
+
+// Proto file describing the Authorization service.
+
+// The authorization service definition.
+service AuthorizationService {
+	// Authorizes a user.
+    rpc Authorize(AuthorizeRequest) returns (AuthorizeResponse) {}
+}
+
+// Request message for 'AuthorizationService.Authorize'.
+message AuthorizeRequest {
+    // The user ID.
+    google.protobuf.UInt64Value user_id = 1;
+
+    // The client ID.
+    google.protobuf.UInt64Value client_id = 2;
+
+    repeated uint64 required_permission_ids = 3;
+}
+
+// Response message for 'AuthorizationService.Authorize'.
+message AuthorizeResponse {
+	// The user's group.
+    personalwebsite.identity.groups.UserGroup group = 1;
+
+    // The roles of permissions.
+    repeated PermissionWithRoles permission_roles = 2;
+}
+
+// The permission with roles.
+message PermissionWithRoles {
+    // The permission ID.
+    uint64 permission_id = 1;
+
+    // The role IDs.
+    repeated uint64 role_ids = 2;
+}
