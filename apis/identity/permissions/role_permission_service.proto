@@ -1,0 +1,147 @@
+// Copyright 2023 Alexey Lavrenchenko. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// 	http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+
+package personalwebsite.identity.permissions;
+
+import "google/protobuf/empty.proto";
+
+option go_package = "personal-website-v2/go-apis/identity/permissions;permissions";
+
+// Proto file describing the Role permission service.
+
+// The role permission service definition.
+service RolePermissionService {
+    // Grants permissions to the role.
+    rpc Grant(GrantRequest) returns (google.protobuf.Empty) {}
+
+    // Revokes permissions from the role.
+    rpc Revoke(RevokeRequest) returns (google.protobuf.Empty) {}
+
+    // Revokes all permissions from the role.
+    rpc RevokeAll(RevokeAllRequest) returns (google.protobuf.Empty) {}
+
+    // Revokes permissions from all roles.
+    rpc RevokeFromAll(RevokeFromAllRequest) returns (google.protobuf.Empty) {}
+
+    // Updates permissions of the role.
+    rpc Update(UpdateRequest) returns (google.protobuf.Empty) {}
+
+    // Returns true if the permission is granted to the role.
+    rpc IsGranted(IsGrantedRequest) returns (IsGrantedResponse) {}
+
+    // Returns true if all permissions are granted to the role.
+    rpc AreGranted(AreGrantedRequest) returns (AreGrantedResponse) {}
+
+    // Gets all IDs of the permissions granted to the role by the specified role ID.
+    rpc GetAllPermissionIdsByRoleId(GetAllPermissionIdsByRoleIdRequest) returns (GetAllPermissionIdsByRoleIdResponse) {}
+
+    // Gets all IDs of the roles that are granted the specified permission.
+    rpc GetAllRoleIdsByPermissionId(GetAllRoleIdsByPermissionIdRequest) returns (GetAllRoleIdsByPermissionIdResponse) {}
+}
+
+// Request message for 'RolePermissionService.Grant'.
+message GrantRequest {
+	// The role ID.
+    uint64 role_id = 1;
+
+    // The permission IDs.
+    repeated uint64 permission_ids = 2;
+}
+
+// Request message for 'RolePermissionService.Revoke'.
+message RevokeRequest {
+	// The role ID.
+    uint64 role_id = 1;
+
+    // The permission IDs.
+    repeated uint64 permission_ids = 2;
+}
+
+// Request message for 'RolePermissionService.RevokeAll'.
+message RevokeAllRequest {
+	// The role ID.
+    uint64 role_id = 1;
+}
+
+// Request message for 'RolePermissionService.RevokeFromAll'.
+message RevokeFromAllRequest {
+    // The permission IDs.
+    repeated uint64 permission_ids = 1;
+}
+
+// Request message for 'RolePermissionService.Update'.
+message UpdateRequest {
+	// The role ID.
+    uint64 role_id = 1;
+
+    // The permission IDs to grant.
+    repeated uint64 permission_ids_to_grant = 2;
+
+    // The permission IDs to revoke.
+    repeated uint64 permission_ids_to_revoke = 3;
+}
+
+// Request message for 'RolePermissionService.IsGranted'.
+message IsGrantedRequest {
+	// The role ID.
+    uint64 role_id = 1;
+
+    // The permission ID.
+    uint64 permission_id = 2;
+}
+
+// Response message for 'RolePermissionService.IsGranted'.
+message IsGrantedResponse {
+    bool is_granted = 1;
+}
+
+// Request message for 'RolePermissionService.AreGranted'.
+message AreGrantedRequest {
+	// The role ID.
+    uint64 role_id = 1;
+
+    // The permission IDs.
+    repeated uint64 permission_ids = 2;
+}
+
+// Response message for 'RolePermissionService.AreGranted'.
+message AreGrantedResponse {
+    bool are_granted = 1;
+}
+
+// Request message for 'RolePermissionService.GetAllPermissionIdsByRoleId'.
+message GetAllPermissionIdsByRoleIdRequest {
+    // The role ID.
+    uint64 role_id = 1;
+}
+
+// Response message for 'RolePermissionService.GetAllPermissionIdsByRoleId'.
+message GetAllPermissionIdsByRoleIdResponse {
+    // The permission IDs.
+    repeated uint64 permission_ids = 1;
+}
+
+// Request message for 'RolePermissionService.GetAllRoleIdsByPermissionId'.
+message GetAllRoleIdsByPermissionIdRequest {
+    // The permission ID.
+    uint64 permission_id = 1;
+}
+
+// Response message for 'RolePermissionService.GetAllRoleIdsByPermissionId'.
+message GetAllRoleIdsByPermissionIdResponse {
+    // The role IDs.
+    repeated uint64 role_ids = 1;
+}
