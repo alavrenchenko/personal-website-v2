@@ -1,0 +1,171 @@
+// Copyright 2023 Alexey Lavrenchenko. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// 	http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+
+package personalwebsite.identity.roles;
+
+import "apis/identity/roles/user_role_assignment.proto";
+
+option go_package = "personal-website-v2/go-apis/identity/roles;roles";
+
+// Proto file describing the User role assignment service.
+
+// The user role assignment service definition.
+service UserRoleAssignmentService {
+    // Gets a user's role assignment by the specified user's role assignment ID.
+    rpc GetById(GetByIdRequest) returns (GetByIdResponse) {}
+
+    // Gets a user's role assignment by the specified role assignment ID.
+    rpc GetByRoleAssignmentId(GetByRoleAssignmentIdRequest) returns (GetByRoleAssignmentIdResponse) {}
+
+    // Gets all user's role assignments by the specified user ID.
+    rpc GetAllByUserId(GetAllByUserIdRequest) returns (GetAllByUserIdResponse) {}
+
+	// Returns true if the user's role assignment exists.
+    rpc Exists(ExistsRequest) returns (ExistsResponse) {}
+	
+    // Returns true if the role is assigned to the user.
+    rpc IsAssigned(IsAssignedRequest) returns (IsAssignedResponse) {}
+
+    // Gets the user's role assignment ID by the specified role assignment ID.
+    rpc GetIdByRoleAssignmentId(GetIdByRoleAssignmentIdRequest) returns (GetIdByRoleAssignmentIdResponse) {}
+
+	// Gets a user's role assignment status by the specified user's role assignment ID.
+    rpc GetStatusById(GetStatusByIdRequest) returns (GetStatusByIdResponse) {}
+
+	// Gets a user's role assignment status by the specified role assignment ID.
+    rpc GetStatusByRoleAssignmentId(GetStatusByRoleAssignmentIdRequest) returns (GetStatusByRoleAssignmentIdResponse) {}
+	
+	// Gets the IDs of the roles assigned to the user by the specified user ID.
+	// If the role filter is empty, then all assigned roles are returned, otherwise only the roles
+	// specified in the filter, if any, are returned.
+    rpc GetUserRoleIdsByUserId(GetUserRoleIdsByUserIdRequest) returns (GetUserRoleIdsByUserIdResponse) {}
+}
+
+// Request message for 'UserRoleAssignmentService.GetById'.
+message GetByIdRequest {
+    // The user's role assignment ID.
+    uint64 id = 1;
+}
+
+// Response message for 'UserRoleAssignmentService.GetById'.
+message GetByIdResponse {
+    // The user's role assignment.
+    UserRoleAssignment assignment = 1;
+}
+
+// Request message for 'UserRoleAssignmentService.GetByRoleAssignmentId'.
+message GetByRoleAssignmentIdRequest {
+    // The role assignment ID.
+    uint64 role_assignment_id = 1;
+}
+
+// Response message for 'UserRoleAssignmentService.GetByRoleAssignmentId'.
+message GetByRoleAssignmentIdResponse {
+    // The user's role assignment.
+    UserRoleAssignment assignment = 1;
+}
+
+// Request message for 'UserRoleAssignmentService.GetAllByUserId'.
+message GetAllByUserIdRequest {
+    // The user ID.
+    uint64 user_id = 1;
+}
+
+// Response message for 'UserRoleAssignmentService.GetAllByUserId'.
+message GetAllByUserIdResponse {
+    // The user's role assignments.
+    repeated UserRoleAssignment assignments = 1;
+}
+
+// Request message for 'UserRoleAssignmentService.Exists'.
+message ExistsRequest {
+    // The user ID.
+    uint64 user_id = 1;
+    
+    // The role ID.
+    uint64 role_id = 2;
+}
+
+// Response message for 'UserRoleAssignmentService.Exists'.
+message ExistsResponse {
+    // The user's role assignment exists.
+    bool exists = 1;
+}
+
+// Request message for 'UserRoleAssignmentService.IsAssigned'.
+message IsAssignedRequest {
+    // The user ID.
+    uint64 user_id = 1;
+    
+    // The role ID.
+    uint64 role_id = 2;
+}
+
+// Response message for 'UserRoleAssignmentService.IsAssigned'.
+message IsAssignedResponse {
+    bool is_assigned = 1;
+}
+
+// Request message for 'UserRoleAssignmentService.GetIdByRoleAssignmentId'.
+message GetIdByRoleAssignmentIdRequest {
+    // The role assignment ID.
+    uint64 role_assignment_id = 1;
+}
+
+// Response message for 'UserRoleAssignmentService.GetIdByRoleAssignmentId'.
+message GetIdByRoleAssignmentIdResponse {
+    // The user's role assignment ID.
+    uint64 id = 1;
+}
+
+// Request message for 'UserRoleAssignmentService.GetStatusById'.
+message GetStatusByIdRequest {
+    // The user's role assignment ID.
+    uint64 id = 1;
+}
+
+// Response message for 'UserRoleAssignmentService.GetStatusById'.
+message GetStatusByIdResponse {
+    // The user's role assignment status.
+    UserRoleAssignmentStatusEnum.UserRoleAssignmentStatus status = 1;
+}
+
+// Request message for 'UserRoleAssignmentService.GetStatusByRoleAssignmentId'.
+message GetStatusByRoleAssignmentIdRequest {
+    // The role assignment ID.
+    uint64 role_assignment_id = 1;
+}
+
+// Response message for 'UserRoleAssignmentService.GetStatusByRoleAssignmentId'.
+message GetStatusByRoleAssignmentIdResponse {
+    // The user's role assignment status.
+    UserRoleAssignmentStatusEnum.UserRoleAssignmentStatus status = 1;
+}
+
+// Request message for 'UserRoleAssignmentService.GetUserRoleIdsByUserId'.
+message GetUserRoleIdsByUserIdRequest {
+    // The user ID.
+    uint64 user_id = 1;
+
+    // The role filter.
+    repeated uint64 role_filter = 2;
+}
+
+// Response message for 'UserRoleAssignmentService.GetUserRoleIdsByUserId'.
+message GetUserRoleIdsByUserIdResponse {
+    // The role IDs.
+    repeated uint64 role_ids = 1;
+}
