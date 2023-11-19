@@ -1,0 +1,234 @@
+// Copyright 2023 Alexey Lavrenchenko. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// 	http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+
+package personalwebsite.identity.sessions;
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/wrappers.proto";
+import "apis/identity/sessions/user_session_info.proto";
+
+option go_package = "personal-website-v2/go-apis/identity/sessions;sessions";
+
+// Proto file describing the User session service.
+
+// The user session service definition.
+service UserSessionService {
+	// Creates and starts a user's web session and returns the user's session ID
+	// if the operation is successful.
+    rpc CreateAndStartWebSession(CreateAndStartWebSessionRequest) returns (CreateAndStartWebSessionResponse) {}
+
+	// Creates and starts a user's mobile session and returns the user's session ID
+	// if the operation is successful.
+    rpc CreateAndStartMobileSession(CreateAndStartMobileSessionRequest) returns (CreateAndStartMobileSessionResponse) {}
+
+	// Terminates a user's session by the specified user session ID.
+    rpc Terminate(TerminateRequest) returns (google.protobuf.Empty) {}
+
+    // Gets user's session info by the specified user session ID.
+    rpc GetById(GetByIdRequest) returns (GetByIdResponse) {}
+
+	// Gets all user's sessions by the specified user ID.
+    rpc GetAllByUserId(GetAllByUserIdRequest) returns (GetAllByUserIdResponse) {}
+
+	// Gets all sessions of users by the specified client ID.
+    rpc GetAllByClientId(GetAllByClientIdRequest) returns (GetAllByClientIdResponse) {}
+
+	// Gets all user's sessions by the specified user ID and client ID.
+    rpc GetAllByUserIdAndClientId(GetAllByUserIdAndClientIdRequest) returns (GetAllByUserIdAndClientIdResponse) {}
+
+	// Gets all user's sessions by the specified user agent ID.
+    rpc GetAllByUserAgentId(GetAllByUserAgentIdRequest) returns (GetAllByUserAgentIdResponse) {}
+
+	// Returns true if the user's session exists.
+    rpc Exists(ExistsRequest) returns (ExistsResponse) {}
+
+	// Gets a user's session type by the specified user session ID.
+    rpc GetTypeById(GetTypeByIdRequest) returns (GetTypeByIdResponse) {}
+
+	// Gets a user's session status by the specified user session ID.
+    rpc GetStatusById(GetStatusByIdRequest) returns (GetStatusByIdResponse) {}
+}
+
+// Request message for 'UserSessionService.CreateAndStartWebSession'.
+message CreateAndStartWebSessionRequest {
+    // The user ID who owns the session.
+    uint64 user_id = 1;
+
+    // The client ID.
+    uint64 client_id = 2;
+
+    // The user agent ID.
+    uint64 user_agent_id = 3;
+
+    // Optional. The app ID.
+    google.protobuf.UInt64Value app_id = 4;
+
+    // The first IP address (sign-in IP address).
+    string first_ip = 5;
+}
+
+// Response message for 'UserSessionService.CreateAndStartWebSession'.
+message CreateAndStartWebSessionResponse {
+    // The user's session ID.
+    uint64 id = 1;
+}
+
+// Request message for 'UserSessionService.CreateAndStartMobileSession'.
+message CreateAndStartMobileSessionRequest {
+    // The user ID who owns the session.
+    uint64 user_id = 1;
+
+    // The client ID.
+    uint64 client_id = 2;
+
+    // The user agent ID.
+    uint64 user_agent_id = 3;
+
+    // The app ID.
+    uint64 app_id = 4;
+
+    // The first IP address (sign-in IP address).
+    string first_ip = 5;
+}
+
+// Response message for 'UserSessionService.CreateAndStartMobileSession'.
+message CreateAndStartMobileSessionResponse {
+    // The user's session ID.
+    uint64 id = 1;
+}
+
+// Request message for 'UserSessionService.Terminate'.
+message TerminateRequest {
+    // The user's session ID.
+    uint64 id = 1;
+}
+
+// Request message for 'UserSessionService.GetById'.
+message GetByIdRequest {
+    // The user's session ID.
+    uint64 id = 1;
+}
+
+// Response message for 'UserSessionService.GetById'.
+message GetByIdResponse {
+    // The user's session info.
+    UserSessionInfo info = 1;
+}
+
+// Request message for 'UserSessionService.GetAllByUserId'.
+message GetAllByUserIdRequest {
+    // The user ID.
+    uint64 user_id = 1;
+
+    // If onlyExisting is true, then only user's existing sessions are returned.
+    bool only_existing = 2;
+}
+
+// Response message for 'UserSessionService.GetAllByUserId'.
+message GetAllByUserIdResponse {
+    // The user's sessions.
+    repeated UserSessionInfo sessions = 1;
+}
+
+// Request message for 'UserSessionService.GetAllByClientId'.
+message GetAllByClientIdRequest {
+    // The client ID.
+    uint64 client_id = 1;
+
+    // If onlyExisting is true, then only existing sessions of users are returned.
+    bool only_existing = 2;
+}
+
+// Response message for 'UserSessionService.GetAllByClientId'.
+message GetAllByClientIdResponse {
+    // The user sessions.
+    repeated UserSessionInfo sessions = 1;
+}
+
+// Request message for 'UserSessionService.GetAllByUserIdAndClientId'.
+message GetAllByUserIdAndClientIdRequest {
+    // The user ID.
+    uint64 user_id = 1;
+
+    // The client ID.
+    uint64 client_id = 2;
+
+    // If onlyExisting is true, then only user's existing sessions are returned.
+    bool only_existing = 3;
+}
+
+// Response message for 'UserSessionService.GetAllByUserIdAndClientId'.
+message GetAllByUserIdAndClientIdResponse {
+    // The user's sessions.
+    repeated UserSessionInfo sessions = 1;
+}
+
+// Request message for 'UserSessionService.GetAllByUserAgentId'.
+message GetAllByUserAgentIdRequest {
+    // The user agent ID.
+    uint64 user_agent_id = 1;
+
+    // If onlyExisting is true, then only user's existing sessions are returned.
+    bool only_existing = 2;
+}
+
+// Response message for 'UserSessionService.GetAllByUserAgentId'.
+message GetAllByUserAgentIdResponse {
+    // The user's sessions.
+    repeated UserSessionInfo sessions = 1;
+}
+
+// Request message for 'UserSessionService.Exists'.
+message ExistsRequest {
+    // The user ID.
+    uint64 user_id = 1;
+
+    // The client ID.
+    uint64 client_id = 2;
+
+    // The user agent ID.
+    uint64 user_agent_id = 3;
+}
+
+// Response message for 'UserSessionService.Exists'.
+message ExistsResponse {
+    // The user's session exists.
+    bool exists = 1;
+}
+
+// Request message for 'UserSessionService.GetTypeById'.
+message GetTypeByIdRequest {
+    // The user's session ID.
+    uint64 id = 1;
+}
+
+// Response message for 'UserSessionService.GetTypeById'.
+message GetTypeByIdResponse {
+	// The user's session type.
+    UserSessionTypeEnum.UserSessionType type = 1;
+}
+
+// Request message for 'UserSessionService.GetStatusById'.
+message GetStatusByIdRequest {
+    // The user's session ID.
+    uint64 id = 1;
+}
+
+// Response message for 'UserSessionService.GetStatusById'.
+message GetStatusByIdResponse {
+	// The user's session status.
+    UserSessionStatusEnum.UserSessionStatus status = 1;
+}
