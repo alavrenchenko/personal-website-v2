@@ -151,7 +151,7 @@ message GetByIdRequest {
 
 // Response message for 'UserAgentSessionService.GetById'.
 message GetByIdResponse {
-    // The user agent session info
+    // The user agent session info.
     UserAgentSessionInfo info = 1;
 }
 
@@ -166,7 +166,7 @@ message GetByUserIdAndClientIdRequest {
 
 // Response message for 'UserAgentSessionService.GetByUserIdAndClientId'.
 message GetByUserIdAndClientIdResponse {
-    // The user agent session info
+    // The user agent session info.
     UserAgentSessionInfo info = 1;
 }
 
@@ -178,7 +178,7 @@ message GetByUserAgentIdRequest {
 
 // Response message for 'UserAgentSessionService.GetByUserAgentId'.
 message GetByUserAgentIdResponse {
-    // The user agent session info
+    // The user agent session info.
     UserAgentSessionInfo info = 1;
 }
 
