@@ -1,0 +1,121 @@
+// Copyright 2023 Alexey Lavrenchenko. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// 	http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+
+package personalwebsite.identity.sessions;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/wrappers.proto";
+
+option go_package = "personal-website-v2/go-apis/identity/sessions;sessions";
+
+// Proto file describing the User agent session.
+
+// The user agent session info.
+message UserAgentSessionInfo {
+	// The unique ID to identify the user agent session.
+    uint64 id = 1;
+    
+	// The user ID who owns the session.
+    uint64 user_id = 2;
+
+	// The client ID.
+    uint64 client_id = 3;
+
+	// The user agent ID.
+    uint64 user_agent_id = 4;
+
+	// The user agent session type.
+    UserAgentSessionTypeEnum.UserAgentSessionType type = 5;
+
+	// The user's session ID.
+    uint64 user_session_id = 6;
+
+	// It stores the date and time at which the session was created.
+    google.protobuf.Timestamp created_at = 7;
+
+	// The user ID to identify the user who created the session.
+    uint64 created_by = 8;
+
+	// It stores the date and time at which the session was updated.
+    google.protobuf.Timestamp updated_at = 9;
+
+	// The user ID to identify the user who updated the session.
+    uint64 updated_by = 10;
+
+	// The user agent session status.
+    UserAgentSessionStatusEnum.UserAgentSessionStatus status = 11;
+
+	// It stores the date and time at which the session status was updated.
+    google.protobuf.Timestamp status_updated_at = 12;
+
+	// The user ID to identify the user who updated the session status.
+    uint64 status_updated_by = 13;
+
+    // Optional. The session status comment.
+    google.protobuf.StringValue status_comment = 14;
+
+    // Optional. The first sign-in time.
+    google.protobuf.Timestamp first_sign_in_time = 15;
+
+    // Optional. The first sign-in IP address.
+    google.protobuf.StringValue first_sign_in_ip = 16;
+
+    // Optional. The last sign-in time.
+    google.protobuf.Timestamp last_sign_in_time = 17;
+
+    // Optional. The last sign-in IP address.
+    google.protobuf.StringValue last_sign_in_ip = 18;
+
+    // Optional. The last sign-out time.
+    google.protobuf.Timestamp last_sign_out_time = 19;
+
+    // Optional. The last activity time.
+    google.protobuf.Timestamp last_activity_time = 20;
+
+    // Optional. The last activity IP address.
+    google.protobuf.StringValue last_activity_ip = 21;
+}
+
+// Container for enum describing the user agent session type.
+message UserAgentSessionTypeEnum {
+    // The user agent session type.
+    enum UserAgentSessionType {
+        // Unspecified. Do not use.
+        UNSPECIFIED = 0;
+        WEB = 1;
+
+        // For mobile apps.
+        MOBILE = 2;
+    }
+}
+
+// Container for enum describing the user agent session status.
+message UserAgentSessionStatusEnum {
+    // The user agent session status.
+    enum UserAgentSessionStatus {
+        // Unspecified. Do not use.
+        UNSPECIFIED = 0;
+        NEW = 1;
+        ACTIVE = 2;
+        SIGNED_OUT = 3;
+        ENDED = 4;
+        LOCKED_OUT = 5;
+        TEMPORARILY_LOCKED_OUT = 6;
+        DISABLED = 7;
+        DELETING = 8;
+        DELETED = 9;
+    }
+}
