@@ -42,7 +42,7 @@ type CreateWebUserAgentOperationData struct {
 	// The user ID.
 	UserId uint64 `db:"userId"`
 
-	// The client ID (web and mobile).
+	// The client ID.
 	ClientId uint64 `db:"clientId"`
 
 	// The app ID.
@@ -63,7 +63,7 @@ type CreateMobileUserAgentOperationData struct {
 	// The user ID.
 	UserId uint64 `db:"userId"`
 
-	// The client ID (web and mobile).
+	// The client ID.
 	ClientId uint64 `db:"clientId"`
 
 	// The app ID.
