@@ -20,7 +20,7 @@ import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/wrappers.proto";
 import "apis/identity/groups/user_group.proto";
-import "apis/identity/users/personal_info.proto";
+import "apis/identity/users/personalinfo/personal_info.proto";
 import "apis/identity/users/user.proto";
 
 option go_package = "personal-website-v2/go-apis/identity/users;users";
@@ -99,7 +99,7 @@ message CreateRequest {
     google.protobuf.Timestamp birth_date = 8;
 
 	// The user's gender.
-    GenderEnum.Gender gender = 9;
+    personalwebsite.identity.users.personalinfo.GenderEnum.Gender gender = 9;
 }
 
 // Response message for 'UserService.Create'.
