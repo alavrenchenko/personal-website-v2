@@ -14,12 +14,12 @@
 
 syntax = "proto3";
 
-package personalwebsite.identity.sessions;
+package personalwebsite.identity.sessions.useragentsessions;
 
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/wrappers.proto";
 
-option go_package = "personal-website-v2/go-apis/identity/sessions;sessions";
+option go_package = "personal-website-v2/go-apis/identity/sessions/useragentsessions;useragentsessions";
 
 // Proto file describing the User agent session.
 
