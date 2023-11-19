@@ -14,11 +14,11 @@
 
 syntax = "proto3";
 
-package personalwebsite.identity.users;
+package personalwebsite.identity.users.personalinfo;
 
-import "apis/identity/users/personal_info.proto";
+import "apis/identity/users/personalinfo/personal_info.proto";
 
-option go_package = "personal-website-v2/go-apis/identity/users;users";
+option go_package = "personal-website-v2/go-apis/identity/users/personalinfo;personalinfo";
 
 // Proto file describing the User personal info service.
 
