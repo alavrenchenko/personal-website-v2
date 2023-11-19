@@ -14,28 +14,29 @@
 
 syntax = "proto3";
 
-package personalwebsite.identity.roles;
+package personalwebsite.identity.roles.grouproles;
 
+import "apis/identity/groups/user_group.proto";
 import "apis/identity/roles/role.proto";
 
-option go_package = "personal-website-v2/go-apis/identity/roles;roles";
+option go_package = "personal-website-v2/go-apis/identity/roles/grouproles;grouproles";
 
-// Proto file describing the User role service.
+// Proto file describing the Group role service.
 
-// The user role service definition.
-service UserRoleService {
-	// Gets all user's roles by the specified user ID.
-    rpc GetAllRolesByUserId(GetAllRolesByUserIdRequest) returns (GetAllRolesByUserIdResponse) {}
+// The group role service definition.
+service GroupRoleService {
+	// Gets all roles of the group by the specified group.
+    rpc GetAllRolesByGroup(GetAllRolesByGroupRequest) returns (GetAllRolesByGroupResponse) {}
 }
 
-// Request message for 'UserRoleService.GetAllRolesByUserId'.
-message GetAllRolesByUserIdRequest {
-    // The user ID.
-    uint64 user_id = 1;
+// Request message for 'GroupRoleService.GetAllRolesByGroup'.
+message GetAllRolesByGroupRequest {
+	// The user's group.
+    personalwebsite.identity.groups.UserGroup group = 1;
 }
 
-// Response message for 'UserRoleService.GetAllRolesByUserId'.
-message GetAllRolesByUserIdResponse {
+// Response message for 'GroupRoleService.GetAllRolesByGroup'.
+message GetAllRolesByGroupResponse {
     // The roles.
     repeated Role roles = 1;
 }

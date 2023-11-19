@@ -14,11 +14,11 @@
 
 syntax = "proto3";
 
-package personalwebsite.identity.roles;
+package personalwebsite.identity.roles.userroleassignments;
 
-import "apis/identity/roles/user_role_assignment.proto";
+import "apis/identity/roles/userroleassignments/user_role_assignment.proto";
 
-option go_package = "personal-website-v2/go-apis/identity/roles;roles";
+option go_package = "personal-website-v2/go-apis/identity/roles/userroleassignments;userroleassignments";
 
 // Proto file describing the User role assignment service.
 

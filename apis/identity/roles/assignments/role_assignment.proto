@@ -14,12 +14,12 @@
 
 syntax = "proto3";
 
-package personalwebsite.identity.roles;
+package personalwebsite.identity.roles.assignments;
 
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/wrappers.proto";
 
-option go_package = "personal-website-v2/go-apis/identity/roles;roles";
+option go_package = "personal-website-v2/go-apis/identity/roles/assignments;assignments";
 
 // Proto file describing the Role assignment.
 
