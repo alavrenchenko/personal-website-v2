@@ -108,7 +108,7 @@ message GetTypeByIdRequest {
 // Response message for 'ClientService.GetTypeById'.
 message GetTypeByIdResponse {
     // The client type.
-    ClientTypeEnum.ClientType type = 2;
+    ClientTypeEnum.ClientType type = 1;
 }
 
 // Request message for 'ClientService.GetStatusById'.
