@@ -14,11 +14,11 @@
 
 syntax = "proto3";
 
-package personalwebsite.identity.permissions;
+package personalwebsite.identity.permissions.rolepermissions;
 
 import "google/protobuf/empty.proto";
 
-option go_package = "personal-website-v2/go-apis/identity/permissions;permissions";
+option go_package = "personal-website-v2/go-apis/identity/permissions/rolepermissions;rolepermissions";
 
 // Proto file describing the Role permission service.
 

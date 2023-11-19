@@ -14,12 +14,12 @@
 
 syntax = "proto3";
 
-package personalwebsite.identity.permissions;
+package personalwebsite.identity.permissions.groups;
 
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/wrappers.proto";
 
-option go_package = "personal-website-v2/go-apis/identity/permissions;permissions";
+option go_package = "personal-website-v2/go-apis/identity/permissions/groups;groups";
 
 // Proto file describing the Permission group.
 
