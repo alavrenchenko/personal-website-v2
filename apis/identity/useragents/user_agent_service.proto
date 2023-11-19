@@ -1,0 +1,238 @@
+// Copyright 2023 Alexey Lavrenchenko. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// 	http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+
+package personalwebsite.identity.useragents;
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/wrappers.proto";
+import "apis/identity/useragents/user_agent.proto";
+
+option go_package = "personal-website-v2/go-apis/identity/useragents;useragents";
+
+// Proto file describing the User agent service.
+
+// The user agent service definition.
+service UserAgentService {
+	// Creates a web user agent and returns the user agent ID if the operation is successful.
+    rpc CreateWebUserAgent(CreateWebUserAgentRequest) returns (CreateWebUserAgentResponse) {}
+
+	// Creates a mobile user agent and returns the user agent ID if the operation is successful.
+    rpc CreateMobileUserAgent(CreateMobileUserAgentRequest) returns (CreateMobileUserAgentResponse) {}
+
+	// Deletes a user agent by the specified user agent ID.
+    rpc Delete(DeleteRequest) returns (google.protobuf.Empty) {}
+
+    // Gets user agent by the specified user agent ID.
+    rpc GetById(GetByIdRequest) returns (GetByIdResponse) {}
+
+    // Gets an existing user agent by the specified user ID and client ID.
+    rpc GetByUserIdAndClientId(GetByUserIdAndClientIdRequest) returns (GetByUserIdAndClientIdResponse) {}
+
+	// Gets all user agents by the specified user ID.
+    rpc GetAllByUserId(GetAllByUserIdRequest) returns (GetAllByUserIdResponse) {}
+
+	// Gets all user agents by the specified client ID.
+    rpc GetAllByClientId(GetAllByClientIdRequest) returns (GetAllByClientIdResponse) {}
+
+	// Returns true if the user agent exists.
+    rpc Exists(ExistsRequest) returns (ExistsResponse) {}
+
+	// Gets all user agent IDs by the specified user ID.
+    rpc GetAllIdsByUserId(GetAllIdsByUserIdRequest) returns (GetAllIdsByUserIdResponse) {}
+
+	// Gets all user agent IDs by the specified client ID.
+    rpc GetAllIdsByClientId(GetAllIdsByClientIdRequest) returns (GetAllIdsByClientIdResponse) {}
+
+	// Gets a user agent type by the specified user agent ID.
+    rpc GetTypeById(GetTypeByIdRequest) returns (GetTypeByIdResponse) {}
+
+	// Gets a user agent status by the specified user agent ID.
+    rpc GetStatusById(GetStatusByIdRequest) returns (GetStatusByIdResponse) {}
+}
+
+// Request message for 'UserAgentService.CreateWebUserAgent'.
+message CreateWebUserAgentRequest {
+    // The user ID.
+    uint64 user_id = 1;
+
+    // The client ID.
+    uint64 client_id = 2;
+
+    // Optional. The app ID.
+    google.protobuf.UInt64Value app_id = 3;
+
+    // The User-Agent.
+    string user_agent = 4;
+}
+
+// Response message for 'UserAgentService.CreateWebUserAgent'.
+message CreateWebUserAgentResponse {
+    // The user agent ID.
+    uint64 id = 1;
+}
+
+// Request message for 'UserAgentService.CreateMobileUserAgent'.
+message CreateMobileUserAgentRequest {
+    // The user ID.
+    uint64 user_id = 1;
+
+    // The client ID.
+    uint64 client_id = 2;
+
+    // The app ID.
+    uint64 app_id = 3;
+
+    // Optional. The User-Agent.
+    google.protobuf.StringValue user_agent = 4;
+}
+
+// Response message for 'UserAgentService.CreateMobileUserAgent'.
+message CreateMobileUserAgentResponse {
+    // The user agent ID.
+    uint64 id = 1;
+}
+
+// Request message for 'UserAgentService.Delete'.
+message DeleteRequest {
+    // The user agent ID.
+    uint64 id = 1;
+}
+
+// Request message for 'UserAgentService.GetById'.
+message GetByIdRequest {
+    // The user agent ID.
+    uint64 id = 1;
+}
+
+// Response message for 'UserAgentService.GetById'.
+message GetByIdResponse {
+    // The user agent.
+    UserAgent user_agent = 1;
+}
+
+// Request message for 'UserAgentService.GetByUserIdAndClientId'.
+message GetByUserIdAndClientIdRequest {
+    // The user ID.
+    uint64 user_id = 1;
+
+    // The client ID.
+    uint64 client_id = 2;
+}
+
+// Response message for 'UserAgentService.GetByUserIdAndClientId'.
+message GetByUserIdAndClientIdResponse {
+    // The user agent.
+    UserAgent user_agent = 1;
+}
+
+// Request message for 'UserAgentService.GetAllByUserId'.
+message GetAllByUserIdRequest {
+    // The user ID.
+    uint64 user_id = 1;
+
+    // If onlyExisting is true, then only existing user agents are returned.
+    bool only_existing = 2;
+}
+
+// Response message for 'UserAgentService.GetAllByUserId'.
+message GetAllByUserIdResponse {
+    // The user agents.
+    repeated UserAgent user_agents = 1;
+}
+
+// Request message for 'UserAgentService.GetAllByClientId'.
+message GetAllByClientIdRequest {
+    // The client ID.
+    uint64 client_id = 1;
+
+    // If onlyExisting is true, then only existing user agents are returned.
+    bool only_existing = 2;
+}
+
+// Response message for 'UserAgentService.GetAllByClientId'.
+message GetAllByClientIdResponse {
+    // The user agents.
+    repeated UserAgent user_agents = 1;
+}
+
+// Request message for 'UserAgentService.Exists'.
+message ExistsRequest {
+    // The user ID.
+    uint64 user_id = 1;
+
+    // The client ID.
+    uint64 client_id = 2;
+}
+
+// Response message for 'UserAgentService.Exists'.
+message ExistsResponse {
+    // The user agent exists.
+    bool exists = 1;
+}
+
+// Request message for 'UserAgentService.GetAllIdsByUserId'.
+message GetAllIdsByUserIdRequest {
+    // The user ID.
+    uint64 user_id = 1;
+
+    // If onlyExisting is true, then the IDs of only existing user agents are returned.
+    bool only_existing = 2;
+}
+
+// Response message for 'UserAgentService.GetAllIdsByUserId'.
+message GetAllIdsByUserIdResponse {
+    // The user agent IDs.
+    repeated uint64 ids = 1;
+}
+
+// Request message for 'UserAgentService.GetAllIdsByClientId'.
+message GetAllIdsByClientIdRequest {
+    // The client ID.
+    uint64 client_id = 1;
+
+    // If onlyExisting is true, then the IDs of only existing user agents are returned.
+    bool only_existing = 2;
+}
+
+// Response message for 'UserAgentService.GetAllIdsByClientId'.
+message GetAllIdsByClientIdResponse {
+    // The user agent IDs.
+    repeated uint64 ids = 1;
+}
+
+// Request message for 'UserAgentService.GetTypeById'.
+message GetTypeByIdRequest {
+    // The user agent ID.
+    uint64 id = 1;
+}
+
+// Response message for 'UserAgentService.GetTypeById'.
+message GetTypeByIdResponse {
+	// The user agent type.
+    UserAgentTypeEnum.UserAgentType type = 1;
+}
+
+// Request message for 'UserAgentService.GetStatusById'.
+message GetStatusByIdRequest {
+    // The user agent ID.
+    uint64 id = 1;
+}
+
+// Response message for 'UserAgentService.GetStatusById'.
+message GetStatusByIdResponse {
+	// The user agent status.
+    UserAgentStatusEnum.UserAgentStatus status = 1;
+}
