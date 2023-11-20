@@ -256,3 +256,30 @@ func (s *ClientService) GetTypeById(ctx context.Context, req *clientspb.GetTypeB
 	}
 	return res, nil
 }
+
+// GetStatusById gets a client status by the specified client ID.
+func (s *ClientService) GetStatusById(ctx context.Context, req *clientspb.GetStatusByIdRequest) (*clientspb.GetStatusByIdResponse, error) {
+	var res *clientspb.GetStatusByIdResponse
+	err := s.reqProcessor.Process(ctx, iactions.ActionTypeClient_GetStatusById, iactions.OperationTypeClientService_GetStatusById,
+		func(opCtx *actions.OperationContext) error {
+			status, err := s.clientManager.GetStatusById(opCtx, req.Id)
+			if err != nil {
+				s.logger.ErrorWithEvent(opCtx.CreateLogEntryContext(), events.GrpcServices_ClientServiceEvent, err,
+					"[clients.ClientService.GetStatusById] get a client status by id",
+				)
+
+				if err2 := errors.Unwrap(err); err2 == ierrors.ErrInvalidClientId {
+					return apigrpcerrors.CreateGrpcError(codes.InvalidArgument, iapierrors.ErrInvalidClientId)
+				}
+				return apigrpcerrors.CreateGrpcError(codes.Internal, apierrors.ErrInternal)
+			}
+
+			res = &clientspb.GetStatusByIdResponse{Status: clientspb.ClientStatus(status)}
+			return nil
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
