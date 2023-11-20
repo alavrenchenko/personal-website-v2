@@ -23,6 +23,7 @@ import (
 
 	clientspb "personal-website-v2/go-apis/identity/clients"
 	iapierrors "personal-website-v2/identity/src/api/errors"
+	"personal-website-v2/identity/src/api/grpc/clients/converter"
 	"personal-website-v2/identity/src/api/grpc/clients/validation"
 	iactions "personal-website-v2/identity/src/internal/actions"
 	"personal-website-v2/identity/src/internal/clients"
@@ -192,4 +193,37 @@ func (s *ClientService) Delete(ctx context.Context, req *clientspb.DeleteRequest
 		return nil, err
 	}
 	return &emptypb.Empty{}, nil
+}
+
+// GetById gets a client by the specified client ID.
+func (s *ClientService) GetById(ctx context.Context, req *clientspb.GetByIdRequest) (*clientspb.GetByIdResponse, error) {
+	var res *clientspb.GetByIdResponse
+	err := s.reqProcessor.Process(ctx, iactions.ActionTypeClient_GetById, iactions.OperationTypeClientService_GetById,
+		func(opCtx *actions.OperationContext) error {
+			c, err := s.clientManager.FindById(opCtx, req.Id)
+			if err != nil {
+				s.logger.ErrorWithEvent(opCtx.CreateLogEntryContext(), events.GrpcServices_ClientServiceEvent, err,
+					"[clients.ClientService.GetById] find a client by id",
+				)
+
+				if err2 := errors.Unwrap(err); err2 == ierrors.ErrInvalidClientId {
+					return apigrpcerrors.CreateGrpcError(codes.InvalidArgument, iapierrors.ErrInvalidClientId)
+				}
+				return apigrpcerrors.CreateGrpcError(codes.Internal, apierrors.ErrInternal)
+			}
+			if c == nil {
+				s.logger.WarningWithEvent(opCtx.CreateLogEntryContext(), events.GrpcServices_ClientServiceEvent,
+					"[clients.ClientService.GetById] client not found",
+				)
+				return apigrpcerrors.CreateGrpcError(codes.NotFound, iapierrors.ErrClientNotFound)
+			}
+
+			res = &clientspb.GetByIdResponse{Client: converter.ConvertToApiClient(c)}
+			return nil
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
 }
