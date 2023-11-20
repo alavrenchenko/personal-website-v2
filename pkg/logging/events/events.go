@@ -74,7 +74,7 @@ var (
 	// NetHttp client events (id: 0, 2800-2999)
 	NetHttp_ClientEvent = logging.NewEvent(0, "NetHttp_Client", logging.EventCategoryCommon, logging.EventGroupNetHttp_Client)
 
-	// NetHttp events (id: 0, 3000-3199)
+	// NetGrpc events (id: 0, 3000-3199)
 	NetGrpcEvent = logging.NewEvent(0, "NetGrpc", logging.EventCategoryCommon, logging.EventGroupNetGrpc)
 
 	// NetGrpcServer (server, pipeline) events (id: 0, 3200-3399)
