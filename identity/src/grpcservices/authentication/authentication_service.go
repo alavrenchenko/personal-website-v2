@@ -89,3 +89,26 @@ func (s *AuthenticationService) CreateUserToken(ctx context.Context, req *authen
 	}
 	return res, nil
 }
+
+// CreateClientToken creates a client token and returns it if the operation is successful.
+func (s *AuthenticationService) CreateClientToken(ctx context.Context, req *authenticationpb.CreateClientTokenRequest) (*authenticationpb.CreateClientTokenResponse, error) {
+	var res *authenticationpb.CreateClientTokenResponse
+	err := s.reqProcessor.Process(ctx, iactions.ActionTypeAuthentication_CreateClientToken, iactions.OperationTypeAuthenticationService_CreateClientToken,
+		func(opCtx *actions.OperationContext) error {
+			t, err := s.authenticationManager.CreateClientToken(opCtx, req.ClientId)
+			if err != nil {
+				s.logger.ErrorWithEvent(opCtx.CreateLogEntryContext(), events.GrpcServices_AuthenticationServiceEvent, err,
+					"[authentication.AuthenticationService.CreateClientToken] create a client token",
+				)
+				return apigrpcerrors.CreateGrpcError(codes.Internal, apierrors.ErrInternal)
+			}
+
+			res = &authenticationpb.CreateClientTokenResponse{Token: t}
+			return nil
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
