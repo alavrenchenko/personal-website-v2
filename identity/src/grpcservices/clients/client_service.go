@@ -110,3 +110,44 @@ func (s *ClientService) CreateWebClient(ctx context.Context, req *clientspb.Crea
 	}
 	return res, nil
 }
+
+// CreateMobileClient creates a mobile client and returns the client ID if the operation is successful.
+func (s *ClientService) CreateMobileClient(ctx context.Context, req *clientspb.CreateMobileClientRequest) (*clientspb.CreateMobileClientResponse, error) {
+	var res *clientspb.CreateMobileClientResponse
+	err := s.reqProcessor.Process(ctx, iactions.ActionTypeClient_CreateMobileClient, iactions.OperationTypeClientService_CreateMobileClient,
+		func(opCtx *actions.OperationContext) error {
+			if err := validation.ValidateCreateMobileClientRequest(req); err != nil {
+				s.logger.ErrorWithEvent(opCtx.CreateLogEntryContext(), events.GrpcServices_ClientServiceEvent, nil,
+					"[clients.ClientService.CreateMobileClient] "+err.Message(),
+				)
+				return apigrpcerrors.CreateGrpcError(codes.InvalidArgument, err)
+			}
+
+			var userAgent nullable.Nullable[string]
+			if req.UserAgent != nil {
+				userAgent = nullable.NewNullable(req.UserAgent.Value)
+			}
+
+			d := &clientoperations.CreateMobileClientOperationData{
+				AppId:     req.AppId,
+				UserAgent: userAgent,
+				IP:        req.Ip,
+			}
+
+			id, err := s.clientManager.CreateMobileClient(opCtx, d)
+			if err != nil {
+				s.logger.ErrorWithEvent(opCtx.CreateLogEntryContext(), events.GrpcServices_ClientServiceEvent, err,
+					"[clients.ClientService.CreateMobileClient] create a mobile client",
+				)
+				return apigrpcerrors.CreateGrpcError(codes.Internal, apierrors.ErrInternal)
+			}
+
+			res = &clientspb.CreateMobileClientResponse{Id: id}
+			return nil
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
