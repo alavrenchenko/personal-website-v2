@@ -23,6 +23,7 @@ import (
 	authenticationpb "personal-website-v2/go-apis/identity/authentication"
 	userspb "personal-website-v2/go-apis/identity/users"
 	iapierrors "personal-website-v2/identity/src/api/errors"
+	"personal-website-v2/identity/src/api/grpc/authentication/validation"
 	iactions "personal-website-v2/identity/src/internal/actions"
 	"personal-website-v2/identity/src/internal/authentication"
 	ierrors "personal-website-v2/identity/src/internal/errors"
@@ -122,6 +123,13 @@ func (s *AuthenticationService) Authenticate(ctx context.Context, req *authentic
 	var res *authenticationpb.AuthenticateResponse
 	err := s.reqProcessor.Process(ctx, iactions.ActionTypeAuthentication_Authenticate, iactions.OperationTypeAuthenticationService_Authenticate,
 		func(opCtx *actions.OperationContext) error {
+			if err := validation.ValidateAuthenticateRequest(req); err != nil {
+				s.logger.ErrorWithEvent(opCtx.CreateLogEntryContext(), events.GrpcServices_AuthenticationServiceEvent, nil,
+					"[authentication.AuthenticationService.Authenticate] "+err.Message(),
+				)
+				return apigrpcerrors.CreateGrpcError(codes.InvalidArgument, err)
+			}
+
 			r, err := s.authenticationManager.Authenticate(opCtx, req.UserToken, req.ClientToken)
 			if err != nil {
 				s.logger.ErrorWithEvent(opCtx.CreateLogEntryContext(), events.GrpcServices_AuthenticationServiceEvent, err,
@@ -166,6 +174,13 @@ func (s *AuthenticationService) AuthenticateUser(ctx context.Context, req *authe
 	var res *authenticationpb.AuthenticateUserResponse
 	err := s.reqProcessor.Process(ctx, iactions.ActionTypeAuthentication_AuthenticateUser, iactions.OperationTypeAuthenticationService_AuthenticateUser,
 		func(opCtx *actions.OperationContext) error {
+			if err := validation.ValidateAuthenticateUserRequest(req); err != nil {
+				s.logger.ErrorWithEvent(opCtx.CreateLogEntryContext(), events.GrpcServices_AuthenticationServiceEvent, nil,
+					"[authentication.AuthenticationService.AuthenticateUser] "+err.Message(),
+				)
+				return apigrpcerrors.CreateGrpcError(codes.InvalidArgument, err)
+			}
+
 			r, err := s.authenticationManager.AuthenticateUser(opCtx, req.UserToken)
 			if err != nil {
 				s.logger.ErrorWithEvent(opCtx.CreateLogEntryContext(), events.GrpcServices_AuthenticationServiceEvent, err,
@@ -205,6 +220,13 @@ func (s *AuthenticationService) AuthenticateClient(ctx context.Context, req *aut
 	var res *authenticationpb.AuthenticateClientResponse
 	err := s.reqProcessor.Process(ctx, iactions.ActionTypeAuthentication_AuthenticateClient, iactions.OperationTypeAuthenticationService_AuthenticateClient,
 		func(opCtx *actions.OperationContext) error {
+			if err := validation.ValidateAuthenticateClientRequest(req); err != nil {
+				s.logger.ErrorWithEvent(opCtx.CreateLogEntryContext(), events.GrpcServices_AuthenticationServiceEvent, nil,
+					"[authentication.AuthenticationService.AuthenticateClient] "+err.Message(),
+				)
+				return apigrpcerrors.CreateGrpcError(codes.InvalidArgument, err)
+			}
+
 			r, err := s.authenticationManager.AuthenticateClient(opCtx, req.ClientToken)
 			if err != nil {
 				s.logger.ErrorWithEvent(opCtx.CreateLogEntryContext(), events.GrpcServices_AuthenticationServiceEvent, err,
