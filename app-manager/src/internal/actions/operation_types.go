@@ -79,7 +79,7 @@ const (
 
 	// [gRPC] app.AppService operation types (200000-200499)
 
-	// [gRPC] apps.AppService operation types (200500-20999)
+	// [gRPC] apps.AppService operation types (200500-200999)
 	OperationTypeAppService_GetById       actions.OperationType = 200500
 	OperationTypeAppService_GetByName     actions.OperationType = 200501
 	OperationTypeAppService_GetByIdOrName actions.OperationType = 200502
