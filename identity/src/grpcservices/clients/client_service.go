@@ -178,6 +178,8 @@ func (s *ClientService) Delete(ctx context.Context, req *clientspb.DeleteRequest
 					switch err2 {
 					case ierrors.ErrClientNotFound:
 						return apigrpcerrors.CreateGrpcError(codes.NotFound, iapierrors.ErrClientNotFound)
+					case ierrors.ErrInvalidClientId:
+						return apigrpcerrors.CreateGrpcError(codes.InvalidArgument, iapierrors.ErrInvalidClientId)
 					}
 					switch err2.Code() {
 					case errors.ErrorCodeInvalidOperation:
