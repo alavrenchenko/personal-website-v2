@@ -160,3 +160,42 @@ func (s *AuthenticationService) Authenticate(ctx context.Context, req *authentic
 	}
 	return res, nil
 }
+
+// Authenticate authenticates a user.
+func (s *AuthenticationService) AuthenticateUser(ctx context.Context, req *authenticationpb.AuthenticateUserRequest) (*authenticationpb.AuthenticateUserResponse, error) {
+	var res *authenticationpb.AuthenticateUserResponse
+	err := s.reqProcessor.Process(ctx, iactions.ActionTypeAuthentication_AuthenticateUser, iactions.OperationTypeAuthenticationService_AuthenticateUser,
+		func(opCtx *actions.OperationContext) error {
+			r, err := s.authenticationManager.AuthenticateUser(opCtx, req.UserToken)
+			if err != nil {
+				s.logger.ErrorWithEvent(opCtx.CreateLogEntryContext(), events.GrpcServices_AuthenticationServiceEvent, err,
+					"[authentication.AuthenticationService.AuthenticateUser] authenticate a user",
+				)
+
+				if err2 := errors.Unwrap(err); err2 != nil {
+					switch err2 {
+					case ierrors.ErrUserNotFound, ierrors.ErrUserSessionNotFound:
+						return apigrpcerrors.CreateGrpcError(codes.InvalidArgument, iapierrors.ErrInvalidUserAuthToken)
+					}
+					switch err2.Code() {
+					case errors.ErrorCodeInvalidOperation, ierrors.ErrorCodeInvalidAuthToken:
+						return apigrpcerrors.CreateGrpcError(codes.InvalidArgument, iapierrors.ErrInvalidAuthToken)
+					case ierrors.ErrorCodeInvalidUserAuthToken:
+						return apigrpcerrors.CreateGrpcError(codes.InvalidArgument, iapierrors.ErrInvalidUserAuthToken)
+					}
+				}
+				return apigrpcerrors.CreateGrpcError(codes.Internal, apierrors.ErrInternal)
+			}
+
+			res = &authenticationpb.AuthenticateUserResponse{
+				UserId:   r.UserId,
+				UserType: userspb.UserTypeEnum_UserType(r.UserType),
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
