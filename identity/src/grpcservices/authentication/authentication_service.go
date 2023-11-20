@@ -21,12 +21,16 @@ import (
 	"google.golang.org/grpc/codes"
 
 	authenticationpb "personal-website-v2/go-apis/identity/authentication"
+	userspb "personal-website-v2/go-apis/identity/users"
+	iapierrors "personal-website-v2/identity/src/api/errors"
 	iactions "personal-website-v2/identity/src/internal/actions"
 	"personal-website-v2/identity/src/internal/authentication"
+	ierrors "personal-website-v2/identity/src/internal/errors"
 	"personal-website-v2/identity/src/internal/logging/events"
 	"personal-website-v2/pkg/actions"
 	apierrors "personal-website-v2/pkg/api/errors"
 	apigrpcerrors "personal-website-v2/pkg/api/grpc/errors"
+	"personal-website-v2/pkg/errors"
 	grpcserverhelper "personal-website-v2/pkg/helper/net/grpc/server"
 	"personal-website-v2/pkg/logging"
 	lcontext "personal-website-v2/pkg/logging/context"
@@ -104,6 +108,50 @@ func (s *AuthenticationService) CreateClientToken(ctx context.Context, req *auth
 			}
 
 			res = &authenticationpb.CreateClientTokenResponse{Token: t}
+			return nil
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+// Authenticate authenticates a user and a client.
+func (s *AuthenticationService) Authenticate(ctx context.Context, req *authenticationpb.AuthenticateRequest) (*authenticationpb.AuthenticateResponse, error) {
+	var res *authenticationpb.AuthenticateResponse
+	err := s.reqProcessor.Process(ctx, iactions.ActionTypeAuthentication_Authenticate, iactions.OperationTypeAuthenticationService_Authenticate,
+		func(opCtx *actions.OperationContext) error {
+			r, err := s.authenticationManager.Authenticate(opCtx, req.UserToken, req.ClientToken)
+			if err != nil {
+				s.logger.ErrorWithEvent(opCtx.CreateLogEntryContext(), events.GrpcServices_AuthenticationServiceEvent, err,
+					"[authentication.AuthenticationService.Authenticate] authenticate a user and a client",
+				)
+
+				if err2 := errors.Unwrap(err); err2 != nil {
+					switch err2 {
+					case ierrors.ErrUserNotFound, ierrors.ErrUserSessionNotFound:
+						return apigrpcerrors.CreateGrpcError(codes.InvalidArgument, iapierrors.ErrInvalidUserAuthToken)
+					case ierrors.ErrClientNotFound:
+						return apigrpcerrors.CreateGrpcError(codes.InvalidArgument, iapierrors.ErrInvalidClientAuthToken)
+					}
+					switch err2.Code() {
+					case errors.ErrorCodeInvalidOperation, ierrors.ErrorCodeInvalidAuthToken:
+						return apigrpcerrors.CreateGrpcError(codes.InvalidArgument, iapierrors.ErrInvalidAuthToken)
+					case ierrors.ErrorCodeInvalidUserAuthToken:
+						return apigrpcerrors.CreateGrpcError(codes.InvalidArgument, iapierrors.ErrInvalidUserAuthToken)
+					case ierrors.ErrorCodeInvalidClientAuthToken:
+						return apigrpcerrors.CreateGrpcError(codes.InvalidArgument, iapierrors.ErrInvalidClientAuthToken)
+					}
+				}
+				return apigrpcerrors.CreateGrpcError(codes.Internal, apierrors.ErrInternal)
+			}
+
+			res = &authenticationpb.AuthenticateResponse{
+				UserId:   r.UserId,
+				UserType: userspb.UserTypeEnum_UserType(r.UserType),
+				ClientId: r.ClientId,
+			}
 			return nil
 		},
 	)
