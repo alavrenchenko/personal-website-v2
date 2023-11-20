@@ -15,12 +15,18 @@
 package authentication
 
 import (
+	"context"
 	"fmt"
+
+	"google.golang.org/grpc/codes"
 
 	authenticationpb "personal-website-v2/go-apis/identity/authentication"
 	iactions "personal-website-v2/identity/src/internal/actions"
 	"personal-website-v2/identity/src/internal/authentication"
+	"personal-website-v2/identity/src/internal/logging/events"
 	"personal-website-v2/pkg/actions"
+	apierrors "personal-website-v2/pkg/api/errors"
+	apigrpcerrors "personal-website-v2/pkg/api/grpc/errors"
 	grpcserverhelper "personal-website-v2/pkg/helper/net/grpc/server"
 	"personal-website-v2/pkg/logging"
 	lcontext "personal-website-v2/pkg/logging/context"
@@ -59,4 +65,27 @@ func NewAuthenticationService(
 		authenticationManager: authenticationManager,
 		logger:                l,
 	}, nil
+}
+
+// CreateUserToken creates a user's token and returns it if the operation is successful.
+func (s *AuthenticationService) CreateUserToken(ctx context.Context, req *authenticationpb.CreateUserTokenRequest) (*authenticationpb.CreateUserTokenResponse, error) {
+	var res *authenticationpb.CreateUserTokenResponse
+	err := s.reqProcessor.Process(ctx, iactions.ActionTypeAuthentication_CreateUserToken, iactions.OperationTypeAuthenticationService_CreateUserToken,
+		func(opCtx *actions.OperationContext) error {
+			t, err := s.authenticationManager.CreateUserToken(opCtx, req.UserSessionId)
+			if err != nil {
+				s.logger.ErrorWithEvent(opCtx.CreateLogEntryContext(), events.GrpcServices_AuthenticationServiceEvent, err,
+					"[authentication.AuthenticationService.CreateUserToken] create a user's token",
+				)
+				return apigrpcerrors.CreateGrpcError(codes.Internal, apierrors.ErrInternal)
+			}
+
+			res = &authenticationpb.CreateUserTokenResponse{Token: t}
+			return nil
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
 }
