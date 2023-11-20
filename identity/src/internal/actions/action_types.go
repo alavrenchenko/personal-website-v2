@@ -45,7 +45,8 @@ const (
 	ActionTypeClient_CreateMobileClient actions.ActionType = 11202
 	ActionTypeClient_Delete             actions.ActionType = 11202
 	ActionTypeClient_GetById            actions.ActionType = 11203
-	ActionTypeClient_GetStatusById      actions.ActionType = 11204
+	ActionTypeClient_GetTypeById        actions.ActionType = 11204
+	ActionTypeClient_GetStatusById      actions.ActionType = 11205
 
 	// UserGroup action types (11400-11599).
 

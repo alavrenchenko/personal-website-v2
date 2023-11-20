@@ -550,7 +550,8 @@ const (
 	OperationTypeClientService_CreateMobileClient actions.OperationType = 201202
 	OperationTypeClientService_Delete             actions.OperationType = 201202
 	OperationTypeClientService_GetById            actions.OperationType = 201203
-	OperationTypeClientService_GetStatusById      actions.OperationType = 201204
+	OperationTypeClientService_GetTypeById        actions.OperationType = 201204
+	OperationTypeClientService_GetStatusById      actions.OperationType = 201205
 
 	// [gRPC] UserGroupService operation types (201400-201599).
 

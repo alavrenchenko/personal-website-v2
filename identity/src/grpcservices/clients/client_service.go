@@ -229,3 +229,30 @@ func (s *ClientService) GetById(ctx context.Context, req *clientspb.GetByIdReque
 	}
 	return res, nil
 }
+
+// GetTypeById gets a client type by the specified client ID.
+func (s *ClientService) GetTypeById(ctx context.Context, req *clientspb.GetTypeByIdRequest) (*clientspb.GetTypeByIdResponse, error) {
+	var res *clientspb.GetTypeByIdResponse
+	err := s.reqProcessor.Process(ctx, iactions.ActionTypeClient_GetTypeById, iactions.OperationTypeClientService_GetTypeById,
+		func(opCtx *actions.OperationContext) error {
+			t, err := s.clientManager.GetTypeById(req.Id)
+			if err != nil {
+				s.logger.ErrorWithEvent(opCtx.CreateLogEntryContext(), events.GrpcServices_ClientServiceEvent, err,
+					"[clients.ClientService.GetTypeById] get a client type by id",
+				)
+
+				if err2 := errors.Unwrap(err); err2 == ierrors.ErrInvalidClientId {
+					return apigrpcerrors.CreateGrpcError(codes.InvalidArgument, iapierrors.ErrInvalidClientId)
+				}
+				return apigrpcerrors.CreateGrpcError(codes.Internal, apierrors.ErrInternal)
+			}
+
+			res = &clientspb.GetTypeByIdResponse{Type: clientspb.ClientTypeEnum_ClientType(t)}
+			return nil
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
