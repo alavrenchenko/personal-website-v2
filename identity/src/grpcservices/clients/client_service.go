@@ -15,12 +15,21 @@
 package clients
 
 import (
+	"context"
 	"fmt"
 
+	"google.golang.org/grpc/codes"
+
 	clientspb "personal-website-v2/go-apis/identity/clients"
+	"personal-website-v2/identity/src/api/grpc/clients/validation"
 	iactions "personal-website-v2/identity/src/internal/actions"
 	"personal-website-v2/identity/src/internal/clients"
+	clientoperations "personal-website-v2/identity/src/internal/clients/operations/clients"
+	"personal-website-v2/identity/src/internal/logging/events"
 	"personal-website-v2/pkg/actions"
+	apierrors "personal-website-v2/pkg/api/errors"
+	apigrpcerrors "personal-website-v2/pkg/api/grpc/errors"
+	"personal-website-v2/pkg/base/nullable"
 	grpcserverhelper "personal-website-v2/pkg/helper/net/grpc/server"
 	"personal-website-v2/pkg/logging"
 	lcontext "personal-website-v2/pkg/logging/context"
@@ -59,4 +68,45 @@ func NewClientService(
 		clientManager: clientManager,
 		logger:        l,
 	}, nil
+}
+
+// CreateWebClient creates a web client and returns the client ID if the operation is successful.
+func (s *ClientService) CreateWebClient(ctx context.Context, req *clientspb.CreateWebClientRequest) (*clientspb.CreateWebClientResponse, error) {
+	var res *clientspb.CreateWebClientResponse
+	err := s.reqProcessor.Process(ctx, iactions.ActionTypeClient_CreateWebClient, iactions.OperationTypeClientService_CreateWebClient,
+		func(opCtx *actions.OperationContext) error {
+			if err := validation.ValidateCreateWebClientRequest(req); err != nil {
+				s.logger.ErrorWithEvent(opCtx.CreateLogEntryContext(), events.GrpcServices_ClientServiceEvent, nil,
+					"[clients.ClientService.CreateWebClient] "+err.Message(),
+				)
+				return apigrpcerrors.CreateGrpcError(codes.InvalidArgument, err)
+			}
+
+			var appId nullable.Nullable[uint64]
+			if req.AppId != nil {
+				appId = nullable.NewNullable(req.AppId.Value)
+			}
+
+			d := &clientoperations.CreateWebClientOperationData{
+				AppId:     appId,
+				UserAgent: req.UserAgent,
+				IP:        req.Ip,
+			}
+
+			id, err := s.clientManager.CreateWebClient(opCtx, d)
+			if err != nil {
+				s.logger.ErrorWithEvent(opCtx.CreateLogEntryContext(), events.GrpcServices_ClientServiceEvent, err,
+					"[clients.ClientService.CreateWebClient] create a web client",
+				)
+				return apigrpcerrors.CreateGrpcError(codes.Internal, apierrors.ErrInternal)
+			}
+
+			res = &clientspb.CreateWebClientResponse{Id: id}
+			return nil
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
 }
