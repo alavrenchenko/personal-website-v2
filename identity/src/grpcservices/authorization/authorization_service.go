@@ -15,23 +15,24 @@
 package authorization
 
 import (
-	// "context"
+	"context"
 	"fmt"
 
-	// "google.golang.org/grpc/codes"
+	"google.golang.org/grpc/codes"
 
 	authorizationpb "personal-website-v2/go-apis/identity/authorization"
-	// groupspb "personal-website-v2/go-apis/identity/groups"
-	// iapierrors "personal-website-v2/identity/src/api/errors"
+	groupspb "personal-website-v2/go-apis/identity/groups"
+	iapierrors "personal-website-v2/identity/src/api/errors"
+	"personal-website-v2/identity/src/api/grpc/authorization/validation"
 	iactions "personal-website-v2/identity/src/internal/actions"
 	"personal-website-v2/identity/src/internal/authorization"
-
-	// ierrors "personal-website-v2/identity/src/internal/errors"
-	// "personal-website-v2/identity/src/internal/logging/events"
+	ierrors "personal-website-v2/identity/src/internal/errors"
+	"personal-website-v2/identity/src/internal/logging/events"
 	"personal-website-v2/pkg/actions"
-	// apierrors "personal-website-v2/pkg/api/errors"
-	// apigrpcerrors "personal-website-v2/pkg/api/grpc/errors"
-	// "personal-website-v2/pkg/errors"
+	apierrors "personal-website-v2/pkg/api/errors"
+	apigrpcerrors "personal-website-v2/pkg/api/grpc/errors"
+	"personal-website-v2/pkg/base/nullable"
+	"personal-website-v2/pkg/errors"
 	grpcserverhelper "personal-website-v2/pkg/helper/net/grpc/server"
 	"personal-website-v2/pkg/logging"
 	lcontext "personal-website-v2/pkg/logging/context"
@@ -70,4 +71,68 @@ func NewAuthorizationService(
 		authorizationManager: authorizationManager,
 		logger:               l,
 	}, nil
+}
+
+// Authorize authorizes a user and returns the authorization result if the operation is successful.
+func (s *AuthorizationService) Authorize(ctx context.Context, req *authorizationpb.AuthorizeRequest) (*authorizationpb.AuthorizeResponse, error) {
+	var res *authorizationpb.AuthorizeResponse
+	err := s.reqProcessor.Process(ctx, iactions.ActionTypeAuthorization_Authorize, iactions.OperationTypeAuthorizationService_Authorize,
+		func(opCtx *actions.OperationContext) error {
+			if err := validation.ValidateAuthorizeRequest(req); err != nil {
+				s.logger.ErrorWithEvent(opCtx.CreateLogEntryContext(), events.GrpcServices_AuthorizationServiceEvent, nil,
+					"[authorization.AuthorizationService.Authorize] "+err.Message(),
+				)
+				return apigrpcerrors.CreateGrpcError(codes.InvalidArgument, err)
+			}
+
+			var userId, clientId nullable.Nullable[uint64]
+			if req.UserId != nil {
+				userId = nullable.NewNullable(req.UserId.Value)
+			}
+			if req.ClientId != nil {
+				clientId = nullable.NewNullable(req.ClientId.Value)
+			}
+
+			r, err := s.authorizationManager.Authorize(opCtx, userId, clientId, req.RequiredPermissionIds)
+			if err != nil {
+				s.logger.ErrorWithEvent(opCtx.CreateLogEntryContext(), events.GrpcServices_AuthorizationServiceEvent, err,
+					"[authorization.AuthorizationService.Authorize] authorize a user",
+				)
+
+				if err2 := errors.Unwrap(err); err2 != nil {
+					switch err2 {
+					case ierrors.ErrUserNotFound:
+						return apigrpcerrors.CreateGrpcError(codes.NotFound, iapierrors.ErrUserNotFound)
+					case ierrors.ErrClientNotFound:
+						return apigrpcerrors.CreateGrpcError(codes.NotFound, iapierrors.ErrClientNotFound)
+					case ierrors.ErrPermissionNotGranted:
+						return apigrpcerrors.CreateGrpcError(codes.FailedPrecondition, iapierrors.ErrPermissionNotGranted)
+					}
+					switch err2.Code() {
+					case errors.ErrorCodeInvalidOperation:
+						return apigrpcerrors.CreateGrpcError(codes.FailedPrecondition, apierrors.NewApiError(apierrors.ApiErrorCodeInvalidOperation, err2.Message()))
+					case errors.ErrorCodeInvalidData:
+						return apigrpcerrors.CreateGrpcError(codes.InvalidArgument, apierrors.NewApiError(apierrors.ApiErrorCodeInvalidData, err2.Message()))
+					}
+				}
+				return apigrpcerrors.CreateGrpcError(codes.Internal, apierrors.ErrInternal)
+			}
+
+			prs := make([]*authorizationpb.PermissionWithRoles, len(r.PermissionRoles))
+			for i := 0; i < len(r.PermissionRoles); i++ {
+				item := r.PermissionRoles[i]
+				prs[i] = &authorizationpb.PermissionWithRoles{PermissionId: item.PermissionId, RoleIds: item.RoleIds}
+			}
+
+			res = &authorizationpb.AuthorizeResponse{
+				Group:           groupspb.UserGroup(r.Group),
+				PermissionRoles: prs,
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
 }
