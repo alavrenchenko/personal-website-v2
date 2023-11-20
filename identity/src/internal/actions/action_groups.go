@@ -22,13 +22,24 @@ import "personal-website-v2/pkg/actions"
 const (
 	ActionGroupUser             actions.ActionGroup = 1000
 	ActionGroupClient           actions.ActionGroup = 1001
-	ActionGroupUserAgent        actions.ActionGroup = 1002
-	ActionGroupAuthentication   actions.ActionGroup = 1003
-	ActionGroupAuthorization    actions.ActionGroup = 1004
-	ActionGroupPermission       actions.ActionGroup = 1005
-	ActionGroupUserSession      actions.ActionGroup = 1006
-	ActionGroupUserAgentSession actions.ActionGroup = 1007
+	ActionGroupUserGroup        actions.ActionGroup = 1002
+	ActionGroupRole             actions.ActionGroup = 1003
+	ActionGroupPermission       actions.ActionGroup = 1004
+	ActionGroupPermissionGroup  actions.ActionGroup = 1005
+	ActionGroupUserAgent        actions.ActionGroup = 1006
+	ActionGroupUserSession      actions.ActionGroup = 1007
+	ActionGroupUserAgentSession actions.ActionGroup = 1008
+	ActionGroupAuthentication   actions.ActionGroup = 1009
+	ActionGroupAuthorization    actions.ActionGroup = 1010
 
-	// Authentication token encryption key action group.
-	ActionGroupAuthTokenEncryptionKey actions.ActionGroup = 1008
+	// Authentication token encryption key operation group.
+	ActionGroupAuthTokenEncryptionKey actions.ActionGroup = 1011
+
+	ActionGroupRoleAssignment      actions.ActionGroup = 1012
+	ActionGroupUserRoleAssignment  actions.ActionGroup = 1013
+	ActionGroupGroupRoleAssignment actions.ActionGroup = 1014
+	ActionGroupUserRole            actions.ActionGroup = 1015
+	ActionGroupGroupRole           actions.ActionGroup = 1016
+	ActionGroupRolePermission      actions.ActionGroup = 1017
+	ActionGroupUserPersonalInfo    actions.ActionGroup = 1018
 )
