@@ -19,17 +19,21 @@ import (
 	"fmt"
 
 	"google.golang.org/grpc/codes"
+	"google.golang.org/protobuf/types/known/emptypb"
 
 	clientspb "personal-website-v2/go-apis/identity/clients"
+	iapierrors "personal-website-v2/identity/src/api/errors"
 	"personal-website-v2/identity/src/api/grpc/clients/validation"
 	iactions "personal-website-v2/identity/src/internal/actions"
 	"personal-website-v2/identity/src/internal/clients"
 	clientoperations "personal-website-v2/identity/src/internal/clients/operations/clients"
+	ierrors "personal-website-v2/identity/src/internal/errors"
 	"personal-website-v2/identity/src/internal/logging/events"
 	"personal-website-v2/pkg/actions"
 	apierrors "personal-website-v2/pkg/api/errors"
 	apigrpcerrors "personal-website-v2/pkg/api/grpc/errors"
 	"personal-website-v2/pkg/base/nullable"
+	"personal-website-v2/pkg/errors"
 	grpcserverhelper "personal-website-v2/pkg/helper/net/grpc/server"
 	"personal-website-v2/pkg/logging"
 	lcontext "personal-website-v2/pkg/logging/context"
@@ -150,4 +154,34 @@ func (s *ClientService) CreateMobileClient(ctx context.Context, req *clientspb.C
 		return nil, err
 	}
 	return res, nil
+}
+
+// Delete deletes a client by the specified client ID.
+func (s *ClientService) Delete(ctx context.Context, req *clientspb.DeleteRequest) (*emptypb.Empty, error) {
+	err := s.reqProcessor.Process(ctx, iactions.ActionTypeClient_Delete, iactions.OperationTypeClientService_Delete,
+		func(opCtx *actions.OperationContext) error {
+			if err := s.clientManager.Delete(opCtx, req.Id); err != nil {
+				s.logger.ErrorWithEvent(opCtx.CreateLogEntryContext(), events.GrpcServices_ClientServiceEvent, err,
+					"[clients.ClientService.Delete] delete a client",
+				)
+
+				if err2 := errors.Unwrap(err); err2 != nil {
+					switch err2 {
+					case ierrors.ErrClientNotFound:
+						return apigrpcerrors.CreateGrpcError(codes.NotFound, iapierrors.ErrClientNotFound)
+					}
+					switch err2.Code() {
+					case errors.ErrorCodeInvalidOperation:
+						return apigrpcerrors.CreateGrpcError(codes.FailedPrecondition, apierrors.NewApiError(apierrors.ApiErrorCodeInvalidOperation, err2.Message()))
+					}
+				}
+				return apigrpcerrors.CreateGrpcError(codes.Internal, apierrors.ErrInternal)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &emptypb.Empty{}, nil
 }
