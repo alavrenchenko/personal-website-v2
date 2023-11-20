@@ -161,7 +161,7 @@ func (s *AuthenticationService) Authenticate(ctx context.Context, req *authentic
 	return res, nil
 }
 
-// Authenticate authenticates a user.
+// AuthenticateUser authenticates a user.
 func (s *AuthenticationService) AuthenticateUser(ctx context.Context, req *authenticationpb.AuthenticateUserRequest) (*authenticationpb.AuthenticateUserResponse, error) {
 	var res *authenticationpb.AuthenticateUserResponse
 	err := s.reqProcessor.Process(ctx, iactions.ActionTypeAuthentication_AuthenticateUser, iactions.OperationTypeAuthenticationService_AuthenticateUser,
@@ -191,6 +191,42 @@ func (s *AuthenticationService) AuthenticateUser(ctx context.Context, req *authe
 				UserId:   r.UserId,
 				UserType: userspb.UserTypeEnum_UserType(r.UserType),
 			}
+			return nil
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+// AuthenticateClient authenticates a client.
+func (s *AuthenticationService) AuthenticateClient(ctx context.Context, req *authenticationpb.AuthenticateClientRequest) (*authenticationpb.AuthenticateClientResponse, error) {
+	var res *authenticationpb.AuthenticateClientResponse
+	err := s.reqProcessor.Process(ctx, iactions.ActionTypeAuthentication_AuthenticateClient, iactions.OperationTypeAuthenticationService_AuthenticateClient,
+		func(opCtx *actions.OperationContext) error {
+			r, err := s.authenticationManager.AuthenticateClient(opCtx, req.ClientToken)
+			if err != nil {
+				s.logger.ErrorWithEvent(opCtx.CreateLogEntryContext(), events.GrpcServices_AuthenticationServiceEvent, err,
+					"[authentication.AuthenticationService.AuthenticateClient] authenticate a client",
+				)
+
+				if err2 := errors.Unwrap(err); err2 != nil {
+					switch err2 {
+					case ierrors.ErrClientNotFound:
+						return apigrpcerrors.CreateGrpcError(codes.InvalidArgument, iapierrors.ErrInvalidClientAuthToken)
+					}
+					switch err2.Code() {
+					case errors.ErrorCodeInvalidOperation, ierrors.ErrorCodeInvalidAuthToken:
+						return apigrpcerrors.CreateGrpcError(codes.InvalidArgument, iapierrors.ErrInvalidAuthToken)
+					case ierrors.ErrorCodeInvalidClientAuthToken:
+						return apigrpcerrors.CreateGrpcError(codes.InvalidArgument, iapierrors.ErrInvalidClientAuthToken)
+					}
+				}
+				return apigrpcerrors.CreateGrpcError(codes.Internal, apierrors.ErrInternal)
+			}
+
+			res = &authenticationpb.AuthenticateClientResponse{ClientId: r.ClientId}
 			return nil
 		},
 	)
