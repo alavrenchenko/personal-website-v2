@@ -126,4 +126,54 @@ var (
 
 	// GrpcServices_ClientService events (id: 0, 200200-200399).
 	GrpcServices_ClientServiceEvent = logging.NewEvent(0, "GrpcServices_ClientService", logging.EventCategoryCommon, amlogging.EventGroupGrpcServices_ClientService)
+
+	// GrpcServices_UserGroupService events (id: 0, 200400-200599).
+
+	// GrpcServices_RoleService events (id: 0, 200600-200799).
+	GrpcServices_RoleServiceEvent = logging.NewEvent(0, "GrpcServices_RoleService", logging.EventCategoryCommon, amlogging.EventGroupGrpcServices_RoleService)
+
+	// GrpcServices_PermissionService events (id: 0, 200800-200999).
+	GrpcServices_PermissionServiceEvent = logging.NewEvent(0, "GrpcServices_PermissionService", logging.EventCategoryCommon, amlogging.EventGroupGrpcServices_PermissionService)
+
+	// GrpcServices_PermissionGroupService events (id: 0, 201000-201199).
+	GrpcServices_PermissionGroupServiceEvent = logging.NewEvent(0, "GrpcServices_PermissionGroupService", logging.EventCategoryCommon, amlogging.EventGroupGrpcServices_PermissionGroupService)
+
+	// GrpcServices_UserAgentService events (id: 0, 201200-201399).
+	GrpcServices_UserAgentServiceEvent = logging.NewEvent(0, "GrpcServices_UserAgentService", logging.EventCategoryCommon, amlogging.EventGroupGrpcServices_UserAgentService)
+
+	// GrpcServices_UserSessionService events (id: 0, 201400-201599).
+	GrpcServices_UserSessionServiceEvent = logging.NewEvent(0, "GrpcServices_UserSessionService", logging.EventCategoryCommon, amlogging.EventGroupGrpcServices_UserSessionService)
+
+	// GrpcServices_UserAgentSessionService events (id: 0, 201600-201799).
+	GrpcServices_UserAgentSessionServiceEvent = logging.NewEvent(0, "GrpcServices_UserAgentSessionService", logging.EventCategoryCommon, amlogging.EventGroupGrpcServices_UserAgentSessionService)
+
+	// GrpcServices_AuthenticationService events (id: 0, 201800-201999).
+	GrpcServices_AuthenticationServiceEvent = logging.NewEvent(0, "GrpcServices_AuthenticationService", logging.EventCategoryCommon, amlogging.EventGroupGrpcServices_AuthenticationService)
+
+	// GrpcServices_AuthorizationService events (id: 0, 202000-202199).
+	GrpcServices_AuthorizationServiceEvent = logging.NewEvent(0, "GrpcServices_AuthorizationService", logging.EventCategoryCommon, amlogging.EventGroupGrpcServices_AuthorizationService)
+
+	// Authentication token encryption key service events (id: 0, 202200-202399).
+	GrpcServices_AuthTokenEncryptionKeyServiceEvent = logging.NewEvent(0, "GrpcServices_AuthTokenEncryptionKeyService", logging.EventCategoryCommon, amlogging.EventGroupGrpcServices_AuthTokenEncryptionKeyService)
+
+	// GrpcServices_RoleAssignmentService events (id: 0, 202400-202599).
+	GrpcServices_RoleAssignmentServiceEvent = logging.NewEvent(0, "GrpcServices_RoleAssignmentService", logging.EventCategoryCommon, amlogging.EventGroupGrpcServices_RoleAssignmentService)
+
+	// GrpcServices_UserRoleAssignmentService events (id: 0, 202600-202799).
+	GrpcServices_UserRoleAssignmentServiceEvent = logging.NewEvent(0, "GrpcServices_UserRoleAssignmentService", logging.EventCategoryCommon, amlogging.EventGroupGrpcServices_UserRoleAssignmentService)
+
+	// GrpcServices_GroupRoleAssignmentService events (id: 0, 202800-202999).
+	GrpcServices_GroupRoleAssignmentServiceEvent = logging.NewEvent(0, "GrpcServices_GroupRoleAssignmentService", logging.EventCategoryCommon, amlogging.EventGroupGrpcServices_GroupRoleAssignmentService)
+
+	// GrpcServices_UserRoleService events (id: 0, 203000-203199).
+	GrpcServices_UserRoleServiceEvent = logging.NewEvent(0, "GrpcServices_UserRoleService", logging.EventCategoryCommon, amlogging.EventGroupGrpcServices_UserRoleService)
+
+	// GrpcServices_GroupRoleService events (id: 0, 203200-203399).
+	GrpcServices_GroupRoleServiceEvent = logging.NewEvent(0, "GrpcServices_GroupRoleService", logging.EventCategoryCommon, amlogging.EventGroupGrpcServices_GroupRoleService)
+
+	// GrpcServices_RolePermissionService events (id: 0, 203400-203599).
+	GrpcServices_RolePermissionServiceEvent = logging.NewEvent(0, "GrpcServices_RolePermissionService", logging.EventCategoryCommon, amlogging.EventGroupGrpcServices_RolePermissionService)
+
+	// GrpcServices_UserPersonalInfoService events (id: 0, 203600-203799).
+	GrpcServices_UserPersonalInfoServiceEvent = logging.NewEvent(0, "GrpcServices_UserPersonalInfoService", logging.EventCategoryCommon, amlogging.EventGroupGrpcServices_UserPersonalInfoService)
 )

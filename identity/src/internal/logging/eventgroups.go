@@ -60,6 +60,26 @@ const (
 	EventGroupHttpControllers_UserController   logging.EventGroup = 2000
 	EventGroupHttpControllers_ClientController logging.EventGroup = 2001
 
-	EventGroupGrpcServices_UserService   logging.EventGroup = 3000
-	EventGroupGrpcServices_ClientService logging.EventGroup = 3001
+	EventGroupGrpcServices_UserService             logging.EventGroup = 3000
+	EventGroupGrpcServices_ClientService           logging.EventGroup = 3001
+	EventGroupGrpcServices_UserGroupService        logging.EventGroup = 3002
+	EventGroupGrpcServices_RoleService             logging.EventGroup = 3003
+	EventGroupGrpcServices_PermissionService       logging.EventGroup = 3004
+	EventGroupGrpcServices_PermissionGroupService  logging.EventGroup = 3005
+	EventGroupGrpcServices_UserAgentService        logging.EventGroup = 3006
+	EventGroupGrpcServices_UserSessionService      logging.EventGroup = 3007
+	EventGroupGrpcServices_UserAgentSessionService logging.EventGroup = 3008
+	EventGroupGrpcServices_AuthenticationService   logging.EventGroup = 3009
+	EventGroupGrpcServices_AuthorizationService    logging.EventGroup = 3010
+
+	// Authentication token encryption key service.
+	EventGroupGrpcServices_AuthTokenEncryptionKeyService logging.EventGroup = 3011
+
+	EventGroupGrpcServices_RoleAssignmentService      logging.EventGroup = 3012
+	EventGroupGrpcServices_UserRoleAssignmentService  logging.EventGroup = 3013
+	EventGroupGrpcServices_GroupRoleAssignmentService logging.EventGroup = 3014
+	EventGroupGrpcServices_UserRoleService            logging.EventGroup = 3015
+	EventGroupGrpcServices_GroupRoleService           logging.EventGroup = 3016
+	EventGroupGrpcServices_RolePermissionService      logging.EventGroup = 3017
+	EventGroupGrpcServices_UserPersonalInfoService    logging.EventGroup = 3018
 )
