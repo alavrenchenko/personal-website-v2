@@ -10,7 +10,7 @@ bin/
 
 **/admin/
 
-/identity/**/authentication/
+/identity/**/internal/authentication/
 
 /api-clients/emailnotifier/
 /api-clients/identity/
