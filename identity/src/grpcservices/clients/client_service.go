@@ -102,6 +102,10 @@ func (s *ClientService) CreateWebClient(ctx context.Context, req *clientspb.Crea
 				s.logger.ErrorWithEvent(opCtx.CreateLogEntryContext(), events.GrpcServices_ClientServiceEvent, err,
 					"[clients.ClientService.CreateWebClient] create a web client",
 				)
+
+				if err2 := errors.Unwrap(err); err2 != nil && err2.Code() == errors.ErrorCodeInvalidData {
+					return apigrpcerrors.CreateGrpcError(codes.InvalidArgument, apierrors.NewApiError(apierrors.ApiErrorCodeInvalidData, err2.Message()))
+				}
 				return apigrpcerrors.CreateGrpcError(codes.Internal, apierrors.ErrInternal)
 			}
 
@@ -143,6 +147,10 @@ func (s *ClientService) CreateMobileClient(ctx context.Context, req *clientspb.C
 				s.logger.ErrorWithEvent(opCtx.CreateLogEntryContext(), events.GrpcServices_ClientServiceEvent, err,
 					"[clients.ClientService.CreateMobileClient] create a mobile client",
 				)
+
+				if err2 := errors.Unwrap(err); err2 != nil && err2.Code() == errors.ErrorCodeInvalidData {
+					return apigrpcerrors.CreateGrpcError(codes.InvalidArgument, apierrors.NewApiError(apierrors.ApiErrorCodeInvalidData, err2.Message()))
+				}
 				return apigrpcerrors.CreateGrpcError(codes.Internal, apierrors.ErrInternal)
 			}
 
