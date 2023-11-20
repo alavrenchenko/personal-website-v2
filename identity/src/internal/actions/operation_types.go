@@ -526,9 +526,188 @@ const (
 	// [HTTP] ClientController operation types (101000-101499).
 	OperationTypeClientController_GetById actions.OperationType = 101000
 
-	// [gRPC] UserService operation types (200500-20999).
-	OperationTypeUserService_GetById actions.OperationType = 200500
+	// [gRPC] app.AppService operation types (200000-200999)
 
-	// [gRPC] ClientService operation types (201000-201499).
-	OperationTypeClientService_GetById actions.OperationType = 201000
+	// [gRPC] UserService operation types (201000-201199).
+	OperationTypeUserService_Create                actions.OperationType = 201000
+	OperationTypeUserService_Delete                actions.OperationType = 201001
+	OperationTypeUserService_GetById               actions.OperationType = 201002
+	OperationTypeUserService_GetByName             actions.OperationType = 201003
+	OperationTypeUserService_GetByEmail            actions.OperationType = 201004
+	OperationTypeUserService_GetIdByName           actions.OperationType = 201005
+	OperationTypeUserService_GetNameById           actions.OperationType = 201006
+	OperationTypeUserService_SetNameById           actions.OperationType = 201007
+	OperationTypeUserService_NameExists            actions.OperationType = 201008
+	OperationTypeUserService_GetTypeById           actions.OperationType = 201009
+	OperationTypeUserService_GetGroupById          actions.OperationType = 201010
+	OperationTypeUserService_GetStatusById         actions.OperationType = 201011
+	OperationTypeUserService_GetTypeAndStatusById  actions.OperationType = 201012
+	OperationTypeUserService_GetGroupAndStatusById actions.OperationType = 201013
+
+	// [gRPC] ClientService operation types (201200-201399).
+	OperationTypeClientService_Create             actions.OperationType = 201200
+	OperationTypeClientService_CreateWebClient    actions.OperationType = 201201
+	OperationTypeClientService_CreateMobileClient actions.OperationType = 201202
+	OperationTypeClientService_Delete             actions.OperationType = 201202
+	OperationTypeClientService_GetById            actions.OperationType = 201203
+	OperationTypeClientService_GetStatusById      actions.OperationType = 201204
+
+	// [gRPC] UserGroupService operation types (201400-201599).
+
+	// [gRPC] RoleService operation types (201600-201799).
+	OperationTypeRoleService_Create        actions.OperationType = 201600
+	OperationTypeRoleService_Delete        actions.OperationType = 201601
+	OperationTypeRoleService_GetById       actions.OperationType = 201602
+	OperationTypeRoleService_GetByName     actions.OperationType = 201603
+	OperationTypeRoleService_GetAllByIds   actions.OperationType = 201604
+	OperationTypeRoleService_GetAllByNames actions.OperationType = 201605
+	OperationTypeRoleService_Exists        actions.OperationType = 201606
+	OperationTypeRoleService_GetTypeById   actions.OperationType = 201607
+	OperationTypeRoleService_GetStatusById actions.OperationType = 201608
+
+	// [gRPC] PermissionService operation types (201800-201999).
+	OperationTypePermissionService_Create        actions.OperationType = 201800
+	OperationTypePermissionService_Delete        actions.OperationType = 201801
+	OperationTypePermissionService_GetById       actions.OperationType = 201802
+	OperationTypePermissionService_GetByName     actions.OperationType = 201803
+	OperationTypePermissionService_GetAllByIds   actions.OperationType = 201804
+	OperationTypePermissionService_GetAllByNames actions.OperationType = 201805
+	OperationTypePermissionService_Exists        actions.OperationType = 201806
+	OperationTypePermissionService_GetStatusById actions.OperationType = 201807
+
+	// [gRPC] PermissionGroupService operation types (202000-202199).
+	OperationTypePermissionGroupService_Create        actions.OperationType = 202000
+	OperationTypePermissionGroupService_Delete        actions.OperationType = 202001
+	OperationTypePermissionGroupService_GetById       actions.OperationType = 202002
+	OperationTypePermissionGroupService_GetByName     actions.OperationType = 202003
+	OperationTypePermissionGroupService_GetAllByIds   actions.OperationType = 202004
+	OperationTypePermissionGroupService_GetAllByNames actions.OperationType = 202005
+	OperationTypePermissionGroupService_Exists        actions.OperationType = 202006
+	OperationTypePermissionGroupService_GetStatusById actions.OperationType = 202007
+
+	// [gRPC] UserAgentService operation types (202200-202399).
+	OperationTypeUserAgentService_Create                 actions.OperationType = 202200
+	OperationTypeUserAgentService_CreateWebUserAgent     actions.OperationType = 202201
+	OperationTypeUserAgentService_CreateMobileUserAgent  actions.OperationType = 202202
+	OperationTypeUserAgentService_Delete                 actions.OperationType = 202203
+	OperationTypeUserAgentService_DeleteAllByUserId      actions.OperationType = 202204
+	OperationTypeUserAgentService_DeleteAllByClientId    actions.OperationType = 202205
+	OperationTypeUserAgentService_GetById                actions.OperationType = 202206
+	OperationTypeUserAgentService_GetByUserIdAndClientId actions.OperationType = 202207
+	OperationTypeUserAgentService_GetAllByUserId         actions.OperationType = 202208
+	OperationTypeUserAgentService_GetAllByClientId       actions.OperationType = 202209
+	OperationTypeUserAgentService_Exists                 actions.OperationType = 202210
+	OperationTypeUserAgentService_GetAllIdsByUserId      actions.OperationType = 202211
+	OperationTypeUserAgentService_GetAllIdsByClientId    actions.OperationType = 202212
+	OperationTypeUserAgentService_GetStatusById          actions.OperationType = 202213
+
+	// [gRPC] UserSessionService operation types (202400-202599).
+	OperationTypeUserSessionService_Create                      actions.OperationType = 202400
+	OperationTypeUserSessionService_CreateWebSession            actions.OperationType = 202401
+	OperationTypeUserSessionService_CreateMobileSession         actions.OperationType = 202402
+	OperationTypeUserSessionService_Start                       actions.OperationType = 202403
+	OperationTypeUserSessionService_CreateAndStart              actions.OperationType = 202404
+	OperationTypeUserSessionService_CreateAndStartWebSession    actions.OperationType = 202405
+	OperationTypeUserSessionService_CreateAndStartMobileSession actions.OperationType = 202406
+	OperationTypeUserSessionService_Terminate                   actions.OperationType = 202407
+	OperationTypeUserSessionService_Delete                      actions.OperationType = 202408
+	OperationTypeUserSessionService_GetById                     actions.OperationType = 202409
+	OperationTypeUserSessionService_GetAllByUserId              actions.OperationType = 202410
+	OperationTypeUserSessionService_GetAllByClientId            actions.OperationType = 202411
+	OperationTypeUserSessionService_GetAllByUserIdAndClientId   actions.OperationType = 202412
+	OperationTypeUserSessionService_GetAllByUserAgentId         actions.OperationType = 202413
+	OperationTypeUserSessionService_Exists                      actions.OperationType = 202414
+	OperationTypeUserSessionService_GetStatusById               actions.OperationType = 202415
+
+	// [gRPC] UserAgentSessionService operation types (202600-202799).
+	OperationTypeUserAgentSessionService_Create                      actions.OperationType = 202600
+	OperationTypeUserAgentSessionService_CreateWebSession            actions.OperationType = 202601
+	OperationTypeUserAgentSessionService_CreateMobileSession         actions.OperationType = 202602
+	OperationTypeUserAgentSessionService_Start                       actions.OperationType = 202603
+	OperationTypeUserAgentSessionService_CreateAndStart              actions.OperationType = 202604
+	OperationTypeUserAgentSessionService_CreateAndStartWebSession    actions.OperationType = 202605
+	OperationTypeUserAgentSessionService_CreateAndStartMobileSession actions.OperationType = 202606
+	OperationTypeUserAgentSessionService_Terminate                   actions.OperationType = 202607
+	OperationTypeUserAgentSessionService_Delete                      actions.OperationType = 202608
+	OperationTypeUserAgentSessionService_GetById                     actions.OperationType = 202609
+	OperationTypeUserAgentSessionService_GetByUserIdAndClientId      actions.OperationType = 202610
+	OperationTypeUserAgentSessionService_GetByUserAgentId            actions.OperationType = 202611
+	OperationTypeUserAgentSessionService_GetAllByUserId              actions.OperationType = 202612
+	OperationTypeUserAgentSessionService_GetAllByClientId            actions.OperationType = 202613
+	OperationTypeUserAgentSessionService_Exists                      actions.OperationType = 202614
+	OperationTypeUserAgentSessionService_GetStatusById               actions.OperationType = 202615
+
+	// [gRPC] AuthenticationService operation types (202800-202999).
+	OperationTypeAuthenticationService_CreateUserToken    actions.OperationType = 202800
+	OperationTypeAuthenticationService_CreateClientToken  actions.OperationType = 202801
+	OperationTypeAuthenticationService_Authenticate       actions.OperationType = 202802
+	OperationTypeAuthenticationService_AuthenticateUser   actions.OperationType = 202803
+	OperationTypeAuthenticationService_AuthenticateClient actions.OperationType = 202804
+
+	// [gRPC] AuthorizationService operation types (203000-203199).
+	OperationTypeAuthorizationService_Authorize actions.OperationType = 203000
+
+	// [gRPC] Authentication token encryption key service operation types (203200-203399).
+
+	// [gRPC] RoleAssignmentService operation types (203400-203599).
+	OperationTypeRoleAssignmentService_Create                   actions.OperationType = 203400
+	OperationTypeRoleAssignmentService_Delete                   actions.OperationType = 203401
+	OperationTypeRoleAssignmentService_GetById                  actions.OperationType = 203402
+	OperationTypeRoleAssignmentService_GetByRoleIdAndAssignee   actions.OperationType = 203403
+	OperationTypeRoleAssignmentService_Exists                   actions.OperationType = 203404
+	OperationTypeRoleAssignmentService_IsAssigned               actions.OperationType = 203405
+	OperationTypeRoleAssignmentService_GetAssigneeTypeById      actions.OperationType = 203406
+	OperationTypeRoleAssignmentService_GetStatusById            actions.OperationType = 203407
+	OperationTypeRoleAssignmentService_GetRoleIdAndAssigneeById actions.OperationType = 203408
+
+	// [gRPC] UserRoleAssignmentService operation types (203600-203799).
+	OperationTypeUserRoleAssignmentService_Create                      actions.OperationType = 203600
+	OperationTypeUserRoleAssignmentService_Delete                      actions.OperationType = 203601
+	OperationTypeUserRoleAssignmentService_DeleteByRoleAssignmentId    actions.OperationType = 203602
+	OperationTypeUserRoleAssignmentService_GetById                     actions.OperationType = 203603
+	OperationTypeUserRoleAssignmentService_GetByRoleAssignmentId       actions.OperationType = 203604
+	OperationTypeUserRoleAssignmentService_GetAllByUserId              actions.OperationType = 203605
+	OperationTypeUserRoleAssignmentService_Exists                      actions.OperationType = 203606
+	OperationTypeUserRoleAssignmentService_IsAssigned                  actions.OperationType = 203607
+	OperationTypeUserRoleAssignmentService_GetIdByRoleAssignmentId     actions.OperationType = 203608
+	OperationTypeUserRoleAssignmentService_GetStatusById               actions.OperationType = 203609
+	OperationTypeUserRoleAssignmentService_GetStatusByRoleAssignmentId actions.OperationType = 203610
+	OperationTypeUserRoleAssignmentService_GetUserRoleIdsByUserId      actions.OperationType = 203611
+
+	// [gRPC] GroupRoleAssignmentService operation types (203800-203999).
+	OperationTypeGroupRoleAssignmentService_Create                      actions.OperationType = 203800
+	OperationTypeGroupRoleAssignmentService_Delete                      actions.OperationType = 203801
+	OperationTypeGroupRoleAssignmentService_DeleteByRoleAssignmentId    actions.OperationType = 203802
+	OperationTypeGroupRoleAssignmentService_GetById                     actions.OperationType = 203803
+	OperationTypeGroupRoleAssignmentService_GetByRoleAssignmentId       actions.OperationType = 203804
+	OperationTypeGroupRoleAssignmentService_GetAllByGroup               actions.OperationType = 203805
+	OperationTypeGroupRoleAssignmentService_Exists                      actions.OperationType = 203806
+	OperationTypeGroupRoleAssignmentService_IsAssigned                  actions.OperationType = 203807
+	OperationTypeGroupRoleAssignmentService_GetIdByRoleAssignmentId     actions.OperationType = 203808
+	OperationTypeGroupRoleAssignmentService_GetStatusById               actions.OperationType = 203809
+	OperationTypeGroupRoleAssignmentService_GetStatusByRoleAssignmentId actions.OperationType = 203810
+	OperationTypeGroupRoleAssignmentService_GetGroupRoleIdsByGroup      actions.OperationType = 203811
+
+	// [gRPC] UserRoleService operation types (204000-204199).
+	OperationTypeUserRoleService_GetAllRolesByUserId actions.OperationType = 204000
+
+	// [gRPC] GroupRoleService operation types (204200-204399).
+	OperationTypeGroupRoleService_GetAllRolesByGroup actions.OperationType = 204200
+
+	// [gRPC] RolePermissionService operation types (204400-204599).
+	OperationTypeRolePermissionService_Grant                       actions.OperationType = 204400
+	OperationTypeRolePermissionService_Revoke                      actions.OperationType = 204401
+	OperationTypeRolePermissionService_RevokeAll                   actions.OperationType = 204402
+	OperationTypeRolePermissionService_RevokeFromAll               actions.OperationType = 204403
+	OperationTypeRolePermissionService_Update                      actions.OperationType = 204404
+	OperationTypeRolePermissionService_IsGranted                   actions.OperationType = 204405
+	OperationTypeRolePermissionService_AreGranted                  actions.OperationType = 204406
+	OperationTypeRolePermissionService_GetAllPermissionIdsByRoleId actions.OperationType = 204407
+	OperationTypeRolePermissionService_GetAllRoleIdsByPermissionId actions.OperationType = 204408
+
+	// [gRPC] UserPersonalInfoService operation types (204600-204799).
+	OperationTypeUserPersonalInfoService_Create      actions.OperationType = 204600
+	OperationTypeUserPersonalInfoService_Delete      actions.OperationType = 204601
+	OperationTypeUserPersonalInfoService_GetById     actions.OperationType = 204602
+	OperationTypeUserPersonalInfoService_GetByUserId actions.OperationType = 204603
 )
