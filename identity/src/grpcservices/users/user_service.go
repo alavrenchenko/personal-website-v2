@@ -15,12 +15,21 @@
 package users
 
 import (
+	"context"
 	"fmt"
 
+	"google.golang.org/grpc/codes"
+
 	userspb "personal-website-v2/go-apis/identity/users"
+	iapierrors "personal-website-v2/identity/src/api/errors"
 	iactions "personal-website-v2/identity/src/internal/actions"
+	ierrors "personal-website-v2/identity/src/internal/errors"
+	"personal-website-v2/identity/src/internal/logging/events"
 	"personal-website-v2/identity/src/internal/users"
 	"personal-website-v2/pkg/actions"
+	apierrors "personal-website-v2/pkg/api/errors"
+	apigrpcerrors "personal-website-v2/pkg/api/grpc/errors"
+	"personal-website-v2/pkg/errors"
 	grpcserverhelper "personal-website-v2/pkg/helper/net/grpc/server"
 	"personal-website-v2/pkg/logging"
 	lcontext "personal-website-v2/pkg/logging/context"
@@ -59,4 +68,34 @@ func NewUserService(
 		userManager:  userManager,
 		logger:       l,
 	}, nil
+}
+
+// GetTypeAndStatusById gets a type and a status of the user by the specified user ID.
+func (s *UserService) GetTypeAndStatusById(ctx context.Context, req *userspb.GetTypeAndStatusByIdRequest) (*userspb.GetTypeAndStatusByIdResponse, error) {
+	var res *userspb.GetTypeAndStatusByIdResponse
+	err := s.reqProcessor.Process(ctx, iactions.ActionTypeUser_GetTypeAndStatusById, iactions.OperationTypeUserService_GetTypeAndStatusById,
+		func(opCtx *actions.OperationContext) error {
+			t, status, err := s.userManager.GetTypeAndStatusById(opCtx, req.Id)
+			if err != nil {
+				s.logger.ErrorWithEvent(opCtx.CreateLogEntryContext(), events.GrpcServices_UserServiceEvent, err,
+					"[users.UserService.GetTypeAndStatusById] get a type and a status of the user by id",
+				)
+
+				if err2 := errors.Unwrap(err); err2 == ierrors.ErrUserNotFound {
+					return apigrpcerrors.CreateGrpcError(codes.NotFound, iapierrors.ErrUserNotFound)
+				}
+				return apigrpcerrors.CreateGrpcError(codes.Internal, apierrors.ErrInternal)
+			}
+
+			res = &userspb.GetTypeAndStatusByIdResponse{
+				Type:   userspb.UserTypeEnum_UserType(t),
+				Status: userspb.UserStatus(status),
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
 }
