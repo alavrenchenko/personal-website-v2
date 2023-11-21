@@ -65,7 +65,7 @@ func NewClientService(
 	}
 	p, err := grpcserverhelper.NewRequestProcessor(appSessionId, actionManager, c, loggerFactory)
 	if err != nil {
-		return nil, fmt.Errorf("[clients.NewAuthenticationManager] new request processor: %w", err)
+		return nil, fmt.Errorf("[clients.NewClientService] new request processor: %w", err)
 	}
 
 	return &ClientService{
