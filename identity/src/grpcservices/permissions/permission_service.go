@@ -15,12 +15,23 @@
 package permissions
 
 import (
+	"context"
 	"fmt"
 
+	"google.golang.org/grpc/codes"
+
 	permissionspb "personal-website-v2/go-apis/identity/permissions"
+	iapierrors "personal-website-v2/identity/src/api/errors"
+	"personal-website-v2/identity/src/api/grpc/permissions/converter"
+	permissionvalidation "personal-website-v2/identity/src/api/grpc/permissions/validation/permissions"
 	iactions "personal-website-v2/identity/src/internal/actions"
+	ierrors "personal-website-v2/identity/src/internal/errors"
+	"personal-website-v2/identity/src/internal/logging/events"
 	"personal-website-v2/identity/src/internal/permissions"
 	"personal-website-v2/pkg/actions"
+	apierrors "personal-website-v2/pkg/api/errors"
+	apigrpcerrors "personal-website-v2/pkg/api/grpc/errors"
+	"personal-website-v2/pkg/errors"
 	grpcserverhelper "personal-website-v2/pkg/helper/net/grpc/server"
 	"personal-website-v2/pkg/logging"
 	lcontext "personal-website-v2/pkg/logging/context"
@@ -59,4 +70,48 @@ func NewPermissionService(
 		permissionManager: permissionManager,
 		logger:            l,
 	}, nil
+}
+
+// GetAllByNames gets all permissions by the specified permission names.
+func (s *PermissionService) GetAllByNames(ctx context.Context, req *permissionspb.GetAllByNamesRequest) (*permissionspb.GetAllByNamesResponse, error) {
+	var res *permissionspb.GetAllByNamesResponse
+	err := s.reqProcessor.Process(ctx, iactions.ActionTypePermission_GetAllByNames, iactions.OperationTypePermissionService_GetAllByNames,
+		func(opCtx *actions.OperationContext) error {
+			if err := permissionvalidation.ValidateGetAllByNamesRequest(req); err != nil {
+				s.logger.ErrorWithEvent(opCtx.CreateLogEntryContext(), events.GrpcServices_PermissionServiceEvent, nil,
+					"[permissions.PermissionService.GetAllByNames] "+err.Message(),
+				)
+				return apigrpcerrors.CreateGrpcError(codes.InvalidArgument, err)
+			}
+
+			ps, err := s.permissionManager.GetAllByNames(opCtx, req.Names)
+			if err != nil {
+				s.logger.ErrorWithEvent(opCtx.CreateLogEntryContext(), events.GrpcServices_PermissionServiceEvent, err,
+					"[permissions.PermissionService.GetAllByNames] get all permissions by names",
+				)
+
+				if err2 := errors.Unwrap(err); err2 != nil {
+					switch err2.Code() {
+					case errors.ErrorCodeInvalidData:
+						return apigrpcerrors.CreateGrpcError(codes.InvalidArgument, apierrors.NewApiError(apierrors.ApiErrorCodeInvalidData, err2.Message()))
+					case ierrors.ErrorCodePermissionNotFound:
+						return apigrpcerrors.CreateGrpcError(codes.NotFound, apierrors.NewApiError(iapierrors.ApiErrorCodePermissionNotFound, err2.Message()))
+					}
+				}
+				return apigrpcerrors.CreateGrpcError(codes.Internal, apierrors.ErrInternal)
+			}
+
+			ps2 := make([]*permissionspb.Permission, len(ps))
+			for i := 0; i < len(ps); i++ {
+				ps2[i] = converter.ConvertToApiPermission(ps[i])
+			}
+
+			res = &permissionspb.GetAllByNamesResponse{Permissions: ps2}
+			return nil
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
 }
