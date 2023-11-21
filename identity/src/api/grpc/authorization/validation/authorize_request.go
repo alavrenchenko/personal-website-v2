@@ -22,7 +22,6 @@ import (
 func ValidateAuthorizeRequest(r *authorizationpb.AuthorizeRequest) *errors.ApiError {
 	if len(r.RequiredPermissionIds) == 0 {
 		return errors.NewApiError(errors.ApiErrorCodeInvalidData, "number of required permission ids is 0")
-
 	}
 	return nil
 }
