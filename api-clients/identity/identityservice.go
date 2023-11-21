@@ -22,6 +22,14 @@ import (
 	"time"
 
 	"google.golang.org/grpc"
+
+	"personal-website-v2/api-clients/identity/authentication"
+	"personal-website-v2/api-clients/identity/authorization"
+	"personal-website-v2/api-clients/identity/clients"
+	"personal-website-v2/api-clients/identity/config"
+	"personal-website-v2/api-clients/identity/permissions"
+	"personal-website-v2/api-clients/identity/roles"
+	"personal-website-v2/api-clients/identity/users"
 )
 
 type IdentityServiceClientConfig struct {
@@ -32,11 +40,17 @@ type IdentityServiceClientConfig struct {
 
 // IdentityService represents a client service for working with the Identity Service.
 type IdentityService struct {
-	config        *IdentityServiceClientConfig
-	conn          *grpc.ClientConn
-	mu            sync.Mutex
-	isInitialized bool
-	disposed      bool
+	Users          *users.UsersService
+	Clients        *clients.ClientsService
+	Roles          *roles.RolesService
+	Permissions    *permissions.PermissionsService
+	Authentication *authentication.AuthenticationService
+	Authorization  *authorization.AuthorizationService
+	config         *IdentityServiceClientConfig
+	conn           *grpc.ClientConn
+	mu             sync.Mutex
+	isInitialized  bool
+	disposed       bool
 }
 
 // NewIdentityService returns a new IdentityService.
@@ -67,6 +81,13 @@ func (s *IdentityService) Init() error {
 	}
 
 	s.conn = conn
+	c := &config.ServiceConfig{CallTimeout: s.config.CallTimeout}
+	s.Users = users.NewUsersService(conn, c)
+	s.Clients = clients.NewClientsService(conn, c)
+	s.Roles = roles.NewRolesService(conn, c)
+	s.Permissions = permissions.NewPermissionsService(conn, c)
+	s.Authentication = authentication.NewAuthenticationService(conn, c)
+	s.Authorization = authorization.NewAuthorizationService(conn, c)
 	s.isInitialized = true
 	return nil
 }
