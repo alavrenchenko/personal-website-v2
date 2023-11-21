@@ -12,5 +12,5 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package internal.
-package internal // import "personal-website-v2/api-clients/identity/internal"
+// Package config.
+package config // import "personal-website-v2/api-clients/identity/config"
