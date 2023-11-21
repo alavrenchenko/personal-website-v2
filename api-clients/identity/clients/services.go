@@ -30,11 +30,11 @@ type Clients interface {
 	// Delete deletes a client by the specified client ID.
 	Delete(ctx *actions.OperationContext, id uint64) error
 
-	// FindById finds and returns a client, if any, by the specified client ID.
-	FindById(ctx *actions.OperationContext, id uint64) (*clientspb.Client, error)
+	// GetById gets a client by the specified client ID.
+	GetById(ctx *actions.OperationContext, id uint64) (*clientspb.Client, error)
 
 	// GetTypeById gets a client type by the specified client ID.
-	GetTypeById(id uint64) (clientspb.ClientTypeEnum_ClientType, error)
+	GetTypeById(ctx *actions.OperationContext, id uint64) (clientspb.ClientTypeEnum_ClientType, error)
 
 	// GetStatusById gets a client status by the specified client ID.
 	GetStatusById(ctx *actions.OperationContext, id uint64) (clientspb.ClientStatus, error)
