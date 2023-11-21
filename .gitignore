@@ -13,7 +13,6 @@ bin/
 /identity/**/internal/authentication/
 
 /api-clients/emailnotifier/
-/api-clients/identity/
 /api-clients/internal/
 
 /cdn/
