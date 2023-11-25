@@ -21,5 +21,8 @@ import (
 
 type Roles interface {
 	// GetAllByNames gets all roles by the specified role names.
-	GetAllByNames(ctx *actions.OperationContext, names []string) ([]*rolespb.Role, error)
+	GetAllByNames(names []string, operationUserId uint64) ([]*rolespb.Role, error)
+
+	// GetAllByNamesWithContext gets all roles by the specified role names.
+	GetAllByNamesWithContext(ctx *actions.OperationContext, names []string) ([]*rolespb.Role, error)
 }
