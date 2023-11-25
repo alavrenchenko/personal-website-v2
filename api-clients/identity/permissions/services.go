@@ -21,5 +21,8 @@ import (
 
 type Permissions interface {
 	// GetAllByNames gets all permissions by the specified permission names.
-	GetAllByNames(ctx *actions.OperationContext, names []string) ([]*permissionspb.Permission, error)
+	GetAllByNames(names []string, operationUserId uint64) ([]*permissionspb.Permission, error)
+
+	// GetAllByNamesWithContext gets all permissions by the specified permission names.
+	GetAllByNamesWithContext(ctx *actions.OperationContext, names []string) ([]*permissionspb.Permission, error)
 }
