@@ -19,6 +19,7 @@ type OperationGroup uint64
 const (
 	OperationGroupNoGroup     OperationGroup = 0
 	OperationGroupApplication OperationGroup = 1
+	OperationGroupIdentity    OperationGroup = 2
 
 	// reserved operation groups: 2-999
 )

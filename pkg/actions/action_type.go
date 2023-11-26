@@ -26,5 +26,11 @@ const (
 	ActionTypeApplicationSession_Start     ActionType = 200
 	ActionTypeApplicationSession_Terminate ActionType = 201
 
+	// Identity action types (300-499)
+	ActionTypeIdentity_Authenticate        ActionType = 300
+	ActionTypeIdentity_AuthenticateById    ActionType = 301
+	ActionTypeIdentity_AuthenticateByToken ActionType = 302
+	ActionTypeIdentity_Authorize           ActionType = 303
+
 	// reserved event ids: 300-9999
 )

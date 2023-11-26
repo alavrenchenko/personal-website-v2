@@ -19,6 +19,7 @@ type ActionGroup uint64
 const (
 	ActionGroupNoGroup     ActionGroup = 0
 	ActionGroupApplication ActionGroup = 1
+	ActionGroupIdentity    ActionGroup = 2
 
 	// reserved action groups: 2-999
 )

@@ -17,19 +17,33 @@ package actions
 type OperationType uint64
 
 const (
-	// Application operation types (1-499)
+	// Application operation types (1-199)
 	OperationTypeApplication_Start            OperationType = 1
 	OperationTypeApplication_Stop             OperationType = 2
 	OperationTypeApplication_TerminateSession OperationType = 3
 
-	// Application session action types (500-999)
-	OperationTypeApplicationSession_Start     OperationType = 500
-	OperationTypeApplicationSession_Terminate OperationType = 501
+	// Application session operation types (200-299)
+	OperationTypeApplicationSession_Start     OperationType = 200
+	OperationTypeApplicationSession_Terminate OperationType = 201
+
+	// IdentityManager operation types (300-499)
+	OperationTypeIdentityManager_Authenticate        OperationType = 300
+	OperationTypeIdentityManager_AuthenticateById    OperationType = 301
+	OperationTypeIdentityManager_AuthenticateByToken OperationType = 302
+	OperationTypeIdentityManager_Authorize           OperationType = 303
+
+	// NetHttpServer_RequestPipelineLifetime operation types (500-549)
+	OperationTypeNetHttpServer_RequestPipelineLifetime_Authenticate OperationType = 500
+	OperationTypeNetHttpServer_RequestPipelineLifetime_Authorize    OperationType = 501
+
+	// NetGrpcServer_RequestPipelineLifetime operation types (550-599)
+	OperationTypeNetGrpcServer_RequestPipelineLifetime_Authenticate OperationType = 550
+	OperationTypeNetGrpcServer_RequestPipelineLifetime_Authorize    OperationType = 551
 
 	// [HTTP] ApplicationController operation types (7000-7099)
 	OperationTypeApplicationController_Stop OperationType = 7000
 
 	// [gRPC] ApplicationService operation types (8000-8099)
 
-	// reserved event ids: 1000-6999, 7100-7999, 8100-9999
+	// reserved event ids: 600-6999, 7100-7999, 8100-9999
 )
