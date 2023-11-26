@@ -19,23 +19,24 @@ type EventGroup uint64
 const (
 	EventGroupNoGroup                               EventGroup = 0
 	EventGroupApplication                           EventGroup = 1
-	EventGroupTransaction                           EventGroup = 2
-	EventGroupAction                                EventGroup = 3
-	EventGroupOperation                             EventGroup = 4
-	EventGroupNetwork                               EventGroup = 5
-	EventGroupNetHttp                               EventGroup = 6
-	EventGroupNetHttpServer                         EventGroup = 7 // server, pipeline, routing
-	EventGroupNetHttpServer_RequestPipelineLifetime EventGroup = 8
-	EventGroupNetHttp_Server                        EventGroup = 9
-	EventGroupNetHttpClient                         EventGroup = 10
-	EventGroupNetHttp_Client                        EventGroup = 11
-	EventGroupNetGrpc                               EventGroup = 12
-	EventGroupNetGrpcServer                         EventGroup = 13 // server, pipeline
-	EventGroupNetGrpcServer_RequestPipelineLifetime EventGroup = 14
-	EventGroupNetGrpc_Server                        EventGroup = 15
-	EventGroupNetGrpcClient                         EventGroup = 16
-	EventGroupNetGrpc_Client                        EventGroup = 17
-	EventGroupDb                                    EventGroup = 18
+	EventGroupIdentity                              EventGroup = 2
+	EventGroupTransaction                           EventGroup = 3
+	EventGroupAction                                EventGroup = 4
+	EventGroupOperation                             EventGroup = 5
+	EventGroupNetwork                               EventGroup = 6
+	EventGroupNetHttp                               EventGroup = 7
+	EventGroupNetHttpServer                         EventGroup = 8 // server, pipeline, routing
+	EventGroupNetHttpServer_RequestPipelineLifetime EventGroup = 9
+	EventGroupNetHttp_Server                        EventGroup = 10
+	EventGroupNetHttpClient                         EventGroup = 11
+	EventGroupNetHttp_Client                        EventGroup = 12
+	EventGroupNetGrpc                               EventGroup = 13
+	EventGroupNetGrpcServer                         EventGroup = 14 // server, pipeline
+	EventGroupNetGrpcServer_RequestPipelineLifetime EventGroup = 15
+	EventGroupNetGrpc_Server                        EventGroup = 16
+	EventGroupNetGrpcClient                         EventGroup = 17
+	EventGroupNetGrpc_Client                        EventGroup = 18
+	EventGroupDb                                    EventGroup = 19
 
 	// Store event groups (500-549).
 
