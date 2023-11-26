@@ -268,8 +268,13 @@ func (s *ClientService) GetStatusById(ctx context.Context, req *clientspb.GetSta
 					"[clients.ClientService.GetStatusById] get a client status by id",
 				)
 
-				if err2 := errors.Unwrap(err); err2 == ierrors.ErrInvalidClientId {
-					return apigrpcerrors.CreateGrpcError(codes.InvalidArgument, iapierrors.ErrInvalidClientId)
+				if err2 := errors.Unwrap(err); err2 != nil {
+					switch err2 {
+					case ierrors.ErrClientNotFound:
+						return apigrpcerrors.CreateGrpcError(codes.NotFound, iapierrors.ErrClientNotFound)
+					case ierrors.ErrInvalidClientId:
+						return apigrpcerrors.CreateGrpcError(codes.InvalidArgument, iapierrors.ErrInvalidClientId)
+					}
 				}
 				return apigrpcerrors.CreateGrpcError(codes.Internal, apierrors.ErrInternal)
 			}
