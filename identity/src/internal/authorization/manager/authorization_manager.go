@@ -117,7 +117,7 @@ func (m *AuthorizationManager) Authorize(ctx *actions.OperationContext, userId, 
 
 			m.logger.InfoWithEvent(
 				opCtx.CreateLogEntryContext(),
-				events.AuthenticationEvent,
+				events.AuthorizationEvent,
 				"[manager.AuthorizationManager.Authorize] user has been authorized",
 				logging.NewField("userId", userId.Ptr()),
 				logging.NewField("clientId", clientId.Ptr()),
