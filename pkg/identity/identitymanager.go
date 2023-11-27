@@ -132,7 +132,9 @@ func (m *identityManager) AuthenticateById(ctx *actions.OperationContext, userId
 					i.userId = userId
 					i.userType = UserType(t)
 				} else {
-					m.logger.WarningWithEvent(opCtx.CreateLogEntryContext(), events.IdentityEvent, fmt.Sprintf("invalid user's status (%v)", s))
+					m.logger.WarningWithEvent(opCtx.CreateLogEntryContext(), events.IdentityEvent, "[identity.identityManager.AuthenticateById] invalid user's status",
+						logging.NewField("userStatus", s),
+					)
 				}
 			}
 
@@ -146,7 +148,9 @@ func (m *identityManager) AuthenticateById(ctx *actions.OperationContext, userId
 				} else if s == clientspb.ClientStatus_ACTIVE {
 					i.clientId = clientId
 				} else {
-					m.logger.WarningWithEvent(opCtx.CreateLogEntryContext(), events.IdentityEvent, fmt.Sprintf("invalid client status (%v)", s))
+					m.logger.WarningWithEvent(opCtx.CreateLogEntryContext(), events.IdentityEvent, "[identity.identityManager.AuthenticateById] invalid client status",
+						logging.NewField("clientStatus", s),
+					)
 				}
 			}
 
