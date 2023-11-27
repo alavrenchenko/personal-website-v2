@@ -31,7 +31,7 @@ type GrpcContext struct {
 	IncomingMetadata     metadata.MD
 	IncomingOperationCtx *apimetadata.OperationContext
 	Transaction          *actions.Transaction
-	User                 *identity.DefaultIdentity
+	User                 identity.Identity
 	callId               uuid.NullUUID
 	hasError             bool
 }

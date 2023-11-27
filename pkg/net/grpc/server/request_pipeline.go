@@ -37,7 +37,6 @@ import (
 	"personal-website-v2/pkg/base/sequence"
 	"personal-website-v2/pkg/errors"
 	"personal-website-v2/pkg/identity"
-	"personal-website-v2/pkg/identity/account"
 	"personal-website-v2/pkg/logging"
 	lcontext "personal-website-v2/pkg/logging/context"
 	"personal-website-v2/pkg/logging/events"
@@ -279,7 +278,7 @@ func (p *requestPipeline) handleRequest(ctx *GrpcContext, h handler) error {
 		}
 
 		if ctx.User == nil {
-			ctx.User = identity.NewDefaultIdentity(nullable.Nullable[uint64]{}, account.UserGroupAnonymousUsers, nullable.Nullable[uint64]{})
+			ctx.User = identity.NewDefaultIdentity(nullable.Nullable[uint64]{}, identity.UserTypeUser, nullable.Nullable[uint64]{})
 		}
 
 		if p.config.UseAuthorization {
@@ -288,7 +287,7 @@ func (p *requestPipeline) handleRequest(ctx *GrpcContext, h handler) error {
 			}
 		}
 	} else {
-		ctx.User = identity.NewDefaultIdentity(nullable.Nullable[uint64]{}, account.UserGroupAnonymousUsers, nullable.Nullable[uint64]{})
+		ctx.User = identity.NewDefaultIdentity(nullable.Nullable[uint64]{}, identity.UserTypeUser, nullable.Nullable[uint64]{})
 	}
 
 	h.invoke()
