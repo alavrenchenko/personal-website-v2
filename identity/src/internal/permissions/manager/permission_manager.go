@@ -201,6 +201,19 @@ func (m *PermissionManager) GetAllByIds(ctx *actions.OperationContext, ids []uin
 
 // GetAllByNames gets all permissions by the specified permission names.
 func (m *PermissionManager) GetAllByNames(ctx *actions.OperationContext, names []string) ([]*dbmodels.Permission, error) {
+	if len(names) == 0 {
+		return nil, errors.NewError(errors.ErrorCodeInvalidData, "number of names is 0")
+	}
+
+	ps, err := m.permissionStore.GetAllByNames(names)
+	if err != nil {
+		return nil, fmt.Errorf("[manager.PermissionManager.GetAllByNames] get all permissions by names: %w", err)
+	}
+	return ps, nil
+}
+
+// GetAllByNamesWithContext gets all permissions by the specified permission names.
+func (m *PermissionManager) GetAllByNamesWithContext(ctx *actions.OperationContext, names []string) ([]*dbmodels.Permission, error) {
 	var ps []*dbmodels.Permission
 	err := m.opExecutor.Exec(ctx, iactions.OperationTypePermissionManager_GetAllByNames, []*actions.OperationParam{actions.NewOperationParam("names", names)},
 		func(opCtx *actions.OperationContext) error {
@@ -209,14 +222,14 @@ func (m *PermissionManager) GetAllByNames(ctx *actions.OperationContext, names [
 			}
 
 			var err error
-			if ps, err = m.permissionStore.GetAllByNames(opCtx, names); err != nil {
-				return fmt.Errorf("[manager.PermissionManager.GetAllByNames] get all permissions by names: %w", err)
+			if ps, err = m.permissionStore.GetAllByNamesWithContext(opCtx, names); err != nil {
+				return fmt.Errorf("[manager.PermissionManager.GetAllByNamesWithContext] get all permissions by names: %w", err)
 			}
 			return nil
 		},
 	)
 	if err != nil {
-		return nil, fmt.Errorf("[manager.PermissionManager.GetAllByNames] execute an operation: %w", err)
+		return nil, fmt.Errorf("[manager.PermissionManager.GetAllByNamesWithContext] execute an operation: %w", err)
 	}
 	return ps, nil
 }

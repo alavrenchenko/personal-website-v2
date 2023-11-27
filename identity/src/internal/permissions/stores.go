@@ -43,7 +43,10 @@ type PermissionStore interface {
 	GetAllByIds(ctx *actions.OperationContext, ids []uint64) ([]*dbmodels.Permission, error)
 
 	// GetAllByNames gets all permissions by the specified permission names.
-	GetAllByNames(ctx *actions.OperationContext, names []string) ([]*dbmodels.Permission, error)
+	GetAllByNames(names []string) ([]*dbmodels.Permission, error)
+
+	// GetAllByNamesWithContext gets all permissions by the specified permission names.
+	GetAllByNamesWithContext(ctx *actions.OperationContext, names []string) ([]*dbmodels.Permission, error)
 
 	// Exists returns true if the permission exists.
 	Exists(ctx *actions.OperationContext, name string) (bool, error)
