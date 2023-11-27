@@ -200,7 +200,7 @@ func (m *PermissionManager) GetAllByIds(ctx *actions.OperationContext, ids []uin
 }
 
 // GetAllByNames gets all permissions by the specified permission names.
-func (m *PermissionManager) GetAllByNames(ctx *actions.OperationContext, names []string) ([]*dbmodels.Permission, error) {
+func (m *PermissionManager) GetAllByNames(names []string) ([]*dbmodels.Permission, error) {
 	if len(names) == 0 {
 		return nil, errors.NewError(errors.ErrorCodeInvalidData, "number of names is 0")
 	}

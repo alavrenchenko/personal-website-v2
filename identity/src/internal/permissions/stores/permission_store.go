@@ -279,7 +279,7 @@ func (s *PermissionStore) GetAllByIds(ctx *actions.OperationContext, ids []uint6
 }
 
 // GetAllByNames gets all permissions by the specified permission names.
-func (s *PermissionStore) GetAllByNames(ctx *actions.OperationContext, names []string) ([]*dbmodels.Permission, error) {
+func (s *PermissionStore) GetAllByNames(names []string) ([]*dbmodels.Permission, error) {
 	ps, err := s.getAllByNames(context.Background(), names)
 	if err != nil {
 		return nil, fmt.Errorf("[stores.PermissionStore.GetAllByNames] get all permissions by names: %w", err)
