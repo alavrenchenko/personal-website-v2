@@ -84,7 +84,7 @@ func (s *RoleService) GetAllByNames(ctx context.Context, req *rolespb.GetAllByNa
 				return apigrpcerrors.CreateGrpcError(codes.InvalidArgument, err)
 			}
 
-			rs, err := s.roleManager.GetAllByNames(opCtx, req.Names)
+			rs, err := s.roleManager.GetAllByNamesWithContext(opCtx, req.Names)
 			if err != nil {
 				s.logger.ErrorWithEvent(opCtx.CreateLogEntryContext(), events.GrpcServices_RoleServiceEvent, err,
 					"[roles.RoleService.GetAllByNames] get all roles by names",
