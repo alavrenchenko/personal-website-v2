@@ -29,7 +29,7 @@ type HttpContext struct {
 	Response             *Response
 	IncomingOperationCtx *metadata.OperationContext
 	Transaction          *actions.Transaction
-	User                 *identity.DefaultIdentity
+	User                 identity.Identity
 
 	// Items (SharedData) are a key/value collection that can be used to share data within the scope of this request.
 	Items    map[any]any
