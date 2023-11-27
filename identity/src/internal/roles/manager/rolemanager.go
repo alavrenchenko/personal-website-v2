@@ -179,7 +179,20 @@ func (m *RoleManager) GetAllByIds(ctx *actions.OperationContext, ids []uint64) (
 }
 
 // GetAllByNames gets all roles by the specified role names.
-func (m *RoleManager) GetAllByNames(ctx *actions.OperationContext, names []string) ([]*dbmodels.Role, error) {
+func (m *RoleManager) GetAllByNames(names []string) ([]*dbmodels.Role, error) {
+	if len(names) == 0 {
+		return nil, errors.NewError(errors.ErrorCodeInvalidData, "number of names is 0")
+	}
+
+	rs, err := m.roleStore.GetAllByNames(names)
+	if err != nil {
+		return nil, fmt.Errorf("[manager.RoleManager.GetAllByNames] get all roles by names: %w", err)
+	}
+	return rs, nil
+}
+
+// GetAllByNamesWithContext gets all roles by the specified role names.
+func (m *RoleManager) GetAllByNamesWithContext(ctx *actions.OperationContext, names []string) ([]*dbmodels.Role, error) {
 	var rs []*dbmodels.Role
 	err := m.opExecutor.Exec(ctx, iactions.OperationTypeRoleManager_GetAllByNames, []*actions.OperationParam{actions.NewOperationParam("names", names)},
 		func(opCtx *actions.OperationContext) error {
@@ -188,14 +201,14 @@ func (m *RoleManager) GetAllByNames(ctx *actions.OperationContext, names []strin
 			}
 
 			var err error
-			if rs, err = m.roleStore.GetAllByNames(opCtx, names); err != nil {
-				return fmt.Errorf("[manager.RoleManager.GetAllByNames] get all roles by names: %w", err)
+			if rs, err = m.roleStore.GetAllByNamesWithContext(opCtx, names); err != nil {
+				return fmt.Errorf("[manager.RoleManager.GetAllByNamesWithContext] get all roles by names: %w", err)
 			}
 			return nil
 		},
 	)
 	if err != nil {
-		return nil, fmt.Errorf("[manager.RoleManager.GetAllByNames] execute an operation: %w", err)
+		return nil, fmt.Errorf("[manager.RoleManager.GetAllByNamesWithContext] execute an operation: %w", err)
 	}
 	return rs, nil
 }

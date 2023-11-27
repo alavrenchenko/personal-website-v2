@@ -43,7 +43,10 @@ type RoleManager interface {
 	GetAllByIds(ctx *actions.OperationContext, ids []uint64) ([]*dbmodels.Role, error)
 
 	// GetAllByNames gets all roles by the specified role names.
-	GetAllByNames(ctx *actions.OperationContext, names []string) ([]*dbmodels.Role, error)
+	GetAllByNames(names []string) ([]*dbmodels.Role, error)
+
+	// GetAllByNamesWithContext gets all roles by the specified role names.
+	GetAllByNamesWithContext(ctx *actions.OperationContext, names []string) ([]*dbmodels.Role, error)
 
 	// Exists returns true if the role exists.
 	Exists(ctx *actions.OperationContext, name string) (bool, error)
