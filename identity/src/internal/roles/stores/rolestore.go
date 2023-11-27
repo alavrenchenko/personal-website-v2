@@ -241,7 +241,7 @@ func (s *RoleStore) GetAllByIds(ctx *actions.OperationContext, ids []uint64) ([]
 }
 
 // GetAllByNames gets all roles by the specified role names.
-func (s *RoleStore) GetAllByNames(ctx *actions.OperationContext, names []string) ([]*dbmodels.Role, error) {
+func (s *RoleStore) GetAllByNames(names []string) ([]*dbmodels.Role, error) {
 	rs, err := s.getAllByNames(context.Background(), names)
 	if err != nil {
 		return nil, fmt.Errorf("[stores.RoleStore.GetAllByNames] get all roles by names: %w", err)
