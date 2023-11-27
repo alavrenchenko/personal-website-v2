@@ -129,16 +129,8 @@ func (m *identityManager) AuthenticateById(ctx *actions.OperationContext, userId
 					}
 					m.logger.ErrorWithEvent(opCtx.CreateLogEntryContext(), events.IdentityEvent, err, msg)
 				} else if s == userspb.UserStatus_ACTIVE {
-					switch t {
-					case userspb.UserTypeEnum_USER:
-						i.userType = UserTypeUser
-					case userspb.UserTypeEnum_SYSTEM_USER:
-						i.userType = UserTypeSystemUser
-					default:
-						return fmt.Errorf("[identity.identityManager.AuthenticateById] invalid user's type (%v)", t)
-					}
-
 					i.userId = userId
+					i.userType = UserType(t)
 				} else {
 					m.logger.WarningWithEvent(opCtx.CreateLogEntryContext(), events.IdentityEvent, fmt.Sprintf("invalid user's status (%v)", s))
 				}
@@ -209,16 +201,8 @@ func (m *identityManager) AuthenticateByToken(ctx *actions.OperationContext, use
 					}
 					m.logger.ErrorWithEvent(opCtx.CreateLogEntryContext(), events.IdentityEvent, err, msg)
 				} else {
-					switch r.UserType {
-					case userspb.UserTypeEnum_USER:
-						i.userType = UserTypeUser
-					case userspb.UserTypeEnum_SYSTEM_USER:
-						i.userType = UserTypeSystemUser
-					default:
-						return fmt.Errorf("[identity.identityManager.AuthenticateByToken] invalid user's type (%v)", r.UserType)
-					}
-
 					i.userId = nullable.NewNullable(r.UserId)
+					i.userType = UserType(r.UserType)
 					i.clientId = nullable.NewNullable(r.ClientId)
 
 					m.logger.InfoWithEvent(
@@ -238,16 +222,8 @@ func (m *identityManager) AuthenticateByToken(ctx *actions.OperationContext, use
 					}
 					m.logger.ErrorWithEvent(opCtx.CreateLogEntryContext(), events.IdentityEvent, err, msg)
 				} else {
-					switch r.UserType {
-					case userspb.UserTypeEnum_USER:
-						i.userType = UserTypeUser
-					case userspb.UserTypeEnum_SYSTEM_USER:
-						i.userType = UserTypeSystemUser
-					default:
-						return fmt.Errorf("[identity.identityManager.AuthenticateByToken] invalid user's type (%v)", r.UserType)
-					}
-
 					i.userId = nullable.NewNullable(r.UserId)
+					i.userType = UserType(r.UserType)
 
 					m.logger.InfoWithEvent(
 						opCtx.CreateLogEntryContext(),
