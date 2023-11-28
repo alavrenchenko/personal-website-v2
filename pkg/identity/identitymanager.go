@@ -38,7 +38,7 @@ type IdentityManager interface {
 	Init() error
 	AuthenticateById(ctx *actions.OperationContext, userId, clientId nullable.Nullable[uint64]) (Identity, error)
 	AuthenticateByToken(ctx *actions.OperationContext, userToken, clientToken []byte) (Identity, error)
-	Authorize(ctx *actions.OperationContext, user Identity, requiredPermissions []string) error
+	Authorize(ctx *actions.OperationContext, user Identity, requiredPermissions []string) (authorized bool, err error)
 }
 
 type identityManager struct {
@@ -205,8 +205,8 @@ func (m *identityManager) AuthenticateByToken(ctx *actions.OperationContext, use
 			if len(userToken) > 0 && len(clientToken) > 0 {
 				if r, err := m.identityService.Authentication.Authenticate(opCtx, userToken, clientToken); err != nil {
 					msg := "[identity.identityManager.AuthenticateByToken] authenticate a user and a client"
-					if err2 := apierrors.Unwrap(err); err2 == nil ||
-						err2.Code() != ierrors.ApiErrorCodeInvalidAuthToken && err2.Code() != ierrors.ApiErrorCodeInvalidUserAuthToken && err2.Code() != ierrors.ApiErrorCodeInvalidClientAuthToken {
+					if err2 := apierrors.Unwrap(err); err2 == nil || err2.Code() != ierrors.ApiErrorCodeInvalidAuthToken &&
+						err2.Code() != ierrors.ApiErrorCodeInvalidUserAuthToken && err2.Code() != ierrors.ApiErrorCodeInvalidClientAuthToken {
 						return fmt.Errorf("%s: %w", msg, err)
 					}
 					m.logger.ErrorWithEvent(opCtx.CreateLogEntryContext(), events.IdentityEvent, err, msg)
@@ -270,11 +270,12 @@ func (m *identityManager) AuthenticateByToken(ctx *actions.OperationContext, use
 	return i, nil
 }
 
-func (m *identityManager) Authorize(ctx *actions.OperationContext, user Identity, requiredPermissions []string) error {
+func (m *identityManager) Authorize(ctx *actions.OperationContext, user Identity, requiredPermissions []string) (bool, error) {
 	if !m.isInitialized {
-		return errors.New("[identity.identityManager.Authorize] identityManager not initialized")
+		return false, errors.New("[identity.identityManager.Authorize] identityManager not initialized")
 	}
 
+	authorized := false
 	err := m.opExecutor.Exec(ctx, actions.OperationTypeIdentityManager_Authorize,
 		[]*actions.OperationParam{
 			actions.NewOperationParam("userId", user.UserId().Ptr()),
@@ -300,11 +301,12 @@ func (m *identityManager) Authorize(ctx *actions.OperationContext, user Identity
 			r, err := m.identityService.Authorization.Authorize(opCtx, user.UserId(), user.ClientId(), pids)
 			if err != nil {
 				msg := "[identity.identityManager.Authorize] authorize a user"
-				if err2 := apierrors.Unwrap(err); err2 == nil || err2.Code() != apierrors.ApiErrorCodeInvalidOperation && err2.Code() != apierrors.ApiErrorCodeInvalidData &&
-					err2.Code() != ierrors.ApiErrorCodeUserNotFound && err2.Code() != ierrors.ApiErrorCodeClientNotFound && err2.Code() != ierrors.ApiErrorCodePermissionNotGranted {
-					return fmt.Errorf("%s: %w", msg, err)
+				if err2 := apierrors.Unwrap(err); err2 != nil && (err2.Code() == apierrors.ApiErrorCodeInvalidOperation || err2.Code() == ierrors.ApiErrorCodeUserNotFound ||
+					err2.Code() == ierrors.ApiErrorCodeClientNotFound || err2.Code() == ierrors.ApiErrorCodePermissionNotGranted) {
+					m.logger.ErrorWithEvent(opCtx.CreateLogEntryContext(), events.IdentityEvent, err, msg)
+					return nil
 				}
-				m.logger.ErrorWithEvent(opCtx.CreateLogEntryContext(), events.IdentityEvent, err, msg)
+				return fmt.Errorf("%s: %w", msg, err)
 			}
 
 			prs := make([]*PermissionWithRoles, len(r.PermissionRoles))
@@ -330,6 +332,7 @@ func (m *identityManager) Authorize(ctx *actions.OperationContext, user Identity
 
 			user.SetUserGroup(UserGroup(r.Group))
 			user.AddPermissionRoles(prs)
+			authorized = true
 
 			m.logger.InfoWithEvent(
 				opCtx.CreateLogEntryContext(),
@@ -344,7 +347,7 @@ func (m *identityManager) Authorize(ctx *actions.OperationContext, user Identity
 		},
 	)
 	if err != nil {
-		return fmt.Errorf("[identity.identityManager.Authorize] execute an operation: %w", err)
+		return false, fmt.Errorf("[identity.identityManager.Authorize] execute an operation: %w", err)
 	}
-	return nil
+	return authorized, nil
 }
