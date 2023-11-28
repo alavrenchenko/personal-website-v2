@@ -225,8 +225,8 @@ func (m *identityManager) AuthenticateByToken(ctx *actions.OperationContext, use
 			if len(userToken) > 0 && len(clientToken) > 0 {
 				if r, err := m.authenticationManager.Authenticate(opCtx, userToken, clientToken); err != nil {
 					msg := "[identity.identityManager.AuthenticateByToken] authenticate a user and a client"
-					if err2 := errs.Unwrap(err); err2 == nil ||
-						err2.Code() != ierrors.ErrorCodeInvalidAuthToken && err2.Code() != ierrors.ErrorCodeInvalidUserAuthToken && err2.Code() != ierrors.ErrorCodeInvalidClientAuthToken {
+					if err2 := errs.Unwrap(err); err2 == nil || err2.Code() != ierrors.ErrorCodeInvalidAuthToken &&
+						err2.Code() != ierrors.ErrorCodeInvalidUserAuthToken && err2.Code() != ierrors.ErrorCodeInvalidClientAuthToken {
 						return fmt.Errorf("%s: %w", msg, err)
 					}
 					m.logger.ErrorWithEvent(opCtx.CreateLogEntryContext(), events.IdentityEvent, err, msg)
@@ -287,11 +287,12 @@ func (m *identityManager) AuthenticateByToken(ctx *actions.OperationContext, use
 	return i, nil
 }
 
-func (m *identityManager) Authorize(ctx *actions.OperationContext, user identity.Identity, requiredPermissions []string) error {
+func (m *identityManager) Authorize(ctx *actions.OperationContext, user identity.Identity, requiredPermissions []string) (bool, error) {
 	if !m.isInitialized {
-		return errors.New("[identity.identityManager.Authorize] identityManager not initialized")
+		return false, errors.New("[identity.identityManager.Authorize] identityManager not initialized")
 	}
 
+	authorized := false
 	err := m.opExecutor.Exec(ctx, actions.OperationTypeIdentityManager_Authorize,
 		[]*actions.OperationParam{
 			actions.NewOperationParam("userId", user.UserId().Ptr()),
@@ -317,11 +318,12 @@ func (m *identityManager) Authorize(ctx *actions.OperationContext, user identity
 			r, err := m.authorizationManager.Authorize(opCtx, user.UserId(), user.ClientId(), pids)
 			if err != nil {
 				msg := "[identity.identityManager.Authorize] authorize a user"
-				if err2 := errs.Unwrap(err); err2 == nil || err2.Code() != errs.ErrorCodeInvalidOperation && err2.Code() != errs.ErrorCodeInvalidData &&
-					err2.Code() != ierrors.ErrorCodeUserNotFound && err2.Code() != ierrors.ErrorCodeClientNotFound && err2.Code() != ierrors.ErrorCodePermissionNotGranted {
-					return fmt.Errorf("%s: %w", msg, err)
+				if err2 := errs.Unwrap(err); err2 != nil && (err2.Code() == errs.ErrorCodeInvalidOperation || err2.Code() == ierrors.ErrorCodeUserNotFound ||
+					err2.Code() == ierrors.ErrorCodeClientNotFound || err2.Code() == ierrors.ErrorCodePermissionNotGranted) {
+					m.logger.ErrorWithEvent(opCtx.CreateLogEntryContext(), events.IdentityEvent, err, msg)
+					return nil
 				}
-				m.logger.ErrorWithEvent(opCtx.CreateLogEntryContext(), events.IdentityEvent, err, msg)
+				return fmt.Errorf("%s: %w", msg, err)
 			}
 
 			prs := make([]*identity.PermissionWithRoles, len(r.PermissionRoles))
@@ -347,6 +349,7 @@ func (m *identityManager) Authorize(ctx *actions.OperationContext, user identity
 
 			user.SetUserGroup(identity.UserGroup(r.Group))
 			user.AddPermissionRoles(prs)
+			authorized = true
 
 			m.logger.InfoWithEvent(
 				opCtx.CreateLogEntryContext(),
@@ -361,7 +364,7 @@ func (m *identityManager) Authorize(ctx *actions.OperationContext, user identity
 		},
 	)
 	if err != nil {
-		return fmt.Errorf("[identity.identityManager.Authorize] execute an operation: %w", err)
+		return false, fmt.Errorf("[identity.identityManager.Authorize] execute an operation: %w", err)
 	}
-	return nil
+	return authorized, nil
 }
