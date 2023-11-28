@@ -64,7 +64,7 @@ func NewRequestProcessor(
 	}, nil
 }
 
-func (p *RequestProcessor) Process(incomingCtx context.Context, atype actions.ActionType, otype actions.OperationType, f func(ctx *actions.OperationContext) error) error {
+func (p *RequestProcessor) Process(incomingCtx context.Context, atype actions.ActionType, otype actions.OperationType, f func(ctx *GrpcOperationContext) error) error {
 	grpcCtx, ok := server.GetGrpcContextFromIncomingContext(incomingCtx)
 	if !ok {
 		p.logger.ErrorWithEvent(
@@ -138,7 +138,19 @@ func (p *RequestProcessor) Process(incomingCtx context.Context, atype actions.Ac
 		}
 	}()
 
-	err = f(opCtx)
+	err = f(NewGrpcOperationContext(grpcCtx, opCtx))
 	succeeded = err == nil
 	return err
+}
+
+type GrpcOperationContext struct {
+	GrpcCtx      *server.GrpcContext
+	OperationCtx *actions.OperationContext
+}
+
+func NewGrpcOperationContext(grpcCtx *server.GrpcContext, opCtx *actions.OperationContext) *GrpcOperationContext {
+	return &GrpcOperationContext{
+		GrpcCtx:      grpcCtx,
+		OperationCtx: opCtx,
+	}
 }
