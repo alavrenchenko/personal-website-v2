@@ -29,28 +29,34 @@ const (
 	ErrorCodeApplication_StartError ErrorCode = 1001
 	ErrorCodeApplication_StopError  ErrorCode = 1002
 
-	// Transaction error codes (1200-1399).
-	ErrorCodeTransactionError ErrorCode = 1200
+	// Identity error codes (1200-1399).
+	ErrorCodeIdentityError            ErrorCode = 1200
+	ErrorCodeIdentity_Unauthenticated ErrorCode = 1201
+	// Unauthorized.
+	ErrorCodeIdentity_PermissionDenied ErrorCode = 1202
 
-	// Action error codes (1400-1599).
-	ErrorCodeActionError ErrorCode = 1400
+	// Transaction error codes (1400-1599).
+	ErrorCodeTransactionError ErrorCode = 1400
 
-	// Operation error codes (1600-1799).
-	ErrorCodeOperationError ErrorCode = 1600
+	// Action error codes (1600-1799).
+	ErrorCodeActionError ErrorCode = 1600
 
-	// HttpServer (../pkg/net/http/server) error codes (1800-1999).
-	ErrorCodeHttpServerError                  ErrorCode = 1800
-	ErrorCodeHttpServer_CreateRequestIdError  ErrorCode = 1801
-	ErrorCodeHttpServer_CreateResponseIdError ErrorCode = 1802
-	ErrorCodeHttpServer_RequestHandlingError  ErrorCode = 1803
-	ErrorCodeHttpServer_RequestLoggingError   ErrorCode = 1804
-	ErrorCodeHttpServer_ResponseLoggingError  ErrorCode = 1805
+	// Operation error codes (1800-1999).
+	ErrorCodeOperationError ErrorCode = 1800
 
-	// GrpcServer (../pkg/net/grpc/server) error codes (2000-2199).
-	ErrorCodeGrpcServerError                 ErrorCode = 2000
-	ErrorCodeGrpcServer_CreateCallIdError    ErrorCode = 2001
-	ErrorCodeGrpcServer_RequestHandlingError ErrorCode = 2003
-	ErrorCodeGrpcServer_CallLoggingError     ErrorCode = 2004
+	// HttpServer (../pkg/net/http/server) error codes (2000-2199).
+	ErrorCodeHttpServerError                  ErrorCode = 2000
+	ErrorCodeHttpServer_CreateRequestIdError  ErrorCode = 2001
+	ErrorCodeHttpServer_CreateResponseIdError ErrorCode = 2002
+	ErrorCodeHttpServer_RequestHandlingError  ErrorCode = 2003
+	ErrorCodeHttpServer_RequestLoggingError   ErrorCode = 2004
+	ErrorCodeHttpServer_ResponseLoggingError  ErrorCode = 2005
+
+	// GrpcServer (../pkg/net/grpc/server) error codes (2200-2399).
+	ErrorCodeGrpcServerError                 ErrorCode = 2200
+	ErrorCodeGrpcServer_CreateCallIdError    ErrorCode = 2201
+	ErrorCodeGrpcServer_RequestHandlingError ErrorCode = 2203
+	ErrorCodeGrpcServer_CallLoggingError     ErrorCode = 2204
 
 	// Common error codes (10000-19999).
 	ErrorCodeInvalidOperation ErrorCode = 10000
