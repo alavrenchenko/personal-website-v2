@@ -26,6 +26,7 @@ import (
 	rolevalidation "personal-website-v2/identity/src/api/grpc/roles/validation/roles"
 	iactions "personal-website-v2/identity/src/internal/actions"
 	ierrors "personal-website-v2/identity/src/internal/errors"
+	iidentity "personal-website-v2/identity/src/internal/identity"
 	"personal-website-v2/identity/src/internal/logging/events"
 	"personal-website-v2/identity/src/internal/roles"
 	"personal-website-v2/pkg/actions"
@@ -33,20 +34,23 @@ import (
 	apigrpcerrors "personal-website-v2/pkg/api/grpc/errors"
 	"personal-website-v2/pkg/errors"
 	grpcserverhelper "personal-website-v2/pkg/helper/net/grpc/server"
+	"personal-website-v2/pkg/identity"
 	"personal-website-v2/pkg/logging"
 	lcontext "personal-website-v2/pkg/logging/context"
 )
 
 type RoleService struct {
 	rolespb.UnimplementedRoleServiceServer
-	reqProcessor *grpcserverhelper.RequestProcessor
-	roleManager  roles.RoleManager
-	logger       logging.Logger[*lcontext.LogEntryContext]
+	reqProcessor    *grpcserverhelper.RequestProcessor
+	identityManager identity.IdentityManager
+	roleManager     roles.RoleManager
+	logger          logging.Logger[*lcontext.LogEntryContext]
 }
 
 func NewRoleService(
 	appSessionId uint64,
 	actionManager *actions.ActionManager,
+	identityManager identity.IdentityManager,
 	roleManager roles.RoleManager,
 	loggerFactory logging.LoggerFactory[*lcontext.LogEntryContext],
 ) (*RoleService, error) {
@@ -66,9 +70,10 @@ func NewRoleService(
 	}
 
 	return &RoleService{
-		reqProcessor: p,
-		roleManager:  roleManager,
-		logger:       l,
+		reqProcessor:    p,
+		identityManager: identityManager,
+		roleManager:     roleManager,
+		logger:          l,
 	}, nil
 }
 
@@ -77,6 +82,25 @@ func (s *RoleService) GetAllByNames(ctx context.Context, req *rolespb.GetAllByNa
 	var res *rolespb.GetAllByNamesResponse
 	err := s.reqProcessor.Process(ctx, iactions.ActionTypeRole_GetAllByNames, iactions.OperationTypeRoleService_GetAllByNames,
 		func(opCtx *grpcserverhelper.GrpcOperationContext) error {
+			if !opCtx.GrpcCtx.User.IsAuthenticated() {
+				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_RoleServiceEvent, nil,
+					"[roles.RoleService.GetAllByNames] user not authenticated",
+				)
+				return apigrpcerrors.CreateGrpcError(codes.Unauthenticated, apierrors.NewApiError(apierrors.ApiErrorCodeUnauthenticated, "user not authenticated"))
+			}
+
+			if authorized, err := s.identityManager.Authorize(opCtx.OperationCtx, opCtx.GrpcCtx.User, []string{iidentity.PermissionRole_GetAllBy}); err != nil {
+				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_RoleServiceEvent, err,
+					"[roles.RoleService.GetAllByNames] authorize a user",
+				)
+				return apigrpcerrors.CreateGrpcError(codes.Internal, apierrors.ErrInternal)
+			} else if !authorized {
+				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_RoleServiceEvent, nil,
+					"[roles.RoleService.GetAllByNames] user not authorized",
+				)
+				return apigrpcerrors.CreateGrpcError(codes.PermissionDenied, apierrors.NewApiError(apierrors.ApiErrorCodePermissionDenied, "forbidden"))
+			}
+
 			if err := rolevalidation.ValidateGetAllByNamesRequest(req); err != nil {
 				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_RoleServiceEvent, nil,
 					"[roles.RoleService.GetAllByNames] "+err.Message(),
