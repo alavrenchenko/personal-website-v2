@@ -26,6 +26,7 @@ import (
 	permissionvalidation "personal-website-v2/identity/src/api/grpc/permissions/validation/permissions"
 	iactions "personal-website-v2/identity/src/internal/actions"
 	ierrors "personal-website-v2/identity/src/internal/errors"
+	iidentity "personal-website-v2/identity/src/internal/identity"
 	"personal-website-v2/identity/src/internal/logging/events"
 	"personal-website-v2/identity/src/internal/permissions"
 	"personal-website-v2/pkg/actions"
@@ -33,6 +34,7 @@ import (
 	apigrpcerrors "personal-website-v2/pkg/api/grpc/errors"
 	"personal-website-v2/pkg/errors"
 	grpcserverhelper "personal-website-v2/pkg/helper/net/grpc/server"
+	"personal-website-v2/pkg/identity"
 	"personal-website-v2/pkg/logging"
 	lcontext "personal-website-v2/pkg/logging/context"
 )
@@ -40,6 +42,7 @@ import (
 type PermissionService struct {
 	permissionspb.UnimplementedPermissionServiceServer
 	reqProcessor      *grpcserverhelper.RequestProcessor
+	identityManager   identity.IdentityManager
 	permissionManager permissions.PermissionManager
 	logger            logging.Logger[*lcontext.LogEntryContext]
 }
@@ -47,6 +50,7 @@ type PermissionService struct {
 func NewPermissionService(
 	appSessionId uint64,
 	actionManager *actions.ActionManager,
+	identityManager identity.IdentityManager,
 	permissionManager permissions.PermissionManager,
 	loggerFactory logging.LoggerFactory[*lcontext.LogEntryContext],
 ) (*PermissionService, error) {
@@ -67,6 +71,7 @@ func NewPermissionService(
 
 	return &PermissionService{
 		reqProcessor:      p,
+		identityManager:   identityManager,
 		permissionManager: permissionManager,
 		logger:            l,
 	}, nil
@@ -77,6 +82,25 @@ func (s *PermissionService) GetAllByNames(ctx context.Context, req *permissionsp
 	var res *permissionspb.GetAllByNamesResponse
 	err := s.reqProcessor.Process(ctx, iactions.ActionTypePermission_GetAllByNames, iactions.OperationTypePermissionService_GetAllByNames,
 		func(opCtx *grpcserverhelper.GrpcOperationContext) error {
+			if !opCtx.GrpcCtx.User.IsAuthenticated() {
+				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_PermissionServiceEvent, nil,
+					"[permissions.PermissionService.GetAllByNames] user not authenticated",
+				)
+				return apigrpcerrors.CreateGrpcError(codes.Unauthenticated, apierrors.NewApiError(apierrors.ApiErrorCodeUnauthenticated, "user not authenticated"))
+			}
+
+			if authorized, err := s.identityManager.Authorize(opCtx.OperationCtx, opCtx.GrpcCtx.User, []string{iidentity.PermissionPermission_GetAllBy}); err != nil {
+				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_PermissionServiceEvent, err,
+					"[permissions.PermissionService.GetAllByNames] authorize a user",
+				)
+				return apigrpcerrors.CreateGrpcError(codes.Internal, apierrors.ErrInternal)
+			} else if !authorized {
+				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_PermissionServiceEvent, nil,
+					"[permissions.PermissionService.GetAllByNames] user not authorized",
+				)
+				return apigrpcerrors.CreateGrpcError(codes.PermissionDenied, apierrors.NewApiError(apierrors.ApiErrorCodePermissionDenied, "forbidden"))
+			}
+
 			if err := permissionvalidation.ValidateGetAllByNamesRequest(req); err != nil {
 				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_PermissionServiceEvent, nil,
 					"[permissions.PermissionService.GetAllByNames] "+err.Message(),
