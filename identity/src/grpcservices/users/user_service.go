@@ -24,6 +24,7 @@ import (
 	iapierrors "personal-website-v2/identity/src/api/errors"
 	iactions "personal-website-v2/identity/src/internal/actions"
 	ierrors "personal-website-v2/identity/src/internal/errors"
+	iidentity "personal-website-v2/identity/src/internal/identity"
 	"personal-website-v2/identity/src/internal/logging/events"
 	"personal-website-v2/identity/src/internal/users"
 	"personal-website-v2/pkg/actions"
@@ -31,20 +32,23 @@ import (
 	apigrpcerrors "personal-website-v2/pkg/api/grpc/errors"
 	"personal-website-v2/pkg/errors"
 	grpcserverhelper "personal-website-v2/pkg/helper/net/grpc/server"
+	"personal-website-v2/pkg/identity"
 	"personal-website-v2/pkg/logging"
 	lcontext "personal-website-v2/pkg/logging/context"
 )
 
 type UserService struct {
 	userspb.UnimplementedUserServiceServer
-	reqProcessor *grpcserverhelper.RequestProcessor
-	userManager  users.UserManager
-	logger       logging.Logger[*lcontext.LogEntryContext]
+	reqProcessor    *grpcserverhelper.RequestProcessor
+	identityManager identity.IdentityManager
+	userManager     users.UserManager
+	logger          logging.Logger[*lcontext.LogEntryContext]
 }
 
 func NewUserService(
 	appSessionId uint64,
 	actionManager *actions.ActionManager,
+	identityManager identity.IdentityManager,
 	userManager users.UserManager,
 	loggerFactory logging.LoggerFactory[*lcontext.LogEntryContext],
 ) (*UserService, error) {
@@ -64,9 +68,10 @@ func NewUserService(
 	}
 
 	return &UserService{
-		reqProcessor: p,
-		userManager:  userManager,
-		logger:       l,
+		reqProcessor:    p,
+		identityManager: identityManager,
+		userManager:     userManager,
+		logger:          l,
 	}, nil
 }
 
@@ -75,6 +80,25 @@ func (s *UserService) GetTypeAndStatusById(ctx context.Context, req *userspb.Get
 	var res *userspb.GetTypeAndStatusByIdResponse
 	err := s.reqProcessor.Process(ctx, iactions.ActionTypeUser_GetTypeAndStatusById, iactions.OperationTypeUserService_GetTypeAndStatusById,
 		func(opCtx *grpcserverhelper.GrpcOperationContext) error {
+			if !opCtx.GrpcCtx.User.IsAuthenticated() {
+				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_UserServiceEvent, nil,
+					"[users.UserService.GetTypeAndStatusById] user not authenticated",
+				)
+				return apigrpcerrors.CreateGrpcError(codes.Unauthenticated, apierrors.NewApiError(apierrors.ApiErrorCodeUnauthenticated, "user not authenticated"))
+			}
+
+			if authorized, err := s.identityManager.Authorize(opCtx.OperationCtx, opCtx.GrpcCtx.User, []string{iidentity.PermissionUser_GetTypeAndStatus}); err != nil {
+				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_UserServiceEvent, err,
+					"[users.UserService.GetTypeAndStatusById] authorize a user",
+				)
+				return apigrpcerrors.CreateGrpcError(codes.Internal, apierrors.ErrInternal)
+			} else if !authorized {
+				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_UserServiceEvent, nil,
+					"[users.UserService.GetTypeAndStatusById] user not authorized",
+				)
+				return apigrpcerrors.CreateGrpcError(codes.PermissionDenied, apierrors.NewApiError(apierrors.ApiErrorCodePermissionDenied, "forbidden"))
+			}
+
 			t, status, err := s.userManager.GetTypeAndStatusById(opCtx.OperationCtx, req.Id)
 			if err != nil {
 				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_UserServiceEvent, err,
