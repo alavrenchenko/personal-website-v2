@@ -51,7 +51,8 @@ type identityManager struct {
 	roleNames             []string
 	permissionNames       []string
 	roles                 map[uint64]*roledbmodels.Role
-	permissions           map[uint64]*permissiondbmodels.Permission
+	permissionsById       map[uint64]*permissiondbmodels.Permission
+	permissionIdsByName   map[string]uint64
 	logger                logging.Logger[*context.LogEntryContext]
 	isInitialized         bool
 }
@@ -66,8 +67,8 @@ func NewIdentityManager(
 	permissionManager permissions.PermissionManager,
 	authenticationManager authentication.AuthenticationManager,
 	authorizationManager authorization.AuthorizationManager,
-	roleNames,
-	permissionNames []string,
+	roles []string,
+	permissions []string,
 	loggerFactory logging.LoggerFactory[*context.LogEntryContext],
 ) (identity.IdentityManager, error) {
 	l, err := loggerFactory.CreateLogger("internal.identity.identityManager")
@@ -94,6 +95,8 @@ func NewIdentityManager(
 		permissionManager:     permissionManager,
 		authenticationManager: authenticationManager,
 		authorizationManager:  authorizationManager,
+		roleNames:             roles,
+		permissionNames:       permissions,
 		logger:                l,
 	}, nil
 }
@@ -119,12 +122,15 @@ func (m *identityManager) Init() error {
 	}
 
 	pm := make(map[uint64]*permissiondbmodels.Permission, len(ps))
+	pidm := make(map[string]uint64, len(ps))
 	for _, p := range ps {
 		pm[p.Id] = p
+		pidm[p.Name] = p.Id
 	}
 
 	m.roles = rm
-	m.permissions = pm
+	m.permissionsById = pm
+	m.permissionIdsByName = pidm
 	m.isInitialized = true
 	return nil
 }
@@ -281,7 +287,7 @@ func (m *identityManager) AuthenticateByToken(ctx *actions.OperationContext, use
 	return i, nil
 }
 
-func (m *identityManager) Authorize(ctx *actions.OperationContext, user identity.Identity, requiredPermissionIds []uint64) error {
+func (m *identityManager) Authorize(ctx *actions.OperationContext, user identity.Identity, requiredPermissions []string) error {
 	if !m.isInitialized {
 		return errors.New("[identity.identityManager.Authorize] identityManager not initialized")
 	}
@@ -290,14 +296,25 @@ func (m *identityManager) Authorize(ctx *actions.OperationContext, user identity
 		[]*actions.OperationParam{
 			actions.NewOperationParam("userId", user.UserId().Ptr()),
 			actions.NewOperationParam("clientId", user.ClientId().Ptr()),
-			actions.NewOperationParam("requiredPermissionIds", requiredPermissionIds),
+			actions.NewOperationParam("requiredPermissions", requiredPermissions),
 		},
 		func(opCtx *actions.OperationContext) error {
-			if len(requiredPermissionIds) == 0 {
-				return errs.NewError(errs.ErrorCodeInvalidData, "number of required permission ids is 0")
+			rpsLen := len(requiredPermissions)
+			if rpsLen == 0 {
+				return errs.NewError(errs.ErrorCodeInvalidData, "number of required permissions is 0")
 			}
 
-			r, err := m.authorizationManager.Authorize(opCtx, user.UserId(), user.ClientId(), requiredPermissionIds)
+			pids := make([]uint64, rpsLen)
+			for i := 0; i < rpsLen; i++ {
+				id, ok := m.permissionIdsByName[requiredPermissions[i]]
+				if !ok {
+					return fmt.Errorf("[identity.identityManager.Authorize] '%s' permission is missing in identityManager", requiredPermissions[i])
+				}
+
+				pids[i] = id
+			}
+
+			r, err := m.authorizationManager.Authorize(opCtx, user.UserId(), user.ClientId(), pids)
 			if err != nil {
 				msg := "[identity.identityManager.Authorize] authorize a user"
 				if err2 := errs.Unwrap(err); err2 == nil || err2.Code() != errs.ErrorCodeInvalidOperation && err2.Code() != errs.ErrorCodeInvalidData &&
@@ -310,16 +327,16 @@ func (m *identityManager) Authorize(ctx *actions.OperationContext, user identity
 			prs := make([]*identity.PermissionWithRoles, len(r.PermissionRoles))
 			for i := 0; i < len(r.PermissionRoles); i++ {
 				item := r.PermissionRoles[i]
-				p, ok := m.permissions[item.PermissionId]
+				p, ok := m.permissionsById[item.PermissionId]
 				if !ok {
-					return fmt.Errorf("[identity.identityManager.Authorize] permission (%d) is missing in identityManager: %w", item.PermissionId, err)
+					return fmt.Errorf("[identity.identityManager.Authorize] permission (%d) is missing in identityManager", item.PermissionId)
 				}
 
 				rs := make([]string, len(item.RoleIds))
 				for j := 0; j < len(item.RoleIds); j++ {
 					r, ok := m.roles[item.RoleIds[j]]
 					if !ok {
-						return fmt.Errorf("[identity.identityManager.Authorize] role (%d) is missing in identityManager: %w", item.RoleIds[j], err)
+						return fmt.Errorf("[identity.identityManager.Authorize] role (%d) is missing in identityManager", item.RoleIds[j])
 					}
 
 					rs[j] = r.Name
