@@ -27,6 +27,7 @@ import (
 	iactions "personal-website-v2/identity/src/internal/actions"
 	"personal-website-v2/identity/src/internal/authorization"
 	ierrors "personal-website-v2/identity/src/internal/errors"
+	iidentity "personal-website-v2/identity/src/internal/identity"
 	"personal-website-v2/identity/src/internal/logging/events"
 	"personal-website-v2/pkg/actions"
 	apierrors "personal-website-v2/pkg/api/errors"
@@ -34,6 +35,7 @@ import (
 	"personal-website-v2/pkg/base/nullable"
 	"personal-website-v2/pkg/errors"
 	grpcserverhelper "personal-website-v2/pkg/helper/net/grpc/server"
+	"personal-website-v2/pkg/identity"
 	"personal-website-v2/pkg/logging"
 	lcontext "personal-website-v2/pkg/logging/context"
 )
@@ -41,6 +43,7 @@ import (
 type AuthorizationService struct {
 	authorizationpb.UnimplementedAuthorizationServiceServer
 	reqProcessor         *grpcserverhelper.RequestProcessor
+	identityManager      identity.IdentityManager
 	authorizationManager authorization.AuthorizationManager
 	logger               logging.Logger[*lcontext.LogEntryContext]
 }
@@ -48,6 +51,7 @@ type AuthorizationService struct {
 func NewAuthorizationService(
 	appSessionId uint64,
 	actionManager *actions.ActionManager,
+	identityManager identity.IdentityManager,
 	authorizationManager authorization.AuthorizationManager,
 	loggerFactory logging.LoggerFactory[*lcontext.LogEntryContext],
 ) (*AuthorizationService, error) {
@@ -68,6 +72,7 @@ func NewAuthorizationService(
 
 	return &AuthorizationService{
 		reqProcessor:         p,
+		identityManager:      identityManager,
 		authorizationManager: authorizationManager,
 		logger:               l,
 	}, nil
@@ -78,6 +83,25 @@ func (s *AuthorizationService) Authorize(ctx context.Context, req *authorization
 	var res *authorizationpb.AuthorizeResponse
 	err := s.reqProcessor.Process(ctx, iactions.ActionTypeAuthorization_Authorize, iactions.OperationTypeAuthorizationService_Authorize,
 		func(opCtx *grpcserverhelper.GrpcOperationContext) error {
+			if !opCtx.GrpcCtx.User.IsAuthenticated() {
+				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AuthorizationServiceEvent, nil,
+					"[authorization.AuthorizationService.Authorize] user not authenticated",
+				)
+				return apigrpcerrors.CreateGrpcError(codes.Unauthenticated, apierrors.NewApiError(apierrors.ApiErrorCodeUnauthenticated, "user not authenticated"))
+			}
+
+			if authorized, err := s.identityManager.Authorize(opCtx.OperationCtx, opCtx.GrpcCtx.User, []string{iidentity.PermissionAuthorization_Authorize}); err != nil {
+				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AuthorizationServiceEvent, err,
+					"[authorization.AuthorizationService.Authorize] authorize a user",
+				)
+				return apigrpcerrors.CreateGrpcError(codes.Internal, apierrors.ErrInternal)
+			} else if !authorized {
+				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AuthorizationServiceEvent, nil,
+					"[authorization.AuthorizationService.Authorize] user not authorized",
+				)
+				return apigrpcerrors.CreateGrpcError(codes.PermissionDenied, apierrors.NewApiError(apierrors.ApiErrorCodePermissionDenied, "forbidden"))
+			}
+
 			if err := validation.ValidateAuthorizeRequest(req); err != nil {
 				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AuthorizationServiceEvent, nil,
 					"[authorization.AuthorizationService.Authorize] "+err.Message(),
