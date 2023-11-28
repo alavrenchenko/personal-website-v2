@@ -17,9 +17,11 @@ package actions
 type ActionGroup uint64
 
 const (
-	ActionGroupNoGroup     ActionGroup = 0
-	ActionGroupApplication ActionGroup = 1
-	ActionGroupIdentity    ActionGroup = 2
+	ActionGroupNoGroup                               ActionGroup = 0
+	ActionGroupApplication                           ActionGroup = 1
+	ActionGroupIdentity                              ActionGroup = 2
+	ActionGroupNetHttpServer_RequestPipelineLifetime ActionGroup = 3
+	ActionGroupNetGrpcServer_RequestPipelineLifetime ActionGroup = 4
 
-	// reserved action groups: 2-999
+	// reserved action groups: 5-999
 )

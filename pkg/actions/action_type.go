@@ -32,5 +32,13 @@ const (
 	ActionTypeIdentity_AuthenticateByToken ActionType = 302
 	ActionTypeIdentity_Authorize           ActionType = 303
 
-	// reserved event ids: 300-9999
+	// NetHttpServer_RequestPipelineLifetime action types (500-549)
+	ActionTypeNetHttpServer_RequestPipelineLifetime_Authenticate ActionType = 500
+	ActionTypeNetHttpServer_RequestPipelineLifetime_Authorize    ActionType = 501
+
+	// NetGrpcServer_RequestPipelineLifetime action types (550-599)
+	ActionTypeNetGrpcServer_RequestPipelineLifetime_Authenticate ActionType = 550
+	ActionTypeNetGrpcServer_RequestPipelineLifetime_Authorize    ActionType = 551
+
+	// reserved event ids: 600-9999
 )

@@ -17,9 +17,11 @@ package actions
 type OperationGroup uint64
 
 const (
-	OperationGroupNoGroup     OperationGroup = 0
-	OperationGroupApplication OperationGroup = 1
-	OperationGroupIdentity    OperationGroup = 2
+	OperationGroupNoGroup                               OperationGroup = 0
+	OperationGroupApplication                           OperationGroup = 1
+	OperationGroupIdentity                              OperationGroup = 2
+	OperationGroupNetHttpServer_RequestPipelineLifetime OperationGroup = 3
+	OperationGroupNetGrpcServer_RequestPipelineLifetime OperationGroup = 4
 
-	// reserved operation groups: 2-999
+	// reserved operation groups: 5-999
 )
