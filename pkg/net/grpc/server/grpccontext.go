@@ -50,7 +50,7 @@ func (c *GrpcContext) HasError() bool {
 	return c.hasError
 }
 
-func newIncomingContextWithGrpcContext(ctx context.Context, grpcCtx *GrpcContext) context.Context {
+func NewIncomingContextWithGrpcContext(ctx context.Context, grpcCtx *GrpcContext) context.Context {
 	return context.WithValue(ctx, grpcContextKey{}, grpcCtx)
 }
 

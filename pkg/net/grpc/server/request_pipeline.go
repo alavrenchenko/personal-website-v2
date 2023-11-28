@@ -106,7 +106,7 @@ func (p *requestPipeline) onUnaryInterceptor(ctx context.Context, req interface{
 
 	md, _ := metadata.FromIncomingContext(ctx)
 	grpcCtx := NewGrpcContext(md)
-	ctx = newIncomingContextWithGrpcContext(ctx, grpcCtx)
+	ctx = NewIncomingContextWithGrpcContext(ctx, grpcCtx)
 
 	cInfo := &CallInfo{
 		Status:      CallStatusNew,
@@ -141,7 +141,7 @@ func (p *requestPipeline) onStreamInterceptor(srv interface{}, ss grpc.ServerStr
 	ctx := ss.Context()
 	md, _ := metadata.FromIncomingContext(ctx)
 	grpcCtx := NewGrpcContext(md)
-	ctx = newIncomingContextWithGrpcContext(ctx, grpcCtx)
+	ctx = NewIncomingContextWithGrpcContext(ctx, grpcCtx)
 
 	cInfo := &CallInfo{
 		Status:      CallStatusNew,
