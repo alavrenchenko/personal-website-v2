@@ -77,9 +77,9 @@ func NewAuthorizationService(
 func (s *AuthorizationService) Authorize(ctx context.Context, req *authorizationpb.AuthorizeRequest) (*authorizationpb.AuthorizeResponse, error) {
 	var res *authorizationpb.AuthorizeResponse
 	err := s.reqProcessor.Process(ctx, iactions.ActionTypeAuthorization_Authorize, iactions.OperationTypeAuthorizationService_Authorize,
-		func(opCtx *actions.OperationContext) error {
+		func(opCtx *grpcserverhelper.GrpcOperationContext) error {
 			if err := validation.ValidateAuthorizeRequest(req); err != nil {
-				s.logger.ErrorWithEvent(opCtx.CreateLogEntryContext(), events.GrpcServices_AuthorizationServiceEvent, nil,
+				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AuthorizationServiceEvent, nil,
 					"[authorization.AuthorizationService.Authorize] "+err.Message(),
 				)
 				return apigrpcerrors.CreateGrpcError(codes.InvalidArgument, err)
@@ -93,9 +93,9 @@ func (s *AuthorizationService) Authorize(ctx context.Context, req *authorization
 				clientId = nullable.NewNullable(req.ClientId.Value)
 			}
 
-			r, err := s.authorizationManager.Authorize(opCtx, userId, clientId, req.RequiredPermissionIds)
+			r, err := s.authorizationManager.Authorize(opCtx.OperationCtx, userId, clientId, req.RequiredPermissionIds)
 			if err != nil {
-				s.logger.ErrorWithEvent(opCtx.CreateLogEntryContext(), events.GrpcServices_AuthorizationServiceEvent, err,
+				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AuthorizationServiceEvent, err,
 					"[authorization.AuthorizationService.Authorize] authorize a user",
 				)
 

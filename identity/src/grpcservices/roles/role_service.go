@@ -76,17 +76,17 @@ func NewRoleService(
 func (s *RoleService) GetAllByNames(ctx context.Context, req *rolespb.GetAllByNamesRequest) (*rolespb.GetAllByNamesResponse, error) {
 	var res *rolespb.GetAllByNamesResponse
 	err := s.reqProcessor.Process(ctx, iactions.ActionTypeRole_GetAllByNames, iactions.OperationTypeRoleService_GetAllByNames,
-		func(opCtx *actions.OperationContext) error {
+		func(opCtx *grpcserverhelper.GrpcOperationContext) error {
 			if err := rolevalidation.ValidateGetAllByNamesRequest(req); err != nil {
-				s.logger.ErrorWithEvent(opCtx.CreateLogEntryContext(), events.GrpcServices_RoleServiceEvent, nil,
+				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_RoleServiceEvent, nil,
 					"[roles.RoleService.GetAllByNames] "+err.Message(),
 				)
 				return apigrpcerrors.CreateGrpcError(codes.InvalidArgument, err)
 			}
 
-			rs, err := s.roleManager.GetAllByNamesWithContext(opCtx, req.Names)
+			rs, err := s.roleManager.GetAllByNamesWithContext(opCtx.OperationCtx, req.Names)
 			if err != nil {
-				s.logger.ErrorWithEvent(opCtx.CreateLogEntryContext(), events.GrpcServices_RoleServiceEvent, err,
+				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_RoleServiceEvent, err,
 					"[roles.RoleService.GetAllByNames] get all roles by names",
 				)
 

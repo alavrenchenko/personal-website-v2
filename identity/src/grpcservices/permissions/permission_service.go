@@ -76,17 +76,17 @@ func NewPermissionService(
 func (s *PermissionService) GetAllByNames(ctx context.Context, req *permissionspb.GetAllByNamesRequest) (*permissionspb.GetAllByNamesResponse, error) {
 	var res *permissionspb.GetAllByNamesResponse
 	err := s.reqProcessor.Process(ctx, iactions.ActionTypePermission_GetAllByNames, iactions.OperationTypePermissionService_GetAllByNames,
-		func(opCtx *actions.OperationContext) error {
+		func(opCtx *grpcserverhelper.GrpcOperationContext) error {
 			if err := permissionvalidation.ValidateGetAllByNamesRequest(req); err != nil {
-				s.logger.ErrorWithEvent(opCtx.CreateLogEntryContext(), events.GrpcServices_PermissionServiceEvent, nil,
+				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_PermissionServiceEvent, nil,
 					"[permissions.PermissionService.GetAllByNames] "+err.Message(),
 				)
 				return apigrpcerrors.CreateGrpcError(codes.InvalidArgument, err)
 			}
 
-			ps, err := s.permissionManager.GetAllByNamesWithContext(opCtx, req.Names)
+			ps, err := s.permissionManager.GetAllByNamesWithContext(opCtx.OperationCtx, req.Names)
 			if err != nil {
-				s.logger.ErrorWithEvent(opCtx.CreateLogEntryContext(), events.GrpcServices_PermissionServiceEvent, err,
+				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_PermissionServiceEvent, err,
 					"[permissions.PermissionService.GetAllByNames] get all permissions by names",
 				)
 

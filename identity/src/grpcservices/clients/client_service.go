@@ -79,9 +79,9 @@ func NewClientService(
 func (s *ClientService) CreateWebClient(ctx context.Context, req *clientspb.CreateWebClientRequest) (*clientspb.CreateWebClientResponse, error) {
 	var res *clientspb.CreateWebClientResponse
 	err := s.reqProcessor.Process(ctx, iactions.ActionTypeClient_CreateWebClient, iactions.OperationTypeClientService_CreateWebClient,
-		func(opCtx *actions.OperationContext) error {
+		func(opCtx *grpcserverhelper.GrpcOperationContext) error {
 			if err := validation.ValidateCreateWebClientRequest(req); err != nil {
-				s.logger.ErrorWithEvent(opCtx.CreateLogEntryContext(), events.GrpcServices_ClientServiceEvent, nil,
+				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_ClientServiceEvent, nil,
 					"[clients.ClientService.CreateWebClient] "+err.Message(),
 				)
 				return apigrpcerrors.CreateGrpcError(codes.InvalidArgument, err)
@@ -98,9 +98,9 @@ func (s *ClientService) CreateWebClient(ctx context.Context, req *clientspb.Crea
 				IP:        req.Ip,
 			}
 
-			id, err := s.clientManager.CreateWebClient(opCtx, d)
+			id, err := s.clientManager.CreateWebClient(opCtx.OperationCtx, d)
 			if err != nil {
-				s.logger.ErrorWithEvent(opCtx.CreateLogEntryContext(), events.GrpcServices_ClientServiceEvent, err,
+				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_ClientServiceEvent, err,
 					"[clients.ClientService.CreateWebClient] create a web client",
 				)
 
@@ -124,9 +124,9 @@ func (s *ClientService) CreateWebClient(ctx context.Context, req *clientspb.Crea
 func (s *ClientService) CreateMobileClient(ctx context.Context, req *clientspb.CreateMobileClientRequest) (*clientspb.CreateMobileClientResponse, error) {
 	var res *clientspb.CreateMobileClientResponse
 	err := s.reqProcessor.Process(ctx, iactions.ActionTypeClient_CreateMobileClient, iactions.OperationTypeClientService_CreateMobileClient,
-		func(opCtx *actions.OperationContext) error {
+		func(opCtx *grpcserverhelper.GrpcOperationContext) error {
 			if err := validation.ValidateCreateMobileClientRequest(req); err != nil {
-				s.logger.ErrorWithEvent(opCtx.CreateLogEntryContext(), events.GrpcServices_ClientServiceEvent, nil,
+				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_ClientServiceEvent, nil,
 					"[clients.ClientService.CreateMobileClient] "+err.Message(),
 				)
 				return apigrpcerrors.CreateGrpcError(codes.InvalidArgument, err)
@@ -143,9 +143,9 @@ func (s *ClientService) CreateMobileClient(ctx context.Context, req *clientspb.C
 				IP:        req.Ip,
 			}
 
-			id, err := s.clientManager.CreateMobileClient(opCtx, d)
+			id, err := s.clientManager.CreateMobileClient(opCtx.OperationCtx, d)
 			if err != nil {
-				s.logger.ErrorWithEvent(opCtx.CreateLogEntryContext(), events.GrpcServices_ClientServiceEvent, err,
+				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_ClientServiceEvent, err,
 					"[clients.ClientService.CreateMobileClient] create a mobile client",
 				)
 
@@ -168,9 +168,9 @@ func (s *ClientService) CreateMobileClient(ctx context.Context, req *clientspb.C
 // Delete deletes a client by the specified client ID.
 func (s *ClientService) Delete(ctx context.Context, req *clientspb.DeleteRequest) (*emptypb.Empty, error) {
 	err := s.reqProcessor.Process(ctx, iactions.ActionTypeClient_Delete, iactions.OperationTypeClientService_Delete,
-		func(opCtx *actions.OperationContext) error {
-			if err := s.clientManager.Delete(opCtx, req.Id); err != nil {
-				s.logger.ErrorWithEvent(opCtx.CreateLogEntryContext(), events.GrpcServices_ClientServiceEvent, err,
+		func(opCtx *grpcserverhelper.GrpcOperationContext) error {
+			if err := s.clientManager.Delete(opCtx.OperationCtx, req.Id); err != nil {
+				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_ClientServiceEvent, err,
 					"[clients.ClientService.Delete] delete a client",
 				)
 
@@ -201,10 +201,10 @@ func (s *ClientService) Delete(ctx context.Context, req *clientspb.DeleteRequest
 func (s *ClientService) GetById(ctx context.Context, req *clientspb.GetByIdRequest) (*clientspb.GetByIdResponse, error) {
 	var res *clientspb.GetByIdResponse
 	err := s.reqProcessor.Process(ctx, iactions.ActionTypeClient_GetById, iactions.OperationTypeClientService_GetById,
-		func(opCtx *actions.OperationContext) error {
-			c, err := s.clientManager.FindById(opCtx, req.Id)
+		func(opCtx *grpcserverhelper.GrpcOperationContext) error {
+			c, err := s.clientManager.FindById(opCtx.OperationCtx, req.Id)
 			if err != nil {
-				s.logger.ErrorWithEvent(opCtx.CreateLogEntryContext(), events.GrpcServices_ClientServiceEvent, err,
+				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_ClientServiceEvent, err,
 					"[clients.ClientService.GetById] find a client by id",
 				)
 
@@ -214,7 +214,7 @@ func (s *ClientService) GetById(ctx context.Context, req *clientspb.GetByIdReque
 				return apigrpcerrors.CreateGrpcError(codes.Internal, apierrors.ErrInternal)
 			}
 			if c == nil {
-				s.logger.WarningWithEvent(opCtx.CreateLogEntryContext(), events.GrpcServices_ClientServiceEvent,
+				s.logger.WarningWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_ClientServiceEvent,
 					"[clients.ClientService.GetById] client not found",
 				)
 				return apigrpcerrors.CreateGrpcError(codes.NotFound, iapierrors.ErrClientNotFound)
@@ -234,10 +234,10 @@ func (s *ClientService) GetById(ctx context.Context, req *clientspb.GetByIdReque
 func (s *ClientService) GetTypeById(ctx context.Context, req *clientspb.GetTypeByIdRequest) (*clientspb.GetTypeByIdResponse, error) {
 	var res *clientspb.GetTypeByIdResponse
 	err := s.reqProcessor.Process(ctx, iactions.ActionTypeClient_GetTypeById, iactions.OperationTypeClientService_GetTypeById,
-		func(opCtx *actions.OperationContext) error {
+		func(opCtx *grpcserverhelper.GrpcOperationContext) error {
 			t, err := s.clientManager.GetTypeById(req.Id)
 			if err != nil {
-				s.logger.ErrorWithEvent(opCtx.CreateLogEntryContext(), events.GrpcServices_ClientServiceEvent, err,
+				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_ClientServiceEvent, err,
 					"[clients.ClientService.GetTypeById] get a client type by id",
 				)
 
@@ -261,10 +261,10 @@ func (s *ClientService) GetTypeById(ctx context.Context, req *clientspb.GetTypeB
 func (s *ClientService) GetStatusById(ctx context.Context, req *clientspb.GetStatusByIdRequest) (*clientspb.GetStatusByIdResponse, error) {
 	var res *clientspb.GetStatusByIdResponse
 	err := s.reqProcessor.Process(ctx, iactions.ActionTypeClient_GetStatusById, iactions.OperationTypeClientService_GetStatusById,
-		func(opCtx *actions.OperationContext) error {
-			status, err := s.clientManager.GetStatusById(opCtx, req.Id)
+		func(opCtx *grpcserverhelper.GrpcOperationContext) error {
+			status, err := s.clientManager.GetStatusById(opCtx.OperationCtx, req.Id)
 			if err != nil {
-				s.logger.ErrorWithEvent(opCtx.CreateLogEntryContext(), events.GrpcServices_ClientServiceEvent, err,
+				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_ClientServiceEvent, err,
 					"[clients.ClientService.GetStatusById] get a client status by id",
 				)
 

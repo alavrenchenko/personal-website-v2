@@ -74,10 +74,10 @@ func NewUserService(
 func (s *UserService) GetTypeAndStatusById(ctx context.Context, req *userspb.GetTypeAndStatusByIdRequest) (*userspb.GetTypeAndStatusByIdResponse, error) {
 	var res *userspb.GetTypeAndStatusByIdResponse
 	err := s.reqProcessor.Process(ctx, iactions.ActionTypeUser_GetTypeAndStatusById, iactions.OperationTypeUserService_GetTypeAndStatusById,
-		func(opCtx *actions.OperationContext) error {
-			t, status, err := s.userManager.GetTypeAndStatusById(opCtx, req.Id)
+		func(opCtx *grpcserverhelper.GrpcOperationContext) error {
+			t, status, err := s.userManager.GetTypeAndStatusById(opCtx.OperationCtx, req.Id)
 			if err != nil {
-				s.logger.ErrorWithEvent(opCtx.CreateLogEntryContext(), events.GrpcServices_UserServiceEvent, err,
+				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_UserServiceEvent, err,
 					"[users.UserService.GetTypeAndStatusById] get a type and a status of the user by id",
 				)
 

@@ -33,6 +33,7 @@ import (
 	apigrpcerrors "personal-website-v2/pkg/api/grpc/errors"
 	"personal-website-v2/pkg/errors"
 	grpcserverhelper "personal-website-v2/pkg/helper/net/grpc/server"
+	"personal-website-v2/pkg/identity"
 	"personal-website-v2/pkg/logging"
 	lcontext "personal-website-v2/pkg/logging/context"
 )
@@ -40,6 +41,7 @@ import (
 type AuthenticationService struct {
 	authenticationpb.UnimplementedAuthenticationServiceServer
 	reqProcessor          *grpcserverhelper.RequestProcessor
+	identityManager       identity.IdentityManager
 	authenticationManager authentication.AuthenticationManager
 	logger                logging.Logger[*lcontext.LogEntryContext]
 }
@@ -47,6 +49,7 @@ type AuthenticationService struct {
 func NewAuthenticationService(
 	appSessionId uint64,
 	actionManager *actions.ActionManager,
+	identityManager identity.IdentityManager,
 	authenticationManager authentication.AuthenticationManager,
 	loggerFactory logging.LoggerFactory[*lcontext.LogEntryContext],
 ) (*AuthenticationService, error) {
@@ -67,6 +70,7 @@ func NewAuthenticationService(
 
 	return &AuthenticationService{
 		reqProcessor:          p,
+		identityManager:       identityManager,
 		authenticationManager: authenticationManager,
 		logger:                l,
 	}, nil
@@ -76,10 +80,10 @@ func NewAuthenticationService(
 func (s *AuthenticationService) CreateUserToken(ctx context.Context, req *authenticationpb.CreateUserTokenRequest) (*authenticationpb.CreateUserTokenResponse, error) {
 	var res *authenticationpb.CreateUserTokenResponse
 	err := s.reqProcessor.Process(ctx, iactions.ActionTypeAuthentication_CreateUserToken, iactions.OperationTypeAuthenticationService_CreateUserToken,
-		func(opCtx *actions.OperationContext) error {
-			t, err := s.authenticationManager.CreateUserToken(opCtx, req.UserSessionId)
+		func(opCtx *grpcserverhelper.GrpcOperationContext) error {
+			t, err := s.authenticationManager.CreateUserToken(opCtx.OperationCtx, req.UserSessionId)
 			if err != nil {
-				s.logger.ErrorWithEvent(opCtx.CreateLogEntryContext(), events.GrpcServices_AuthenticationServiceEvent, err,
+				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AuthenticationServiceEvent, err,
 					"[authentication.AuthenticationService.CreateUserToken] create a user's token",
 				)
 				return apigrpcerrors.CreateGrpcError(codes.Internal, apierrors.ErrInternal)
@@ -99,10 +103,10 @@ func (s *AuthenticationService) CreateUserToken(ctx context.Context, req *authen
 func (s *AuthenticationService) CreateClientToken(ctx context.Context, req *authenticationpb.CreateClientTokenRequest) (*authenticationpb.CreateClientTokenResponse, error) {
 	var res *authenticationpb.CreateClientTokenResponse
 	err := s.reqProcessor.Process(ctx, iactions.ActionTypeAuthentication_CreateClientToken, iactions.OperationTypeAuthenticationService_CreateClientToken,
-		func(opCtx *actions.OperationContext) error {
-			t, err := s.authenticationManager.CreateClientToken(opCtx, req.ClientId)
+		func(opCtx *grpcserverhelper.GrpcOperationContext) error {
+			t, err := s.authenticationManager.CreateClientToken(opCtx.OperationCtx, req.ClientId)
 			if err != nil {
-				s.logger.ErrorWithEvent(opCtx.CreateLogEntryContext(), events.GrpcServices_AuthenticationServiceEvent, err,
+				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AuthenticationServiceEvent, err,
 					"[authentication.AuthenticationService.CreateClientToken] create a client token",
 				)
 				return apigrpcerrors.CreateGrpcError(codes.Internal, apierrors.ErrInternal)
@@ -122,17 +126,17 @@ func (s *AuthenticationService) CreateClientToken(ctx context.Context, req *auth
 func (s *AuthenticationService) Authenticate(ctx context.Context, req *authenticationpb.AuthenticateRequest) (*authenticationpb.AuthenticateResponse, error) {
 	var res *authenticationpb.AuthenticateResponse
 	err := s.reqProcessor.Process(ctx, iactions.ActionTypeAuthentication_Authenticate, iactions.OperationTypeAuthenticationService_Authenticate,
-		func(opCtx *actions.OperationContext) error {
+		func(opCtx *grpcserverhelper.GrpcOperationContext) error {
 			if err := validation.ValidateAuthenticateRequest(req); err != nil {
-				s.logger.ErrorWithEvent(opCtx.CreateLogEntryContext(), events.GrpcServices_AuthenticationServiceEvent, nil,
+				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AuthenticationServiceEvent, nil,
 					"[authentication.AuthenticationService.Authenticate] "+err.Message(),
 				)
 				return apigrpcerrors.CreateGrpcError(codes.InvalidArgument, err)
 			}
 
-			r, err := s.authenticationManager.Authenticate(opCtx, req.UserToken, req.ClientToken)
+			r, err := s.authenticationManager.Authenticate(opCtx.OperationCtx, req.UserToken, req.ClientToken)
 			if err != nil {
-				s.logger.ErrorWithEvent(opCtx.CreateLogEntryContext(), events.GrpcServices_AuthenticationServiceEvent, err,
+				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AuthenticationServiceEvent, err,
 					"[authentication.AuthenticationService.Authenticate] authenticate a user and a client",
 				)
 
@@ -173,17 +177,17 @@ func (s *AuthenticationService) Authenticate(ctx context.Context, req *authentic
 func (s *AuthenticationService) AuthenticateUser(ctx context.Context, req *authenticationpb.AuthenticateUserRequest) (*authenticationpb.AuthenticateUserResponse, error) {
 	var res *authenticationpb.AuthenticateUserResponse
 	err := s.reqProcessor.Process(ctx, iactions.ActionTypeAuthentication_AuthenticateUser, iactions.OperationTypeAuthenticationService_AuthenticateUser,
-		func(opCtx *actions.OperationContext) error {
+		func(opCtx *grpcserverhelper.GrpcOperationContext) error {
 			if err := validation.ValidateAuthenticateUserRequest(req); err != nil {
-				s.logger.ErrorWithEvent(opCtx.CreateLogEntryContext(), events.GrpcServices_AuthenticationServiceEvent, nil,
+				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AuthenticationServiceEvent, nil,
 					"[authentication.AuthenticationService.AuthenticateUser] "+err.Message(),
 				)
 				return apigrpcerrors.CreateGrpcError(codes.InvalidArgument, err)
 			}
 
-			r, err := s.authenticationManager.AuthenticateUser(opCtx, req.UserToken)
+			r, err := s.authenticationManager.AuthenticateUser(opCtx.OperationCtx, req.UserToken)
 			if err != nil {
-				s.logger.ErrorWithEvent(opCtx.CreateLogEntryContext(), events.GrpcServices_AuthenticationServiceEvent, err,
+				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AuthenticationServiceEvent, err,
 					"[authentication.AuthenticationService.AuthenticateUser] authenticate a user",
 				)
 
@@ -219,17 +223,17 @@ func (s *AuthenticationService) AuthenticateUser(ctx context.Context, req *authe
 func (s *AuthenticationService) AuthenticateClient(ctx context.Context, req *authenticationpb.AuthenticateClientRequest) (*authenticationpb.AuthenticateClientResponse, error) {
 	var res *authenticationpb.AuthenticateClientResponse
 	err := s.reqProcessor.Process(ctx, iactions.ActionTypeAuthentication_AuthenticateClient, iactions.OperationTypeAuthenticationService_AuthenticateClient,
-		func(opCtx *actions.OperationContext) error {
+		func(opCtx *grpcserverhelper.GrpcOperationContext) error {
 			if err := validation.ValidateAuthenticateClientRequest(req); err != nil {
-				s.logger.ErrorWithEvent(opCtx.CreateLogEntryContext(), events.GrpcServices_AuthenticationServiceEvent, nil,
+				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AuthenticationServiceEvent, nil,
 					"[authentication.AuthenticationService.AuthenticateClient] "+err.Message(),
 				)
 				return apigrpcerrors.CreateGrpcError(codes.InvalidArgument, err)
 			}
 
-			r, err := s.authenticationManager.AuthenticateClient(opCtx, req.ClientToken)
+			r, err := s.authenticationManager.AuthenticateClient(opCtx.OperationCtx, req.ClientToken)
 			if err != nil {
-				s.logger.ErrorWithEvent(opCtx.CreateLogEntryContext(), events.GrpcServices_AuthenticationServiceEvent, err,
+				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AuthenticationServiceEvent, err,
 					"[authentication.AuthenticationService.AuthenticateClient] authenticate a client",
 				)
 
