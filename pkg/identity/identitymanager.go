@@ -38,24 +38,25 @@ type IdentityManager interface {
 	Init() error
 	AuthenticateById(ctx *actions.OperationContext, userId, clientId nullable.Nullable[uint64]) (Identity, error)
 	AuthenticateByToken(ctx *actions.OperationContext, userToken, clientToken []byte) (Identity, error)
-	Authorize(ctx *actions.OperationContext, user Identity, requiredPermissionIds []uint64) error
+	Authorize(ctx *actions.OperationContext, user Identity, requiredPermissions []string) error
 }
 
 type identityManager struct {
-	opExecutor      *actionhelper.OperationExecutor
-	appUserId       uint64
-	identityService *identity.IdentityService
-	roleNames       []string
-	permissionNames []string
-	roles           map[uint64]*rolespb.Role
-	permissions     map[uint64]*permissionspb.Permission
-	logger          logging.Logger[*context.LogEntryContext]
-	isInitialized   bool
+	opExecutor          *actionhelper.OperationExecutor
+	appUserId           uint64
+	identityService     *identity.IdentityService
+	roleNames           []string
+	permissionNames     []string
+	roles               map[uint64]*rolespb.Role
+	permissionsById     map[uint64]*permissionspb.Permission
+	permissionIdsByName map[string]uint64
+	logger              logging.Logger[*context.LogEntryContext]
+	isInitialized       bool
 }
 
 var _ IdentityManager = (*identityManager)(nil)
 
-func NewIdentityManager(appUserId uint64, identityService *identity.IdentityService, roleNames, permissionNames []string, loggerFactory logging.LoggerFactory[*context.LogEntryContext]) (IdentityManager, error) {
+func NewIdentityManager(appUserId uint64, identityService *identity.IdentityService, roles, permissions []string, loggerFactory logging.LoggerFactory[*context.LogEntryContext]) (IdentityManager, error) {
 	l, err := loggerFactory.CreateLogger("identity.identityManager")
 	if err != nil {
 		return nil, fmt.Errorf("[identity.NewIdentityManager] create a logger: %w", err)
@@ -75,6 +76,8 @@ func NewIdentityManager(appUserId uint64, identityService *identity.IdentityServ
 		opExecutor:      e,
 		appUserId:       appUserId,
 		identityService: identityService,
+		roleNames:       roles,
+		permissionNames: permissions,
 		logger:          l,
 	}, nil
 }
@@ -100,12 +103,15 @@ func (m *identityManager) Init() error {
 	}
 
 	pm := make(map[uint64]*permissionspb.Permission, len(ps))
+	pidm := make(map[string]uint64, len(ps))
 	for _, p := range ps {
 		pm[p.Id] = p
+		pidm[p.Name] = p.Id
 	}
 
 	m.roles = rm
-	m.permissions = pm
+	m.permissionsById = pm
+	m.permissionIdsByName = pidm
 	m.isInitialized = true
 	return nil
 }
@@ -264,7 +270,7 @@ func (m *identityManager) AuthenticateByToken(ctx *actions.OperationContext, use
 	return i, nil
 }
 
-func (m *identityManager) Authorize(ctx *actions.OperationContext, user Identity, requiredPermissionIds []uint64) error {
+func (m *identityManager) Authorize(ctx *actions.OperationContext, user Identity, requiredPermissions []string) error {
 	if !m.isInitialized {
 		return errors.New("[identity.identityManager.Authorize] identityManager not initialized")
 	}
@@ -273,14 +279,25 @@ func (m *identityManager) Authorize(ctx *actions.OperationContext, user Identity
 		[]*actions.OperationParam{
 			actions.NewOperationParam("userId", user.UserId().Ptr()),
 			actions.NewOperationParam("clientId", user.ClientId().Ptr()),
-			actions.NewOperationParam("requiredPermissionIds", requiredPermissionIds),
+			actions.NewOperationParam("requiredPermissions", requiredPermissions),
 		},
 		func(opCtx *actions.OperationContext) error {
-			if len(requiredPermissionIds) == 0 {
-				return errs.NewError(errs.ErrorCodeInvalidData, "number of required permission ids is 0")
+			rpsLen := len(requiredPermissions)
+			if rpsLen == 0 {
+				return errs.NewError(errs.ErrorCodeInvalidData, "number of required permissions is 0")
 			}
 
-			r, err := m.identityService.Authorization.Authorize(opCtx, user.UserId(), user.ClientId(), requiredPermissionIds)
+			pids := make([]uint64, rpsLen)
+			for i := 0; i < rpsLen; i++ {
+				id, ok := m.permissionIdsByName[requiredPermissions[i]]
+				if !ok {
+					return fmt.Errorf("[identity.identityManager.Authorize] '%s' permission is missing in identityManager", requiredPermissions[i])
+				}
+
+				pids[i] = id
+			}
+
+			r, err := m.identityService.Authorization.Authorize(opCtx, user.UserId(), user.ClientId(), pids)
 			if err != nil {
 				msg := "[identity.identityManager.Authorize] authorize a user"
 				if err2 := apierrors.Unwrap(err); err2 == nil || err2.Code() != apierrors.ApiErrorCodeInvalidOperation && err2.Code() != apierrors.ApiErrorCodeInvalidData &&
@@ -293,16 +310,16 @@ func (m *identityManager) Authorize(ctx *actions.OperationContext, user Identity
 			prs := make([]*PermissionWithRoles, len(r.PermissionRoles))
 			for i := 0; i < len(r.PermissionRoles); i++ {
 				item := r.PermissionRoles[i]
-				p, ok := m.permissions[item.PermissionId]
+				p, ok := m.permissionsById[item.PermissionId]
 				if !ok {
-					return fmt.Errorf("[identity.identityManager.Authorize] permission (%d) is missing in identityManager: %w", item.PermissionId, err)
+					return fmt.Errorf("[identity.identityManager.Authorize] permission (%d) is missing in identityManager", item.PermissionId)
 				}
 
 				rs := make([]string, len(item.RoleIds))
 				for j := 0; j < len(item.RoleIds); j++ {
 					r, ok := m.roles[item.RoleIds[j]]
 					if !ok {
-						return fmt.Errorf("[identity.identityManager.Authorize] role (%d) is missing in identityManager: %w", item.RoleIds[j], err)
+						return fmt.Errorf("[identity.identityManager.Authorize] role (%d) is missing in identityManager", item.RoleIds[j])
 					}
 
 					rs[j] = r.Name
