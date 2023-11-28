@@ -143,10 +143,10 @@ func (l *RequestPipelineLifetime) Authenticate(ctx *server.GrpcContext) error {
 	}
 	return l.reqProcessor.Process(server.NewIncomingContextWithGrpcContext(context.Background(), ctx),
 		actions.ActionTypeNetGrpcServer_RequestPipelineLifetime_Authenticate, actions.OperationTypeNetGrpcServer_RequestPipelineLifetime_Authenticate,
-		func(opCtx *actions.OperationContext) error {
-			i, err := l.identityManager.AuthenticateById(opCtx, ctx.IncomingOperationCtx.UserId, ctx.IncomingOperationCtx.ClientId)
+		func(opCtx *grpcserverhelper.GrpcOperationContext) error {
+			i, err := l.identityManager.AuthenticateById(opCtx.OperationCtx, ctx.IncomingOperationCtx.UserId, ctx.IncomingOperationCtx.ClientId)
 			if err != nil {
-				l.logger.ErrorWithEvent(opCtx.CreateLogEntryContext(), events.NetGrpcServer_RequestPipelineLifetimeEvent, err,
+				l.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.NetGrpcServer_RequestPipelineLifetimeEvent, err,
 					"[grpc.RequestPipelineLifetime.Authenticate] authenticate a user and a client by id",
 				)
 				return apigrpcerrors.CreateGrpcError(codes.Internal, apierrors.ErrInternal)
