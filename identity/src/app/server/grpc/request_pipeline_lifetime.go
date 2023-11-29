@@ -84,10 +84,7 @@ func (l *RequestPipelineLifetime) BeginRequest(ctx *server.GrpcContext) error {
 	if len(opCtxVal) > 0 {
 		opCtx, err := metadata.DecodeOperationContextFromString(opCtxVal[0])
 		if err != nil {
-			l.logger.ErrorWithEvent(
-				&lcontext.LogEntryContext{AppSessionId: nullable.NewNullable(l.appSessionId)},
-				events.NetGrpcServer_RequestPipelineLifetimeEvent,
-				err,
+			l.logger.ErrorWithEvent(&lcontext.LogEntryContext{AppSessionId: nullable.NewNullable(l.appSessionId)}, events.NetGrpcServer_RequestPipelineLifetimeEvent, err,
 				"[grpc.RequestPipelineLifetime.BeginRequest] decode OperationContext from string",
 				logging.NewField("callId", ctx.CallId()),
 			)
@@ -100,11 +97,7 @@ func (l *RequestPipelineLifetime) BeginRequest(ctx *server.GrpcContext) error {
 		t, err = l.tranManager.CreateAndStart()
 		if err != nil {
 			leCtx := &lcontext.LogEntryContext{AppSessionId: nullable.NewNullable(l.appSessionId)}
-			l.logger.FatalWithEventAndError(
-				leCtx,
-				events.NetGrpcServer_RequestPipelineLifetimeEvent,
-				err,
-				"[grpc.RequestPipelineLifetime.BeginRequest] create and start a transaction",
+			l.logger.FatalWithEventAndError(leCtx, events.NetGrpcServer_RequestPipelineLifetimeEvent, err, "[grpc.RequestPipelineLifetime.BeginRequest] create and start a transaction",
 				logging.NewField("callId", ctx.CallId()),
 			)
 
@@ -119,10 +112,7 @@ func (l *RequestPipelineLifetime) BeginRequest(ctx *server.GrpcContext) error {
 
 	ctx.Transaction = t
 	leCtx := l.createLogEntryContext(t)
-	err = l.logger.InfoWithEvent(
-		leCtx,
-		events.NetGrpc_Server_ReqAndTranInitialized,
-		"[grpc.RequestPipelineLifetime.BeginRequest] grpc request and transaction initialized",
+	err = l.logger.InfoWithEvent(leCtx, events.NetGrpc_Server_ReqAndTranInitialized, "[grpc.RequestPipelineLifetime.BeginRequest] grpc request and transaction initialized",
 		logging.NewField("callId", ctx.CallId()),
 	)
 	if err != nil {
@@ -163,29 +153,23 @@ func (l *RequestPipelineLifetime) Authorize(ctx *server.GrpcContext) error {
 }
 
 func (l *RequestPipelineLifetime) Error(ctx *server.GrpcContext, err error) {
-	l.logger.ErrorWithEvent(
-		l.createLogEntryContext(ctx.Transaction),
-		events.NetGrpcServer_RequestPipelineLifetimeEvent,
-		err,
+	l.logger.ErrorWithEvent(l.createLogEntryContext(ctx.Transaction), events.NetGrpcServer_RequestPipelineLifetimeEvent, err,
 		"[grpc.RequestPipelineLifetime.Error] an error occurred while handling the request",
 		logging.NewField("callId", ctx.CallId()),
 	)
 }
 
 func (l *RequestPipelineLifetime) EndRequest(ctx *server.GrpcContext) {
-	l.logger.InfoWithEvent(
-		l.createLogEntryContext(ctx.Transaction),
-		events.NetGrpcServer_RequestPipelineLifetimeEvent,
-		"[grpc.RequestPipelineLifetime.EndRequest] end a request",
+	l.logger.InfoWithEvent(l.createLogEntryContext(ctx.Transaction), events.NetGrpcServer_RequestPipelineLifetimeEvent, "[grpc.RequestPipelineLifetime.EndRequest] end a request",
 		logging.NewField("callId", ctx.CallId()),
 	)
 }
 
 func (l *RequestPipelineLifetime) createLogEntryContext(tran *actions.Transaction) *lcontext.LogEntryContext {
-	return &lcontext.LogEntryContext{
-		AppSessionId: nullable.NewNullable(l.appSessionId),
-		Transaction: &lcontext.TransactionInfo{
-			Id: tran.Id(),
-		},
+	ctx := &lcontext.LogEntryContext{AppSessionId: nullable.NewNullable(l.appSessionId)}
+
+	if tran != nil {
+		ctx.Transaction = &lcontext.TransactionInfo{Id: tran.Id()}
 	}
+	return ctx
 }
