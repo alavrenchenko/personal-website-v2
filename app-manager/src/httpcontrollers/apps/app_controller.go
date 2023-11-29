@@ -27,30 +27,34 @@ import (
 	"personal-website-v2/app-manager/src/internal/apps"
 	"personal-website-v2/app-manager/src/internal/apps/dbmodels"
 	amerrors "personal-website-v2/app-manager/src/internal/errors"
+	amidentity "personal-website-v2/app-manager/src/internal/identity"
 	"personal-website-v2/app-manager/src/internal/logging/events"
 	"personal-website-v2/pkg/actions"
 	apierrors "personal-website-v2/pkg/api/errors"
 	apihttp "personal-website-v2/pkg/api/http"
 	"personal-website-v2/pkg/errors"
 	httpserverhelper "personal-website-v2/pkg/helper/net/http/server"
+	"personal-website-v2/pkg/identity"
 	"personal-website-v2/pkg/logging"
 	lcontext "personal-website-v2/pkg/logging/context"
 	"personal-website-v2/pkg/net/http/server"
 )
 
 type AppController struct {
-	reqProcessor *httpserverhelper.RequestProcessor
-	appManager   apps.AppManager
-	logger       logging.Logger[*lcontext.LogEntryContext]
+	reqProcessor    *httpserverhelper.RequestProcessor
+	identityManager identity.IdentityManager
+	appManager      apps.AppManager
+	logger          logging.Logger[*lcontext.LogEntryContext]
 }
 
 func NewAppController(
 	appSessionId uint64,
 	actionManager *actions.ActionManager,
+	identityManager identity.IdentityManager,
 	appManager apps.AppManager,
-	loggerFactory logging.LoggerFactory[*lcontext.LogEntryContext]) (*AppController, error) {
+	loggerFactory logging.LoggerFactory[*lcontext.LogEntryContext],
+) (*AppController, error) {
 	l, err := loggerFactory.CreateLogger("httpcontrollers.apps.AppController")
-
 	if err != nil {
 		return nil, fmt.Errorf("[apps.NewAppController] create a logger: %w", err)
 	}
@@ -66,9 +70,10 @@ func NewAppController(
 	}
 
 	return &AppController{
-		reqProcessor: p,
-		appManager:   appManager,
-		logger:       l,
+		reqProcessor:    p,
+		identityManager: identityManager,
+		appManager:      appManager,
+		logger:          l,
 	}, nil
 }
 
@@ -80,6 +85,32 @@ func (c *AppController) GetByIdOrName(ctx *server.HttpContext) {
 	c.reqProcessor.Process(ctx, actions.ActionTypeApplication_Stop, actions.OperationTypeApplicationController_Stop,
 		func(opCtx *actions.OperationContext) bool {
 			leCtx := opCtx.CreateLogEntryContext()
+
+			if !ctx.User.IsAuthenticated() {
+				c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppControllerEvent, nil, "[apps.AppController.GetByIdOrName] user not authenticated")
+
+				if err := apihttp.Unauthorized(ctx, apierrors.ErrUnauthenticated); err != nil {
+					c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppControllerEvent, err, "[apps.AppController.GetByIdOrName] write Unauthorized")
+				}
+				return false
+			}
+
+			if authorized, err := c.identityManager.Authorize(opCtx, ctx.User, []string{amidentity.PermissionApps_Get}); err != nil {
+				c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppControllerEvent, err, "[apps.AppController.GetByIdOrName] authorize a user")
+
+				if err = apihttp.InternalServerError(ctx); err != nil {
+					c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppControllerEvent, err, "[apps.AppController.GetByIdOrName] write InternalServerError")
+				}
+				return false
+			} else if !authorized {
+				c.logger.ErrorWithEvent(opCtx.CreateLogEntryContext(), events.HttpControllers_AppControllerEvent, nil, "[apps.AppController.GetByIdOrName] user not authorized")
+
+				if err = apihttp.Forbidden(ctx, apierrors.ErrPermissionDenied); err != nil {
+					c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppControllerEvent, err, "[apps.AppController.GetByIdOrName] write Forbidden")
+				}
+				return false
+			}
+
 			vs, err := url.ParseQuery(ctx.Request.URL.RawQuery)
 			if err != nil {
 				c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppControllerEvent, err, "[apps.AppController.GetByIdOrName] parse the URL-encoded query string")
@@ -108,7 +139,7 @@ func (c *AppController) GetByIdOrName(ctx *server.HttpContext) {
 					c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppControllerEvent, err, "[apps.AppController.GetByIdOrName] find an app by id")
 
 					if err = apihttp.InternalServerError(ctx); err != nil {
-						c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppControllerEvent, err, "[apps.AppController.GetByIdOrName] write an error (InternalServerError)")
+						c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppControllerEvent, err, "[apps.AppController.GetByIdOrName] write InternalServerError")
 					}
 					return false
 				}
@@ -132,7 +163,7 @@ func (c *AppController) GetByIdOrName(ctx *server.HttpContext) {
 							c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppControllerEvent, err, "[apps.AppController.GetByIdOrName] write BadRequest")
 						}
 					} else if err = apihttp.InternalServerError(ctx); err != nil {
-						c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppControllerEvent, err, "[apps.AppController.GetStatusById] write an error (InternalServerError)")
+						c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppControllerEvent, err, "[apps.AppController.GetStatusById] write InternalServerError")
 					}
 					return false
 				}
@@ -172,6 +203,32 @@ func (c *AppController) GetStatusById(ctx *server.HttpContext) {
 	c.reqProcessor.Process(ctx, actions.ActionTypeApplication_Stop, actions.OperationTypeApplicationController_Stop,
 		func(opCtx *actions.OperationContext) bool {
 			leCtx := opCtx.CreateLogEntryContext()
+
+			if !ctx.User.IsAuthenticated() {
+				c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppControllerEvent, nil, "[apps.AppController.GetStatusById] user not authenticated")
+
+				if err := apihttp.Unauthorized(ctx, apierrors.ErrUnauthenticated); err != nil {
+					c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppControllerEvent, err, "[apps.AppController.GetStatusById] write Unauthorized")
+				}
+				return false
+			}
+
+			if authorized, err := c.identityManager.Authorize(opCtx, ctx.User, []string{amidentity.PermissionApps_GetStatus}); err != nil {
+				c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppControllerEvent, err, "[apps.AppController.GetStatusById] authorize a user")
+
+				if err = apihttp.InternalServerError(ctx); err != nil {
+					c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppControllerEvent, err, "[apps.AppController.GetStatusById] write InternalServerError")
+				}
+				return false
+			} else if !authorized {
+				c.logger.ErrorWithEvent(opCtx.CreateLogEntryContext(), events.HttpControllers_AppControllerEvent, nil, "[apps.AppController.GetStatusById] user not authorized")
+
+				if err = apihttp.Forbidden(ctx, apierrors.ErrPermissionDenied); err != nil {
+					c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppControllerEvent, err, "[apps.AppController.GetStatusById] write Forbidden")
+				}
+				return false
+			}
+
 			vs, err := url.ParseQuery(ctx.Request.URL.RawQuery)
 			if err != nil {
 				c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppControllerEvent, err, "[apps.AppController.GetStatusById] parse the URL-encoded query string")
@@ -201,7 +258,7 @@ func (c *AppController) GetStatusById(ctx *server.HttpContext) {
 						c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppControllerEvent, err, "[apps.AppController.GetStatusById] write NotFound")
 					}
 				} else if err = apihttp.InternalServerError(ctx); err != nil {
-					c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppControllerEvent, err, "[apps.AppController.GetStatusById] write an error (InternalServerError)")
+					c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppControllerEvent, err, "[apps.AppController.GetStatusById] write InternalServerError")
 				}
 				return false
 			}
