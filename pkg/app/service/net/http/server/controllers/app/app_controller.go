@@ -18,25 +18,35 @@ import (
 	"fmt"
 
 	"personal-website-v2/pkg/actions"
+	"personal-website-v2/pkg/api/errors"
 	apihttp "personal-website-v2/pkg/api/http"
 	"personal-website-v2/pkg/app"
 	httpserverhelper "personal-website-v2/pkg/helper/net/http/server"
+	"personal-website-v2/pkg/identity"
 	"personal-website-v2/pkg/logging"
 	lcontext "personal-website-v2/pkg/logging/context"
 	"personal-website-v2/pkg/logging/events"
 	"personal-website-v2/pkg/net/http/server"
 )
 
+type ApplicationControllerIdentityConfig struct {
+	StopPermission string
+}
+
 type ApplicationController struct {
-	app          app.Application
-	reqProcessor *httpserverhelper.RequestProcessor
-	logger       logging.Logger[*lcontext.LogEntryContext]
+	app             app.Application
+	reqProcessor    *httpserverhelper.RequestProcessor
+	identityManager identity.IdentityManager
+	identityConfig  *ApplicationControllerIdentityConfig
+	logger          logging.Logger[*lcontext.LogEntryContext]
 }
 
 func NewApplicationController(
 	a app.Application,
 	appSessionId uint64,
 	actionManager *actions.ActionManager,
+	identityManager identity.IdentityManager,
+	identityConfig *ApplicationControllerIdentityConfig,
 	loggerFactory logging.LoggerFactory[*lcontext.LogEntryContext],
 ) (*ApplicationController, error) {
 	l, err := loggerFactory.CreateLogger("app.service.net.http.server.controllers.app.ApplicationController")
@@ -55,9 +65,11 @@ func NewApplicationController(
 	}
 
 	return &ApplicationController{
-		app:          a,
-		reqProcessor: p,
-		logger:       l,
+		app:             a,
+		reqProcessor:    p,
+		identityManager: identityManager,
+		identityConfig:  identityConfig,
+		logger:          l,
 	}, nil
 }
 
@@ -68,6 +80,23 @@ func (c *ApplicationController) Stop(ctx *server.HttpContext) {
 	c.reqProcessor.Process(ctx, actions.ActionTypeApplication_Stop, actions.OperationTypeApplicationController_Stop,
 		func(opCtx *actions.OperationContext) bool {
 			leCtx := opCtx.CreateLogEntryContext()
+
+			if authorized, err := c.identityManager.Authorize(opCtx, ctx.User, []string{c.identityConfig.StopPermission}); err != nil {
+				c.logger.ErrorWithEvent(leCtx, events.HttpControllers_ApplicationControllerEvent, err, "[app.ApplicationController.Stop] authorize a user")
+
+				if err = apihttp.InternalServerError(ctx); err != nil {
+					c.logger.ErrorWithEvent(leCtx, events.HttpControllers_ApplicationControllerEvent, err, "[app.ApplicationController.Stop] write an error (InternalServerError)")
+				}
+				return false
+			} else if !authorized {
+				c.logger.ErrorWithEvent(opCtx.CreateLogEntryContext(), events.HttpControllers_ApplicationControllerEvent, nil, "[app.ApplicationController.Stop] user not authorized")
+
+				if err = apihttp.Forbidden(ctx, errors.ErrPermissionDenied); err != nil {
+					c.logger.ErrorWithEvent(leCtx, events.HttpControllers_ApplicationControllerEvent, err, "[app.ApplicationController.Stop] write an error (Forbidden)")
+				}
+				return false
+			}
+
 			go func() {
 				if err := c.app.StopWithContext(opCtx); err != nil {
 					c.logger.ErrorWithEvent(leCtx, events.HttpControllers_ApplicationControllerEvent, err, "[app.ApplicationController.Stop] stop an app")
