@@ -22,12 +22,14 @@ import (
 	amapierrors "personal-website-v2/app-manager/src/api/errors"
 	"personal-website-v2/app-manager/src/api/http/sessions/converter"
 	amactions "personal-website-v2/app-manager/src/internal/actions"
+	amidentity "personal-website-v2/app-manager/src/internal/identity"
 	"personal-website-v2/app-manager/src/internal/logging/events"
 	"personal-website-v2/app-manager/src/internal/sessions"
 	"personal-website-v2/pkg/actions"
 	apierrors "personal-website-v2/pkg/api/errors"
 	apihttp "personal-website-v2/pkg/api/http"
 	httpserverhelper "personal-website-v2/pkg/helper/net/http/server"
+	"personal-website-v2/pkg/identity"
 	"personal-website-v2/pkg/logging"
 	lcontext "personal-website-v2/pkg/logging/context"
 	"personal-website-v2/pkg/net/http/server"
@@ -35,6 +37,7 @@ import (
 
 type AppSessionController struct {
 	reqProcessor      *httpserverhelper.RequestProcessor
+	identityManager   identity.IdentityManager
 	appSessionManager sessions.AppSessionManager
 	logger            logging.Logger[*lcontext.LogEntryContext]
 }
@@ -42,6 +45,7 @@ type AppSessionController struct {
 func NewAppSessionController(
 	appSessionId uint64,
 	actionManager *actions.ActionManager,
+	identityManager identity.IdentityManager,
 	appSessionManager sessions.AppSessionManager,
 	loggerFactory logging.LoggerFactory[*lcontext.LogEntryContext],
 ) (*AppSessionController, error) {
@@ -62,6 +66,7 @@ func NewAppSessionController(
 
 	return &AppSessionController{
 		reqProcessor:      p,
+		identityManager:   identityManager,
 		appSessionManager: appSessionManager,
 		logger:            l,
 	}, nil
@@ -74,12 +79,46 @@ func (c *AppSessionController) GetById(ctx *server.HttpContext) {
 	c.reqProcessor.Process(ctx, actions.ActionTypeApplication_Stop, actions.OperationTypeApplicationController_Stop,
 		func(opCtx *actions.OperationContext) bool {
 			leCtx := opCtx.CreateLogEntryContext()
+
+			if !ctx.User.IsAuthenticated() {
+				c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppSessionControllerEvent, nil,
+					"[sessions.AppSessionController.GetById] user not authenticated",
+				)
+				if err := apihttp.Unauthorized(ctx, apierrors.ErrUnauthenticated); err != nil {
+					c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppSessionControllerEvent, err,
+						"[sessions.AppSessionController.GetById] write Unauthorized",
+					)
+				}
+				return false
+			}
+
+			if authorized, err := c.identityManager.Authorize(opCtx, ctx.User, []string{amidentity.PermissionAppSession_Get}); err != nil {
+				c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppSessionControllerEvent, err,
+					"[sessions.AppSessionController.GetById] authorize a user",
+				)
+				if err = apihttp.InternalServerError(ctx); err != nil {
+					c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppSessionControllerEvent, err,
+						"[sessions.AppSessionController.GetById] write InternalServerError",
+					)
+				}
+				return false
+			} else if !authorized {
+				c.logger.ErrorWithEvent(opCtx.CreateLogEntryContext(), events.HttpControllers_AppSessionControllerEvent, nil,
+					"[sessions.AppSessionController.GetById] user not authorized",
+				)
+				if err = apihttp.Forbidden(ctx, apierrors.ErrPermissionDenied); err != nil {
+					c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppSessionControllerEvent, err,
+						"[sessions.AppSessionController.GetById] write Forbidden",
+					)
+				}
+				return false
+			}
+
 			vs, err := url.ParseQuery(ctx.Request.URL.RawQuery)
 			if err != nil {
 				c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppSessionControllerEvent, err,
 					"[sessions.AppSessionController.GetById] parse the URL-encoded query string",
 				)
-
 				if err = apihttp.BadRequest(ctx, apierrors.ErrInvalidQueryString); err != nil {
 					c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppSessionControllerEvent, err,
 						"[sessions.AppSessionController.GetById] write BadRequest",
@@ -93,7 +132,6 @@ func (c *AppSessionController) GetById(ctx *server.HttpContext) {
 				c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppSessionControllerEvent, err,
 					"[sessions.AppSessionController.GetById] id is missing or invalid",
 				)
-
 				if err = apihttp.BadRequest(ctx, apierrors.NewApiError(apierrors.ApiErrorCodeInvalidQueryString, "id is missing or invalid")); err != nil {
 					c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppSessionControllerEvent, err,
 						"[sessions.AppSessionController.GetById] write BadRequest",
@@ -107,10 +145,9 @@ func (c *AppSessionController) GetById(ctx *server.HttpContext) {
 				c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppSessionControllerEvent, err,
 					"[sessions.AppSessionController.GetById] find an app session by id",
 				)
-
 				if err = apihttp.InternalServerError(ctx); err != nil {
 					c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppSessionControllerEvent, err,
-						"[sessions.AppSessionController.GetById] write an error (InternalServerError)",
+						"[sessions.AppSessionController.GetById] write InternalServerError",
 					)
 				}
 				return false
@@ -120,7 +157,6 @@ func (c *AppSessionController) GetById(ctx *server.HttpContext) {
 				c.logger.WarningWithEvent(leCtx, events.HttpControllers_AppSessionControllerEvent,
 					"[sessions.AppSessionController.GetById] app session not found",
 				)
-
 				if err = apihttp.NotFound(ctx, amapierrors.ErrAppSessionNotFound); err != nil {
 					c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppSessionControllerEvent, err,
 						"[sessions.AppSessionController.GetById] write NotFound",
