@@ -19,10 +19,11 @@ import (
 	"net/http"
 
 	"personal-website-v2/pkg/actions"
+	apihttp "personal-website-v2/pkg/api/http"
 	"personal-website-v2/pkg/app"
 	"personal-website-v2/pkg/base/nullable"
+	httpserverhelper "personal-website-v2/pkg/helper/net/http/server"
 	"personal-website-v2/pkg/identity"
-	"personal-website-v2/pkg/identity/account"
 	"personal-website-v2/pkg/logging"
 	"personal-website-v2/pkg/logging/context"
 	"personal-website-v2/pkg/logging/events"
@@ -30,10 +31,11 @@ import (
 )
 
 type RequestPipelineLifetime struct {
-	appSessionId  uint64
-	tranManager   *actions.TransactionManager
-	actionManager *actions.ActionManager
-	logger        logging.Logger[*context.LogEntryContext]
+	appSessionId    uint64
+	tranManager     *actions.TransactionManager
+	reqProcessor    *httpserverhelper.RequestProcessor
+	identityManager identity.IdentityManager
+	logger          logging.Logger[*context.LogEntryContext]
 }
 
 var _ server.RequestPipelineLifetime = (*RequestPipelineLifetime)(nil)
@@ -42,35 +44,44 @@ func NewRequestPipelineLifetime(
 	appSessionId uint64,
 	tranManager *actions.TransactionManager,
 	actionManager *actions.ActionManager,
-	loggerFactory logging.LoggerFactory[*context.LogEntryContext]) (*RequestPipelineLifetime, error) {
+	identityManager identity.IdentityManager,
+	loggerFactory logging.LoggerFactory[*context.LogEntryContext],
+) (*RequestPipelineLifetime, error) {
 	l, err := loggerFactory.CreateLogger("app.server.http.RequestPipelineLifetime")
-
 	if err != nil {
 		return nil, fmt.Errorf("[http.NewRequestPipelineLifetime] create a logger: %w", err)
 	}
 
+	c := &httpserverhelper.RequestProcessorConfig{
+		ActionGroup:    actions.ActionGroupNetHttpServer_RequestPipelineLifetime,
+		OperationGroup: actions.OperationGroupNetHttpServer_RequestPipelineLifetime,
+		StopAppIfError: true,
+	}
+	p, err := httpserverhelper.NewRequestProcessor(appSessionId, actionManager, c, loggerFactory)
+	if err != nil {
+		return nil, fmt.Errorf("[http.NewRequestPipelineLifetime] new request processor: %w", err)
+	}
+
 	return &RequestPipelineLifetime{
-		appSessionId:  appSessionId,
-		tranManager:   tranManager,
-		actionManager: actionManager,
-		logger:        l,
+		appSessionId:    appSessionId,
+		tranManager:     tranManager,
+		reqProcessor:    p,
+		identityManager: identityManager,
+		logger:          l,
 	}, nil
 }
 
 func (l *RequestPipelineLifetime) BeginRequest(ctx *server.HttpContext) {
 	t, err := l.tranManager.CreateAndStart()
-
 	if err != nil {
 		leCtx := &context.LogEntryContext{AppSessionId: nullable.NewNullable(l.appSessionId)}
-		l.logger.FatalWithEventAndError(
-			leCtx,
-			events.NetHttpServer_RequestPipelineLifetimeEvent,
-			err,
-			"[http.RequestPipelineLifetime.BeginRequest] create and start a transaction",
+		l.logger.FatalWithEventAndError(leCtx, events.NetHttpServer_RequestPipelineLifetimeEvent, err, "[http.RequestPipelineLifetime.BeginRequest] create and start a transaction",
 			logging.NewField("reqId", ctx.RequestId()),
 		)
-		ctx.Response.Writer.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
-		ctx.Response.Writer.WriteHeader(http.StatusInternalServerError)
+
+		if err = apihttp.InternalServerError(ctx); err != nil {
+			l.logger.ErrorWithEvent(leCtx, events.NetHttpServer_RequestPipelineLifetimeEvent, err, "[http.RequestPipelineLifetime.BeginRequest] write an error (InternalServerError)")
+		}
 
 		go func() {
 			if err2 := app.Stop(); err2 != nil {
@@ -82,16 +93,13 @@ func (l *RequestPipelineLifetime) BeginRequest(ctx *server.HttpContext) {
 
 	ctx.Transaction = t
 	leCtx := l.createLogEntryContext(t)
-	err = l.logger.InfoWithEvent(
-		leCtx,
-		events.NetHttp_Server_ReqAndTranInitialized,
-		"[http.RequestPipelineLifetime.BeginRequest] http request and transaction initialized",
+	err = l.logger.InfoWithEvent(leCtx, events.NetHttp_Server_ReqAndTranInitialized, "[http.RequestPipelineLifetime.BeginRequest] http request and transaction initialized",
 		logging.NewField("reqId", ctx.RequestId()),
 	)
-
 	if err != nil {
-		ctx.Response.Writer.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
-		ctx.Response.Writer.WriteHeader(http.StatusInternalServerError)
+		if err = apihttp.InternalServerError(ctx); err != nil {
+			l.logger.ErrorWithEvent(leCtx, events.NetHttpServer_RequestPipelineLifetimeEvent, err, "[http.RequestPipelineLifetime.BeginRequest] write an error (InternalServerError)")
+		}
 
 		go func() {
 			if err2 := app.Stop(); err2 != nil {
@@ -102,7 +110,28 @@ func (l *RequestPipelineLifetime) BeginRequest(ctx *server.HttpContext) {
 }
 
 func (l *RequestPipelineLifetime) Authenticate(ctx *server.HttpContext) {
-	ctx.User = identity.NewDefaultIdentity(nullable.Nullable[uint64]{}, account.UserGroupAnonymousUsers, nullable.Nullable[uint64]{})
+	if ctx.IncomingOperationCtx == nil || !ctx.IncomingOperationCtx.UserId.HasValue && !ctx.IncomingOperationCtx.ClientId.HasValue {
+		ctx.User = identity.NewDefaultIdentity(nullable.Nullable[uint64]{}, identity.UserTypeUser, nullable.Nullable[uint64]{})
+		return
+	}
+
+	l.reqProcessor.Process(ctx, actions.ActionTypeNetHttpServer_RequestPipelineLifetime_Authenticate, actions.OperationTypeNetHttpServer_RequestPipelineLifetime_Authenticate,
+		func(opCtx *actions.OperationContext) bool {
+			i, err := l.identityManager.AuthenticateById(opCtx, ctx.IncomingOperationCtx.UserId, ctx.IncomingOperationCtx.ClientId)
+			if err != nil {
+				leCtx := opCtx.CreateLogEntryContext()
+				l.logger.ErrorWithEvent(leCtx, events.NetHttpServer_RequestPipelineLifetimeEvent, err, "[http.RequestPipelineLifetime.Authenticate] authenticate a user and a client by id")
+
+				if err = apihttp.InternalServerError(ctx); err != nil {
+					l.logger.ErrorWithEvent(leCtx, events.NetHttpServer_RequestPipelineLifetimeEvent, err, "[http.RequestPipelineLifetime.Authenticate] write an error (InternalServerError)")
+				}
+				return false
+			}
+
+			ctx.User = i
+			return true
+		},
+	)
 }
 
 func (l *RequestPipelineLifetime) Authorize(ctx *server.HttpContext) {
@@ -119,31 +148,27 @@ func (l *RequestPipelineLifetime) NotFound(ctx *server.HttpContext) {
 }
 
 func (l *RequestPipelineLifetime) Error(ctx *server.HttpContext, err error) {
-	l.logger.ErrorWithEvent(
-		l.createLogEntryContext(ctx.Transaction),
-		events.NetHttpServer_RequestPipelineLifetimeEvent,
-		err,
-		"[http.RequestPipelineLifetime.Error] an error occurred while handling the request",
+	leCtx := l.createLogEntryContext(ctx.Transaction)
+	l.logger.ErrorWithEvent(leCtx, events.NetHttpServer_RequestPipelineLifetimeEvent, err, "[http.RequestPipelineLifetime.Error] an error occurred while handling the request",
 		logging.NewField("reqId", ctx.RequestId()),
 	)
-	ctx.Response.Writer.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
-	ctx.Response.Writer.WriteHeader(http.StatusInternalServerError)
+
+	if err = apihttp.InternalServerError(ctx); err != nil {
+		l.logger.ErrorWithEvent(leCtx, events.NetHttpServer_RequestPipelineLifetimeEvent, err, "[http.RequestPipelineLifetime.Error] write an error (InternalServerError)")
+	}
 }
 
 func (l *RequestPipelineLifetime) EndRequest(ctx *server.HttpContext) {
-	l.logger.InfoWithEvent(
-		l.createLogEntryContext(ctx.Transaction),
-		events.NetHttpServer_RequestPipelineLifetimeEvent,
-		"[http.RequestPipelineLifetime.EndRequest] end a request",
+	l.logger.InfoWithEvent(l.createLogEntryContext(ctx.Transaction), events.NetHttpServer_RequestPipelineLifetimeEvent, "[http.RequestPipelineLifetime.EndRequest] end a request",
 		logging.NewField("reqId", ctx.RequestId()),
 	)
 }
 
 func (l *RequestPipelineLifetime) createLogEntryContext(tran *actions.Transaction) *context.LogEntryContext {
-	return &context.LogEntryContext{
-		AppSessionId: nullable.NewNullable(l.appSessionId),
-		Transaction: &context.TransactionInfo{
-			Id: tran.Id(),
-		},
+	ctx := &context.LogEntryContext{AppSessionId: nullable.NewNullable(l.appSessionId)}
+
+	if tran != nil {
+		ctx.Transaction = &context.TransactionInfo{Id: tran.Id()}
 	}
+	return ctx
 }
