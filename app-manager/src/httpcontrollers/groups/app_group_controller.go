@@ -25,12 +25,14 @@ import (
 	amactions "personal-website-v2/app-manager/src/internal/actions"
 	"personal-website-v2/app-manager/src/internal/groups"
 	"personal-website-v2/app-manager/src/internal/groups/dbmodels"
+	amidentity "personal-website-v2/app-manager/src/internal/identity"
 	"personal-website-v2/app-manager/src/internal/logging/events"
 	"personal-website-v2/pkg/actions"
 	apierrors "personal-website-v2/pkg/api/errors"
 	apihttp "personal-website-v2/pkg/api/http"
 	"personal-website-v2/pkg/errors"
 	httpserverhelper "personal-website-v2/pkg/helper/net/http/server"
+	"personal-website-v2/pkg/identity"
 	"personal-website-v2/pkg/logging"
 	lcontext "personal-website-v2/pkg/logging/context"
 	"personal-website-v2/pkg/net/http/server"
@@ -38,6 +40,7 @@ import (
 
 type AppGroupController struct {
 	reqProcessor    *httpserverhelper.RequestProcessor
+	identityManager identity.IdentityManager
 	appGroupManager groups.AppGroupManager
 	logger          logging.Logger[*lcontext.LogEntryContext]
 }
@@ -45,6 +48,7 @@ type AppGroupController struct {
 func NewAppGroupController(
 	appSessionId uint64,
 	actionManager *actions.ActionManager,
+	identityManager identity.IdentityManager,
 	appGroupManager groups.AppGroupManager,
 	loggerFactory logging.LoggerFactory[*lcontext.LogEntryContext],
 ) (*AppGroupController, error) {
@@ -60,11 +64,12 @@ func NewAppGroupController(
 	}
 	p, err := httpserverhelper.NewRequestProcessor(appSessionId, actionManager, c, loggerFactory)
 	if err != nil {
-		return nil, fmt.Errorf("[http.NewRequestPipelineLifetime] new request processor: %w", err)
+		return nil, fmt.Errorf("[groups.NewAppGroupController] new request processor: %w", err)
 	}
 
 	return &AppGroupController{
 		reqProcessor:    p,
+		identityManager: identityManager,
 		appGroupManager: appGroupManager,
 		logger:          l,
 	}, nil
@@ -78,6 +83,32 @@ func (c *AppGroupController) GetByIdOrName(ctx *server.HttpContext) {
 	c.reqProcessor.Process(ctx, actions.ActionTypeApplication_Stop, actions.OperationTypeApplicationController_Stop,
 		func(opCtx *actions.OperationContext) bool {
 			leCtx := opCtx.CreateLogEntryContext()
+
+			if !ctx.User.IsAuthenticated() {
+				c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppGroupControllerEvent, nil, "[groups.AppGroupController.GetByIdOrName] user not authenticated")
+
+				if err := apihttp.Unauthorized(ctx, apierrors.ErrUnauthenticated); err != nil {
+					c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppGroupControllerEvent, err, "[groups.AppGroupController.GetByIdOrName] write Unauthorized")
+				}
+				return false
+			}
+
+			if authorized, err := c.identityManager.Authorize(opCtx, ctx.User, []string{amidentity.PermissionAppGroup_Get}); err != nil {
+				c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppGroupControllerEvent, err, "[groups.AppGroupController.GetByIdOrName] authorize a user")
+
+				if err = apihttp.InternalServerError(ctx); err != nil {
+					c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppGroupControllerEvent, err, "[groups.AppGroupController.GetByIdOrName] write InternalServerError")
+				}
+				return false
+			} else if !authorized {
+				c.logger.ErrorWithEvent(opCtx.CreateLogEntryContext(), events.HttpControllers_AppGroupControllerEvent, nil, "[groups.AppGroupController.GetByIdOrName] user not authorized")
+
+				if err = apihttp.Forbidden(ctx, apierrors.ErrPermissionDenied); err != nil {
+					c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppGroupControllerEvent, err, "[groups.AppGroupController.GetByIdOrName] write Forbidden")
+				}
+				return false
+			}
+
 			vs, err := url.ParseQuery(ctx.Request.URL.RawQuery)
 			if err != nil {
 				c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppGroupControllerEvent, err, "[groups.AppGroupController.GetByIdOrName] parse the URL-encoded query string")
