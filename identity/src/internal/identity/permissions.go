@@ -15,6 +15,9 @@
 package identity
 
 const (
+	// Application permissions.
+	PermissionApp_Stop = "identity.app.stop"
+
 	// Authentication permissions.
 	PermissionAuthentication_CreateUserToken    = "identity.authentication.createUserToken"
 	PermissionAuthentication_CreateClientToken  = "identity.authentication.createClientToken"
@@ -218,6 +221,7 @@ const (
 )
 
 var Permissions = []string{
+	PermissionApp_Stop,
 	PermissionAuthentication_CreateUserToken,
 	PermissionAuthentication_CreateClientToken,
 	PermissionAuthentication_Authenticate,
