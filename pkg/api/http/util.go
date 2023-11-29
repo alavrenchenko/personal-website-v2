@@ -94,6 +94,13 @@ func NotFound(ctx *server.HttpContext, err *errors.ApiError) error {
 	return nil
 }
 
+func Forbidden(ctx *server.HttpContext, err *errors.ApiError) error {
+	if err2 := Error(ctx, http.StatusForbidden, err); err2 != nil {
+		return fmt.Errorf("[http.Forbidden] write an error (Forbidden): %w", err2)
+	}
+	return nil
+}
+
 func Error(ctx *server.HttpContext, statusCode int, err *errors.ApiError) error {
 	h := ctx.Response.Writer.Header()
 	h.Set("Cache-Control", "no-cache, no-store, must-revalidate")
