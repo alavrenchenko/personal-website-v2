@@ -89,7 +89,14 @@ func InternalServerError(ctx *server.HttpContext) error {
 
 func NotFound(ctx *server.HttpContext, err *errors.ApiError) error {
 	if err2 := Error(ctx, http.StatusNotFound, err); err2 != nil {
-		return fmt.Errorf("[http.Conflict] write an error (NotFound): %w", err2)
+		return fmt.Errorf("[http.NotFound] write an error (NotFound): %w", err2)
+	}
+	return nil
+}
+
+func Unauthorized(ctx *server.HttpContext, err *errors.ApiError) error {
+	if err2 := Error(ctx, http.StatusUnauthorized, err); err2 != nil {
+		return fmt.Errorf("[http.Unauthorized] write an error (Unauthorized): %w", err2)
 	}
 	return nil
 }
