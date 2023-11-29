@@ -16,29 +16,108 @@ package postgres
 
 import (
 	"errors"
+	"fmt"
 
-	// accountstores "personal-website-v2/identity/src/internal/accounts/stores"
-	// userstores "personal-website-v2/identity/src/internal/users/stores"
-	// clientstores "personal-website-v2/identity/src/internal/clients/stores"
+	authenticationstores "personal-website-v2/identity/src/internal/authentication/stores"
+	clientmodels "personal-website-v2/identity/src/internal/clients/models"
+	clientstores "personal-website-v2/identity/src/internal/clients/stores"
+	permissionstores "personal-website-v2/identity/src/internal/permissions/stores"
+	rolestores "personal-website-v2/identity/src/internal/roles/stores"
+	sessionmodels "personal-website-v2/identity/src/internal/sessions/models"
+	sessionstores "personal-website-v2/identity/src/internal/sessions/stores"
+	useragentmodels "personal-website-v2/identity/src/internal/useragents/models"
+	useragentstores "personal-website-v2/identity/src/internal/useragents/stores"
+	userstores "personal-website-v2/identity/src/internal/users/stores"
 	"personal-website-v2/pkg/db/postgres"
 	"personal-website-v2/pkg/logging"
 	"personal-website-v2/pkg/logging/context"
 )
 
 const (
-	userCategory   = "User"
-	clientCategory = "Client"
+	// TokenEncryptionKeyStore.
+	identityCategory = "Identity"
+
+	// UserStore, UserPersonalInfoStore, UserRoleAssignmentStore.
+	userCategory = "User"
+
+	// WebClientStore.
+	webClientCategory = "WebClient"
+
+	// MobileClientStore.
+	mobileClientCategory = "MobileClient"
+
+	// GroupRoleAssignmentStore.
+	userGroupCategory = "UserGroup"
+
+	// RoleStore, RolesStateStore.
+	roleCategory = "Role"
+
+	// RoleAssignmentStore.
+	roleAssignmentCategory = "RoleAssignment"
+
+	// PermissionStore, PermissionGroupStore, RolePermissionStore.
+	permissionCategory = "Permission"
+
+	// WebUserAgentStore, UserAgentWebSessionStore.
+	webUserAgentCategory = "WebUserAgent"
+
+	// MobileUserAgentStore, UserAgentMobileSessionStore.
+	mobileUserAgentCategory = "MobileUserAgent"
+
+	// UserWebSessionStore.
+	userWebSessionCategory = "User_WebSession"
+
+	// UserMobileSessionStore.
+	userMobileSessionCategory = "User_MobileSession"
 )
 
 type Stores interface {
+	UserStore() *userstores.UserStore
+	UserPersonalInfoStore() *userstores.UserPersonalInfoStore
+	WebClientStore() *clientstores.ClientStore
+	MobileClientStore() *clientstores.ClientStore
+	RoleStore() *rolestores.RoleStore
+	RoleAssignmentStore() *rolestores.RoleAssignmentStore
+	UserRoleAssignmentStore() *rolestores.UserRoleAssignmentStore
+	GroupRoleAssignmentStore() *rolestores.GroupRoleAssignmentStore
+	RolesStateStore() *rolestores.RolesStateStore
+	PermissionStore() *permissionstores.PermissionStore
+	PermissionGroupStore() *permissionstores.PermissionGroupStore
+	RolePermissionStore() *permissionstores.RolePermissionStore
+	WebUserAgentStore() *useragentstores.UserAgentStore
+	MobileUserAgentStore() *useragentstores.UserAgentStore
+	UserWebSessionStore() *sessionstores.UserSessionStore
+	UserMobileSessionStore() *sessionstores.UserSessionStore
+	UserAgentWebSessionStore() *sessionstores.UserAgentSessionStore
+	UserAgentMobileSessionStore() *sessionstores.UserAgentSessionStore
+	TokenEncryptionKeyStore() *authenticationstores.TokenEncryptionKeyStore
 	Init(databases map[string]*postgres.Database) error
 }
 
 var _ postgres.Stores = (Stores)(nil)
 
 type stores struct {
-	loggerFactory logging.LoggerFactory[*context.LogEntryContext]
-	isInitialized bool
+	userStore                   *userstores.UserStore
+	userPersonalInfoStore       *userstores.UserPersonalInfoStore
+	webClientStore              *clientstores.ClientStore
+	mobileClientStore           *clientstores.ClientStore
+	roleStore                   *rolestores.RoleStore
+	roleAssignmentStore         *rolestores.RoleAssignmentStore
+	userRoleAssignmentStore     *rolestores.UserRoleAssignmentStore
+	groupRoleAssignmentStore    *rolestores.GroupRoleAssignmentStore
+	rolesStateStore             *rolestores.RolesStateStore
+	permissionStore             *permissionstores.PermissionStore
+	permissionGroupStore        *permissionstores.PermissionGroupStore
+	rolePermissionStore         *permissionstores.RolePermissionStore
+	webUserAgentStore           *useragentstores.UserAgentStore
+	mobileUserAgentStore        *useragentstores.UserAgentStore
+	userWebSessionStore         *sessionstores.UserSessionStore
+	userMobileSessionStore      *sessionstores.UserSessionStore
+	userAgentWebSessionStore    *sessionstores.UserAgentSessionStore
+	userAgentMobileSessionStore *sessionstores.UserAgentSessionStore
+	tokenEncryptionKeyStore     *authenticationstores.TokenEncryptionKeyStore
+	loggerFactory               logging.LoggerFactory[*context.LogEntryContext]
+	isInitialized               bool
 }
 
 var _ Stores = (*stores)(nil)
@@ -49,12 +128,262 @@ func NewStores(loggerFactory logging.LoggerFactory[*context.LogEntryContext]) St
 	}
 }
 
+func (s *stores) UserStore() *userstores.UserStore {
+	return s.userStore
+}
+
+func (s *stores) UserPersonalInfoStore() *userstores.UserPersonalInfoStore {
+	return s.userPersonalInfoStore
+}
+
+func (s *stores) WebClientStore() *clientstores.ClientStore {
+	return s.webClientStore
+}
+
+func (s *stores) MobileClientStore() *clientstores.ClientStore {
+	return s.mobileClientStore
+}
+
+func (s *stores) RoleStore() *rolestores.RoleStore {
+	return s.roleStore
+}
+
+func (s *stores) RoleAssignmentStore() *rolestores.RoleAssignmentStore {
+	return s.roleAssignmentStore
+}
+
+func (s *stores) UserRoleAssignmentStore() *rolestores.UserRoleAssignmentStore {
+	return s.userRoleAssignmentStore
+}
+
+func (s *stores) GroupRoleAssignmentStore() *rolestores.GroupRoleAssignmentStore {
+	return s.groupRoleAssignmentStore
+}
+
+func (s *stores) RolesStateStore() *rolestores.RolesStateStore {
+	return s.rolesStateStore
+}
+
+func (s *stores) PermissionStore() *permissionstores.PermissionStore {
+	return s.permissionStore
+}
+
+func (s *stores) PermissionGroupStore() *permissionstores.PermissionGroupStore {
+	return s.permissionGroupStore
+}
+
+func (s *stores) RolePermissionStore() *permissionstores.RolePermissionStore {
+	return s.rolePermissionStore
+}
+
+func (s *stores) WebUserAgentStore() *useragentstores.UserAgentStore {
+	return s.webUserAgentStore
+}
+
+func (s *stores) MobileUserAgentStore() *useragentstores.UserAgentStore {
+	return s.mobileUserAgentStore
+}
+
+func (s *stores) UserWebSessionStore() *sessionstores.UserSessionStore {
+	return s.userWebSessionStore
+}
+
+func (s *stores) UserMobileSessionStore() *sessionstores.UserSessionStore {
+	return s.userMobileSessionStore
+}
+
+func (s *stores) UserAgentWebSessionStore() *sessionstores.UserAgentSessionStore {
+	return s.userAgentWebSessionStore
+}
+
+func (s *stores) UserAgentMobileSessionStore() *sessionstores.UserAgentSessionStore {
+	return s.userAgentMobileSessionStore
+}
+
+func (s *stores) TokenEncryptionKeyStore() *authenticationstores.TokenEncryptionKeyStore {
+	return s.tokenEncryptionKeyStore
+}
+
 // databases: map[DataCategory]Database
 func (s *stores) Init(databases map[string]*postgres.Database) error {
 	if s.isInitialized {
 		return errors.New("[postgres.stores.Init] stores have already been initialized")
 	}
 
+	database, ok := databases[identityCategory]
+	if !ok {
+		return fmt.Errorf("[postgres.stores.Init] database not found for the category '%s'", identityCategory)
+	}
+
+	tokenEncryptionKeyStore, err := authenticationstores.NewTokenEncryptionKeyStore(database, s.loggerFactory)
+	if err != nil {
+		return fmt.Errorf("[postgres.stores.Init] new token encryption key store: %w", err)
+	}
+
+	database, ok = databases[userCategory]
+	if !ok {
+		return fmt.Errorf("[postgres.stores.Init] database not found for the category '%s'", userCategory)
+	}
+
+	userStore, err := userstores.NewUserStore(database, s.loggerFactory)
+	if err != nil {
+		return fmt.Errorf("[postgres.stores.Init] new user store: %w", err)
+	}
+
+	userPersonalInfoStore, err := userstores.NewUserPersonalInfoStore(database, s.loggerFactory)
+	if err != nil {
+		return fmt.Errorf("[postgres.stores.Init] new store of users' personal info: %w", err)
+	}
+
+	userRoleAssignmentStore, err := rolestores.NewUserRoleAssignmentStore(database, s.loggerFactory)
+	if err != nil {
+		return fmt.Errorf("[postgres.stores.Init] new client store: %w", err)
+	}
+
+	database, ok = databases[webClientCategory]
+	if !ok {
+		return fmt.Errorf("[postgres.stores.Init] database not found for the category '%s'", webClientCategory)
+	}
+
+	webClientStore, err := clientstores.NewClientStore(clientmodels.ClientTypeWeb, database, s.loggerFactory)
+	if err != nil {
+		return fmt.Errorf("[postgres.stores.Init] new client store: %w", err)
+	}
+
+	database, ok = databases[mobileClientCategory]
+	if !ok {
+		return fmt.Errorf("[postgres.stores.Init] database not found for the category '%s'", mobileClientCategory)
+	}
+
+	mobileClientStore, err := clientstores.NewClientStore(clientmodels.ClientTypeMobile, database, s.loggerFactory)
+	if err != nil {
+		return fmt.Errorf("[postgres.stores.Init] new client store: %w", err)
+	}
+
+	database, ok = databases[userGroupCategory]
+	if !ok {
+		return fmt.Errorf("[postgres.stores.Init] database not found for the category '%s'", userGroupCategory)
+	}
+
+	groupRoleAssignmentStore, err := rolestores.NewGroupRoleAssignmentStore(database, s.loggerFactory)
+	if err != nil {
+		return fmt.Errorf("[postgres.stores.Init] new client store: %w", err)
+	}
+
+	database, ok = databases[roleCategory]
+	if !ok {
+		return fmt.Errorf("[postgres.stores.Init] database not found for the category '%s'", roleCategory)
+	}
+
+	roleStore, err := rolestores.NewRoleStore(database, s.loggerFactory)
+	if err != nil {
+		return fmt.Errorf("[postgres.stores.Init] new client store: %w", err)
+	}
+
+	rolesStateStore, err := rolestores.NewRolesStateStore(database, s.loggerFactory)
+	if err != nil {
+		return fmt.Errorf("[postgres.stores.Init] new client store: %w", err)
+	}
+
+	database, ok = databases[roleAssignmentCategory]
+	if !ok {
+		return fmt.Errorf("[postgres.stores.Init] database not found for the category '%s'", roleAssignmentCategory)
+	}
+
+	roleAssignmentStore, err := rolestores.NewRoleAssignmentStore(database, s.loggerFactory)
+	if err != nil {
+		return fmt.Errorf("[postgres.stores.Init] new client store: %w", err)
+	}
+
+	database, ok = databases[permissionCategory]
+	if !ok {
+		return fmt.Errorf("[postgres.stores.Init] database not found for the category '%s'", permissionCategory)
+	}
+
+	permissionStore, err := permissionstores.NewPermissionStore(database, s.loggerFactory)
+	if err != nil {
+		return fmt.Errorf("[postgres.stores.Init] new client store: %w", err)
+	}
+
+	permissionGroupStore, err := permissionstores.NewPermissionGroupStore(database, s.loggerFactory)
+	if err != nil {
+		return fmt.Errorf("[postgres.stores.Init] new client store: %w", err)
+	}
+
+	rolePermissionStore, err := permissionstores.NewRolePermissionStore(database, s.loggerFactory)
+	if err != nil {
+		return fmt.Errorf("[postgres.stores.Init] new client store: %w", err)
+	}
+
+	database, ok = databases[webUserAgentCategory]
+	if !ok {
+		return fmt.Errorf("[postgres.stores.Init] database not found for the category '%s'", webUserAgentCategory)
+	}
+
+	webUserAgentStore, err := useragentstores.NewUserAgentStore(useragentmodels.UserAgentTypeWeb, database, s.loggerFactory)
+	if err != nil {
+		return fmt.Errorf("[postgres.stores.Init] new client store: %w", err)
+	}
+
+	userAgentWebSessionStore, err := sessionstores.NewUserAgentSessionStore(sessionmodels.UserAgentSessionTypeWeb, database, s.loggerFactory)
+	if err != nil {
+		return fmt.Errorf("[postgres.stores.Init] new client store: %w", err)
+	}
+
+	database, ok = databases[mobileUserAgentCategory]
+	if !ok {
+		return fmt.Errorf("[postgres.stores.Init] database not found for the category '%s'", mobileUserAgentCategory)
+	}
+
+	mobileUserAgentStore, err := useragentstores.NewUserAgentStore(useragentmodels.UserAgentTypeMobile, database, s.loggerFactory)
+	if err != nil {
+		return fmt.Errorf("[postgres.stores.Init] new client store: %w", err)
+	}
+
+	userAgentMobileSessionStore, err := sessionstores.NewUserAgentSessionStore(sessionmodels.UserAgentSessionTypeMobile, database, s.loggerFactory)
+	if err != nil {
+		return fmt.Errorf("[postgres.stores.Init] new client store: %w", err)
+	}
+
+	database, ok = databases[userWebSessionCategory]
+	if !ok {
+		return fmt.Errorf("[postgres.stores.Init] database not found for the category '%s'", userWebSessionCategory)
+	}
+
+	userWebSessionStore, err := sessionstores.NewUserSessionStore(sessionmodels.UserSessionTypeWeb, database, s.loggerFactory)
+	if err != nil {
+		return fmt.Errorf("[postgres.stores.Init] new client store: %w", err)
+	}
+
+	database, ok = databases[userWebSessionCategory]
+	if !ok {
+		return fmt.Errorf("[postgres.stores.Init] database not found for the category '%s'", userWebSessionCategory)
+	}
+
+	userMobileSessionStore, err := sessionstores.NewUserSessionStore(sessionmodels.UserSessionTypeMobile, database, s.loggerFactory)
+	if err != nil {
+		return fmt.Errorf("[postgres.stores.Init] new client store: %w", err)
+	}
+
+	s.userStore = userStore
+	s.userPersonalInfoStore = userPersonalInfoStore
+	s.webClientStore = webClientStore
+	s.mobileClientStore = mobileClientStore
+	s.roleStore = roleStore
+	s.roleAssignmentStore = roleAssignmentStore
+	s.userRoleAssignmentStore = userRoleAssignmentStore
+	s.groupRoleAssignmentStore = groupRoleAssignmentStore
+	s.rolesStateStore = rolesStateStore
+	s.permissionStore = permissionStore
+	s.permissionGroupStore = permissionGroupStore
+	s.rolePermissionStore = rolePermissionStore
+	s.webUserAgentStore = webUserAgentStore
+	s.mobileUserAgentStore = mobileUserAgentStore
+	s.userWebSessionStore = userWebSessionStore
+	s.userMobileSessionStore = userMobileSessionStore
+	s.userAgentWebSessionStore = userAgentWebSessionStore
+	s.userAgentMobileSessionStore = userAgentMobileSessionStore
+	s.tokenEncryptionKeyStore = tokenEncryptionKeyStore
 	s.isInitialized = true
 	return nil
 }
