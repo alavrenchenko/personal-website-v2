@@ -15,12 +15,9 @@
 package sessions
 
 import (
-	"context"
 	"fmt"
 	"net/url"
 	"strconv"
-
-	"github.com/google/uuid"
 
 	amapierrors "personal-website-v2/app-manager/src/api/errors"
 	"personal-website-v2/app-manager/src/api/http/sessions/converter"
@@ -30,16 +27,14 @@ import (
 	"personal-website-v2/pkg/actions"
 	apierrors "personal-website-v2/pkg/api/errors"
 	apihttp "personal-website-v2/pkg/api/http"
-	"personal-website-v2/pkg/app"
-	logginghelper "personal-website-v2/pkg/helper/logging"
+	httpserverhelper "personal-website-v2/pkg/helper/net/http/server"
 	"personal-website-v2/pkg/logging"
 	lcontext "personal-website-v2/pkg/logging/context"
 	"personal-website-v2/pkg/net/http/server"
 )
 
 type AppSessionController struct {
-	appSessionId      uint64
-	actionManager     *actions.ActionManager
+	reqProcessor      *httpserverhelper.RequestProcessor
 	appSessionManager sessions.AppSessionManager
 	logger            logging.Logger[*lcontext.LogEntryContext]
 }
@@ -48,168 +43,101 @@ func NewAppSessionController(
 	appSessionId uint64,
 	actionManager *actions.ActionManager,
 	appSessionManager sessions.AppSessionManager,
-	loggerFactory logging.LoggerFactory[*lcontext.LogEntryContext]) (*AppSessionController, error) {
+	loggerFactory logging.LoggerFactory[*lcontext.LogEntryContext],
+) (*AppSessionController, error) {
 	l, err := loggerFactory.CreateLogger("httpcontrollers.sessions.AppSessionController")
-
 	if err != nil {
 		return nil, fmt.Errorf("[sessions.NewAppSessionController] create a logger: %w", err)
 	}
 
+	c := &httpserverhelper.RequestProcessorConfig{
+		ActionGroup:    amactions.ActionGroupAppSession,
+		OperationGroup: amactions.OperationGroupAppSession,
+		StopAppIfError: true,
+	}
+	p, err := httpserverhelper.NewRequestProcessor(appSessionId, actionManager, c, loggerFactory)
+	if err != nil {
+		return nil, fmt.Errorf("[sessions.NewAppSessionController] new request processor: %w", err)
+	}
+
 	return &AppSessionController{
-		appSessionId:      appSessionId,
-		actionManager:     actionManager,
+		reqProcessor:      p,
 		appSessionManager: appSessionManager,
 		logger:            l,
 	}, nil
-}
-
-func (c *AppSessionController) createAndStartActionAndOperation(ctx *server.HttpContext, funcCategory string, atype actions.ActionType, otype actions.OperationType) (*actions.Action, *actions.Operation) {
-	a, err := c.actionManager.CreateAndStart(ctx.Transaction, atype, actions.ActionCategoryHttp, amactions.ActionGroupAppSession, uuid.NullUUID{}, false)
-
-	if err != nil {
-		leCtx := logginghelper.CreateLogEntryContext(c.appSessionId, ctx.Transaction, nil, nil)
-		c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppSessionControllerEvent, err, funcCategory+" create and start an action")
-
-		if err = apihttp.InternalServerError(ctx); err != nil {
-			c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppSessionControllerEvent, err, funcCategory+" write an error (InternalServerError)")
-		}
-		return nil, nil
-	}
-
-	succeeded := false
-	defer func() {
-		if !succeeded {
-			c.completeActionAndOperation(ctx, funcCategory, a, nil, false)
-		}
-	}()
-
-	op, err := a.Operations.CreateAndStart(otype, actions.OperationCategoryCommon, amactions.OperationGroupAppSession, uuid.NullUUID{})
-
-	if err == nil {
-		succeeded = true
-		return a, op
-	}
-
-	leCtx := logginghelper.CreateLogEntryContext(c.appSessionId, ctx.Transaction, a, nil)
-	c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppSessionControllerEvent, err, funcCategory+" create and start an operation")
-
-	if err = apihttp.InternalServerError(ctx); err != nil {
-		c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppSessionControllerEvent, err, funcCategory+" write an error (InternalServerError)")
-	}
-	return nil, nil
-}
-
-func (c *AppSessionController) completeActionAndOperation(ctx *server.HttpContext, funcCategory string, a *actions.Action, op *actions.Operation, succeeded bool) {
-	if a == nil {
-		return
-	}
-
-	defer func() {
-		err := c.actionManager.Complete(a, succeeded)
-
-		if err == nil {
-			return
-		}
-
-		leCtx := logginghelper.CreateLogEntryContext(c.appSessionId, ctx.Transaction, a, op)
-		c.logger.FatalWithEventAndError(leCtx, events.HttpControllers_AppSessionControllerEvent, err, funcCategory+" complete an action")
-
-		go func() {
-			if err := app.Stop(); err != nil {
-				c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppSessionControllerEvent, err, funcCategory+" stop an app")
-			}
-		}()
-	}()
-
-	if op == nil {
-		return
-	}
-
-	err := a.Operations.Complete(op, succeeded)
-
-	if err == nil {
-		return
-	}
-
-	leCtx := logginghelper.CreateLogEntryContext(c.appSessionId, ctx.Transaction, a, op)
-	c.logger.FatalWithEventAndError(leCtx, events.HttpControllers_AppSessionControllerEvent, err, funcCategory+" complete an operation")
-
-	go func() {
-		if err := app.Stop(); err != nil {
-			c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppSessionControllerEvent, err, funcCategory+" stop an app")
-		}
-	}()
 }
 
 // GetById gets app session info by the specified app session ID.
 //
 //	[GET] /api/app-session?id={sessionId}
 func (c *AppSessionController) GetById(ctx *server.HttpContext) {
-	a, op := c.createAndStartActionAndOperation(ctx, "[sessions.AppSessionController.GetById]", amactions.ActionTypeAppSession_GetById, amactions.OperationTypeAppSessionController_GetById)
+	c.reqProcessor.Process(ctx, actions.ActionTypeApplication_Stop, actions.OperationTypeApplicationController_Stop,
+		func(opCtx *actions.OperationContext) bool {
+			leCtx := opCtx.CreateLogEntryContext()
+			vs, err := url.ParseQuery(ctx.Request.URL.RawQuery)
+			if err != nil {
+				c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppSessionControllerEvent, err,
+					"[sessions.AppSessionController.GetById] parse the URL-encoded query string",
+				)
 
-	if a == nil {
-		return
-	}
+				if err = apihttp.BadRequest(ctx, apierrors.ErrInvalidQueryString); err != nil {
+					c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppSessionControllerEvent, err,
+						"[sessions.AppSessionController.GetById] write BadRequest",
+					)
+				}
+				return false
+			}
 
-	succeeded := false
-	defer func() {
-		c.completeActionAndOperation(ctx, "[sessions.AppSessionController.GetById]", a, op, succeeded)
-	}()
+			id, err := strconv.ParseUint(vs.Get("id"), 10, 64)
+			if err != nil {
+				c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppSessionControllerEvent, err,
+					"[sessions.AppSessionController.GetById] id is missing or invalid",
+				)
 
-	if op == nil {
-		return
-	}
+				if err = apihttp.BadRequest(ctx, apierrors.NewApiError(apierrors.ApiErrorCodeInvalidQueryString, "id is missing or invalid")); err != nil {
+					c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppSessionControllerEvent, err,
+						"[sessions.AppSessionController.GetById] write BadRequest",
+					)
+				}
+				return false
+			}
 
-	opCtx := actions.NewOperationContext(context.Background(), c.appSessionId, ctx.Transaction, a, op)
-	leCtx := opCtx.CreateLogEntryContext()
-	vs, err := url.ParseQuery(ctx.Request.URL.RawQuery)
+			appSessionInfo, err := c.appSessionManager.FindById(opCtx, id)
+			if err != nil {
+				c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppSessionControllerEvent, err,
+					"[sessions.AppSessionController.GetById] find an app session by id",
+				)
 
-	if err != nil {
-		c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppSessionControllerEvent, err, "[sessions.AppSessionController.GetById] parse the URL-encoded query string")
+				if err = apihttp.InternalServerError(ctx); err != nil {
+					c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppSessionControllerEvent, err,
+						"[sessions.AppSessionController.GetById] write an error (InternalServerError)",
+					)
+				}
+				return false
+			}
 
-		if err = apihttp.BadRequest(ctx, apierrors.ErrInvalidQueryString); err != nil {
-			c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppSessionControllerEvent, err, "[sessions.AppSessionController.GetById] write BadRequest")
-		}
-		return
-	}
+			if appSessionInfo == nil {
+				c.logger.WarningWithEvent(leCtx, events.HttpControllers_AppSessionControllerEvent,
+					"[sessions.AppSessionController.GetById] app session not found",
+				)
 
-	id, err := strconv.ParseUint(vs.Get("id"), 10, 64)
+				if err = apihttp.NotFound(ctx, amapierrors.ErrAppSessionNotFound); err != nil {
+					c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppSessionControllerEvent, err,
+						"[sessions.AppSessionController.GetById] write NotFound",
+					)
+				}
+				return false
+			}
 
-	if err != nil {
-		c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppSessionControllerEvent, err, "[sessions.AppSessionController.GetById] id is missing or invalid")
+			ctx.Response.Writer.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 
-		if err = apihttp.BadRequest(ctx, apierrors.NewApiError(apierrors.ApiErrorCodeInvalidQueryString, "id is missing or invalid")); err != nil {
-			c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppSessionControllerEvent, err, "[sessions.AppSessionController.GetById] write BadRequest")
-		}
-		return
-	}
-
-	appSessionInfo, err := c.appSessionManager.FindById(opCtx, id)
-
-	if err != nil {
-		c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppSessionControllerEvent, err, "[sessions.AppSessionController.GetById] find an app session by id")
-
-		if err = apihttp.InternalServerError(ctx); err != nil {
-			c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppSessionControllerEvent, err, "[sessions.AppSessionController.GetById] write an error (InternalServerError)")
-		}
-		return
-	}
-
-	if appSessionInfo == nil {
-		c.logger.WarningWithEvent(leCtx, events.HttpControllers_AppSessionControllerEvent, "[sessions.AppSessionController.GetById] app session not found")
-
-		if err = apihttp.NotFound(ctx, amapierrors.ErrAppSessionNotFound); err != nil {
-			c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppSessionControllerEvent, err, "[sessions.AppSessionController.GetById] write NotFound")
-		}
-		return
-	}
-
-	ctx.Response.Writer.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
-
-	if err = apihttp.Ok(ctx, converter.ConvertToApiAppSessionInfo(appSessionInfo)); err != nil {
-		c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppSessionControllerEvent, err, "[sessions.AppSessionController.GetById] write Ok")
-		return
-	}
-
-	succeeded = true
+			if err = apihttp.Ok(ctx, converter.ConvertToApiAppSessionInfo(appSessionInfo)); err != nil {
+				c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppSessionControllerEvent, err,
+					"[sessions.AppSessionController.GetById] write Ok",
+				)
+				return false
+			}
+			return true
+		},
+	)
 }
