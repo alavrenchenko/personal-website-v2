@@ -15,15 +15,12 @@
 package app
 
 import (
-	"context"
 	"fmt"
-
-	"github.com/google/uuid"
 
 	"personal-website-v2/pkg/actions"
 	apihttp "personal-website-v2/pkg/api/http"
 	"personal-website-v2/pkg/app"
-	logginghelper "personal-website-v2/pkg/helper/logging"
+	httpserverhelper "personal-website-v2/pkg/helper/net/http/server"
 	"personal-website-v2/pkg/logging"
 	lcontext "personal-website-v2/pkg/logging/context"
 	"personal-website-v2/pkg/logging/events"
@@ -31,10 +28,9 @@ import (
 )
 
 type ApplicationController struct {
-	app           app.Application
-	appSessionId  uint64
-	actionManager *actions.ActionManager
-	logger        logging.Logger[*lcontext.LogEntryContext]
+	app          app.Application
+	reqProcessor *httpserverhelper.RequestProcessor
+	logger       logging.Logger[*lcontext.LogEntryContext]
 }
 
 func NewApplicationController(
@@ -48,120 +44,43 @@ func NewApplicationController(
 		return nil, fmt.Errorf("[app.NewApplicationController] create a logger: %w", err)
 	}
 
-	return &ApplicationController{
-		app:           a,
-		appSessionId:  appSessionId,
-		actionManager: actionManager,
-		logger:        l,
-	}, nil
-}
-
-func (c *ApplicationController) createAndStartActionAndOperation(ctx *server.HttpContext, funcCategory string, atype actions.ActionType, otype actions.OperationType) (*actions.Action, *actions.Operation) {
-	a, err := c.actionManager.CreateAndStart(ctx.Transaction, atype, actions.ActionCategoryHttp, actions.ActionGroupApplication, uuid.NullUUID{}, false)
-
+	c := &httpserverhelper.RequestProcessorConfig{
+		ActionGroup:    actions.ActionGroupApplication,
+		OperationGroup: actions.OperationGroupApplication,
+		StopAppIfError: true,
+	}
+	p, err := httpserverhelper.NewRequestProcessor(appSessionId, actionManager, c, loggerFactory)
 	if err != nil {
-		leCtx := logginghelper.CreateLogEntryContext(c.appSessionId, ctx.Transaction, nil, nil)
-		c.logger.ErrorWithEvent(leCtx, events.HttpControllers_ApplicationControllerEvent, err, funcCategory+" create and start an action")
-
-		if err = apihttp.InternalServerError(ctx); err != nil {
-			c.logger.ErrorWithEvent(leCtx, events.HttpControllers_ApplicationControllerEvent, err, funcCategory+" write an error (InternalServerError)")
-		}
-		return nil, nil
+		return nil, fmt.Errorf("[http.NewRequestPipelineLifetime] new request processor: %w", err)
 	}
 
-	succeeded := false
-	defer func() {
-		if !succeeded {
-			c.completeActionAndOperation(ctx, funcCategory, a, nil, false)
-		}
-	}()
-
-	op, err := a.Operations.CreateAndStart(otype, actions.OperationCategoryCommon, actions.OperationGroupApplication, uuid.NullUUID{})
-	if err == nil {
-		succeeded = true
-		return a, op
-	}
-
-	leCtx := logginghelper.CreateLogEntryContext(c.appSessionId, ctx.Transaction, a, nil)
-	c.logger.ErrorWithEvent(leCtx, events.HttpControllers_ApplicationControllerEvent, err, funcCategory+" create and start an operation")
-
-	if err = apihttp.InternalServerError(ctx); err != nil {
-		c.logger.ErrorWithEvent(leCtx, events.HttpControllers_ApplicationControllerEvent, err, funcCategory+" write an error (InternalServerError)")
-	}
-	return nil, nil
-}
-
-func (c *ApplicationController) completeActionAndOperation(ctx *server.HttpContext, funcCategory string, a *actions.Action, op *actions.Operation, succeeded bool) {
-	if a == nil {
-		return
-	}
-
-	defer func() {
-		err := c.actionManager.Complete(a, succeeded)
-		if err == nil {
-			return
-		}
-
-		leCtx := logginghelper.CreateLogEntryContext(c.appSessionId, ctx.Transaction, a, op)
-		c.logger.FatalWithEventAndError(leCtx, events.HttpControllers_ApplicationControllerEvent, err, funcCategory+" complete an action")
-
-		go func() {
-			if err := app.Stop(); err != nil {
-				c.logger.ErrorWithEvent(leCtx, events.HttpControllers_ApplicationControllerEvent, err, funcCategory+" stop an app")
-			}
-		}()
-	}()
-
-	if op == nil {
-		return
-	}
-
-	err := a.Operations.Complete(op, succeeded)
-	if err == nil {
-		return
-	}
-
-	leCtx := logginghelper.CreateLogEntryContext(c.appSessionId, ctx.Transaction, a, op)
-	c.logger.FatalWithEventAndError(leCtx, events.HttpControllers_ApplicationControllerEvent, err, funcCategory+" complete an operation")
-
-	go func() {
-		if err := app.Stop(); err != nil {
-			c.logger.ErrorWithEvent(leCtx, events.HttpControllers_ApplicationControllerEvent, err, funcCategory+" stop an app")
-		}
-	}()
+	return &ApplicationController{
+		app:          a,
+		reqProcessor: p,
+		logger:       l,
+	}, nil
 }
 
 // Stop stops an app.
 //
 //	[POST] /private/api/app/stop
 func (c *ApplicationController) Stop(ctx *server.HttpContext) {
-	a, op := c.createAndStartActionAndOperation(ctx, "[app.ApplicationController.Stop]", actions.ActionTypeApplication_Stop, actions.OperationTypeApplicationController_Stop)
-	if a == nil {
-		return
-	}
+	c.reqProcessor.Process(ctx, actions.ActionTypeApplication_Stop, actions.OperationTypeApplicationController_Stop,
+		func(opCtx *actions.OperationContext) bool {
+			leCtx := opCtx.CreateLogEntryContext()
+			go func() {
+				if err := c.app.StopWithContext(opCtx); err != nil {
+					c.logger.ErrorWithEvent(leCtx, events.HttpControllers_ApplicationControllerEvent, err, "[app.ApplicationController.Stop] stop an app")
+				}
+			}()
 
-	succeeded := false
-	defer func() {
-		c.completeActionAndOperation(ctx, "[app.ApplicationController.Stop]", a, op, succeeded)
-	}()
+			ctx.Response.Writer.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 
-	opCtx := actions.NewOperationContext(context.Background(), c.appSessionId, ctx.Transaction, a, op)
-	opCtx.UserId = ctx.User.UserId()
-	opCtx.ClientId = ctx.User.ClientId()
-	leCtx := opCtx.CreateLogEntryContext()
-
-	go func() {
-		if err := c.app.StopWithContext(opCtx); err != nil {
-			c.logger.ErrorWithEvent(leCtx, events.HttpControllers_ApplicationControllerEvent, err, "[app.ApplicationController.Stop] stop an app")
-		}
-	}()
-
-	ctx.Response.Writer.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
-
-	if err := apihttp.Ok(ctx, true); err != nil {
-		c.logger.ErrorWithEvent(leCtx, events.HttpControllers_ApplicationControllerEvent, err, "[app.ApplicationController.Stop] write Ok")
-		return
-	}
-
-	succeeded = true
+			if err := apihttp.Ok(ctx, true); err != nil {
+				c.logger.ErrorWithEvent(leCtx, events.HttpControllers_ApplicationControllerEvent, err, "[app.ApplicationController.Stop] write Ok")
+				return false
+			}
+			return true
+		},
+	)
 }
