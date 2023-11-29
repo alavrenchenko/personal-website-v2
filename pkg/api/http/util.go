@@ -81,8 +81,8 @@ func Conflict(ctx *server.HttpContext, err *errors.ApiError) error {
 }
 
 func InternalServerError(ctx *server.HttpContext) error {
-	if err2 := Error(ctx, http.StatusInternalServerError, errors.ErrInternal); err2 != nil {
-		return fmt.Errorf("[http.InternalServerError] write an error (InternalServerError): %w", err2)
+	if err := Error(ctx, http.StatusInternalServerError, errors.ErrInternal); err != nil {
+		return fmt.Errorf("[http.InternalServerError] write an error (InternalServerError): %w", err)
 	}
 	return nil
 }
