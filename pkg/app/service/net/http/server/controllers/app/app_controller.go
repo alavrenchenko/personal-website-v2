@@ -85,14 +85,14 @@ func (c *ApplicationController) Stop(ctx *server.HttpContext) {
 				c.logger.ErrorWithEvent(leCtx, events.HttpControllers_ApplicationControllerEvent, err, "[app.ApplicationController.Stop] authorize a user")
 
 				if err = apihttp.InternalServerError(ctx); err != nil {
-					c.logger.ErrorWithEvent(leCtx, events.HttpControllers_ApplicationControllerEvent, err, "[app.ApplicationController.Stop] write an error (InternalServerError)")
+					c.logger.ErrorWithEvent(leCtx, events.HttpControllers_ApplicationControllerEvent, err, "[app.ApplicationController.Stop] write InternalServerError")
 				}
 				return false
 			} else if !authorized {
 				c.logger.ErrorWithEvent(opCtx.CreateLogEntryContext(), events.HttpControllers_ApplicationControllerEvent, nil, "[app.ApplicationController.Stop] user not authorized")
 
 				if err = apihttp.Forbidden(ctx, errors.ErrPermissionDenied); err != nil {
-					c.logger.ErrorWithEvent(leCtx, events.HttpControllers_ApplicationControllerEvent, err, "[app.ApplicationController.Stop] write an error (Forbidden)")
+					c.logger.ErrorWithEvent(leCtx, events.HttpControllers_ApplicationControllerEvent, err, "[app.ApplicationController.Stop] write Forbidden")
 				}
 				return false
 			}
