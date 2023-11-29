@@ -15,7 +15,18 @@
 package errors
 
 var (
+	// Internal errors.
 	ErrInternal = NewApiError(ApiErrorCodeInternalError, "internal error")
 
+	// Common error codes (10000-19999).
+	// Network (Requests, Responses), Network Operations, Permissions, Auth (10000-10999).
+	//
+	// Client errors.
+	ErrUnauthenticated = NewApiError(ApiErrorCodeUnauthenticated, "user not authenticated")
+	// Access denied
+	// HTTP Mapping: 403 Forbidden
+	ErrPermissionDenied = NewApiError(ApiErrorCodePermissionDenied, "forbidden")
+
+	// Network Requests, Operations (11000-11999).
 	ErrInvalidQueryString = NewApiError(ApiErrorCodeInvalidQueryString, "invalid query string")
 )
