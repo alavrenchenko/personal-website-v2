@@ -23,6 +23,9 @@ const (
 	RoleAdmin  = "identity.admin"
 	RoleViewer = "identity.viewer"
 
+	// Application roles.
+	RoleAppAdmin = "identity.appAdmin"
+
 	// Client roles.
 	RoleClientAdmin  = "identity.clientAdmin"
 	RoleClientViewer = "identity.clientViewer"
@@ -91,6 +94,7 @@ var Roles = []string{
 	identity.RoleViewer,
 	RoleAdmin,
 	RoleViewer,
+	RoleAppAdmin,
 	RoleClientAdmin,
 	RoleClientViewer,
 	RolePermissionAdmin,
