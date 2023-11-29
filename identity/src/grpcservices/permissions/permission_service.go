@@ -86,7 +86,7 @@ func (s *PermissionService) GetAllByNames(ctx context.Context, req *permissionsp
 				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_PermissionServiceEvent, nil,
 					"[permissions.PermissionService.GetAllByNames] user not authenticated",
 				)
-				return apigrpcerrors.CreateGrpcError(codes.Unauthenticated, apierrors.NewApiError(apierrors.ApiErrorCodeUnauthenticated, "user not authenticated"))
+				return apigrpcerrors.CreateGrpcError(codes.Unauthenticated, apierrors.ErrUnauthenticated)
 			}
 
 			if authorized, err := s.identityManager.Authorize(opCtx.OperationCtx, opCtx.GrpcCtx.User, []string{iidentity.PermissionPermission_GetAllBy}); err != nil {
@@ -98,7 +98,7 @@ func (s *PermissionService) GetAllByNames(ctx context.Context, req *permissionsp
 				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_PermissionServiceEvent, nil,
 					"[permissions.PermissionService.GetAllByNames] user not authorized",
 				)
-				return apigrpcerrors.CreateGrpcError(codes.PermissionDenied, apierrors.NewApiError(apierrors.ApiErrorCodePermissionDenied, "forbidden"))
+				return apigrpcerrors.CreateGrpcError(codes.PermissionDenied, apierrors.ErrPermissionDenied)
 			}
 
 			if err := permissionvalidation.ValidateGetAllByNamesRequest(req); err != nil {

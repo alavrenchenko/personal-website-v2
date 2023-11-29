@@ -84,7 +84,7 @@ func (s *UserService) GetTypeAndStatusById(ctx context.Context, req *userspb.Get
 				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_UserServiceEvent, nil,
 					"[users.UserService.GetTypeAndStatusById] user not authenticated",
 				)
-				return apigrpcerrors.CreateGrpcError(codes.Unauthenticated, apierrors.NewApiError(apierrors.ApiErrorCodeUnauthenticated, "user not authenticated"))
+				return apigrpcerrors.CreateGrpcError(codes.Unauthenticated, apierrors.ErrUnauthenticated)
 			}
 
 			if authorized, err := s.identityManager.Authorize(opCtx.OperationCtx, opCtx.GrpcCtx.User, []string{iidentity.PermissionUser_GetTypeAndStatus}); err != nil {
@@ -96,7 +96,7 @@ func (s *UserService) GetTypeAndStatusById(ctx context.Context, req *userspb.Get
 				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_UserServiceEvent, nil,
 					"[users.UserService.GetTypeAndStatusById] user not authorized",
 				)
-				return apigrpcerrors.CreateGrpcError(codes.PermissionDenied, apierrors.NewApiError(apierrors.ApiErrorCodePermissionDenied, "forbidden"))
+				return apigrpcerrors.CreateGrpcError(codes.PermissionDenied, apierrors.ErrPermissionDenied)
 			}
 
 			t, status, err := s.userManager.GetTypeAndStatusById(opCtx.OperationCtx, req.Id)

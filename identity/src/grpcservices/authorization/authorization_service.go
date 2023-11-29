@@ -87,7 +87,7 @@ func (s *AuthorizationService) Authorize(ctx context.Context, req *authorization
 				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AuthorizationServiceEvent, nil,
 					"[authorization.AuthorizationService.Authorize] user not authenticated",
 				)
-				return apigrpcerrors.CreateGrpcError(codes.Unauthenticated, apierrors.NewApiError(apierrors.ApiErrorCodeUnauthenticated, "user not authenticated"))
+				return apigrpcerrors.CreateGrpcError(codes.Unauthenticated, apierrors.ErrUnauthenticated)
 			}
 
 			if authorized, err := s.identityManager.Authorize(opCtx.OperationCtx, opCtx.GrpcCtx.User, []string{iidentity.PermissionAuthorization_Authorize}); err != nil {
@@ -99,7 +99,7 @@ func (s *AuthorizationService) Authorize(ctx context.Context, req *authorization
 				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AuthorizationServiceEvent, nil,
 					"[authorization.AuthorizationService.Authorize] user not authorized",
 				)
-				return apigrpcerrors.CreateGrpcError(codes.PermissionDenied, apierrors.NewApiError(apierrors.ApiErrorCodePermissionDenied, "forbidden"))
+				return apigrpcerrors.CreateGrpcError(codes.PermissionDenied, apierrors.ErrPermissionDenied)
 			}
 
 			if err := validation.ValidateAuthorizeRequest(req); err != nil {
