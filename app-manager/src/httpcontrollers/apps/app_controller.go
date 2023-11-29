@@ -66,7 +66,7 @@ func NewAppController(
 	}
 	p, err := httpserverhelper.NewRequestProcessor(appSessionId, actionManager, c, loggerFactory)
 	if err != nil {
-		return nil, fmt.Errorf("[http.NewRequestPipelineLifetime] new request processor: %w", err)
+		return nil, fmt.Errorf("[apps.NewAppController] new request processor: %w", err)
 	}
 
 	return &AppController{
