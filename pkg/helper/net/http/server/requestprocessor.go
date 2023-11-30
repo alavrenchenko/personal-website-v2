@@ -21,9 +21,11 @@ import (
 	"github.com/google/uuid"
 
 	"personal-website-v2/pkg/actions"
+	apierrors "personal-website-v2/pkg/api/errors"
 	apihttp "personal-website-v2/pkg/api/http"
 	"personal-website-v2/pkg/app"
 	logginghelper "personal-website-v2/pkg/helper/logging"
+	"personal-website-v2/pkg/identity"
 	"personal-website-v2/pkg/logging"
 	lcontext "personal-website-v2/pkg/logging/context"
 	"personal-website-v2/pkg/logging/events"
@@ -37,15 +39,17 @@ type RequestProcessorConfig struct {
 }
 
 type RequestProcessor struct {
-	appSessionId  uint64
-	actionManager *actions.ActionManager
-	config        *RequestProcessorConfig
-	logger        logging.Logger[*lcontext.LogEntryContext]
+	appSessionId    uint64
+	actionManager   *actions.ActionManager
+	identityManager identity.IdentityManager
+	config          *RequestProcessorConfig
+	logger          logging.Logger[*lcontext.LogEntryContext]
 }
 
 func NewRequestProcessor(
 	appSessionId uint64,
 	actionManager *actions.ActionManager,
+	identityManager identity.IdentityManager,
 	config *RequestProcessorConfig,
 	loggerFactory logging.LoggerFactory[*lcontext.LogEntryContext],
 ) (*RequestProcessor, error) {
@@ -55,10 +59,11 @@ func NewRequestProcessor(
 	}
 
 	return &RequestProcessor{
-		appSessionId:  appSessionId,
-		actionManager: actionManager,
-		config:        config,
-		logger:        l,
+		appSessionId:    appSessionId,
+		actionManager:   actionManager,
+		identityManager: identityManager,
+		config:          config,
+		logger:          l,
 	}, nil
 }
 
@@ -134,4 +139,92 @@ func (p *RequestProcessor) Process(ctx *server.HttpContext, atype actions.Action
 	}()
 
 	succeeded = f(opCtx)
+}
+
+func (p *RequestProcessor) ProcessWithAuthnCheck(ctx *server.HttpContext, atype actions.ActionType, otype actions.OperationType, f func(ctx *actions.OperationContext) (succeeded bool)) {
+	p.Process(ctx, atype, otype,
+		func(opCtx *actions.OperationContext) bool {
+			if !ctx.User.IsAuthenticated() {
+				leCtx := opCtx.CreateLogEntryContext()
+				p.logger.ErrorWithEvent(leCtx, events.NetHttp_ServerEvent, nil, "[server.RequestProcessor.ProcessWithAuthnCheck] user not authenticated")
+
+				if err := apihttp.Unauthorized(ctx, apierrors.ErrUnauthenticated); err != nil {
+					p.logger.ErrorWithEvent(leCtx, events.NetHttp_ServerEvent, err, "[server.RequestProcessor.ProcessWithAuthnCheck] write Unauthorized")
+				}
+				return false
+			}
+			return f(opCtx)
+		},
+	)
+}
+
+func (p *RequestProcessor) ProcessWithAuthz(
+	ctx *server.HttpContext,
+	atype actions.ActionType,
+	otype actions.OperationType,
+	requiredPermissions []string,
+	f func(ctx *actions.OperationContext) (succeeded bool),
+) {
+	p.Process(ctx, atype, otype,
+		func(opCtx *actions.OperationContext) bool {
+			leCtx := opCtx.CreateLogEntryContext()
+
+			if authorized, err := p.identityManager.Authorize(opCtx, ctx.User, requiredPermissions); err != nil {
+				p.logger.ErrorWithEvent(leCtx, events.NetHttp_ServerEvent, err, "[server.RequestProcessor.ProcessWithAuthz] authorize a user")
+
+				if err = apihttp.InternalServerError(ctx); err != nil {
+					p.logger.ErrorWithEvent(leCtx, events.NetHttp_ServerEvent, err, "[server.RequestProcessor.ProcessWithAuthz] write InternalServerError")
+				}
+				return false
+			} else if !authorized {
+				p.logger.ErrorWithEvent(leCtx, events.NetHttp_ServerEvent, nil, "[server.RequestProcessor.ProcessWithAuthz] user not authorized")
+
+				if err = apihttp.Forbidden(ctx, apierrors.ErrPermissionDenied); err != nil {
+					p.logger.ErrorWithEvent(leCtx, events.NetHttp_ServerEvent, err, "[server.RequestProcessor.ProcessWithAuthz] write Forbidden")
+				}
+				return false
+			}
+			return f(opCtx)
+		},
+	)
+}
+
+func (p *RequestProcessor) ProcessWithAuthnCheckAndAuthz(
+	ctx *server.HttpContext,
+	atype actions.ActionType,
+	otype actions.OperationType,
+	requiredPermissions []string,
+	f func(ctx *actions.OperationContext) (succeeded bool),
+) {
+	p.Process(ctx, atype, otype,
+		func(opCtx *actions.OperationContext) bool {
+			leCtx := opCtx.CreateLogEntryContext()
+
+			if !ctx.User.IsAuthenticated() {
+				p.logger.ErrorWithEvent(leCtx, events.NetHttp_ServerEvent, nil, "[server.RequestProcessor.ProcessWithAuthnCheckAndAuthz] user not authenticated")
+
+				if err := apihttp.Unauthorized(ctx, apierrors.ErrUnauthenticated); err != nil {
+					p.logger.ErrorWithEvent(leCtx, events.NetHttp_ServerEvent, err, "[server.RequestProcessor.ProcessWithAuthnCheckAndAuthz] write Unauthorized")
+				}
+				return false
+			}
+
+			if authorized, err := p.identityManager.Authorize(opCtx, ctx.User, requiredPermissions); err != nil {
+				p.logger.ErrorWithEvent(leCtx, events.NetHttp_ServerEvent, err, "[server.RequestProcessor.ProcessWithAuthnCheckAndAuthz] authorize a user")
+
+				if err = apihttp.InternalServerError(ctx); err != nil {
+					p.logger.ErrorWithEvent(leCtx, events.NetHttp_ServerEvent, err, "[server.RequestProcessor.ProcessWithAuthnCheckAndAuthz] write InternalServerError")
+				}
+				return false
+			} else if !authorized {
+				p.logger.ErrorWithEvent(leCtx, events.NetHttp_ServerEvent, nil, "[server.RequestProcessor.ProcessWithAuthnCheckAndAuthz] user not authorized")
+
+				if err = apihttp.Forbidden(ctx, apierrors.ErrPermissionDenied); err != nil {
+					p.logger.ErrorWithEvent(leCtx, events.NetHttp_ServerEvent, err, "[server.RequestProcessor.ProcessWithAuthnCheckAndAuthz] write Forbidden")
+				}
+				return false
+			}
+			return f(opCtx)
+		},
+	)
 }
