@@ -37,7 +37,6 @@ import (
 
 type AppSessionController struct {
 	reqProcessor      *httpserverhelper.RequestProcessor
-	identityManager   identity.IdentityManager
 	appSessionManager sessions.AppSessionManager
 	logger            logging.Logger[*lcontext.LogEntryContext]
 }
@@ -59,14 +58,13 @@ func NewAppSessionController(
 		OperationGroup: amactions.OperationGroupAppSession,
 		StopAppIfError: true,
 	}
-	p, err := httpserverhelper.NewRequestProcessor(appSessionId, actionManager, c, loggerFactory)
+	p, err := httpserverhelper.NewRequestProcessor(appSessionId, actionManager, identityManager, c, loggerFactory)
 	if err != nil {
 		return nil, fmt.Errorf("[sessions.NewAppSessionController] new request processor: %w", err)
 	}
 
 	return &AppSessionController{
 		reqProcessor:      p,
-		identityManager:   identityManager,
 		appSessionManager: appSessionManager,
 		logger:            l,
 	}, nil
@@ -76,44 +74,10 @@ func NewAppSessionController(
 //
 //	[GET] /api/app-session?id={sessionId}
 func (c *AppSessionController) GetById(ctx *server.HttpContext) {
-	c.reqProcessor.Process(ctx, actions.ActionTypeApplication_Stop, actions.OperationTypeApplicationController_Stop,
+	c.reqProcessor.ProcessWithAuthnCheckAndAuthz(ctx, actions.ActionTypeApplication_Stop, actions.OperationTypeApplicationController_Stop,
+		[]string{amidentity.PermissionAppSession_Get},
 		func(opCtx *actions.OperationContext) bool {
 			leCtx := opCtx.CreateLogEntryContext()
-
-			if !ctx.User.IsAuthenticated() {
-				c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppSessionControllerEvent, nil,
-					"[sessions.AppSessionController.GetById] user not authenticated",
-				)
-				if err := apihttp.Unauthorized(ctx, apierrors.ErrUnauthenticated); err != nil {
-					c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppSessionControllerEvent, err,
-						"[sessions.AppSessionController.GetById] write Unauthorized",
-					)
-				}
-				return false
-			}
-
-			if authorized, err := c.identityManager.Authorize(opCtx, ctx.User, []string{amidentity.PermissionAppSession_Get}); err != nil {
-				c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppSessionControllerEvent, err,
-					"[sessions.AppSessionController.GetById] authorize a user",
-				)
-				if err = apihttp.InternalServerError(ctx); err != nil {
-					c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppSessionControllerEvent, err,
-						"[sessions.AppSessionController.GetById] write InternalServerError",
-					)
-				}
-				return false
-			} else if !authorized {
-				c.logger.ErrorWithEvent(opCtx.CreateLogEntryContext(), events.HttpControllers_AppSessionControllerEvent, nil,
-					"[sessions.AppSessionController.GetById] user not authorized",
-				)
-				if err = apihttp.Forbidden(ctx, apierrors.ErrPermissionDenied); err != nil {
-					c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppSessionControllerEvent, err,
-						"[sessions.AppSessionController.GetById] write Forbidden",
-					)
-				}
-				return false
-			}
-
 			vs, err := url.ParseQuery(ctx.Request.URL.RawQuery)
 			if err != nil {
 				c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppSessionControllerEvent, err,
