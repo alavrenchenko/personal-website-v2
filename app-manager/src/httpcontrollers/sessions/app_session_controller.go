@@ -74,7 +74,7 @@ func NewAppSessionController(
 //
 //	[GET] /api/app-session?id={sessionId}
 func (c *AppSessionController) GetById(ctx *server.HttpContext) {
-	c.reqProcessor.ProcessWithAuthnCheckAndAuthz(ctx, actions.ActionTypeApplication_Stop, actions.OperationTypeApplicationController_Stop,
+	c.reqProcessor.ProcessWithAuthnCheckAndAuthz(ctx, amactions.ActionTypeAppSession_GetById, amactions.OperationTypeAppSessionController_GetById,
 		[]string{amidentity.PermissionAppSession_Get},
 		func(opCtx *actions.OperationContext) bool {
 			leCtx := opCtx.CreateLogEntryContext()
