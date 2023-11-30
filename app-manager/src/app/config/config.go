@@ -24,11 +24,16 @@ type AppConfig struct {
 	Env     string          `json:"env"`
 	UserId  uint64          `json:"userId"`
 	Mode    AppMode         `json:"mode"`
+	Startup Startup         `json:"startup"`
 	Logging *config.Logging `json:"logging"`
 	Actions *config.Actions `json:"actions"`
 	Net     *config.Net     `json:"net"`
 	Db      *config.Db      `json:"db"`
 	Apis    Apis            `json:"apis"`
+}
+
+type Startup struct {
+	AllowedUsers []uint64 `json:"allowedUsers"`
 }
 
 type Apis struct {
@@ -37,4 +42,5 @@ type Apis struct {
 
 type ApiClients struct {
 	LoggingManagerService *apiclientconfig.ServiceClientConfig `json:"loggingManagerService"`
+	IdentityService       *apiclientconfig.ServiceClientConfig `json:"identityService"`
 }
