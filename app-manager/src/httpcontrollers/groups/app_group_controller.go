@@ -78,7 +78,7 @@ func NewAppGroupController(
 //	[GET] /api/app-group?id={groupId}
 //	[GET] /api/app-group?name={groupName}
 func (c *AppGroupController) GetByIdOrName(ctx *server.HttpContext) {
-	c.reqProcessor.ProcessWithAuthnCheckAndAuthz(ctx, actions.ActionTypeApplication_Stop, actions.OperationTypeApplicationController_Stop,
+	c.reqProcessor.ProcessWithAuthnCheckAndAuthz(ctx, amactions.ActionTypeAppGroup_GetByIdOrName, amactions.OperationTypeAppGroupController_GetByIdOrName,
 		[]string{amidentity.PermissionAppGroup_Get},
 		func(opCtx *actions.OperationContext) bool {
 			leCtx := opCtx.CreateLogEntryContext()
