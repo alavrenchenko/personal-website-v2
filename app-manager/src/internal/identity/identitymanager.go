@@ -27,19 +27,19 @@ import (
 	"personal-website-v2/pkg/logging/events"
 )
 
-type identityManager struct {
+type startupIdentityManager struct {
 	opExecutor   *actionhelper.OperationExecutor
 	appUserId    uint64
 	allowedUsers map[uint64]bool
 	logger       logging.Logger[*context.LogEntryContext]
 }
 
-var _ identity.IdentityManager = (*identityManager)(nil)
+var _ identity.IdentityManager = (*startupIdentityManager)(nil)
 
-func NewIdentityManager(appUserId uint64, allowedUsers []uint64, loggerFactory logging.LoggerFactory[*context.LogEntryContext]) (identity.IdentityManager, error) {
-	l, err := loggerFactory.CreateLogger("internal.identity.identityManager")
+func NewStartupIdentityManager(appUserId uint64, allowedUsers []uint64, loggerFactory logging.LoggerFactory[*context.LogEntryContext]) (identity.IdentityManager, error) {
+	l, err := loggerFactory.CreateLogger("internal.identity.startupIdentityManager")
 	if err != nil {
-		return nil, fmt.Errorf("[identity.NewIdentityManager] create a logger: %w", err)
+		return nil, fmt.Errorf("[identity.NewStartupIdentityManager] create a logger: %w", err)
 	}
 
 	c := &actionhelper.OperationExecutorConfig{
@@ -49,7 +49,7 @@ func NewIdentityManager(appUserId uint64, allowedUsers []uint64, loggerFactory l
 	}
 	e, err := actionhelper.NewOperationExecutor(c, loggerFactory)
 	if err != nil {
-		return nil, fmt.Errorf("[identity.NewIdentityManager] new operation executor: %w", err)
+		return nil, fmt.Errorf("[identity.NewStartupIdentityManager] new operation executor: %w", err)
 	}
 
 	us := make(map[uint64]bool, len(allowedUsers))
@@ -57,7 +57,7 @@ func NewIdentityManager(appUserId uint64, allowedUsers []uint64, loggerFactory l
 		us[id] = true
 	}
 
-	return &identityManager{
+	return &startupIdentityManager{
 		opExecutor:   e,
 		appUserId:    appUserId,
 		allowedUsers: us,
@@ -65,11 +65,11 @@ func NewIdentityManager(appUserId uint64, allowedUsers []uint64, loggerFactory l
 	}, nil
 }
 
-func (m *identityManager) Init() error {
+func (m *startupIdentityManager) Init() error {
 	return nil
 }
 
-func (m *identityManager) AuthenticateById(ctx *actions.OperationContext, userId, clientId nullable.Nullable[uint64]) (identity.Identity, error) {
+func (m *startupIdentityManager) AuthenticateById(ctx *actions.OperationContext, userId, clientId nullable.Nullable[uint64]) (identity.Identity, error) {
 	var i *identity.DefaultIdentity
 	err := m.opExecutor.Exec(ctx, actions.OperationTypeIdentityManager_AuthenticateById,
 		[]*actions.OperationParam{actions.NewOperationParam("userId", userId.Ptr()), actions.NewOperationParam("clientId", clientId.Ptr())},
@@ -78,7 +78,7 @@ func (m *identityManager) AuthenticateById(ctx *actions.OperationContext, userId
 				i = identity.NewDefaultIdentity(userId, identity.UserTypeUser, nullable.Nullable[uint64]{})
 
 				m.logger.InfoWithEvent(opCtx.CreateLogEntryContext(), events.Identity_UserAuthenticated,
-					"[identity.identityManager.AuthenticateById] user has been authenticated",
+					"[identity.startupIdentityManager.AuthenticateById] user has been authenticated",
 					logging.NewField("userId", userId.Value),
 				)
 			} else {
@@ -88,12 +88,12 @@ func (m *identityManager) AuthenticateById(ctx *actions.OperationContext, userId
 		},
 	)
 	if err != nil {
-		return nil, fmt.Errorf("[identity.identityManager.AuthenticateById] execute an operation: %w", err)
+		return nil, fmt.Errorf("[identity.startupIdentityManager.AuthenticateById] execute an operation: %w", err)
 	}
 	return i, nil
 }
 
-func (m *identityManager) AuthenticateByToken(ctx *actions.OperationContext, userToken, clientToken []byte) (identity.Identity, error) {
+func (m *startupIdentityManager) AuthenticateByToken(ctx *actions.OperationContext, userToken, clientToken []byte) (identity.Identity, error) {
 	var i *identity.DefaultIdentity
 	err := m.opExecutor.Exec(ctx, actions.OperationTypeIdentityManager_AuthenticateByToken, nil,
 		func(opCtx *actions.OperationContext) error {
@@ -102,12 +102,12 @@ func (m *identityManager) AuthenticateByToken(ctx *actions.OperationContext, use
 		},
 	)
 	if err != nil {
-		return nil, fmt.Errorf("[identity.identityManager.AuthenticateByToken] execute an operation: %w", err)
+		return nil, fmt.Errorf("[identity.startupIdentityManager.AuthenticateByToken] execute an operation: %w", err)
 	}
 	return i, nil
 }
 
-func (m *identityManager) Authorize(ctx *actions.OperationContext, user identity.Identity, requiredPermissions []string) (bool, error) {
+func (m *startupIdentityManager) Authorize(ctx *actions.OperationContext, user identity.Identity, requiredPermissions []string) (bool, error) {
 	authorized := false
 	err := m.opExecutor.Exec(ctx, actions.OperationTypeIdentityManager_Authorize,
 		[]*actions.OperationParam{
@@ -123,7 +123,7 @@ func (m *identityManager) Authorize(ctx *actions.OperationContext, user identity
 
 			userId := user.UserId()
 			if !userId.HasValue || !m.allowedUsers[userId.Value] {
-				m.logger.WarningWithEvent(opCtx.CreateLogEntryContext(), events.IdentityEvent, "[identity.identityManager.Authorize] permission not granted")
+				m.logger.WarningWithEvent(opCtx.CreateLogEntryContext(), events.IdentityEvent, "[identity.startupIdentityManager.Authorize] permission not granted")
 				return nil
 			}
 
@@ -131,7 +131,7 @@ func (m *identityManager) Authorize(ctx *actions.OperationContext, user identity
 			for i := 0; i < rpsLen; i++ {
 				p := requiredPermissions[i]
 				if p != PermissionAppSession_CreateAndStart && p != PermissionAppSession_Terminate {
-					m.logger.WarningWithEvent(opCtx.CreateLogEntryContext(), events.IdentityEvent, "[identity.identityManager.Authorize] permission not granted")
+					m.logger.WarningWithEvent(opCtx.CreateLogEntryContext(), events.IdentityEvent, "[identity.startupIdentityManager.Authorize] permission not granted")
 					return nil
 				}
 
@@ -141,7 +141,7 @@ func (m *identityManager) Authorize(ctx *actions.OperationContext, user identity
 			user.AddPermissionRoles(prs)
 			authorized = true
 
-			m.logger.InfoWithEvent(opCtx.CreateLogEntryContext(), events.Identity_UserAuthorized, "[identity.identityManager.Authorize] user has been authorized",
+			m.logger.InfoWithEvent(opCtx.CreateLogEntryContext(), events.Identity_UserAuthorized, "[identity.startupIdentityManager.Authorize] user has been authorized",
 				logging.NewField("userId", user.UserId().Ptr()),
 				logging.NewField("clientId", user.ClientId().Ptr()),
 				logging.NewField("permissionRoles", prs),
@@ -150,7 +150,7 @@ func (m *identityManager) Authorize(ctx *actions.OperationContext, user identity
 		},
 	)
 	if err != nil {
-		return false, fmt.Errorf("[identity.identityManager.Authorize] execute an operation: %w", err)
+		return false, fmt.Errorf("[identity.startupIdentityManager.Authorize] execute an operation: %w", err)
 	}
 	return authorized, nil
 }
