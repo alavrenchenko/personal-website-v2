@@ -26,6 +26,7 @@ import (
 	apigrpcerrors "personal-website-v2/pkg/api/grpc/errors"
 	"personal-website-v2/pkg/app"
 	logginghelper "personal-website-v2/pkg/helper/logging"
+	"personal-website-v2/pkg/identity"
 	"personal-website-v2/pkg/logging"
 	lcontext "personal-website-v2/pkg/logging/context"
 	"personal-website-v2/pkg/logging/events"
@@ -39,15 +40,17 @@ type RequestProcessorConfig struct {
 }
 
 type RequestProcessor struct {
-	appSessionId  uint64
-	actionManager *actions.ActionManager
-	config        *RequestProcessorConfig
-	logger        logging.Logger[*lcontext.LogEntryContext]
+	appSessionId    uint64
+	actionManager   *actions.ActionManager
+	identityManager identity.IdentityManager
+	config          *RequestProcessorConfig
+	logger          logging.Logger[*lcontext.LogEntryContext]
 }
 
 func NewRequestProcessor(
 	appSessionId uint64,
 	actionManager *actions.ActionManager,
+	identityManager identity.IdentityManager,
 	config *RequestProcessorConfig,
 	loggerFactory logging.LoggerFactory[*lcontext.LogEntryContext],
 ) (*RequestProcessor, error) {
@@ -57,10 +60,11 @@ func NewRequestProcessor(
 	}
 
 	return &RequestProcessor{
-		appSessionId:  appSessionId,
-		actionManager: actionManager,
-		config:        config,
-		logger:        l,
+		appSessionId:    appSessionId,
+		actionManager:   actionManager,
+		identityManager: identityManager,
+		config:          config,
+		logger:          l,
 	}, nil
 }
 
@@ -141,6 +145,77 @@ func (p *RequestProcessor) Process(incomingCtx context.Context, atype actions.Ac
 	err = f(NewGrpcOperationContext(grpcCtx, opCtx))
 	succeeded = err == nil
 	return err
+}
+
+func (p *RequestProcessor) ProcessWithAuthnCheck(incomingCtx context.Context, atype actions.ActionType, otype actions.OperationType, f func(ctx *GrpcOperationContext) error) error {
+	return p.Process(incomingCtx, atype, otype,
+		func(opCtx *GrpcOperationContext) error {
+			if !opCtx.GrpcCtx.User.IsAuthenticated() {
+				p.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.NetGrpc_ServerEvent, nil,
+					"[server.RequestProcessor.ProcessWithAuthnCheck] user not authenticated",
+				)
+				return apigrpcerrors.CreateGrpcError(codes.Unauthenticated, apierrors.ErrUnauthenticated)
+			}
+			return f(opCtx)
+		},
+	)
+}
+
+func (p *RequestProcessor) ProcessWithAuthz(
+	incomingCtx context.Context,
+	atype actions.ActionType,
+	otype actions.OperationType,
+	requiredPermissions []string,
+	f func(ctx *GrpcOperationContext) error,
+) error {
+	return p.Process(incomingCtx, atype, otype,
+		func(opCtx *GrpcOperationContext) error {
+			if authorized, err := p.identityManager.Authorize(opCtx.OperationCtx, opCtx.GrpcCtx.User, requiredPermissions); err != nil {
+				p.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.NetGrpc_ServerEvent, err,
+					"[server.RequestProcessor.ProcessWithAuthz] authorize a user",
+				)
+				return apigrpcerrors.CreateGrpcError(codes.Internal, apierrors.ErrInternal)
+			} else if !authorized {
+				p.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.NetGrpc_ServerEvent, nil,
+					"[server.RequestProcessor.ProcessWithAuthz] user not authorized",
+				)
+				return apigrpcerrors.CreateGrpcError(codes.PermissionDenied, apierrors.ErrPermissionDenied)
+			}
+			return f(opCtx)
+		},
+	)
+}
+
+func (p *RequestProcessor) ProcessWithAuthnCheckAndAuthz(
+	incomingCtx context.Context,
+	atype actions.ActionType,
+	otype actions.OperationType,
+	requiredPermissions []string,
+	f func(ctx *GrpcOperationContext) error,
+) error {
+	return p.Process(incomingCtx, atype, otype,
+		func(opCtx *GrpcOperationContext) error {
+			if !opCtx.GrpcCtx.User.IsAuthenticated() {
+				p.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.NetGrpc_ServerEvent, nil,
+					"[server.RequestProcessor.ProcessWithAuthnCheckAndAuthz] user not authenticated",
+				)
+				return apigrpcerrors.CreateGrpcError(codes.Unauthenticated, apierrors.ErrUnauthenticated)
+			}
+
+			if authorized, err := p.identityManager.Authorize(opCtx.OperationCtx, opCtx.GrpcCtx.User, requiredPermissions); err != nil {
+				p.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.NetGrpc_ServerEvent, err,
+					"[server.RequestProcessor.ProcessWithAuthnCheckAndAuthz] authorize a user",
+				)
+				return apigrpcerrors.CreateGrpcError(codes.Internal, apierrors.ErrInternal)
+			} else if !authorized {
+				p.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.NetGrpc_ServerEvent, nil,
+					"[server.RequestProcessor.ProcessWithAuthnCheckAndAuthz] user not authorized",
+				)
+				return apigrpcerrors.CreateGrpcError(codes.PermissionDenied, apierrors.ErrPermissionDenied)
+			}
+			return f(opCtx)
+		},
+	)
 }
 
 type GrpcOperationContext struct {
