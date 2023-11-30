@@ -24,7 +24,7 @@ type AppConfig struct {
 	Env     string          `json:"env"`
 	UserId  uint64          `json:"userId"`
 	Mode    AppMode         `json:"mode"`
-	Startup Startup         `json:"startup"`
+	Startup *Startup        `json:"startup"`
 	Logging *config.Logging `json:"logging"`
 	Actions *config.Actions `json:"actions"`
 	Net     *config.Net     `json:"net"`
