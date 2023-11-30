@@ -25,6 +25,7 @@ import (
 	"personal-website-v2/app-manager/src/api/grpc/sessions/converter"
 	amactions "personal-website-v2/app-manager/src/internal/actions"
 	amerrors "personal-website-v2/app-manager/src/internal/errors"
+	amidentity "personal-website-v2/app-manager/src/internal/identity"
 	"personal-website-v2/app-manager/src/internal/logging/events"
 	"personal-website-v2/app-manager/src/internal/sessions"
 	sessionspb "personal-website-v2/go-apis/app-manager/sessions"
@@ -33,6 +34,7 @@ import (
 	apigrpcerrors "personal-website-v2/pkg/api/grpc/errors"
 	"personal-website-v2/pkg/errors"
 	grpcserverhelper "personal-website-v2/pkg/helper/net/grpc/server"
+	"personal-website-v2/pkg/identity"
 	"personal-website-v2/pkg/logging"
 	lcontext "personal-website-v2/pkg/logging/context"
 )
@@ -40,6 +42,7 @@ import (
 type AppSessionService struct {
 	sessionspb.UnimplementedAppSessionServiceServer
 	reqProcessor      *grpcserverhelper.RequestProcessor
+	identityManager   identity.IdentityManager
 	appSessionManager sessions.AppSessionManager
 	logger            logging.Logger[*lcontext.LogEntryContext]
 }
@@ -47,6 +50,7 @@ type AppSessionService struct {
 func NewAppSessionService(
 	appSessionId uint64,
 	actionManager *actions.ActionManager,
+	identityManager identity.IdentityManager,
 	appSessionManager sessions.AppSessionManager,
 	loggerFactory logging.LoggerFactory[*lcontext.LogEntryContext],
 ) (*AppSessionService, error) {
@@ -67,6 +71,7 @@ func NewAppSessionService(
 
 	return &AppSessionService{
 		reqProcessor:      p,
+		identityManager:   identityManager,
 		appSessionManager: appSessionManager,
 		logger:            l,
 	}, nil
@@ -78,6 +83,25 @@ func (s *AppSessionService) CreateAndStart(ctx context.Context, req *sessionspb.
 	var res *sessionspb.CreateAndStartResponse
 	err := s.reqProcessor.Process(ctx, amactions.ActionTypeAppSession_CreateAndStart, amactions.OperationTypeAppSessionService_CreateAndStart,
 		func(opCtx *grpcserverhelper.GrpcOperationContext) error {
+			if !opCtx.GrpcCtx.User.IsAuthenticated() {
+				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AppSessionServiceEvent, nil,
+					"[sessions.AppSessionService.CreateAndStart] user not authenticated",
+				)
+				return apigrpcerrors.CreateGrpcError(codes.Unauthenticated, apierrors.ErrUnauthenticated)
+			}
+
+			if authorized, err := s.identityManager.Authorize(opCtx.OperationCtx, opCtx.GrpcCtx.User, []string{amidentity.PermissionAppSession_CreateAndStart}); err != nil {
+				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AppSessionServiceEvent, err,
+					"[sessions.AppSessionService.CreateAndStart] authorize a user",
+				)
+				return apigrpcerrors.CreateGrpcError(codes.Internal, apierrors.ErrInternal)
+			} else if !authorized {
+				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AppSessionServiceEvent, nil,
+					"[sessions.AppSessionService.CreateAndStart] user not authorized",
+				)
+				return apigrpcerrors.CreateGrpcError(codes.PermissionDenied, apierrors.ErrPermissionDenied)
+			}
+
 			id, err := s.appSessionManager.CreateAndStartWithContext(opCtx.OperationCtx, req.AppId)
 			if err != nil {
 				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AppSessionServiceEvent, err,
@@ -107,6 +131,25 @@ func (s *AppSessionService) CreateAndStart(ctx context.Context, req *sessionspb.
 func (s *AppSessionService) Terminate(ctx context.Context, req *sessionspb.TerminateRequest) (*emptypb.Empty, error) {
 	err := s.reqProcessor.Process(ctx, amactions.ActionTypeAppSession_Terminate, amactions.OperationTypeAppSessionService_Terminate,
 		func(opCtx *grpcserverhelper.GrpcOperationContext) error {
+			if !opCtx.GrpcCtx.User.IsAuthenticated() {
+				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AppSessionServiceEvent, nil,
+					"[sessions.AppSessionService.Terminate] user not authenticated",
+				)
+				return apigrpcerrors.CreateGrpcError(codes.Unauthenticated, apierrors.ErrUnauthenticated)
+			}
+
+			if authorized, err := s.identityManager.Authorize(opCtx.OperationCtx, opCtx.GrpcCtx.User, []string{amidentity.PermissionAppSession_Terminate}); err != nil {
+				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AppSessionServiceEvent, err,
+					"[sessions.AppSessionService.Terminate] authorize a user",
+				)
+				return apigrpcerrors.CreateGrpcError(codes.Internal, apierrors.ErrInternal)
+			} else if !authorized {
+				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AppSessionServiceEvent, nil,
+					"[sessions.AppSessionService.Terminate] user not authorized",
+				)
+				return apigrpcerrors.CreateGrpcError(codes.PermissionDenied, apierrors.ErrPermissionDenied)
+			}
+
 			if err := s.appSessionManager.TerminateWithContext(opCtx.OperationCtx, req.Id); err != nil {
 				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AppSessionServiceEvent, err,
 					"[sessions.AppSessionService.Terminate] terminate an app session",
@@ -135,6 +178,25 @@ func (s *AppSessionService) GetById(ctx context.Context, req *sessionspb.GetById
 	var res *sessionspb.GetByIdResponse
 	err := s.reqProcessor.Process(ctx, amactions.ActionTypeAppSession_GetById, amactions.OperationTypeAppSessionService_GetById,
 		func(opCtx *grpcserverhelper.GrpcOperationContext) error {
+			if !opCtx.GrpcCtx.User.IsAuthenticated() {
+				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AppSessionServiceEvent, nil,
+					"[sessions.AppSessionService.GetById] user not authenticated",
+				)
+				return apigrpcerrors.CreateGrpcError(codes.Unauthenticated, apierrors.ErrUnauthenticated)
+			}
+
+			if authorized, err := s.identityManager.Authorize(opCtx.OperationCtx, opCtx.GrpcCtx.User, []string{amidentity.PermissionAppSession_Get}); err != nil {
+				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AppSessionServiceEvent, err,
+					"[sessions.AppSessionService.GetById] authorize a user",
+				)
+				return apigrpcerrors.CreateGrpcError(codes.Internal, apierrors.ErrInternal)
+			} else if !authorized {
+				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AppSessionServiceEvent, nil,
+					"[sessions.AppSessionService.GetById] user not authorized",
+				)
+				return apigrpcerrors.CreateGrpcError(codes.PermissionDenied, apierrors.ErrPermissionDenied)
+			}
+
 			appSessionInfo, err := s.appSessionManager.FindById(opCtx.OperationCtx, req.Id)
 			if err != nil {
 				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AppSessionServiceEvent, err,
