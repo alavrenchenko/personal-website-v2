@@ -62,7 +62,7 @@ func NewRequestPipelineLifetime(
 		OperationGroup: actions.OperationGroupNetGrpcServer_RequestPipelineLifetime,
 		StopAppIfError: true,
 	}
-	p, err := grpcserverhelper.NewRequestProcessor(appSessionId, actionManager, c, loggerFactory)
+	p, err := grpcserverhelper.NewRequestProcessor(appSessionId, actionManager, identityManager, c, loggerFactory)
 	if err != nil {
 		return nil, fmt.Errorf("[grpc.NewRequestPipelineLifetime] new request processor: %w", err)
 	}
