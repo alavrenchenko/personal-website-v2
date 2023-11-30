@@ -284,14 +284,6 @@ func (a *Application) Start() (err error) {
 
 	a.log(logging.LogLevelInfo, events.ApplicationIsStarting, nil, "[app.Application.Start] starting the app...", logging.NewField("mode", a.config.Mode.String()))
 
-	if err = a.configureIdentity(); err != nil {
-		return fmt.Errorf("[app.Application.Start] configure the identity: %w", err)
-	}
-
-	if err = a.identityManager.Init(); err != nil {
-		return fmt.Errorf("[app.Application.Start] init an identity manager: %w", err)
-	}
-
 	if err = a.configureDb(); err != nil {
 		return fmt.Errorf("[app.Application.Start] configure DB: %w", err)
 	}
@@ -309,6 +301,14 @@ func (a *Application) Start() (err error) {
 	}
 
 	a.grpcLogger.SetAppSessionId(a.appSessionId.Value)
+
+	if err = a.configureIdentity(); err != nil {
+		return fmt.Errorf("[app.Application.Start] configure the identity: %w", err)
+	}
+
+	if err = a.identityManager.Init(); err != nil {
+		return fmt.Errorf("[app.Application.Start] init an identity manager: %w", err)
+	}
 
 	if err = a.configureActions(); err != nil {
 		return fmt.Errorf("[app.Application.Start] configure actions: %w", err)
