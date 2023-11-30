@@ -31,6 +31,7 @@ import (
 
 	"google.golang.org/grpc/grpclog"
 
+	identityclient "personal-website-v2/api-clients/identity"
 	"personal-website-v2/api-clients/loggingmanager"
 	amappconfig "personal-website-v2/app-manager/src/app/config"
 	actionencoding "personal-website-v2/app-manager/src/app/internal/loggingerror/encoding/actions"
@@ -38,8 +39,6 @@ import (
 	grpcserverencoding "personal-website-v2/app-manager/src/app/internal/loggingerror/encoding/net/grpc/server"
 	httpserverencoding "personal-website-v2/app-manager/src/app/internal/loggingerror/encoding/net/http/server"
 	amapplogging "personal-website-v2/app-manager/src/app/logging"
-	"personal-website-v2/app-manager/src/app/server/grpc"
-	"personal-website-v2/app-manager/src/app/server/http"
 	appservices "personal-website-v2/app-manager/src/grpcservices/apps"
 	groupservices "personal-website-v2/app-manager/src/grpcservices/groups"
 	sessionservices "personal-website-v2/app-manager/src/grpcservices/sessions"
@@ -49,6 +48,7 @@ import (
 	appmanager "personal-website-v2/app-manager/src/internal/apps/manager"
 	ampostgres "personal-website-v2/app-manager/src/internal/db/postgres"
 	groupmanager "personal-website-v2/app-manager/src/internal/groups/manager"
+	amidentity "personal-website-v2/app-manager/src/internal/identity"
 	sessionmanager "personal-website-v2/app-manager/src/internal/sessions/manager"
 	appspb "personal-website-v2/go-apis/app-manager/apps"
 	groupspb "personal-website-v2/go-apis/app-manager/groups"
@@ -58,11 +58,14 @@ import (
 	"personal-website-v2/pkg/app"
 	"personal-website-v2/pkg/app/service"
 	applogging "personal-website-v2/pkg/app/service/logging"
+	appgrpcserver "personal-website-v2/pkg/app/service/net/grpc/server"
+	apphttpserver "personal-website-v2/pkg/app/service/net/http/server"
 	appcontrollers "personal-website-v2/pkg/app/service/net/http/server/controllers/app"
 	"personal-website-v2/pkg/base/env"
 	"personal-website-v2/pkg/base/nullable"
 	"personal-website-v2/pkg/db/postgres"
 	errs "personal-website-v2/pkg/errors"
+	"personal-website-v2/pkg/identity"
 	"personal-website-v2/pkg/logging"
 	"personal-website-v2/pkg/logging/adapters/console"
 	filelogadapter "personal-website-v2/pkg/logging/adapters/filelog"
@@ -106,6 +109,8 @@ type Application struct {
 	mu                sync.Mutex
 	done              chan struct{}
 
+	identityManager identity.IdentityManager
+
 	tranManager   *actions.TransactionManager
 	actionManager *actions.ActionManager
 	actionLogger  *actionlogging.Logger
@@ -119,6 +124,7 @@ type Application struct {
 	postgresManager *postgres.DbManager[ampostgres.Stores]
 
 	loggingManagerService *loggingmanager.LoggingManagerService
+	identityService       *identityclient.IdentityService
 
 	appManager        *appmanager.AppManager
 	appGroupManager   *groupmanager.AppGroupManager
@@ -277,6 +283,14 @@ func (a *Application) Start() (err error) {
 	}
 
 	a.log(logging.LogLevelInfo, events.ApplicationIsStarting, nil, "[app.Application.Start] starting the app...", logging.NewField("mode", a.config.Mode.String()))
+
+	if err = a.configureIdentity(); err != nil {
+		return fmt.Errorf("[app.Application.Start] configure the identity: %w", err)
+	}
+
+	if err = a.identityManager.Init(); err != nil {
+		return fmt.Errorf("[app.Application.Start] init an identity manager: %w", err)
+	}
 
 	if err = a.configureDb(); err != nil {
 		return fmt.Errorf("[app.Application.Start] configure DB: %w", err)
@@ -570,6 +584,44 @@ func (a *Application) createFileLogAdapter(appInfo *info.AppInfo, loggingSession
 	return adapter, nil
 }
 
+func (a *Application) configureIdentity() error {
+	var im identity.IdentityManager
+	var is *identityclient.IdentityService
+	var err error
+
+	if a.config.Mode == amappconfig.AppModeStartup {
+		if im, err = amidentity.NewStartupIdentityManager(a.config.UserId, a.config.Startup.AllowedUsers, a.loggerFactory); err != nil {
+			return fmt.Errorf("[app.Application.configureIdentity] new startup identity manager: %w", err)
+		}
+	} else {
+		c := &identityclient.IdentityServiceClientConfig{
+			ServerAddr:  a.config.Apis.Clients.IdentityService.ServerAddr,
+			DialTimeout: time.Duration(a.config.Apis.Clients.IdentityService.DialTimeout) * time.Millisecond,
+			CallTimeout: time.Duration(a.config.Apis.Clients.IdentityService.CallTimeout) * time.Millisecond,
+		}
+		is = identityclient.NewIdentityService(c)
+		if err = is.Init(); err != nil {
+			return fmt.Errorf("[app.Application.configureIdentity] init an identity service: %w", err)
+		}
+
+		defer func() {
+			if a.identityManager == nil {
+				if err := is.Dispose(); err != nil {
+					a.log(logging.LogLevelError, events.ApplicationEvent, err, "[app.Application.configureIdentity] dispose of the identity service")
+				}
+			}
+		}()
+
+		if im, err = identity.NewIdentityManager(a.config.UserId, is, amidentity.Roles, amidentity.Permissions, a.loggerFactory); err != nil {
+			return fmt.Errorf("[app.Application.configureIdentity] new identity manager: %w", err)
+		}
+	}
+
+	a.identityManager = im
+	a.identityService = is
+	return nil
+}
+
 func (a *Application) configureDb() error {
 	dbConfigs := make(map[string]*postgres.DbConfig, len(a.config.Db.Postgres.Configs))
 	dataMap := make(map[string]string, len(a.config.Db.Postgres.DataMap))
@@ -675,7 +727,7 @@ func (a *Application) configureActions() error {
 }
 
 func (a *Application) configureHttpServer() error {
-	rpl, err := http.NewRequestPipelineLifetime(a.appSessionId.Value, a.tranManager, a.actionManager, a.loggerFactory)
+	rpl, err := apphttpserver.NewRequestPipelineLifetime(a.appSessionId.Value, a.tranManager, a.actionManager, a.identityManager, a.loggerFactory)
 	if err != nil {
 		return fmt.Errorf("[app.Application.configureHttpServer] new request pipeline lifetime: %w", err)
 	}
@@ -734,17 +786,18 @@ func (a *Application) configureHttpServer() error {
 }
 
 func (a *Application) configureHttpRouting(router *httpserverrouting.Router) error {
-	applicationController, err := appcontrollers.NewApplicationController(a, a.appSessionId.Value, a.actionManager, a.loggerFactory)
+	ic := &appcontrollers.ApplicationControllerIdentityConfig{StopPermission: amidentity.PermissionApp_Stop}
+	applicationController, err := appcontrollers.NewApplicationController(a, a.appSessionId.Value, a.actionManager, a.identityManager, ic, a.loggerFactory)
 	if err != nil {
 		return fmt.Errorf("[app.Application.configureHttpRouting] new application controller: %w", err)
 	}
 
-	appController, err := amappcontrollers.NewAppController(a.appSessionId.Value, a.actionManager, a.appManager, a.loggerFactory)
+	appController, err := amappcontrollers.NewAppController(a.appSessionId.Value, a.actionManager, a.identityManager, a.appManager, a.loggerFactory)
 	if err != nil {
 		return fmt.Errorf("[app.Application.configureHttpRouting] new app controller: %w", err)
 	}
 
-	appSessionController, err := sessioncontrollers.NewAppSessionController(a.appSessionId.Value, a.actionManager, a.appSessionManager, a.loggerFactory)
+	appSessionController, err := sessioncontrollers.NewAppSessionController(a.appSessionId.Value, a.actionManager, a.identityManager, a.appSessionManager, a.loggerFactory)
 	if err != nil {
 		return fmt.Errorf("[app.Application.configureHttpRouting] new app session controller: %w", err)
 	}
@@ -762,7 +815,7 @@ func (a *Application) configureHttpRouting(router *httpserverrouting.Router) err
 		return nil
 	}
 
-	appGroupController, err := groupcontrollers.NewAppGroupController(a.appSessionId.Value, a.actionManager, a.appGroupManager, a.loggerFactory)
+	appGroupController, err := groupcontrollers.NewAppGroupController(a.appSessionId.Value, a.actionManager, a.identityManager, a.appGroupManager, a.loggerFactory)
 	if err != nil {
 		return fmt.Errorf("[app.Application.configureHttpRouting] new app group controller: %w", err)
 	}
@@ -787,7 +840,7 @@ func (a *Application) configureGrpcLogging() error {
 }
 
 func (a *Application) configureGrpcServer() error {
-	rpl, err := grpc.NewRequestPipelineLifetime(a.appSessionId.Value, a.tranManager, a.actionManager, a.loggerFactory)
+	rpl, err := appgrpcserver.NewRequestPipelineLifetime(a.appSessionId.Value, a.tranManager, a.actionManager, a.identityManager, a.loggerFactory)
 	if err != nil {
 		return fmt.Errorf("[app.Application.configureGrpcServer] new request pipeline lifetime: %w", err)
 	}
@@ -839,12 +892,12 @@ func (a *Application) configureGrpcServer() error {
 }
 
 func (a *Application) configureGrpcServices(b *grpcserver.GrpcServerBuilder) error {
-	appService, err := appservices.NewAppService(a.appSessionId.Value, a.actionManager, a.appManager, a.loggerFactory)
+	appService, err := appservices.NewAppService(a.appSessionId.Value, a.actionManager, a.identityManager, a.appManager, a.loggerFactory)
 	if err != nil {
 		return fmt.Errorf("[app.Application.configureGrpcServices] new app service: %w", err)
 	}
 
-	appSessionService, err := sessionservices.NewAppSessionService(a.appSessionId.Value, a.actionManager, a.appSessionManager, a.loggerFactory)
+	appSessionService, err := sessionservices.NewAppSessionService(a.appSessionId.Value, a.actionManager, a.identityManager, a.appSessionManager, a.loggerFactory)
 	if err != nil {
 		return fmt.Errorf("[app.Application.configureGrpcServices] new app session service: %w", err)
 	}
@@ -856,7 +909,7 @@ func (a *Application) configureGrpcServices(b *grpcserver.GrpcServerBuilder) err
 		return nil
 	}
 
-	appGroupService, err := groupservices.NewAppGroupService(a.appSessionId.Value, a.actionManager, a.appGroupManager, a.loggerFactory)
+	appGroupService, err := groupservices.NewAppGroupService(a.appSessionId.Value, a.actionManager, a.identityManager, a.appGroupManager, a.loggerFactory)
 	if err != nil {
 		return fmt.Errorf("[app.Application.configureGrpcServices] new app group service: %w", err)
 	}
@@ -1003,6 +1056,12 @@ func (a *Application) stop(ctx *actions.OperationContext) {
 
 	if a.postgresManager != nil {
 		a.postgresManager.Dispose()
+	}
+
+	if a.identityService != nil {
+		if err := a.identityService.Dispose(); err != nil {
+			a.logWithContext(leCtx, logging.LogLevelError, events.ApplicationEvent, err, "[app.Application.stop] dispose of the identity service")
+		}
 	}
 
 	a.isStarted.Store(false)
