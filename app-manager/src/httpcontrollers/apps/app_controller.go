@@ -80,7 +80,7 @@ func NewAppController(
 //	[GET] /api/apps?id={appId}
 //	[GET] /api/apps?name={appName}
 func (c *AppController) GetByIdOrName(ctx *server.HttpContext) {
-	c.reqProcessor.ProcessWithAuthnCheckAndAuthz(ctx, actions.ActionTypeApplication_Stop, actions.OperationTypeApplicationController_Stop,
+	c.reqProcessor.ProcessWithAuthnCheckAndAuthz(ctx, amactions.ActionTypeApps_GetByIdOrName, amactions.OperationTypeAppController_GetByIdOrName,
 		[]string{amidentity.PermissionApps_Get},
 		func(opCtx *actions.OperationContext) bool {
 			leCtx := opCtx.CreateLogEntryContext()
@@ -173,7 +173,7 @@ func (c *AppController) GetByIdOrName(ctx *server.HttpContext) {
 //
 //	[GET] /api/apps/status?id={appId}
 func (c *AppController) GetStatusById(ctx *server.HttpContext) {
-	c.reqProcessor.ProcessWithAuthnCheckAndAuthz(ctx, actions.ActionTypeApplication_Stop, actions.OperationTypeApplicationController_Stop,
+	c.reqProcessor.ProcessWithAuthnCheckAndAuthz(ctx, amactions.ActionTypeApps_GetStatusById, amactions.OperationTypeAppController_GetStatusById,
 		[]string{amidentity.PermissionApps_GetStatus},
 		func(opCtx *actions.OperationContext) bool {
 			leCtx := opCtx.CreateLogEntryContext()
