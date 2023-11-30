@@ -42,7 +42,6 @@ import (
 type PermissionService struct {
 	permissionspb.UnimplementedPermissionServiceServer
 	reqProcessor      *grpcserverhelper.RequestProcessor
-	identityManager   identity.IdentityManager
 	permissionManager permissions.PermissionManager
 	logger            logging.Logger[*lcontext.LogEntryContext]
 }
@@ -64,14 +63,13 @@ func NewPermissionService(
 		OperationGroup: iactions.OperationGroupPermission,
 		StopAppIfError: true,
 	}
-	p, err := grpcserverhelper.NewRequestProcessor(appSessionId, actionManager, c, loggerFactory)
+	p, err := grpcserverhelper.NewRequestProcessor(appSessionId, actionManager, identityManager, c, loggerFactory)
 	if err != nil {
 		return nil, fmt.Errorf("[permissions.NewPermissionService] new request processor: %w", err)
 	}
 
 	return &PermissionService{
 		reqProcessor:      p,
-		identityManager:   identityManager,
 		permissionManager: permissionManager,
 		logger:            l,
 	}, nil
@@ -80,27 +78,9 @@ func NewPermissionService(
 // GetAllByNames gets all permissions by the specified permission names.
 func (s *PermissionService) GetAllByNames(ctx context.Context, req *permissionspb.GetAllByNamesRequest) (*permissionspb.GetAllByNamesResponse, error) {
 	var res *permissionspb.GetAllByNamesResponse
-	err := s.reqProcessor.Process(ctx, iactions.ActionTypePermission_GetAllByNames, iactions.OperationTypePermissionService_GetAllByNames,
+	err := s.reqProcessor.ProcessWithAuthnCheckAndAuthz(ctx, iactions.ActionTypePermission_GetAllByNames, iactions.OperationTypePermissionService_GetAllByNames,
+		[]string{iidentity.PermissionPermission_GetAllBy},
 		func(opCtx *grpcserverhelper.GrpcOperationContext) error {
-			if !opCtx.GrpcCtx.User.IsAuthenticated() {
-				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_PermissionServiceEvent, nil,
-					"[permissions.PermissionService.GetAllByNames] user not authenticated",
-				)
-				return apigrpcerrors.CreateGrpcError(codes.Unauthenticated, apierrors.ErrUnauthenticated)
-			}
-
-			if authorized, err := s.identityManager.Authorize(opCtx.OperationCtx, opCtx.GrpcCtx.User, []string{iidentity.PermissionPermission_GetAllBy}); err != nil {
-				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_PermissionServiceEvent, err,
-					"[permissions.PermissionService.GetAllByNames] authorize a user",
-				)
-				return apigrpcerrors.CreateGrpcError(codes.Internal, apierrors.ErrInternal)
-			} else if !authorized {
-				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_PermissionServiceEvent, nil,
-					"[permissions.PermissionService.GetAllByNames] user not authorized",
-				)
-				return apigrpcerrors.CreateGrpcError(codes.PermissionDenied, apierrors.ErrPermissionDenied)
-			}
-
 			if err := permissionvalidation.ValidateGetAllByNamesRequest(req); err != nil {
 				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_PermissionServiceEvent, nil,
 					"[permissions.PermissionService.GetAllByNames] "+err.Message(),

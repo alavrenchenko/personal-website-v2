@@ -42,7 +42,6 @@ import (
 type AuthenticationService struct {
 	authenticationpb.UnimplementedAuthenticationServiceServer
 	reqProcessor          *grpcserverhelper.RequestProcessor
-	identityManager       identity.IdentityManager
 	authenticationManager authentication.AuthenticationManager
 	logger                logging.Logger[*lcontext.LogEntryContext]
 }
@@ -64,14 +63,13 @@ func NewAuthenticationService(
 		OperationGroup: iactions.OperationGroupAuthentication,
 		StopAppIfError: true,
 	}
-	p, err := grpcserverhelper.NewRequestProcessor(appSessionId, actionManager, c, loggerFactory)
+	p, err := grpcserverhelper.NewRequestProcessor(appSessionId, actionManager, identityManager, c, loggerFactory)
 	if err != nil {
 		return nil, fmt.Errorf("[authentication.NewAuthenticationService] new request processor: %w", err)
 	}
 
 	return &AuthenticationService{
 		reqProcessor:          p,
-		identityManager:       identityManager,
 		authenticationManager: authenticationManager,
 		logger:                l,
 	}, nil
@@ -80,27 +78,9 @@ func NewAuthenticationService(
 // CreateUserToken creates a user's token and returns it if the operation is successful.
 func (s *AuthenticationService) CreateUserToken(ctx context.Context, req *authenticationpb.CreateUserTokenRequest) (*authenticationpb.CreateUserTokenResponse, error) {
 	var res *authenticationpb.CreateUserTokenResponse
-	err := s.reqProcessor.Process(ctx, iactions.ActionTypeAuthentication_CreateUserToken, iactions.OperationTypeAuthenticationService_CreateUserToken,
+	err := s.reqProcessor.ProcessWithAuthnCheckAndAuthz(ctx, iactions.ActionTypeAuthentication_CreateUserToken, iactions.OperationTypeAuthenticationService_CreateUserToken,
+		[]string{iidentity.PermissionAuthentication_CreateUserToken},
 		func(opCtx *grpcserverhelper.GrpcOperationContext) error {
-			if !opCtx.GrpcCtx.User.IsAuthenticated() {
-				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AuthenticationServiceEvent, nil,
-					"[authentication.AuthenticationService.CreateUserToken] user not authenticated",
-				)
-				return apigrpcerrors.CreateGrpcError(codes.Unauthenticated, apierrors.ErrUnauthenticated)
-			}
-
-			if authorized, err := s.identityManager.Authorize(opCtx.OperationCtx, opCtx.GrpcCtx.User, []string{iidentity.PermissionAuthentication_CreateUserToken}); err != nil {
-				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AuthenticationServiceEvent, err,
-					"[authentication.AuthenticationService.CreateUserToken] authorize a user",
-				)
-				return apigrpcerrors.CreateGrpcError(codes.Internal, apierrors.ErrInternal)
-			} else if !authorized {
-				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AuthenticationServiceEvent, nil,
-					"[authentication.AuthenticationService.CreateUserToken] user not authorized",
-				)
-				return apigrpcerrors.CreateGrpcError(codes.PermissionDenied, apierrors.ErrPermissionDenied)
-			}
-
 			t, err := s.authenticationManager.CreateUserToken(opCtx.OperationCtx, req.UserSessionId)
 			if err != nil {
 				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AuthenticationServiceEvent, err,
@@ -122,27 +102,9 @@ func (s *AuthenticationService) CreateUserToken(ctx context.Context, req *authen
 // CreateClientToken creates a client token and returns it if the operation is successful.
 func (s *AuthenticationService) CreateClientToken(ctx context.Context, req *authenticationpb.CreateClientTokenRequest) (*authenticationpb.CreateClientTokenResponse, error) {
 	var res *authenticationpb.CreateClientTokenResponse
-	err := s.reqProcessor.Process(ctx, iactions.ActionTypeAuthentication_CreateClientToken, iactions.OperationTypeAuthenticationService_CreateClientToken,
+	err := s.reqProcessor.ProcessWithAuthnCheckAndAuthz(ctx, iactions.ActionTypeAuthentication_CreateClientToken, iactions.OperationTypeAuthenticationService_CreateClientToken,
+		[]string{iidentity.PermissionAuthentication_CreateClientToken},
 		func(opCtx *grpcserverhelper.GrpcOperationContext) error {
-			if !opCtx.GrpcCtx.User.IsAuthenticated() {
-				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AuthenticationServiceEvent, nil,
-					"[authentication.AuthenticationService.CreateClientToken] user not authenticated",
-				)
-				return apigrpcerrors.CreateGrpcError(codes.Unauthenticated, apierrors.ErrUnauthenticated)
-			}
-
-			if authorized, err := s.identityManager.Authorize(opCtx.OperationCtx, opCtx.GrpcCtx.User, []string{iidentity.PermissionAuthentication_CreateClientToken}); err != nil {
-				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AuthenticationServiceEvent, err,
-					"[authentication.AuthenticationService.CreateClientToken] authorize a user",
-				)
-				return apigrpcerrors.CreateGrpcError(codes.Internal, apierrors.ErrInternal)
-			} else if !authorized {
-				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AuthenticationServiceEvent, nil,
-					"[authentication.AuthenticationService.CreateClientToken] user not authorized",
-				)
-				return apigrpcerrors.CreateGrpcError(codes.PermissionDenied, apierrors.ErrPermissionDenied)
-			}
-
 			t, err := s.authenticationManager.CreateClientToken(opCtx.OperationCtx, req.ClientId)
 			if err != nil {
 				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AuthenticationServiceEvent, err,
@@ -164,27 +126,9 @@ func (s *AuthenticationService) CreateClientToken(ctx context.Context, req *auth
 // Authenticate authenticates a user and a client.
 func (s *AuthenticationService) Authenticate(ctx context.Context, req *authenticationpb.AuthenticateRequest) (*authenticationpb.AuthenticateResponse, error) {
 	var res *authenticationpb.AuthenticateResponse
-	err := s.reqProcessor.Process(ctx, iactions.ActionTypeAuthentication_Authenticate, iactions.OperationTypeAuthenticationService_Authenticate,
+	err := s.reqProcessor.ProcessWithAuthnCheckAndAuthz(ctx, iactions.ActionTypeAuthentication_Authenticate, iactions.OperationTypeAuthenticationService_Authenticate,
+		[]string{iidentity.PermissionAuthentication_Authenticate},
 		func(opCtx *grpcserverhelper.GrpcOperationContext) error {
-			if !opCtx.GrpcCtx.User.IsAuthenticated() {
-				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AuthenticationServiceEvent, nil,
-					"[authentication.AuthenticationService.Authenticate] user not authenticated",
-				)
-				return apigrpcerrors.CreateGrpcError(codes.Unauthenticated, apierrors.ErrUnauthenticated)
-			}
-
-			if authorized, err := s.identityManager.Authorize(opCtx.OperationCtx, opCtx.GrpcCtx.User, []string{iidentity.PermissionAuthentication_Authenticate}); err != nil {
-				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AuthenticationServiceEvent, err,
-					"[authentication.AuthenticationService.Authenticate] authorize a user",
-				)
-				return apigrpcerrors.CreateGrpcError(codes.Internal, apierrors.ErrInternal)
-			} else if !authorized {
-				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AuthenticationServiceEvent, nil,
-					"[authentication.AuthenticationService.Authenticate] user not authorized",
-				)
-				return apigrpcerrors.CreateGrpcError(codes.PermissionDenied, apierrors.ErrPermissionDenied)
-			}
-
 			if err := validation.ValidateAuthenticateRequest(req); err != nil {
 				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AuthenticationServiceEvent, nil,
 					"[authentication.AuthenticationService.Authenticate] "+err.Message(),
@@ -234,27 +178,9 @@ func (s *AuthenticationService) Authenticate(ctx context.Context, req *authentic
 // AuthenticateUser authenticates a user.
 func (s *AuthenticationService) AuthenticateUser(ctx context.Context, req *authenticationpb.AuthenticateUserRequest) (*authenticationpb.AuthenticateUserResponse, error) {
 	var res *authenticationpb.AuthenticateUserResponse
-	err := s.reqProcessor.Process(ctx, iactions.ActionTypeAuthentication_AuthenticateUser, iactions.OperationTypeAuthenticationService_AuthenticateUser,
+	err := s.reqProcessor.ProcessWithAuthnCheckAndAuthz(ctx, iactions.ActionTypeAuthentication_AuthenticateUser, iactions.OperationTypeAuthenticationService_AuthenticateUser,
+		[]string{iidentity.PermissionAuthentication_AuthenticateUser},
 		func(opCtx *grpcserverhelper.GrpcOperationContext) error {
-			if !opCtx.GrpcCtx.User.IsAuthenticated() {
-				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AuthenticationServiceEvent, nil,
-					"[authentication.AuthenticationService.AuthenticateUser] user not authenticated",
-				)
-				return apigrpcerrors.CreateGrpcError(codes.Unauthenticated, apierrors.ErrUnauthenticated)
-			}
-
-			if authorized, err := s.identityManager.Authorize(opCtx.OperationCtx, opCtx.GrpcCtx.User, []string{iidentity.PermissionAuthentication_AuthenticateUser}); err != nil {
-				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AuthenticationServiceEvent, err,
-					"[authentication.AuthenticationService.AuthenticateUser] authorize a user",
-				)
-				return apigrpcerrors.CreateGrpcError(codes.Internal, apierrors.ErrInternal)
-			} else if !authorized {
-				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AuthenticationServiceEvent, nil,
-					"[authentication.AuthenticationService.AuthenticateUser] user not authorized",
-				)
-				return apigrpcerrors.CreateGrpcError(codes.PermissionDenied, apierrors.ErrPermissionDenied)
-			}
-
 			if err := validation.ValidateAuthenticateUserRequest(req); err != nil {
 				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AuthenticationServiceEvent, nil,
 					"[authentication.AuthenticationService.AuthenticateUser] "+err.Message(),
@@ -299,27 +225,9 @@ func (s *AuthenticationService) AuthenticateUser(ctx context.Context, req *authe
 // AuthenticateClient authenticates a client.
 func (s *AuthenticationService) AuthenticateClient(ctx context.Context, req *authenticationpb.AuthenticateClientRequest) (*authenticationpb.AuthenticateClientResponse, error) {
 	var res *authenticationpb.AuthenticateClientResponse
-	err := s.reqProcessor.Process(ctx, iactions.ActionTypeAuthentication_AuthenticateClient, iactions.OperationTypeAuthenticationService_AuthenticateClient,
+	err := s.reqProcessor.ProcessWithAuthnCheckAndAuthz(ctx, iactions.ActionTypeAuthentication_AuthenticateClient, iactions.OperationTypeAuthenticationService_AuthenticateClient,
+		[]string{iidentity.PermissionAuthentication_AuthenticateClient},
 		func(opCtx *grpcserverhelper.GrpcOperationContext) error {
-			if !opCtx.GrpcCtx.User.IsAuthenticated() {
-				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AuthenticationServiceEvent, nil,
-					"[authentication.AuthenticationService.AuthenticateClient] user not authenticated",
-				)
-				return apigrpcerrors.CreateGrpcError(codes.Unauthenticated, apierrors.ErrUnauthenticated)
-			}
-
-			if authorized, err := s.identityManager.Authorize(opCtx.OperationCtx, opCtx.GrpcCtx.User, []string{iidentity.PermissionAuthentication_AuthenticateClient}); err != nil {
-				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AuthenticationServiceEvent, err,
-					"[authentication.AuthenticationService.AuthenticateClient] authorize a user",
-				)
-				return apigrpcerrors.CreateGrpcError(codes.Internal, apierrors.ErrInternal)
-			} else if !authorized {
-				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AuthenticationServiceEvent, nil,
-					"[authentication.AuthenticationService.AuthenticateClient] user not authorized",
-				)
-				return apigrpcerrors.CreateGrpcError(codes.PermissionDenied, apierrors.ErrPermissionDenied)
-			}
-
 			if err := validation.ValidateAuthenticateClientRequest(req); err != nil {
 				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AuthenticationServiceEvent, nil,
 					"[authentication.AuthenticationService.AuthenticateClient] "+err.Message(),

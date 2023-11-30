@@ -41,10 +41,9 @@ import (
 
 type RoleService struct {
 	rolespb.UnimplementedRoleServiceServer
-	reqProcessor    *grpcserverhelper.RequestProcessor
-	identityManager identity.IdentityManager
-	roleManager     roles.RoleManager
-	logger          logging.Logger[*lcontext.LogEntryContext]
+	reqProcessor *grpcserverhelper.RequestProcessor
+	roleManager  roles.RoleManager
+	logger       logging.Logger[*lcontext.LogEntryContext]
 }
 
 func NewRoleService(
@@ -64,43 +63,24 @@ func NewRoleService(
 		OperationGroup: iactions.OperationGroupRole,
 		StopAppIfError: true,
 	}
-	p, err := grpcserverhelper.NewRequestProcessor(appSessionId, actionManager, c, loggerFactory)
+	p, err := grpcserverhelper.NewRequestProcessor(appSessionId, actionManager, identityManager, c, loggerFactory)
 	if err != nil {
 		return nil, fmt.Errorf("[roles.NewRoleService] new request processor: %w", err)
 	}
 
 	return &RoleService{
-		reqProcessor:    p,
-		identityManager: identityManager,
-		roleManager:     roleManager,
-		logger:          l,
+		reqProcessor: p,
+		roleManager:  roleManager,
+		logger:       l,
 	}, nil
 }
 
 // GetAllByNames gets all roles by the specified role names.
 func (s *RoleService) GetAllByNames(ctx context.Context, req *rolespb.GetAllByNamesRequest) (*rolespb.GetAllByNamesResponse, error) {
 	var res *rolespb.GetAllByNamesResponse
-	err := s.reqProcessor.Process(ctx, iactions.ActionTypeRole_GetAllByNames, iactions.OperationTypeRoleService_GetAllByNames,
+	err := s.reqProcessor.ProcessWithAuthnCheckAndAuthz(ctx, iactions.ActionTypeRole_GetAllByNames, iactions.OperationTypeRoleService_GetAllByNames,
+		[]string{iidentity.PermissionRole_GetAllBy},
 		func(opCtx *grpcserverhelper.GrpcOperationContext) error {
-			if !opCtx.GrpcCtx.User.IsAuthenticated() {
-				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_RoleServiceEvent, nil,
-					"[roles.RoleService.GetAllByNames] user not authenticated",
-				)
-				return apigrpcerrors.CreateGrpcError(codes.Unauthenticated, apierrors.ErrUnauthenticated)
-			}
-
-			if authorized, err := s.identityManager.Authorize(opCtx.OperationCtx, opCtx.GrpcCtx.User, []string{iidentity.PermissionRole_GetAllBy}); err != nil {
-				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_RoleServiceEvent, err,
-					"[roles.RoleService.GetAllByNames] authorize a user",
-				)
-				return apigrpcerrors.CreateGrpcError(codes.Internal, apierrors.ErrInternal)
-			} else if !authorized {
-				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_RoleServiceEvent, nil,
-					"[roles.RoleService.GetAllByNames] user not authorized",
-				)
-				return apigrpcerrors.CreateGrpcError(codes.PermissionDenied, apierrors.ErrPermissionDenied)
-			}
-
 			if err := rolevalidation.ValidateGetAllByNamesRequest(req); err != nil {
 				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_RoleServiceEvent, nil,
 					"[roles.RoleService.GetAllByNames] "+err.Message(),

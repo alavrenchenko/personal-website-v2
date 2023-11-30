@@ -39,10 +39,9 @@ import (
 
 type UserService struct {
 	userspb.UnimplementedUserServiceServer
-	reqProcessor    *grpcserverhelper.RequestProcessor
-	identityManager identity.IdentityManager
-	userManager     users.UserManager
-	logger          logging.Logger[*lcontext.LogEntryContext]
+	reqProcessor *grpcserverhelper.RequestProcessor
+	userManager  users.UserManager
+	logger       logging.Logger[*lcontext.LogEntryContext]
 }
 
 func NewUserService(
@@ -62,43 +61,24 @@ func NewUserService(
 		OperationGroup: iactions.OperationGroupUser,
 		StopAppIfError: true,
 	}
-	p, err := grpcserverhelper.NewRequestProcessor(appSessionId, actionManager, c, loggerFactory)
+	p, err := grpcserverhelper.NewRequestProcessor(appSessionId, actionManager, identityManager, c, loggerFactory)
 	if err != nil {
 		return nil, fmt.Errorf("[users.NewUserService] new request processor: %w", err)
 	}
 
 	return &UserService{
-		reqProcessor:    p,
-		identityManager: identityManager,
-		userManager:     userManager,
-		logger:          l,
+		reqProcessor: p,
+		userManager:  userManager,
+		logger:       l,
 	}, nil
 }
 
 // GetTypeAndStatusById gets a type and a status of the user by the specified user ID.
 func (s *UserService) GetTypeAndStatusById(ctx context.Context, req *userspb.GetTypeAndStatusByIdRequest) (*userspb.GetTypeAndStatusByIdResponse, error) {
 	var res *userspb.GetTypeAndStatusByIdResponse
-	err := s.reqProcessor.Process(ctx, iactions.ActionTypeUser_GetTypeAndStatusById, iactions.OperationTypeUserService_GetTypeAndStatusById,
+	err := s.reqProcessor.ProcessWithAuthnCheckAndAuthz(ctx, iactions.ActionTypeUser_GetTypeAndStatusById, iactions.OperationTypeUserService_GetTypeAndStatusById,
+		[]string{iidentity.PermissionUser_GetTypeAndStatus},
 		func(opCtx *grpcserverhelper.GrpcOperationContext) error {
-			if !opCtx.GrpcCtx.User.IsAuthenticated() {
-				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_UserServiceEvent, nil,
-					"[users.UserService.GetTypeAndStatusById] user not authenticated",
-				)
-				return apigrpcerrors.CreateGrpcError(codes.Unauthenticated, apierrors.ErrUnauthenticated)
-			}
-
-			if authorized, err := s.identityManager.Authorize(opCtx.OperationCtx, opCtx.GrpcCtx.User, []string{iidentity.PermissionUser_GetTypeAndStatus}); err != nil {
-				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_UserServiceEvent, err,
-					"[users.UserService.GetTypeAndStatusById] authorize a user",
-				)
-				return apigrpcerrors.CreateGrpcError(codes.Internal, apierrors.ErrInternal)
-			} else if !authorized {
-				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_UserServiceEvent, nil,
-					"[users.UserService.GetTypeAndStatusById] user not authorized",
-				)
-				return apigrpcerrors.CreateGrpcError(codes.PermissionDenied, apierrors.ErrPermissionDenied)
-			}
-
 			t, status, err := s.userManager.GetTypeAndStatusById(opCtx.OperationCtx, req.Id)
 			if err != nil {
 				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_UserServiceEvent, err,

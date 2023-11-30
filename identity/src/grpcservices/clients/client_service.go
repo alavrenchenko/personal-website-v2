@@ -44,10 +44,9 @@ import (
 
 type ClientService struct {
 	clientspb.UnimplementedClientServiceServer
-	reqProcessor    *grpcserverhelper.RequestProcessor
-	identityManager identity.IdentityManager
-	clientManager   clients.ClientManager
-	logger          logging.Logger[*lcontext.LogEntryContext]
+	reqProcessor  *grpcserverhelper.RequestProcessor
+	clientManager clients.ClientManager
+	logger        logging.Logger[*lcontext.LogEntryContext]
 }
 
 func NewClientService(
@@ -67,43 +66,24 @@ func NewClientService(
 		OperationGroup: iactions.OperationGroupClient,
 		StopAppIfError: true,
 	}
-	p, err := grpcserverhelper.NewRequestProcessor(appSessionId, actionManager, c, loggerFactory)
+	p, err := grpcserverhelper.NewRequestProcessor(appSessionId, actionManager, identityManager, c, loggerFactory)
 	if err != nil {
 		return nil, fmt.Errorf("[clients.NewClientService] new request processor: %w", err)
 	}
 
 	return &ClientService{
-		reqProcessor:    p,
-		identityManager: identityManager,
-		clientManager:   clientManager,
-		logger:          l,
+		reqProcessor:  p,
+		clientManager: clientManager,
+		logger:        l,
 	}, nil
 }
 
 // CreateWebClient creates a web client and returns the client ID if the operation is successful.
 func (s *ClientService) CreateWebClient(ctx context.Context, req *clientspb.CreateWebClientRequest) (*clientspb.CreateWebClientResponse, error) {
 	var res *clientspb.CreateWebClientResponse
-	err := s.reqProcessor.Process(ctx, iactions.ActionTypeClient_CreateWebClient, iactions.OperationTypeClientService_CreateWebClient,
+	err := s.reqProcessor.ProcessWithAuthnCheckAndAuthz(ctx, iactions.ActionTypeClient_CreateWebClient, iactions.OperationTypeClientService_CreateWebClient,
+		[]string{iidentity.PermissionClient_Create},
 		func(opCtx *grpcserverhelper.GrpcOperationContext) error {
-			if !opCtx.GrpcCtx.User.IsAuthenticated() {
-				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_ClientServiceEvent, nil,
-					"[authentication.ClientService.CreateWebClient] user not authenticated",
-				)
-				return apigrpcerrors.CreateGrpcError(codes.Unauthenticated, apierrors.ErrUnauthenticated)
-			}
-
-			if authorized, err := s.identityManager.Authorize(opCtx.OperationCtx, opCtx.GrpcCtx.User, []string{iidentity.PermissionClient_Create}); err != nil {
-				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_ClientServiceEvent, err,
-					"[authentication.ClientService.CreateWebClient] authorize a user",
-				)
-				return apigrpcerrors.CreateGrpcError(codes.Internal, apierrors.ErrInternal)
-			} else if !authorized {
-				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_ClientServiceEvent, nil,
-					"[authentication.ClientService.CreateWebClient] user not authorized",
-				)
-				return apigrpcerrors.CreateGrpcError(codes.PermissionDenied, apierrors.ErrPermissionDenied)
-			}
-
 			if err := validation.ValidateCreateWebClientRequest(req); err != nil {
 				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_ClientServiceEvent, nil,
 					"[clients.ClientService.CreateWebClient] "+err.Message(),
@@ -147,27 +127,9 @@ func (s *ClientService) CreateWebClient(ctx context.Context, req *clientspb.Crea
 // CreateMobileClient creates a mobile client and returns the client ID if the operation is successful.
 func (s *ClientService) CreateMobileClient(ctx context.Context, req *clientspb.CreateMobileClientRequest) (*clientspb.CreateMobileClientResponse, error) {
 	var res *clientspb.CreateMobileClientResponse
-	err := s.reqProcessor.Process(ctx, iactions.ActionTypeClient_CreateMobileClient, iactions.OperationTypeClientService_CreateMobileClient,
+	err := s.reqProcessor.ProcessWithAuthnCheckAndAuthz(ctx, iactions.ActionTypeClient_CreateMobileClient, iactions.OperationTypeClientService_CreateMobileClient,
+		[]string{iidentity.PermissionClient_Create},
 		func(opCtx *grpcserverhelper.GrpcOperationContext) error {
-			if !opCtx.GrpcCtx.User.IsAuthenticated() {
-				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_ClientServiceEvent, nil,
-					"[clients.ClientService.CreateMobileClient] user not authenticated",
-				)
-				return apigrpcerrors.CreateGrpcError(codes.Unauthenticated, apierrors.ErrUnauthenticated)
-			}
-
-			if authorized, err := s.identityManager.Authorize(opCtx.OperationCtx, opCtx.GrpcCtx.User, []string{iidentity.PermissionClient_Create}); err != nil {
-				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_ClientServiceEvent, err,
-					"[clients.ClientService.CreateMobileClient] authorize a user",
-				)
-				return apigrpcerrors.CreateGrpcError(codes.Internal, apierrors.ErrInternal)
-			} else if !authorized {
-				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_ClientServiceEvent, nil,
-					"[clients.ClientService.CreateMobileClient] user not authorized",
-				)
-				return apigrpcerrors.CreateGrpcError(codes.PermissionDenied, apierrors.ErrPermissionDenied)
-			}
-
 			if err := validation.ValidateCreateMobileClientRequest(req); err != nil {
 				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_ClientServiceEvent, nil,
 					"[clients.ClientService.CreateMobileClient] "+err.Message(),
@@ -210,27 +172,9 @@ func (s *ClientService) CreateMobileClient(ctx context.Context, req *clientspb.C
 
 // Delete deletes a client by the specified client ID.
 func (s *ClientService) Delete(ctx context.Context, req *clientspb.DeleteRequest) (*emptypb.Empty, error) {
-	err := s.reqProcessor.Process(ctx, iactions.ActionTypeClient_Delete, iactions.OperationTypeClientService_Delete,
+	err := s.reqProcessor.ProcessWithAuthnCheckAndAuthz(ctx, iactions.ActionTypeClient_Delete, iactions.OperationTypeClientService_Delete,
+		[]string{iidentity.PermissionClient_Delete},
 		func(opCtx *grpcserverhelper.GrpcOperationContext) error {
-			if !opCtx.GrpcCtx.User.IsAuthenticated() {
-				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_ClientServiceEvent, nil,
-					"[clients.ClientService.Delete] user not authenticated",
-				)
-				return apigrpcerrors.CreateGrpcError(codes.Unauthenticated, apierrors.ErrUnauthenticated)
-			}
-
-			if authorized, err := s.identityManager.Authorize(opCtx.OperationCtx, opCtx.GrpcCtx.User, []string{iidentity.PermissionClient_Delete}); err != nil {
-				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_ClientServiceEvent, err,
-					"[clients.ClientService.Delete] authorize a user",
-				)
-				return apigrpcerrors.CreateGrpcError(codes.Internal, apierrors.ErrInternal)
-			} else if !authorized {
-				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_ClientServiceEvent, nil,
-					"[clients.ClientService.Delete] user not authorized",
-				)
-				return apigrpcerrors.CreateGrpcError(codes.PermissionDenied, apierrors.ErrPermissionDenied)
-			}
-
 			if err := s.clientManager.Delete(opCtx.OperationCtx, req.Id); err != nil {
 				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_ClientServiceEvent, err,
 					"[clients.ClientService.Delete] delete a client",
@@ -262,27 +206,9 @@ func (s *ClientService) Delete(ctx context.Context, req *clientspb.DeleteRequest
 // GetById gets a client by the specified client ID.
 func (s *ClientService) GetById(ctx context.Context, req *clientspb.GetByIdRequest) (*clientspb.GetByIdResponse, error) {
 	var res *clientspb.GetByIdResponse
-	err := s.reqProcessor.Process(ctx, iactions.ActionTypeClient_GetById, iactions.OperationTypeClientService_GetById,
+	err := s.reqProcessor.ProcessWithAuthnCheckAndAuthz(ctx, iactions.ActionTypeClient_GetById, iactions.OperationTypeClientService_GetById,
+		[]string{iidentity.PermissionClient_Get},
 		func(opCtx *grpcserverhelper.GrpcOperationContext) error {
-			if !opCtx.GrpcCtx.User.IsAuthenticated() {
-				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_ClientServiceEvent, nil,
-					"[clients.ClientService.GetById] user not authenticated",
-				)
-				return apigrpcerrors.CreateGrpcError(codes.Unauthenticated, apierrors.ErrUnauthenticated)
-			}
-
-			if authorized, err := s.identityManager.Authorize(opCtx.OperationCtx, opCtx.GrpcCtx.User, []string{iidentity.PermissionClient_Get}); err != nil {
-				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_ClientServiceEvent, err,
-					"[clients.ClientService.GetById] authorize a user",
-				)
-				return apigrpcerrors.CreateGrpcError(codes.Internal, apierrors.ErrInternal)
-			} else if !authorized {
-				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_ClientServiceEvent, nil,
-					"[clients.ClientService.GetById] user not authorized",
-				)
-				return apigrpcerrors.CreateGrpcError(codes.PermissionDenied, apierrors.ErrPermissionDenied)
-			}
-
 			c, err := s.clientManager.FindById(opCtx.OperationCtx, req.Id)
 			if err != nil {
 				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_ClientServiceEvent, err,
@@ -314,27 +240,9 @@ func (s *ClientService) GetById(ctx context.Context, req *clientspb.GetByIdReque
 // GetTypeById gets a client type by the specified client ID.
 func (s *ClientService) GetTypeById(ctx context.Context, req *clientspb.GetTypeByIdRequest) (*clientspb.GetTypeByIdResponse, error) {
 	var res *clientspb.GetTypeByIdResponse
-	err := s.reqProcessor.Process(ctx, iactions.ActionTypeClient_GetTypeById, iactions.OperationTypeClientService_GetTypeById,
+	err := s.reqProcessor.ProcessWithAuthnCheckAndAuthz(ctx, iactions.ActionTypeClient_GetTypeById, iactions.OperationTypeClientService_GetTypeById,
+		[]string{iidentity.PermissionClient_GetType},
 		func(opCtx *grpcserverhelper.GrpcOperationContext) error {
-			if !opCtx.GrpcCtx.User.IsAuthenticated() {
-				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_ClientServiceEvent, nil,
-					"[clients.ClientService.GetTypeById] user not authenticated",
-				)
-				return apigrpcerrors.CreateGrpcError(codes.Unauthenticated, apierrors.ErrUnauthenticated)
-			}
-
-			if authorized, err := s.identityManager.Authorize(opCtx.OperationCtx, opCtx.GrpcCtx.User, []string{iidentity.PermissionClient_GetType}); err != nil {
-				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_ClientServiceEvent, err,
-					"[clients.ClientService.GetTypeById] authorize a user",
-				)
-				return apigrpcerrors.CreateGrpcError(codes.Internal, apierrors.ErrInternal)
-			} else if !authorized {
-				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_ClientServiceEvent, nil,
-					"[clients.ClientService.GetTypeById] user not authorized",
-				)
-				return apigrpcerrors.CreateGrpcError(codes.PermissionDenied, apierrors.ErrPermissionDenied)
-			}
-
 			t, err := s.clientManager.GetTypeById(req.Id)
 			if err != nil {
 				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_ClientServiceEvent, err,
@@ -360,27 +268,9 @@ func (s *ClientService) GetTypeById(ctx context.Context, req *clientspb.GetTypeB
 // GetStatusById gets a client status by the specified client ID.
 func (s *ClientService) GetStatusById(ctx context.Context, req *clientspb.GetStatusByIdRequest) (*clientspb.GetStatusByIdResponse, error) {
 	var res *clientspb.GetStatusByIdResponse
-	err := s.reqProcessor.Process(ctx, iactions.ActionTypeClient_GetStatusById, iactions.OperationTypeClientService_GetStatusById,
+	err := s.reqProcessor.ProcessWithAuthnCheckAndAuthz(ctx, iactions.ActionTypeClient_GetStatusById, iactions.OperationTypeClientService_GetStatusById,
+		[]string{iidentity.PermissionClient_GetStatus},
 		func(opCtx *grpcserverhelper.GrpcOperationContext) error {
-			if !opCtx.GrpcCtx.User.IsAuthenticated() {
-				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_ClientServiceEvent, nil,
-					"[clients.ClientService.GetStatusById] user not authenticated",
-				)
-				return apigrpcerrors.CreateGrpcError(codes.Unauthenticated, apierrors.ErrUnauthenticated)
-			}
-
-			if authorized, err := s.identityManager.Authorize(opCtx.OperationCtx, opCtx.GrpcCtx.User, []string{iidentity.PermissionClient_GetStatus}); err != nil {
-				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_ClientServiceEvent, err,
-					"[clients.ClientService.GetStatusById] authorize a user",
-				)
-				return apigrpcerrors.CreateGrpcError(codes.Internal, apierrors.ErrInternal)
-			} else if !authorized {
-				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_ClientServiceEvent, nil,
-					"[clients.ClientService.GetStatusById] user not authorized",
-				)
-				return apigrpcerrors.CreateGrpcError(codes.PermissionDenied, apierrors.ErrPermissionDenied)
-			}
-
 			status, err := s.clientManager.GetStatusById(opCtx.OperationCtx, req.Id)
 			if err != nil {
 				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_ClientServiceEvent, err,
