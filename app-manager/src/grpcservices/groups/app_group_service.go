@@ -25,6 +25,7 @@ import (
 	"personal-website-v2/app-manager/src/api/grpc/groups/validation"
 	amactions "personal-website-v2/app-manager/src/internal/actions"
 	"personal-website-v2/app-manager/src/internal/groups"
+	amidentity "personal-website-v2/app-manager/src/internal/identity"
 	"personal-website-v2/app-manager/src/internal/logging/events"
 	groupspb "personal-website-v2/go-apis/app-manager/groups"
 	"personal-website-v2/pkg/actions"
@@ -32,6 +33,7 @@ import (
 	apigrpcerrors "personal-website-v2/pkg/api/grpc/errors"
 	"personal-website-v2/pkg/errors"
 	grpcserverhelper "personal-website-v2/pkg/helper/net/grpc/server"
+	"personal-website-v2/pkg/identity"
 	"personal-website-v2/pkg/logging"
 	lcontext "personal-website-v2/pkg/logging/context"
 )
@@ -39,6 +41,7 @@ import (
 type AppGroupService struct {
 	groupspb.UnimplementedAppGroupServiceServer
 	reqProcessor    *grpcserverhelper.RequestProcessor
+	identityManager identity.IdentityManager
 	appGroupManager groups.AppGroupManager
 	logger          logging.Logger[*lcontext.LogEntryContext]
 }
@@ -46,6 +49,7 @@ type AppGroupService struct {
 func NewAppGroupService(
 	appSessionId uint64,
 	actionManager *actions.ActionManager,
+	identityManager identity.IdentityManager,
 	appGroupManager groups.AppGroupManager,
 	loggerFactory logging.LoggerFactory[*lcontext.LogEntryContext],
 ) (*AppGroupService, error) {
@@ -66,6 +70,7 @@ func NewAppGroupService(
 
 	return &AppGroupService{
 		reqProcessor:    p,
+		identityManager: identityManager,
 		appGroupManager: appGroupManager,
 		logger:          l,
 	}, nil
@@ -76,6 +81,25 @@ func (s *AppGroupService) GetById(ctx context.Context, req *groupspb.GetByIdRequ
 	var res *groupspb.GetByIdResponse
 	err := s.reqProcessor.Process(ctx, amactions.ActionTypeAppGroup_GetById, amactions.OperationTypeAppGroupService_GetById,
 		func(opCtx *grpcserverhelper.GrpcOperationContext) error {
+			if !opCtx.GrpcCtx.User.IsAuthenticated() {
+				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AppGroupServiceEvent, nil,
+					"[groups.AppGroupService.GetById] user not authenticated",
+				)
+				return apigrpcerrors.CreateGrpcError(codes.Unauthenticated, apierrors.ErrUnauthenticated)
+			}
+
+			if authorized, err := s.identityManager.Authorize(opCtx.OperationCtx, opCtx.GrpcCtx.User, []string{amidentity.PermissionAppGroup_Get}); err != nil {
+				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AppGroupServiceEvent, err,
+					"[groups.AppGroupService.GetById] authorize a user",
+				)
+				return apigrpcerrors.CreateGrpcError(codes.Internal, apierrors.ErrInternal)
+			} else if !authorized {
+				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AppGroupServiceEvent, nil,
+					"[groups.AppGroupService.GetById] user not authorized",
+				)
+				return apigrpcerrors.CreateGrpcError(codes.PermissionDenied, apierrors.ErrPermissionDenied)
+			}
+
 			appGroup, err := s.appGroupManager.FindById(opCtx.OperationCtx, req.Id)
 			if err != nil {
 				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AppGroupServiceEvent, err,
@@ -105,6 +129,25 @@ func (s *AppGroupService) GetByName(ctx context.Context, req *groupspb.GetByName
 	var res *groupspb.GetByNameResponse
 	err := s.reqProcessor.Process(ctx, amactions.ActionTypeAppGroup_GetByName, amactions.OperationTypeAppGroupService_GetByName,
 		func(opCtx *grpcserverhelper.GrpcOperationContext) error {
+			if !opCtx.GrpcCtx.User.IsAuthenticated() {
+				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AppGroupServiceEvent, nil,
+					"[groups.AppGroupService.GetByName] user not authenticated",
+				)
+				return apigrpcerrors.CreateGrpcError(codes.Unauthenticated, apierrors.ErrUnauthenticated)
+			}
+
+			if authorized, err := s.identityManager.Authorize(opCtx.OperationCtx, opCtx.GrpcCtx.User, []string{amidentity.PermissionAppGroup_Get}); err != nil {
+				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AppGroupServiceEvent, err,
+					"[groups.AppGroupService.GetByName] authorize a user",
+				)
+				return apigrpcerrors.CreateGrpcError(codes.Internal, apierrors.ErrInternal)
+			} else if !authorized {
+				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AppGroupServiceEvent, nil,
+					"[groups.AppGroupService.GetByName] user not authorized",
+				)
+				return apigrpcerrors.CreateGrpcError(codes.PermissionDenied, apierrors.ErrPermissionDenied)
+			}
+
 			if err2 := validation.ValidateGetByNameRequest(req); err2 != nil {
 				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AppGroupServiceEvent, nil,
 					"[groups.AppGroupService.GetByName] "+err2.Message(),
