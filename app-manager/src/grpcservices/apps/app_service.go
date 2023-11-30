@@ -26,6 +26,7 @@ import (
 	amactions "personal-website-v2/app-manager/src/internal/actions"
 	"personal-website-v2/app-manager/src/internal/apps"
 	amerrors "personal-website-v2/app-manager/src/internal/errors"
+	amidentity "personal-website-v2/app-manager/src/internal/identity"
 	"personal-website-v2/app-manager/src/internal/logging/events"
 	appspb "personal-website-v2/go-apis/app-manager/apps"
 	"personal-website-v2/pkg/actions"
@@ -33,20 +34,23 @@ import (
 	apigrpcerrors "personal-website-v2/pkg/api/grpc/errors"
 	"personal-website-v2/pkg/errors"
 	grpcserverhelper "personal-website-v2/pkg/helper/net/grpc/server"
+	"personal-website-v2/pkg/identity"
 	"personal-website-v2/pkg/logging"
 	lcontext "personal-website-v2/pkg/logging/context"
 )
 
 type AppService struct {
 	appspb.UnimplementedAppServiceServer
-	reqProcessor *grpcserverhelper.RequestProcessor
-	appManager   apps.AppManager
-	logger       logging.Logger[*lcontext.LogEntryContext]
+	reqProcessor    *grpcserverhelper.RequestProcessor
+	identityManager identity.IdentityManager
+	appManager      apps.AppManager
+	logger          logging.Logger[*lcontext.LogEntryContext]
 }
 
 func NewAppService(
 	appSessionId uint64,
 	actionManager *actions.ActionManager,
+	identityManager identity.IdentityManager,
 	appManager apps.AppManager,
 	loggerFactory logging.LoggerFactory[*lcontext.LogEntryContext],
 ) (*AppService, error) {
@@ -66,9 +70,10 @@ func NewAppService(
 	}
 
 	return &AppService{
-		reqProcessor: p,
-		appManager:   appManager,
-		logger:       l,
+		reqProcessor:    p,
+		identityManager: identityManager,
+		appManager:      appManager,
+		logger:          l,
 	}, nil
 }
 
@@ -77,6 +82,25 @@ func (s *AppService) GetById(ctx context.Context, req *appspb.GetByIdRequest) (*
 	var res *appspb.GetByIdResponse
 	err := s.reqProcessor.Process(ctx, amactions.ActionTypeApps_GetById, amactions.OperationTypeAppService_GetById,
 		func(opCtx *grpcserverhelper.GrpcOperationContext) error {
+			if !opCtx.GrpcCtx.User.IsAuthenticated() {
+				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AppServiceEvent, nil,
+					"[apps.AppService.GetById] user not authenticated",
+				)
+				return apigrpcerrors.CreateGrpcError(codes.Unauthenticated, apierrors.ErrUnauthenticated)
+			}
+
+			if authorized, err := s.identityManager.Authorize(opCtx.OperationCtx, opCtx.GrpcCtx.User, []string{amidentity.PermissionApps_Get}); err != nil {
+				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AppServiceEvent, err,
+					"[apps.AppService.GetById] authorize a user",
+				)
+				return apigrpcerrors.CreateGrpcError(codes.Internal, apierrors.ErrInternal)
+			} else if !authorized {
+				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AppServiceEvent, nil,
+					"[apps.AppService.GetById] user not authorized",
+				)
+				return apigrpcerrors.CreateGrpcError(codes.PermissionDenied, apierrors.ErrPermissionDenied)
+			}
+
 			appInfo, err := s.appManager.FindById(opCtx.OperationCtx, req.Id)
 			if err != nil {
 				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AppServiceEvent, err,
@@ -106,6 +130,25 @@ func (s *AppService) GetByName(ctx context.Context, req *appspb.GetByNameRequest
 	var res *appspb.GetByNameResponse
 	err := s.reqProcessor.Process(ctx, amactions.ActionTypeApps_GetByName, amactions.OperationTypeAppService_GetByName,
 		func(opCtx *grpcserverhelper.GrpcOperationContext) error {
+			if !opCtx.GrpcCtx.User.IsAuthenticated() {
+				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AppServiceEvent, nil,
+					"[apps.AppService.GetByName] user not authenticated",
+				)
+				return apigrpcerrors.CreateGrpcError(codes.Unauthenticated, apierrors.ErrUnauthenticated)
+			}
+
+			if authorized, err := s.identityManager.Authorize(opCtx.OperationCtx, opCtx.GrpcCtx.User, []string{amidentity.PermissionApps_Get}); err != nil {
+				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AppServiceEvent, err,
+					"[apps.AppService.GetByName] authorize a user",
+				)
+				return apigrpcerrors.CreateGrpcError(codes.Internal, apierrors.ErrInternal)
+			} else if !authorized {
+				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AppServiceEvent, nil,
+					"[apps.AppService.GetByName] user not authorized",
+				)
+				return apigrpcerrors.CreateGrpcError(codes.PermissionDenied, apierrors.ErrPermissionDenied)
+			}
+
 			if err2 := validation.ValidateGetByNameRequest(req); err2 != nil {
 				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AppServiceEvent, nil,
 					"[apps.AppService.GetByName] "+err2.Message(),
@@ -145,6 +188,25 @@ func (s *AppService) GetStatusById(ctx context.Context, req *appspb.GetStatusByI
 	var res *appspb.GetStatusByIdResponse
 	err := s.reqProcessor.Process(ctx, amactions.ActionTypeApps_GetStatusById, amactions.OperationTypeAppService_GetStatusById,
 		func(opCtx *grpcserverhelper.GrpcOperationContext) error {
+			if !opCtx.GrpcCtx.User.IsAuthenticated() {
+				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AppServiceEvent, nil,
+					"[apps.AppService.GetByName] user not authenticated",
+				)
+				return apigrpcerrors.CreateGrpcError(codes.Unauthenticated, apierrors.ErrUnauthenticated)
+			}
+
+			if authorized, err := s.identityManager.Authorize(opCtx.OperationCtx, opCtx.GrpcCtx.User, []string{amidentity.PermissionApps_GetStatus}); err != nil {
+				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AppServiceEvent, err,
+					"[apps.AppService.GetByName] authorize a user",
+				)
+				return apigrpcerrors.CreateGrpcError(codes.Internal, apierrors.ErrInternal)
+			} else if !authorized {
+				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AppServiceEvent, nil,
+					"[apps.AppService.GetByName] user not authorized",
+				)
+				return apigrpcerrors.CreateGrpcError(codes.PermissionDenied, apierrors.ErrPermissionDenied)
+			}
+
 			appStatus, err := s.appManager.GetStatusById(opCtx.OperationCtx, req.Id)
 			if err != nil {
 				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AppServiceEvent, err,
