@@ -29,14 +29,13 @@ import (
 
 type startupIdentityManager struct {
 	opExecutor   *actionhelper.OperationExecutor
-	appUserId    uint64
 	allowedUsers map[uint64]bool
 	logger       logging.Logger[*context.LogEntryContext]
 }
 
 var _ identity.IdentityManager = (*startupIdentityManager)(nil)
 
-func NewStartupIdentityManager(appUserId uint64, allowedUsers []uint64, loggerFactory logging.LoggerFactory[*context.LogEntryContext]) (identity.IdentityManager, error) {
+func NewStartupIdentityManager(allowedUsers []uint64, loggerFactory logging.LoggerFactory[*context.LogEntryContext]) (identity.IdentityManager, error) {
 	l, err := loggerFactory.CreateLogger("internal.identity.startupIdentityManager")
 	if err != nil {
 		return nil, fmt.Errorf("[identity.NewStartupIdentityManager] create a logger: %w", err)
@@ -59,7 +58,6 @@ func NewStartupIdentityManager(appUserId uint64, allowedUsers []uint64, loggerFa
 
 	return &startupIdentityManager{
 		opExecutor:   e,
-		appUserId:    appUserId,
 		allowedUsers: us,
 		logger:       l,
 	}, nil
