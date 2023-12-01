@@ -23,18 +23,22 @@ import (
 	"personal-website-v2/app-manager/src/internal/apps"
 	"personal-website-v2/app-manager/src/internal/apps/dbmodels"
 	"personal-website-v2/app-manager/src/internal/apps/models"
+	appoperations "personal-website-v2/app-manager/src/internal/apps/operations/apps"
 	"personal-website-v2/app-manager/src/internal/logging/events"
 	"personal-website-v2/pkg/actions"
 	"personal-website-v2/pkg/app"
 	"personal-website-v2/pkg/base/strings"
 	"personal-website-v2/pkg/errors"
+	actionhelper "personal-website-v2/pkg/helper/actions"
 	"personal-website-v2/pkg/logging"
 	"personal-website-v2/pkg/logging/context"
 )
 
+// AppManager is an app manager.
 type AppManager struct {
-	appStore apps.AppStore
-	logger   logging.Logger[*context.LogEntryContext]
+	opExecutor *actionhelper.OperationExecutor
+	appStore   apps.AppStore
+	logger     logging.Logger[*context.LogEntryContext]
 }
 
 var _ apps.AppManager = (*AppManager)(nil)
@@ -45,10 +49,48 @@ func NewAppManager(appStore apps.AppStore, loggerFactory logging.LoggerFactory[*
 		return nil, fmt.Errorf("[manager.NewAppManager] create a logger: %w", err)
 	}
 
+	c := &actionhelper.OperationExecutorConfig{
+		DefaultCategory: actions.OperationCategoryCommon,
+		DefaultGroup:    amactions.OperationGroupApps,
+		StopAppIfError:  true,
+	}
+	e, err := actionhelper.NewOperationExecutor(c, loggerFactory)
+	if err != nil {
+		return nil, fmt.Errorf("[manager.NewAppManager] new operation executor: %w", err)
+	}
+
 	return &AppManager{
-		appStore: appStore,
-		logger:   l,
+		opExecutor: e,
+		appStore:   appStore,
+		logger:     l,
 	}, nil
+}
+
+// Create creates an app and returns the app ID if the operation is successful.
+func (m *AppManager) Create(ctx *actions.OperationContext, data *appoperations.CreateOperationData) (uint64, error) {
+	var id uint64
+	err := m.opExecutor.Exec(ctx, amactions.OperationTypeAppManager_Create, []*actions.OperationParam{actions.NewOperationParam("data", data)},
+		func(opCtx *actions.OperationContext) error {
+			if err := data.Validate(); err != nil {
+				return fmt.Errorf("[manager.AppManager.Create] validate data: %w", err)
+			}
+
+			var err error
+			if id, err = m.appStore.Create(opCtx, data); err != nil {
+				return fmt.Errorf("[manager.AppManager.Create] create an app: %w", err)
+			}
+
+			m.logger.InfoWithEvent(opCtx.CreateLogEntryContext(), events.AppEvent,
+				"[manager.AppManager.Create] app has been created",
+				logging.NewField("id", id),
+			)
+			return nil
+		},
+	)
+	if err != nil {
+		return 0, fmt.Errorf("[manager.AppManager.Create] execute an operation: %w", err)
+	}
+	return id, nil
 }
 
 func (m *AppManager) FindById(ctx *actions.OperationContext, id uint64) (*dbmodels.AppInfo, error) {
