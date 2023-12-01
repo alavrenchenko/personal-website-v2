@@ -32,6 +32,7 @@ import (
 	dberrors "personal-website-v2/pkg/db/errors"
 	"personal-website-v2/pkg/db/postgres"
 	"personal-website-v2/pkg/errors"
+	actionhelper "personal-website-v2/pkg/helper/actions"
 	"personal-website-v2/pkg/logging"
 	lcontext "personal-website-v2/pkg/logging/context"
 )
@@ -40,11 +41,13 @@ const (
 	appSessionsTable = "public.app_sessions"
 )
 
+// AppSessionStore is an app session store.
 type AppSessionStore struct {
-	db        *postgres.Database
-	store     *postgres.Store[dbmodels.AppSessionInfo]
-	txManager *postgres.TxManager
-	logger    logging.Logger[*lcontext.LogEntryContext]
+	db         *postgres.Database
+	opExecutor *actionhelper.OperationExecutor
+	store      *postgres.Store[dbmodels.AppSessionInfo]
+	txManager  *postgres.TxManager
+	logger     logging.Logger[*lcontext.LogEntryContext]
 }
 
 var _ sessions.AppSessionStore = (*AppSessionStore)(nil)
@@ -55,27 +58,42 @@ func NewAppSessionStore(db *postgres.Database, loggerFactory logging.LoggerFacto
 		return nil, fmt.Errorf("[stores.NewAppSessionStore] create a logger: %w", err)
 	}
 
+	c := &actionhelper.OperationExecutorConfig{
+		DefaultCategory: actions.OperationCategoryDatabase,
+		DefaultGroup:    amactions.OperationGroupAppSession,
+		StopAppIfError:  true,
+	}
+	e, err := actionhelper.NewOperationExecutor(c, loggerFactory)
+	if err != nil {
+		return nil, fmt.Errorf("[stores.NewAppSessionStore] new operation executor: %w", err)
+	}
+
 	txm, err := postgres.NewTxManager(db, &postgres.TxManagerConfig{MaxRetriesWhenSerializationFailureErr: 5}, loggerFactory)
 	if err != nil {
 		return nil, fmt.Errorf("[stores.NewAppSessionStore] new TxManager: %w", err)
 	}
 
 	return &AppSessionStore{
-		db:        db,
-		store:     postgres.NewStore[dbmodels.AppSessionInfo](db),
-		txManager: txm,
-		logger:    l,
+		db:         db,
+		opExecutor: e,
+		store:      postgres.NewStore[dbmodels.AppSessionInfo](db),
+		txManager:  txm,
+		logger:     l,
 	}, nil
 }
 
-func (s *AppSessionStore) CreateAndStart(appId uint64, userId uint64) (uint64, error) {
-	id, err := s.createAndStart(context.Background(), appId, userId)
+// CreateAndStart creates and starts an app session for the specified app
+// and returns app session ID if the operation is successful.
+func (s *AppSessionStore) CreateAndStart(appId uint64, operationUserId uint64) (uint64, error) {
+	id, err := s.createAndStart(context.Background(), appId, operationUserId)
 	if err != nil {
 		return 0, fmt.Errorf("[stores.AppSessionStore.CreateAndStart] create and start an app session: %w", err)
 	}
 	return id, nil
 }
 
+// CreateAndStartWithContext creates and starts an app session for the specified app
+// and returns app session ID if the operation is successful.
 func (s *AppSessionStore) CreateAndStartWithContext(ctx *actions.OperationContext, appId uint64) (uint64, error) {
 	op, err := ctx.Action.Operations.CreateAndStart(
 		amactions.OperationTypeAppSessionStore_CreateAndStart,
@@ -115,43 +133,45 @@ func (s *AppSessionStore) CreateAndStartWithContext(ctx *actions.OperationContex
 	return id, nil
 }
 
-func (s *AppSessionStore) createAndStart(ctx context.Context, appId uint64, userId uint64) (uint64, error) {
+func (s *AppSessionStore) createAndStart(ctx context.Context, appId uint64, operationUserId uint64) (uint64, error) {
 	var id uint64
-	var errCode dberrors.DbErrorCode
-	var errMsg string
-	// public.create_and_start_app_session(IN _app_id, IN _created_by, IN _status_comment, OUT _id, OUT err_code, OUT err_msg)
-	const query = "CALL public.create_and_start_app_session($1, $2, NULL, NULL, NULL, NULL)"
+	err := s.txManager.ExecWithReadCommittedLevel(ctx, func(txCtx context.Context, tx pgx.Tx) error {
+		var errCode dberrors.DbErrorCode
+		var errMsg string
+		// PROCEDURE: public.create_and_start_app_session(IN _app_id, IN _created_by, IN _status_comment, OUT _id, OUT err_code, OUT err_msg)
+		// Minimum transaction isolation level: Read committed.
+		const query = "CALL public.create_and_start_app_session($1, $2, NULL, NULL, NULL, NULL)"
 
-	err := s.txManager.ExecWithSerializableLevel(ctx, func(txCtx context.Context, tx pgx.Tx) error {
-		if err := tx.QueryRow(txCtx, query, appId, userId).Scan(&id, &errCode, &errMsg); err != nil {
+		if err := tx.QueryRow(txCtx, query, appId, operationUserId).Scan(&id, &errCode, &errMsg); err != nil {
 			return fmt.Errorf("[stores.AppSessionStore.createAndStart] execute a query (create_and_start_app_session): %w", err)
 		}
-		return nil
+
+		switch errCode {
+		case dberrors.DbErrorCodeNoError:
+			return nil
+		case dberrors.DbErrorCodeInvalidOperation:
+			return errors.NewError(errors.ErrorCodeInvalidOperation, errMsg)
+		case amdberrors.DbErrorCodeAppNotFound:
+			return amerrors.ErrAppNotFound
+		}
+		// unknown error
+		return fmt.Errorf("[stores.AppSessionStore.createAndStart] invalid operation: %w", dberrors.NewDbError(errCode, errMsg))
 	})
-
 	if err != nil {
-		return 0, fmt.Errorf("[stores.AppSessionStore.createAndStart] execute a transaction with the 'serializable' isolation level: %w", err)
+		return 0, fmt.Errorf("[stores.AppSessionStore.createAndStart] execute a transaction: %w", err)
 	}
-
-	switch errCode {
-	case dberrors.DbErrorCodeNoError:
-		return id, nil
-	case amdberrors.DbErrorCodeAppNotFound:
-		return 0, amerrors.ErrAppNotFound
-	case dberrors.DbErrorCodeInvalidOperation:
-		return 0, errors.NewError(errors.ErrorCodeInvalidOperation, errMsg)
-	}
-	// unknown error
-	return 0, fmt.Errorf("[stores.AppSessionStore.createAndStart] invalid operation: %w", dberrors.NewDbError(errCode, errMsg))
+	return id, nil
 }
 
-func (s *AppSessionStore) Terminate(id uint64, userId uint64) error {
-	if err := s.terminate(context.Background(), id, userId); err != nil {
+// Terminate terminates an app session by the specified app session ID.
+func (s *AppSessionStore) Terminate(id uint64, operationUserId uint64) error {
+	if err := s.terminate(context.Background(), id, operationUserId); err != nil {
 		return fmt.Errorf("[stores.AppSessionStore.Terminate] terminate an app session: %w", err)
 	}
 	return nil
 }
 
+// TerminateWithContext terminates an app session by the specified app session ID.
 func (s *AppSessionStore) TerminateWithContext(ctx *actions.OperationContext, id uint64) error {
 	op, err := ctx.Action.Operations.CreateAndStart(
 		amactions.OperationTypeAppSessionStore_Terminate,
@@ -182,7 +202,6 @@ func (s *AppSessionStore) TerminateWithContext(ctx *actions.OperationContext, id
 	}()
 
 	txCtx := postgres.NewTxContextWithOperationContext(opCtx.Ctx, opCtx)
-
 	if err = s.terminate(txCtx, id, ctx.UserId.Value); err != nil {
 		return fmt.Errorf("[stores.AppSessionStore.TerminateWithContext] terminate an app session: %w", err)
 	}
@@ -191,35 +210,36 @@ func (s *AppSessionStore) TerminateWithContext(ctx *actions.OperationContext, id
 	return nil
 }
 
-func (s *AppSessionStore) terminate(ctx context.Context, id uint64, userId uint64) error {
-	var errCode dberrors.DbErrorCode
-	var errMsg string
-	// public.terminate_app_session(IN _id, IN _updated_by, IN _status_comment, OUT err_code, OUT err_msg)
-	const query = "CALL public.terminate_app_session($1, $2, 'termination', NULL, NULL)"
+func (s *AppSessionStore) terminate(ctx context.Context, id uint64, operationUserId uint64) error {
+	err := s.txManager.ExecWithReadCommittedLevel(ctx, func(txCtx context.Context, tx pgx.Tx) error {
+		var errCode dberrors.DbErrorCode
+		var errMsg string
+		// PROCEDURE: public.terminate_app_session(IN _id, IN _updated_by, IN _status_comment, OUT err_code, OUT err_msg)
+		// Minimum transaction isolation level: Read committed.
+		const query = "CALL public.terminate_app_session($1, $2, 'termination', NULL, NULL)"
 
-	err := s.txManager.ExecWithSerializableLevel(ctx, func(txCtx context.Context, tx pgx.Tx) error {
-		if err := tx.QueryRow(txCtx, query, id, userId).Scan(&errCode, &errMsg); err != nil {
+		if err := tx.QueryRow(txCtx, query, id, operationUserId).Scan(&errCode, &errMsg); err != nil {
 			return fmt.Errorf("[stores.AppSessionStore.terminate] execute a query (terminate_app_session): %w", err)
 		}
-		return nil
+
+		switch errCode {
+		case dberrors.DbErrorCodeNoError:
+			return nil
+		case dberrors.DbErrorCodeInvalidOperation:
+			return errors.NewError(errors.ErrorCodeInvalidOperation, errMsg)
+		case amdberrors.DbErrorCodeAppSessionNotFound:
+			return amerrors.ErrAppSessionNotFound
+		}
+		// unknown error
+		return fmt.Errorf("[stores.AppSessionStore.terminate] invalid operation: %w", dberrors.NewDbError(errCode, errMsg))
 	})
-
 	if err != nil {
-		return fmt.Errorf("[stores.AppSessionStore.terminate] execute a transaction with the 'serializable' isolation level: %w", err)
+		return fmt.Errorf("[stores.AppSessionStore.terminate] execute a transaction: %w", err)
 	}
-
-	switch errCode {
-	case dberrors.DbErrorCodeNoError:
-		return nil
-	case amdberrors.DbErrorCodeAppSessionNotFound:
-		return amerrors.ErrAppSessionNotFound
-	case dberrors.DbErrorCodeInvalidOperation:
-		return errors.NewError(errors.ErrorCodeInvalidOperation, errMsg)
-	}
-	// unknown error
-	return fmt.Errorf("[stores.AppSessionStore.terminate] invalid operation: %w", dberrors.NewDbError(errCode, errMsg))
+	return nil
 }
 
+// FindById finds and returns app session info, if any, by the specified app session ID.
 func (s *AppSessionStore) FindById(ctx *actions.OperationContext, id uint64) (*dbmodels.AppSessionInfo, error) {
 	op, err := ctx.Action.Operations.CreateAndStart(
 		amactions.OperationTypeAppSessionStore_FindById,
