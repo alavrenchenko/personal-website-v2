@@ -12,6 +12,21 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
+-- FUNCTION: public.app_session_exists(bigint)
+/*
+App session statuses:
+    Ended   = 3
+    Deleted = 5
+*/
+CREATE OR REPLACE FUNCTION public.app_session_exists(
+    _app_id public.app_sessions.app_id%TYPE
+) RETURNS boolean AS $$
+BEGIN
+    -- app session statuses: Ended(3), Deleted(5)
+    RETURN EXISTS (SELECT 1 FROM public.app_sessions WHERE app_id = _app_id AND status <> 3 AND status <> 5 LIMIT 1);
+END;
+$$ LANGUAGE plpgsql;
+
 -- PROCEDURE: public.create_and_start_app_session(bigint, bigint, text)
 /*
 App statuses:
