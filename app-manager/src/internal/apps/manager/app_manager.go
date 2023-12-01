@@ -93,6 +93,27 @@ func (m *AppManager) Create(ctx *actions.OperationContext, data *appoperations.C
 	return id, nil
 }
 
+// Delete deletes an app by the specified app ID.
+func (m *AppManager) Delete(ctx *actions.OperationContext, id uint64) error {
+	err := m.opExecutor.Exec(ctx, amactions.OperationTypeAppManager_Delete, []*actions.OperationParam{actions.NewOperationParam("id", id)},
+		func(opCtx *actions.OperationContext) error {
+			if err := m.appStore.Delete(opCtx, id); err != nil {
+				return fmt.Errorf("[manager.AppManager.Delete] delete an app: %w", err)
+			}
+
+			m.logger.InfoWithEvent(opCtx.CreateLogEntryContext(), events.AppEvent,
+				"[manager.AppManager.Delete] app has been deleted",
+				logging.NewField("id", id),
+			)
+			return nil
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("[manager.AppManager.Delete] execute an operation: %w", err)
+	}
+	return nil
+}
+
 func (m *AppManager) FindById(ctx *actions.OperationContext, id uint64) (*dbmodels.AppInfo, error) {
 	op, err := ctx.Action.Operations.CreateAndStart(
 		amactions.OperationTypeAppManager_FindById,
