@@ -111,7 +111,7 @@ BEGIN
         RETURN;
     END IF;
 
-    -- permission group statuses: Deleted(5)
+    -- permission group status: Deleted(5)
     IF _status = 5 THEN
         err_code := 3; -- InvalidOperation
         err_msg := 'permission group has already been deleted';
