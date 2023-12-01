@@ -15,44 +15,110 @@
 package stores
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 
 	amactions "personal-website-v2/app-manager/src/internal/actions"
+	amdberrors "personal-website-v2/app-manager/src/internal/db/errors"
+	amerrors "personal-website-v2/app-manager/src/internal/errors"
 	"personal-website-v2/app-manager/src/internal/groups"
 	"personal-website-v2/app-manager/src/internal/groups/dbmodels"
+	groupoperations "personal-website-v2/app-manager/src/internal/groups/operations/groups"
 	"personal-website-v2/app-manager/src/internal/logging/events"
 	"personal-website-v2/pkg/actions"
 	"personal-website-v2/pkg/app"
+	dberrors "personal-website-v2/pkg/db/errors"
 	"personal-website-v2/pkg/db/postgres"
+	actionhelper "personal-website-v2/pkg/helper/actions"
 	"personal-website-v2/pkg/logging"
-	"personal-website-v2/pkg/logging/context"
+	lcontext "personal-website-v2/pkg/logging/context"
 )
 
 const (
 	appGroupsTable = "public.app_groups"
 )
 
+// AppGroupStore is an app group store.
 type AppGroupStore struct {
-	db     *postgres.Database
-	store  *postgres.Store[dbmodels.AppGroup]
-	logger logging.Logger[*context.LogEntryContext]
+	db         *postgres.Database
+	opExecutor *actionhelper.OperationExecutor
+	store      *postgres.Store[dbmodels.AppGroup]
+	txManager  *postgres.TxManager
+	logger     logging.Logger[*lcontext.LogEntryContext]
 }
 
 var _ groups.AppGroupStore = (*AppGroupStore)(nil)
 
-func NewAppGroupStore(db *postgres.Database, loggerFactory logging.LoggerFactory[*context.LogEntryContext]) (*AppGroupStore, error) {
+func NewAppGroupStore(db *postgres.Database, loggerFactory logging.LoggerFactory[*lcontext.LogEntryContext]) (*AppGroupStore, error) {
 	l, err := loggerFactory.CreateLogger("internal.groups.stores.AppGroupStore")
-
 	if err != nil {
 		return nil, fmt.Errorf("[stores.NewAppGroupStore] create a logger: %w", err)
 	}
+
+	c := &actionhelper.OperationExecutorConfig{
+		DefaultCategory: actions.OperationCategoryDatabase,
+		DefaultGroup:    amactions.OperationGroupAppGroup,
+		StopAppIfError:  true,
+	}
+	e, err := actionhelper.NewOperationExecutor(c, loggerFactory)
+	if err != nil {
+		return nil, fmt.Errorf("[stores.NewAppGroupStore] new operation executor: %w", err)
+	}
+
+	txm, err := postgres.NewTxManager(db, &postgres.TxManagerConfig{MaxRetriesWhenSerializationFailureErr: 5}, loggerFactory)
+	if err != nil {
+		return nil, fmt.Errorf("[stores.NewAppGroupStore] new TxManager: %w", err)
+	}
+
 	return &AppGroupStore{
-		db:     db,
-		store:  postgres.NewStore[dbmodels.AppGroup](db),
-		logger: l,
+		db:         db,
+		opExecutor: e,
+		store:      postgres.NewStore[dbmodels.AppGroup](db),
+		txManager:  txm,
+		logger:     l,
 	}, nil
+}
+
+// Create creates an app group and returns the app group ID if the operation is successful.
+func (s *AppGroupStore) Create(ctx *actions.OperationContext, data *groupoperations.CreateOperationData) (uint64, error) {
+	var id uint64
+	err := s.opExecutor.Exec(ctx, amactions.OperationTypeAppGroupStore_Create, []*actions.OperationParam{actions.NewOperationParam("data", data)},
+		func(opCtx *actions.OperationContext) error {
+			err := s.txManager.ExecWithReadCommittedLevel(opCtx.Ctx, func(txCtx context.Context, tx pgx.Tx) error {
+				var errCode dberrors.DbErrorCode
+				var errMsg string
+				// PROCEDURE: public.create_app_group(IN _name, IN _type, IN _title, IN _created_by, IN _status_comment, IN _version, IN _description,
+				// OUT _id, OUT err_code, OUT err_msg)
+				// Minimum transaction isolation level: Read committed.
+				const query = "CALL public.create_app_group($1, $2, $3, $4, NULL, $5, $6, NULL, NULL, NULL)"
+				r := tx.QueryRow(txCtx, query, data.Name, data.Type, data.Title, opCtx.UserId.Value, data.Version, data.Description)
+
+				if err := r.Scan(&id, &errCode, &errMsg); err != nil {
+					return fmt.Errorf("[stores.AppGroupStore.Create] execute a query (create_app_group): %w", err)
+				}
+
+				switch errCode {
+				case dberrors.DbErrorCodeNoError:
+					return nil
+				case amdberrors.DbErrorCodeAppGroupAlreadyExists:
+					return amerrors.ErrAppGroupAlreadyExists
+				}
+				// unknown error
+				return fmt.Errorf("[stores.AppGroupStore.Create] invalid operation: %w", dberrors.NewDbError(errCode, errMsg))
+			})
+			if err != nil {
+				return fmt.Errorf("[stores.AppGroupStore.Create] execute a transaction: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return 0, fmt.Errorf("[stores.AppGroupStore.Create] execute an operation: %w", err)
+	}
+	return id, nil
 }
 
 func (s *AppGroupStore) FindById(ctx *actions.OperationContext, id uint64) (*dbmodels.AppGroup, error) {

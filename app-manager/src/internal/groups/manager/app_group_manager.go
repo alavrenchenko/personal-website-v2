@@ -22,16 +22,20 @@ import (
 	amactions "personal-website-v2/app-manager/src/internal/actions"
 	"personal-website-v2/app-manager/src/internal/groups"
 	"personal-website-v2/app-manager/src/internal/groups/dbmodels"
+	groupoperations "personal-website-v2/app-manager/src/internal/groups/operations/groups"
 	"personal-website-v2/app-manager/src/internal/logging/events"
 	"personal-website-v2/pkg/actions"
 	"personal-website-v2/pkg/app"
 	"personal-website-v2/pkg/base/strings"
 	"personal-website-v2/pkg/errors"
+	actionhelper "personal-website-v2/pkg/helper/actions"
 	"personal-website-v2/pkg/logging"
 	"personal-website-v2/pkg/logging/context"
 )
 
+// AppGroupManager is an app group manager.
 type AppGroupManager struct {
+	opExecutor    *actionhelper.OperationExecutor
 	appGroupStore groups.AppGroupStore
 	logger        logging.Logger[*context.LogEntryContext]
 }
@@ -44,10 +48,48 @@ func NewAppGroupManager(appGroupStore groups.AppGroupStore, loggerFactory loggin
 		return nil, fmt.Errorf("[manager.NewAppGroupManager] create a logger: %w", err)
 	}
 
+	c := &actionhelper.OperationExecutorConfig{
+		DefaultCategory: actions.OperationCategoryCommon,
+		DefaultGroup:    amactions.OperationGroupAppGroup,
+		StopAppIfError:  true,
+	}
+	e, err := actionhelper.NewOperationExecutor(c, loggerFactory)
+	if err != nil {
+		return nil, fmt.Errorf("[manager.NewAppGroupManager] new operation executor: %w", err)
+	}
+
 	return &AppGroupManager{
+		opExecutor:    e,
 		appGroupStore: appGroupStore,
 		logger:        l,
 	}, nil
+}
+
+// Create creates an app group and returns the app group ID if the operation is successful.
+func (m *AppGroupManager) Create(ctx *actions.OperationContext, data *groupoperations.CreateOperationData) (uint64, error) {
+	var id uint64
+	err := m.opExecutor.Exec(ctx, amactions.OperationTypeAppGroupManager_Create, []*actions.OperationParam{actions.NewOperationParam("data", data)},
+		func(opCtx *actions.OperationContext) error {
+			if err := data.Validate(); err != nil {
+				return fmt.Errorf("[manager.AppGroupManager.Create] validate data: %w", err)
+			}
+
+			var err error
+			if id, err = m.appGroupStore.Create(opCtx, data); err != nil {
+				return fmt.Errorf("[manager.AppGroupManager.Create] create an app group: %w", err)
+			}
+
+			m.logger.InfoWithEvent(opCtx.CreateLogEntryContext(), events.AppGroupEvent,
+				"[manager.AppGroupManager.Create] app group has been created",
+				logging.NewField("id", id),
+			)
+			return nil
+		},
+	)
+	if err != nil {
+		return 0, fmt.Errorf("[manager.AppGroupManager.Create] execute an operation: %w", err)
+	}
+	return id, nil
 }
 
 func (m *AppGroupManager) FindById(ctx *actions.OperationContext, id uint64) (*dbmodels.AppGroup, error) {
