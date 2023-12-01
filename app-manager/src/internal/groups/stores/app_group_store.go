@@ -244,6 +244,32 @@ func (s *AppGroupStore) FindByName(ctx *actions.OperationContext, name string) (
 	return g, nil
 }
 
+// Exists returns true if the app group exists.
+func (s *AppGroupStore) Exists(ctx *actions.OperationContext, name string) (bool, error) {
+	var exists bool
+	err := s.opExecutor.Exec(ctx, amactions.OperationTypeAppGroupStore_Exists, []*actions.OperationParam{actions.NewOperationParam("name", name)},
+		func(opCtx *actions.OperationContext) error {
+			conn, err := s.db.ConnPool.Acquire(opCtx.Ctx)
+			if err != nil {
+				return fmt.Errorf("[stores.AppGroupStore.Exists] acquire a connection: %w", err)
+			}
+			defer conn.Release()
+
+			// FUNCTION: public.app_group_exists(_name) RETURNS boolean
+			const query = "SELECT public.app_group_exists($1)"
+
+			if err = conn.QueryRow(opCtx.Ctx, query, name).Scan(&exists); err != nil {
+				return fmt.Errorf("[stores.AppGroupStore.Exists] execute a query (app_group_exists): %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return false, fmt.Errorf("[stores.AppGroupStore.Exists] execute an operation: %w", err)
+	}
+	return exists, nil
+}
+
 /*
 func (s *AppGroupStore) findBy(ctx *actions.OperationContext, query string, args ...any) (*dbmodels.AppGroup, error) {
 	conn, err := s.db.ConnPool.Acquire(ctx.Ctx)

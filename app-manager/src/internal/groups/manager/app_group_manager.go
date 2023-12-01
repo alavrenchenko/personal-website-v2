@@ -192,3 +192,21 @@ func (m *AppGroupManager) FindByName(ctx *actions.OperationContext, name string)
 	succeeded = true
 	return g, nil
 }
+
+// Exists returns true if the app group exists.
+func (m *AppGroupManager) Exists(ctx *actions.OperationContext, name string) (bool, error) {
+	var exists bool
+	err := m.opExecutor.Exec(ctx, amactions.OperationTypeAppGroupManager_Exists, []*actions.OperationParam{actions.NewOperationParam("name", name)},
+		func(opCtx *actions.OperationContext) error {
+			var err error
+			if exists, err = m.appGroupStore.Exists(opCtx, name); err != nil {
+				return fmt.Errorf("[manager.AppGroupManager.Exists] app group exists: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return false, fmt.Errorf("[manager.AppGroupManager.Exists] execute an operation: %w", err)
+	}
+	return exists, nil
+}
