@@ -246,6 +246,36 @@ func (s *AppStore) FindByName(ctx *actions.OperationContext, name string) (*dbmo
 	return a, nil
 }
 
+// GetAllByGroupId gets all apps by the specified app group ID.
+// If onlyExisting is true, then it returns only existing apps.
+func (s *AppStore) GetAllByGroupId(ctx *actions.OperationContext, groupId uint64, onlyExisting bool) ([]*dbmodels.AppInfo, error) {
+	var as []*dbmodels.AppInfo
+	err := s.opExecutor.Exec(ctx, amactions.OperationTypeAppStore_GetAllByGroupId,
+		[]*actions.OperationParam{actions.NewOperationParam("groupId", groupId), actions.NewOperationParam("onlyExisting", onlyExisting)},
+		func(opCtx *actions.OperationContext) error {
+			var query string
+			var args []any
+			if onlyExisting {
+				query = "SELECT * FROM " + appsTable + " WHERE group_id = $1 AND status <> $2"
+				args = []any{groupId, models.AppStatusDeleted}
+			} else {
+				query = "SELECT * FROM " + appsTable + " WHERE group_id = $1"
+				args = []any{groupId}
+			}
+
+			var err error
+			if as, err = s.store.FindAll(opCtx.Ctx, query, args...); err != nil {
+				return fmt.Errorf("[stores.AppStore.GetAllByGroupId] find all apps by group id: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("[stores.AppStore.GetAllByGroupId] execute an operation: %w", err)
+	}
+	return as, nil
+}
+
 func (s *AppStore) GetStatusById(ctx *actions.OperationContext, id uint64) (models.AppStatus, error) {
 	op, err := ctx.Action.Operations.CreateAndStart(
 		amactions.OperationTypeAppStore_GetStatusById,
