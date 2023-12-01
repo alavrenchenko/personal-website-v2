@@ -16,6 +16,7 @@ package sessions
 
 import (
 	"personal-website-v2/app-manager/src/internal/sessions/dbmodels"
+	"personal-website-v2/app-manager/src/internal/sessions/models"
 	"personal-website-v2/pkg/actions"
 )
 
@@ -23,18 +24,31 @@ import (
 type AppSessionManager interface {
 	// CreateAndStart creates and starts an app session for the specified app
 	// and returns app session ID if the operation is successful.
-	CreateAndStart(appId uint64, userId uint64) (uint64, error)
+	CreateAndStart(appId uint64, operationUserId uint64) (uint64, error)
 
 	// CreateAndStartWithContext creates and starts an app session for the specified app
 	// and returns app session ID if the operation is successful.
 	CreateAndStartWithContext(ctx *actions.OperationContext, appId uint64) (uint64, error)
 
 	// Terminate terminates an app session by the specified app session ID.
-	Terminate(id uint64, userId uint64) error
+	Terminate(id uint64, operationUserId uint64) error
 
 	// TerminateWithContext terminates an app session by the specified app session ID.
 	TerminateWithContext(ctx *actions.OperationContext, id uint64) error
 
 	// FindById finds and returns app session info, if any, by the specified app session ID.
 	FindById(ctx *actions.OperationContext, id uint64) (*dbmodels.AppSessionInfo, error)
+
+	// GetAllByAppId gets all sessions of the app by the specified app ID.
+	// If onlyExisting is true, then it returns only existing sessions of the app.
+	GetAllByAppId(ctx *actions.OperationContext, appId uint64, onlyExisting bool) ([]*dbmodels.AppSessionInfo, error)
+
+	// Exists returns true if the app session exists.
+	Exists(ctx *actions.OperationContext, appId uint64) (bool, error)
+
+	// GetOwnerIdById gets an app session owner ID (user ID) by the specified app session ID.
+	GetOwnerIdById(ctx *actions.OperationContext, id uint64) (uint64, error)
+
+	// GetStatusById gets an app session status by the specified app session ID.
+	GetStatusById(ctx *actions.OperationContext, id uint64) (models.AppSessionStatus, error)
 }
