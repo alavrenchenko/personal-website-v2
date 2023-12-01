@@ -20,23 +20,61 @@ import (
 	"personal-website-v2/app-manager/src/internal/apps/models"
 )
 
+// App name examples: appmanager, identity.
+
 // The app info.
 type AppInfo struct {
-	Id              uint64             `db:"id"`                // The unique ID to identify the app.
-	GroupId         uint64             `db:"group_id"`          // The app group ID.
-	Name            string             `db:"name"`              // The unique name to identify the app.
-	Type            models.AppType     `db:"type"`              // The app type.
-	Category        models.AppCategory `db:"category"`          // The app category (app category = group type).
-	CreatedAt       time.Time          `db:"created_at"`        // It stores the date and time at which the app was created.
-	CreatedBy       uint64             `db:"created_by"`        // The user ID to identify the user who added the app.
-	UpdatedAt       time.Time          `db:"updated_at"`        // It stores the date and time at which the app was updated.
-	UpdatedBy       uint64             `db:"updated_by"`        // The user ID to identify the user who updated the app.
-	Status          models.AppStatus   `db:"status"`            // The status of the app can be New(1), Active(2), or Inactive(3).
-	StatusUpdatedAt time.Time          `db:"status_updated_at"` // It stores the date and time at which the app status was updated.
-	StatusUpdatedBy uint64             `db:"status_updated_by"` // The user ID to identify the user who updated the app status.
-	StatusComment   *string            `db:"status_comment"`    // The app status comment.
-	Version         string             `db:"version"`           // The app version.
-	Description     string             `db:"description"`       // The app description.
-	VersionStamp    uint64             `db:"_version_stamp"`    // rowversion
-	Timestamp       time.Time          `db:"_timestamp"`        // row timestamp
+	// The unique ID to identify the app.
+	Id uint64 `db:"id"`
+
+	// The unique name to identify the app.
+	Name string `db:"name"`
+
+	// The app group ID.
+	GroupId uint64 `db:"group_id"`
+
+	// The app type.
+	Type models.AppType `db:"type"`
+
+	// The app title.
+	Title string `db:"title"`
+
+	// The app category (app category = group type).
+	Category models.AppCategory `db:"category"`
+
+	// It stores the date and time at which the app was created.
+	CreatedAt time.Time `db:"created_at"`
+
+	// The user ID to identify the user who added the app.
+	CreatedBy uint64 `db:"created_by"`
+
+	// It stores the date and time at which the app was updated.
+	UpdatedAt time.Time `db:"updated_at"`
+
+	// The user ID to identify the user who updated the app.
+	UpdatedBy uint64 `db:"updated_by"`
+
+	// The app status.
+	Status models.AppStatus `db:"status"`
+
+	// It stores the date and time at which the app status was updated.
+	StatusUpdatedAt time.Time `db:"status_updated_at"`
+
+	// The user ID to identify the user who updated the app status.
+	StatusUpdatedBy uint64 `db:"status_updated_by"`
+
+	// The app status comment.
+	StatusComment *string `db:"status_comment"`
+
+	// The app version.
+	Version string `db:"version"`
+
+	// The app description.
+	Description string `db:"description"`
+
+	// rowversion
+	VersionStamp uint64 `db:"_version_stamp"`
+
+	// row timestamp
+	Timestamp time.Time `db:"_timestamp"`
 }

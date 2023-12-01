@@ -14,8 +14,10 @@
 
 package models
 
+import "fmt"
+
 // The app type.
-type AppType uint16
+type AppType uint8
 
 const (
 	// Unspecified = 0 // Do not use.
@@ -23,8 +25,20 @@ const (
 	AppTypeService AppType = 1
 )
 
+func (t AppType) IsValid() bool {
+	return t == AppTypeService
+}
+
+func (t AppType) String() string {
+	switch t {
+	case AppTypeService:
+		return "service"
+	}
+	return fmt.Sprintf("AppType(%d)", t)
+}
+
 // The app category.
-type AppCategory uint16
+type AppCategory uint8
 
 const (
 	// Unspecified = 0 // Do not use.
@@ -32,8 +46,20 @@ const (
 	AppCategoryService AppCategory = 1
 )
 
+func (c AppCategory) IsValid() bool {
+	return c == AppCategoryService
+}
+
+func (c AppCategory) String() string {
+	switch c {
+	case AppCategoryService:
+		return "service"
+	}
+	return fmt.Sprintf("AppCategory(%d)", c)
+}
+
 // The app status.
-type AppStatus uint16
+type AppStatus uint8
 
 const (
 	// Unspecified = 0 // Do not use.
@@ -41,4 +67,6 @@ const (
 	AppStatusNew      AppStatus = 1
 	AppStatusActive   AppStatus = 2
 	AppStatusInactive AppStatus = 3
+	AppStatusDeleting AppStatus = 4
+	AppStatusDeleted  AppStatus = 5
 )
