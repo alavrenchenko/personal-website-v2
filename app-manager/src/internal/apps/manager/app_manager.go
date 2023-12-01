@@ -214,6 +214,24 @@ func (m *AppManager) GetAllByGroupId(ctx *actions.OperationContext, groupId uint
 	return as, nil
 }
 
+// Exists returns true if the app exists.
+func (m *AppManager) Exists(ctx *actions.OperationContext, name string) (bool, error) {
+	var exists bool
+	err := m.opExecutor.Exec(ctx, amactions.OperationTypeAppManager_Exists, []*actions.OperationParam{actions.NewOperationParam("name", name)},
+		func(opCtx *actions.OperationContext) error {
+			var err error
+			if exists, err = m.appStore.Exists(opCtx, name); err != nil {
+				return fmt.Errorf("[manager.AppManager.Exists] app exists: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return false, fmt.Errorf("[manager.AppManager.Exists] execute an operation: %w", err)
+	}
+	return exists, nil
+}
+
 func (m *AppManager) GetStatusById(ctx *actions.OperationContext, id uint64) (models.AppStatus, error) {
 	op, err := ctx.Action.Operations.CreateAndStart(
 		amactions.OperationTypeAppManager_GetStatusById,

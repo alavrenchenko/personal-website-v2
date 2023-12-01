@@ -276,6 +276,32 @@ func (s *AppStore) GetAllByGroupId(ctx *actions.OperationContext, groupId uint64
 	return as, nil
 }
 
+// Exists returns true if the app exists.
+func (s *AppStore) Exists(ctx *actions.OperationContext, name string) (bool, error) {
+	var exists bool
+	err := s.opExecutor.Exec(ctx, amactions.OperationTypeAppStore_Exists, []*actions.OperationParam{actions.NewOperationParam("name", name)},
+		func(opCtx *actions.OperationContext) error {
+			conn, err := s.db.ConnPool.Acquire(opCtx.Ctx)
+			if err != nil {
+				return fmt.Errorf("[stores.AppStore.Exists] acquire a connection: %w", err)
+			}
+			defer conn.Release()
+
+			// FUNCTION: public.app_exists(_name) RETURNS boolean
+			const query = "SELECT public.app_exists($1)"
+
+			if err = conn.QueryRow(opCtx.Ctx, query, name).Scan(&exists); err != nil {
+				return fmt.Errorf("[stores.AppStore.Exists] execute a query (app_exists): %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return false, fmt.Errorf("[stores.AppStore.Exists] execute an operation: %w", err)
+	}
+	return exists, nil
+}
+
 func (s *AppStore) GetStatusById(ctx *actions.OperationContext, id uint64) (models.AppStatus, error) {
 	op, err := ctx.Action.Operations.CreateAndStart(
 		amactions.OperationTypeAppStore_GetStatusById,
