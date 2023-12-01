@@ -114,6 +114,7 @@ func (m *AppGroupManager) Delete(ctx *actions.OperationContext, id uint64) error
 	return nil
 }
 
+// FindById finds and returns an app group, if any, by the specified app group ID.
 func (m *AppGroupManager) FindById(ctx *actions.OperationContext, id uint64) (*dbmodels.AppGroup, error) {
 	op, err := ctx.Action.Operations.CreateAndStart(
 		amactions.OperationTypeAppGroupManager_FindById,
@@ -152,6 +153,7 @@ func (m *AppGroupManager) FindById(ctx *actions.OperationContext, id uint64) (*d
 	return g, nil
 }
 
+// FindByName finds and returns an app group, if any, by the specified app group name.
 func (m *AppGroupManager) FindByName(ctx *actions.OperationContext, name string) (*dbmodels.AppGroup, error) {
 	op, err := ctx.Action.Operations.CreateAndStart(
 		amactions.OperationTypeAppGroupManager_FindById,
