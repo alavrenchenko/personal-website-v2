@@ -33,10 +33,30 @@ import (
 
 	"personal-website-v2/api-clients/appmanager"
 	"personal-website-v2/api-clients/loggingmanager"
-	lmappconfig "personal-website-v2/identity/src/app/config"
-	"personal-website-v2/identity/src/app/server/grpc"
-	"personal-website-v2/identity/src/app/server/http"
+	authenticationpb "personal-website-v2/go-apis/identity/authentication"
+	authorizationpb "personal-website-v2/go-apis/identity/authorization"
+	clientspb "personal-website-v2/go-apis/identity/clients"
+	permissionspb "personal-website-v2/go-apis/identity/permissions"
+	rolespb "personal-website-v2/go-apis/identity/roles"
+	userspb "personal-website-v2/go-apis/identity/users"
+	iappconfig "personal-website-v2/identity/src/app/config"
+	authenticationservices "personal-website-v2/identity/src/grpcservices/authentication"
+	authorizationservices "personal-website-v2/identity/src/grpcservices/authorization"
+	clientservices "personal-website-v2/identity/src/grpcservices/clients"
+	permissionservices "personal-website-v2/identity/src/grpcservices/permissions"
+	roleservices "personal-website-v2/identity/src/grpcservices/roles"
+	userservices "personal-website-v2/identity/src/grpcservices/users"
+	authenticationmanager "personal-website-v2/identity/src/internal/authentication/manager"
+	authorizationmanager "personal-website-v2/identity/src/internal/authorization/manager"
+	clientmanager "personal-website-v2/identity/src/internal/clients/manager"
 	ipostgres "personal-website-v2/identity/src/internal/db/postgres"
+	iidentity "personal-website-v2/identity/src/internal/identity"
+	permissionmanager "personal-website-v2/identity/src/internal/permissions/manager"
+	rolemanager "personal-website-v2/identity/src/internal/roles/manager"
+	rolestate "personal-website-v2/identity/src/internal/roles/state"
+	sessionmanager "personal-website-v2/identity/src/internal/sessions/manager"
+	useragentmanager "personal-website-v2/identity/src/internal/useragents/manager"
+	usermanager "personal-website-v2/identity/src/internal/users/manager"
 	"personal-website-v2/pkg/actions"
 	actionlogging "personal-website-v2/pkg/actions/logging"
 	"personal-website-v2/pkg/app"
@@ -47,11 +67,14 @@ import (
 	grpcserverencoding "personal-website-v2/pkg/app/service/helper/loggingerror/encoding/net/grpc/server"
 	httpserverencoding "personal-website-v2/pkg/app/service/helper/loggingerror/encoding/net/http/server"
 	applogging "personal-website-v2/pkg/app/service/logging"
+	appgrpcserver "personal-website-v2/pkg/app/service/net/grpc/server"
+	apphttpserver "personal-website-v2/pkg/app/service/net/http/server"
 	appcontrollers "personal-website-v2/pkg/app/service/net/http/server/controllers/app"
 	"personal-website-v2/pkg/base/env"
 	"personal-website-v2/pkg/base/nullable"
 	"personal-website-v2/pkg/db/postgres"
 	errs "personal-website-v2/pkg/errors"
+	"personal-website-v2/pkg/identity"
 	"personal-website-v2/pkg/logging"
 	"personal-website-v2/pkg/logging/adapters/console"
 	filelogadapter "personal-website-v2/pkg/logging/adapters/filelog"
@@ -88,12 +111,14 @@ type Application struct {
 	fileLoggerFactory logging.LoggerFactory[*context.LogEntryContext]
 	fileLogger        logging.Logger[*context.LogEntryContext]
 	configPath        string
-	config            *config.AppConfig[*lmappconfig.Apis]
+	config            *config.AppConfig[*iappconfig.Apis]
 	isStarted         atomic.Bool
 	isStopped         bool
 	wg                sync.WaitGroup
 	mu                sync.Mutex
 	done              chan struct{}
+
+	identityManager identity.IdentityManager
 
 	tranManager   *actions.TransactionManager
 	actionManager *actions.ActionManager
@@ -109,6 +134,26 @@ type Application struct {
 
 	appManagerService     *appmanager.AppManagerService
 	loggingManagerService *loggingmanager.LoggingManagerService
+
+	userManager                *usermanager.UserManager
+	userPersonalInfoManager    *usermanager.UserPersonalInfoManager
+	clientManager              *clientmanager.ClientManager
+	roleManager                *rolemanager.RoleManager
+	roleAssignmentManager      *rolemanager.RoleAssignmentManager
+	userRoleAssignmentManager  *rolemanager.UserRoleAssignmentManager
+	groupRoleAssignmentManager *rolemanager.GroupRoleAssignmentManager
+	userRoleManager            *rolemanager.UserRoleManager
+	groupRoleManager           *rolemanager.GroupRoleManager
+	rolesState                 *rolestate.RolesState
+	permissionManager          *permissionmanager.PermissionManager
+	permissionGroupManager     *permissionmanager.PermissionGroupManager
+	rolePermissionManager      *permissionmanager.RolePermissionManager
+	userAgentManager           *useragentmanager.UserAgentManager
+	userSessionManager         *sessionmanager.UserSessionManager
+	userAgentSessionManager    *sessionmanager.UserAgentSessionManager
+	authnManager               *authenticationmanager.AuthenticationManager
+	tekManager                 *authenticationmanager.TokenEncryptionKeyManager
+	authzManager               *authorizationmanager.AuthorizationManager
 }
 
 var _ app.Application = (*Application)(nil)
@@ -282,6 +327,14 @@ func (a *Application) Start() (err error) {
 		return fmt.Errorf("[app.Application.Start] configure: %w", err)
 	}
 
+	if err = a.configureIdentity(); err != nil {
+		return fmt.Errorf("[app.Application.Start] configure the identity: %w", err)
+	}
+
+	if err = a.identityManager.Init(); err != nil {
+		return fmt.Errorf("[app.Application.Start] init an identity manager: %w", err)
+	}
+
 	if err = a.configureHttpServer(); err != nil {
 		return fmt.Errorf("[app.Application.Start] configure an HTTP server: %w", err)
 	}
@@ -316,7 +369,7 @@ func (a *Application) loadConfig() error {
 		return fmt.Errorf("[app.Application.loadConfig] read a file: %w", err)
 	}
 
-	config := new(config.AppConfig[*lmappconfig.Apis])
+	config := new(config.AppConfig[*iappconfig.Apis])
 
 	if err = json.Unmarshal(c, config); err != nil {
 		return fmt.Errorf("[app.Application.loadConfig] unmarshal JSON-encoded data (config): %w", err)
@@ -558,6 +611,18 @@ func (a *Application) createFileLogAdapter(appInfo *info.AppInfo, loggingSession
 	return adapter, nil
 }
 
+func (a *Application) configureIdentity() error {
+	im, err := iidentity.NewIdentityManager(
+		a.config.UserId, a.userManager, a.clientManager, a.roleManager, a.permissionManager, a.authnManager, a.authzManager, iidentity.Roles, iidentity.Permissions, a.loggerFactory,
+	)
+	if err != nil {
+		return fmt.Errorf("[app.Application.configureIdentity] new identity manager: %w", err)
+	}
+
+	a.identityManager = im
+	return nil
+}
+
 func (a *Application) configureActions() error {
 	c := &actionlogging.LoggerConfig{
 		AppInfo: &info.AppInfo{
@@ -631,11 +696,133 @@ func (a *Application) configureDb() error {
 }
 
 func (a *Application) configure() error {
+	userManager, err := usermanager.NewUserManager(a.postgresManager.Stores.UserStore(), a.loggerFactory)
+	if err != nil {
+		return fmt.Errorf("[app.Application.configure] new user manager: %w", err)
+	}
+
+	userPersonalInfoManager, err := usermanager.NewUserPersonalInfoManager(a.postgresManager.Stores.UserPersonalInfoStore(), a.loggerFactory)
+	if err != nil {
+		return fmt.Errorf("[app.Application.configure] new manager of users' personal info: %w", err)
+	}
+
+	clientManager, err := clientmanager.NewClientManager(a.postgresManager.Stores.WebClientStore(), a.postgresManager.Stores.MobileClientStore(), a.loggerFactory)
+	if err != nil {
+		return fmt.Errorf("[app.Application.configure] new client manager: %w", err)
+	}
+
+	roleManager, err := rolemanager.NewRoleManager(a.postgresManager.Stores.RoleStore(), a.loggerFactory)
+	if err != nil {
+		return fmt.Errorf("[app.Application.configure] new role manager: %w", err)
+	}
+
+	rolesState, err := rolestate.NewRolesState(a.postgresManager.Stores.RolesStateStore(), a.loggerFactory)
+	if err != nil {
+		return fmt.Errorf("[app.Application.configure] new state of the roles: %w", err)
+	}
+
+	userRoleAssignmentManager, err := rolemanager.NewUserRoleAssignmentManager(a.postgresManager.Stores.UserRoleAssignmentStore(), a.loggerFactory)
+	if err != nil {
+		return fmt.Errorf("[app.Application.configure] new user role assignment manager: %w", err)
+	}
+
+	groupRoleAssignmentManager, err := rolemanager.NewGroupRoleAssignmentManager(a.postgresManager.Stores.GroupRoleAssignmentStore(), a.loggerFactory)
+	if err != nil {
+		return fmt.Errorf("[app.Application.configure] new group role assignment manager: %w", err)
+	}
+
+	roleAssignmentManager, err := rolemanager.NewRoleAssignmentManager(
+		rolesState, userRoleAssignmentManager, groupRoleAssignmentManager, a.postgresManager.Stores.RoleAssignmentStore(), a.loggerFactory,
+	)
+	if err != nil {
+		return fmt.Errorf("[app.Application.configure] new role assignment manager: %w", err)
+	}
+
+	userRoleManager, err := rolemanager.NewUserRoleManager(roleManager, userRoleAssignmentManager, a.loggerFactory)
+	if err != nil {
+		return fmt.Errorf("[app.Application.configure] new user role manager: %w", err)
+	}
+
+	groupRoleManager, err := rolemanager.NewGroupRoleManager(roleManager, groupRoleAssignmentManager, a.loggerFactory)
+	if err != nil {
+		return fmt.Errorf("[app.Application.configure] new group role manager: %w", err)
+	}
+
+	rolePermissionManager, err := permissionmanager.NewRolePermissionManager(a.postgresManager.Stores.RolePermissionStore(), a.loggerFactory)
+	if err != nil {
+		return fmt.Errorf("[app.Application.configure] new role permission manager: %w", err)
+	}
+
+	permissionManager, err := permissionmanager.NewPermissionManager(rolePermissionManager, a.postgresManager.Stores.PermissionStore(), a.loggerFactory)
+	if err != nil {
+		return fmt.Errorf("[app.Application.configure] new role permission manager: %w", err)
+	}
+
+	permissionGroupManager, err := permissionmanager.NewPermissionGroupManager(a.postgresManager.Stores.PermissionGroupStore(), a.loggerFactory)
+	if err != nil {
+		return fmt.Errorf("[app.Application.configure] new permission group manager: %w", err)
+	}
+
+	userAgentManager, err := useragentmanager.NewUserAgentManager(
+		clientManager, a.postgresManager.Stores.WebUserAgentStore(), a.postgresManager.Stores.MobileUserAgentStore(), a.loggerFactory,
+	)
+	if err != nil {
+		return fmt.Errorf("[app.Application.configure] new user agent manager: %w", err)
+	}
+
+	userSessionManager, err := sessionmanager.NewUserSessionManager(
+		clientManager, userAgentManager, a.postgresManager.Stores.UserWebSessionStore(), a.postgresManager.Stores.UserMobileSessionStore(), a.loggerFactory,
+	)
+	if err != nil {
+		return fmt.Errorf("[app.Application.configure] new user session manager: %w", err)
+	}
+
+	userAgentSessionManager, err := sessionmanager.NewUserAgentSessionManager(
+		clientManager, userAgentManager, userSessionManager, a.postgresManager.Stores.UserAgentWebSessionStore(), a.postgresManager.Stores.UserAgentMobileSessionStore(), a.loggerFactory,
+	)
+	if err != nil {
+		return fmt.Errorf("[app.Application.configure] new user agent session manager: %w", err)
+	}
+
+	tekManager, err := authenticationmanager.NewTokenEncryptionKeyManager(a.postgresManager.Stores.TokenEncryptionKeyStore(), a.loggerFactory)
+	if err != nil {
+		return fmt.Errorf("[app.Application.configure] new token encryption key manager: %w", err)
+	}
+
+	authnManager, err := authenticationmanager.NewAuthenticationManager(userManager, clientManager, userSessionManager, tekManager, a.loggerFactory)
+	if err != nil {
+		return fmt.Errorf("[app.Application.configure] new authentication manager: %w", err)
+	}
+
+	authzManager, err := authorizationmanager.NewAuthorizationManager(userManager, clientManager, userRoleAssignmentManager, groupRoleAssignmentManager, rolePermissionManager, a.loggerFactory)
+	if err != nil {
+		return fmt.Errorf("[app.Application.configure] new authentication manager: %w", err)
+	}
+
+	a.userManager = userManager
+	a.userPersonalInfoManager = userPersonalInfoManager
+	a.clientManager = clientManager
+	a.roleManager = roleManager
+	a.roleAssignmentManager = roleAssignmentManager
+	a.userRoleAssignmentManager = userRoleAssignmentManager
+	a.groupRoleAssignmentManager = groupRoleAssignmentManager
+	a.userRoleManager = userRoleManager
+	a.groupRoleManager = groupRoleManager
+	a.rolesState = rolesState
+	a.permissionManager = permissionManager
+	a.permissionGroupManager = permissionGroupManager
+	a.rolePermissionManager = rolePermissionManager
+	a.userAgentManager = userAgentManager
+	a.userSessionManager = userSessionManager
+	a.userAgentSessionManager = userAgentSessionManager
+	a.authnManager = authnManager
+	a.tekManager = tekManager
+	a.authzManager = authzManager
 	return nil
 }
 
 func (a *Application) configureHttpServer() error {
-	rpl, err := http.NewRequestPipelineLifetime(a.appSessionId.Value, a.tranManager, a.actionManager, a.loggerFactory)
+	rpl, err := apphttpserver.NewRequestPipelineLifetime(a.appSessionId.Value, a.tranManager, a.actionManager, a.identityManager, a.loggerFactory)
 	if err != nil {
 		return fmt.Errorf("[app.Application.configureHttpServer] new request pipeline lifetime: %w", err)
 	}
@@ -694,7 +881,8 @@ func (a *Application) configureHttpServer() error {
 }
 
 func (a *Application) configureHttpRouting(router *httpserverrouting.Router) error {
-	appController, err := appcontrollers.NewApplicationController(a, a.appSessionId.Value, a.actionManager, a.loggerFactory)
+	ic := &appcontrollers.ApplicationControllerIdentityConfig{StopPermission: iidentity.PermissionApp_Stop}
+	appController, err := appcontrollers.NewApplicationController(a, a.appSessionId.Value, a.actionManager, a.identityManager, ic, a.loggerFactory)
 	if err != nil {
 		return fmt.Errorf("[app.Application.configureHttpRouting] new application controller: %w", err)
 	}
@@ -719,7 +907,7 @@ func (a *Application) configureGrpcLogging() error {
 }
 
 func (a *Application) configureGrpcServer() error {
-	rpl, err := grpc.NewRequestPipelineLifetime(a.appSessionId.Value, a.tranManager, a.actionManager, a.loggerFactory)
+	rpl, err := appgrpcserver.NewRequestPipelineLifetime(a.appSessionId.Value, a.tranManager, a.actionManager, a.identityManager, a.loggerFactory)
 	if err != nil {
 		return fmt.Errorf("[app.Application.configureGrpcServer] new request pipeline lifetime: %w", err)
 	}
@@ -771,6 +959,42 @@ func (a *Application) configureGrpcServer() error {
 }
 
 func (a *Application) configureGrpcServices(b *grpcserver.GrpcServerBuilder) error {
+	userService, err := userservices.NewUserService(a.appSessionId.Value, a.actionManager, a.identityManager, a.userManager, a.loggerFactory)
+	if err != nil {
+		return fmt.Errorf("[app.Application.configureGrpcServices] new user service: %w", err)
+	}
+
+	clientService, err := clientservices.NewClientService(a.appSessionId.Value, a.actionManager, a.identityManager, a.clientManager, a.loggerFactory)
+	if err != nil {
+		return fmt.Errorf("[app.Application.configureGrpcServices] new client service: %w", err)
+	}
+
+	roleService, err := roleservices.NewRoleService(a.appSessionId.Value, a.actionManager, a.identityManager, a.roleManager, a.loggerFactory)
+	if err != nil {
+		return fmt.Errorf("[app.Application.configureGrpcServices] new role service: %w", err)
+	}
+
+	permissionService, err := permissionservices.NewPermissionService(a.appSessionId.Value, a.actionManager, a.identityManager, a.permissionManager, a.loggerFactory)
+	if err != nil {
+		return fmt.Errorf("[app.Application.configureGrpcServices] new permission service: %w", err)
+	}
+
+	authnService, err := authenticationservices.NewAuthenticationService(a.appSessionId.Value, a.actionManager, a.identityManager, a.authnManager, a.loggerFactory)
+	if err != nil {
+		return fmt.Errorf("[app.Application.configureGrpcServices] new authentication service: %w", err)
+	}
+
+	authzService, err := authorizationservices.NewAuthorizationService(a.appSessionId.Value, a.actionManager, a.identityManager, a.authzManager, a.loggerFactory)
+	if err != nil {
+		return fmt.Errorf("[app.Application.configureGrpcServices] new authorization service: %w", err)
+	}
+
+	b.AddService(&userspb.UserService_ServiceDesc, userService).
+		AddService(&clientspb.ClientService_ServiceDesc, clientService).
+		AddService(&rolespb.RoleService_ServiceDesc, roleService).
+		AddService(&permissionspb.PermissionService_ServiceDesc, permissionService).
+		AddService(&authenticationpb.AuthenticationService_ServiceDesc, authnService).
+		AddService(&authorizationpb.AuthorizationService_ServiceDesc, authzService)
 	return nil
 }
 
@@ -847,7 +1071,6 @@ func (a *Application) stop(ctx *actions.OperationContext) {
 	}
 
 	var leCtx *context.LogEntryContext
-
 	if ctx != nil {
 		leCtx = ctx.CreateLogEntryContext()
 	} else if a.appSessionId.HasValue {
@@ -898,19 +1121,17 @@ func (a *Application) stop(ctx *actions.OperationContext) {
 		}
 
 		var err error
-
 		if ctx != nil {
 			err = a.session.TerminateWithContext(ctx)
 		} else {
 			err = a.session.Terminate()
 		}
-
 		if err != nil {
 			a.logWithContext(leCtx, logging.LogLevelError, events.ApplicationEvent, err, "[app.Application.stop] terminate a session")
 		}
 
 		if err = a.appManagerService.Dispose(); err != nil {
-			a.logWithContext(leCtx, logging.LogLevelError, events.ApplicationEvent, err, "[app.Application.startSession] dispose of the app manager service")
+			a.logWithContext(leCtx, logging.LogLevelError, events.ApplicationEvent, err, "[app.Application.stop] dispose of the app manager service")
 		}
 	}
 
