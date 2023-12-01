@@ -26,6 +26,7 @@ import (
 	amerrors "personal-website-v2/app-manager/src/internal/errors"
 	"personal-website-v2/app-manager/src/internal/groups"
 	"personal-website-v2/app-manager/src/internal/groups/dbmodels"
+	"personal-website-v2/app-manager/src/internal/groups/models"
 	groupoperations "personal-website-v2/app-manager/src/internal/groups/operations/groups"
 	"personal-website-v2/app-manager/src/internal/logging/events"
 	"personal-website-v2/pkg/actions"
@@ -202,45 +203,23 @@ func (s *AppGroupStore) FindById(ctx *actions.OperationContext, id uint64) (*dbm
 	return g, nil
 }
 
+// FindByName finds and returns an app group, if any, by the specified app group name.
 func (s *AppGroupStore) FindByName(ctx *actions.OperationContext, name string) (*dbmodels.AppGroup, error) {
-	op, err := ctx.Action.Operations.CreateAndStart(
-		amactions.OperationTypeAppGroupStore_FindByName,
-		actions.OperationCategoryDatabase,
-		amactions.OperationGroupAppGroup,
-		uuid.NullUUID{UUID: ctx.Operation.Id(), Valid: true},
-		actions.NewOperationParam("name", name),
+	var g *dbmodels.AppGroup
+	err := s.opExecutor.Exec(ctx, amactions.OperationTypeAppGroupStore_FindByName, []*actions.OperationParam{actions.NewOperationParam("name", name)},
+		func(opCtx *actions.OperationContext) error {
+			// must be case-sensitive
+			const query = "SELECT * FROM " + appGroupsTable + " WHERE lower(name) = lower($1) AND name = $1 AND status <> $2 LIMIT 1"
+			var err error
+			if g, err = s.store.Find(opCtx.Ctx, query, name, models.AppGroupStatusDeleted); err != nil {
+				return fmt.Errorf("[stores.AppGroupStore.FindByName] find an app group by name: %w", err)
+			}
+			return nil
+		},
 	)
-
 	if err != nil {
-		return nil, fmt.Errorf("[stores.AppGroupStore.FindByName] create and start an operation: %w", err)
+		return nil, fmt.Errorf("[stores.AppGroupStore.FindByName] execute an operation: %w", err)
 	}
-
-	succeeded := false
-	opCtx := ctx.Clone()
-	opCtx.Operation = op
-
-	defer func() {
-		if err := ctx.Action.Operations.Complete(op, succeeded); err != nil {
-			leCtx := opCtx.CreateLogEntryContext()
-			s.logger.FatalWithEventAndError(leCtx, events.AppGroupStoreEvent, err, "[stores.AppGroupStore.FindByName] complete an operation")
-
-			go func() {
-				if err := app.Stop(); err != nil {
-					s.logger.ErrorWithEvent(leCtx, events.AppGroupStoreEvent, err, "[stores.AppGroupStore.FindByName] stop an app")
-				}
-			}()
-		}
-	}()
-
-	const query = "SELECT * FROM " + appGroupsTable + " WHERE name = $1 LIMIT 1"
-	// g, err := s.findBy(ctx, query, name)
-	g, err := s.store.Find(opCtx.Ctx, query, name)
-
-	if err != nil {
-		return nil, fmt.Errorf("[stores.AppGroupStore.FindByName] find an app group by name: %w", err)
-	}
-
-	succeeded = true
 	return g, nil
 }
 
