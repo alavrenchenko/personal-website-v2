@@ -164,6 +164,7 @@ func (s *AppStore) Delete(ctx *actions.OperationContext, id uint64) error {
 	return nil
 }
 
+// FindById finds and returns an app, if any, by the specified app ID.
 func (s *AppStore) FindById(ctx *actions.OperationContext, id uint64) (*dbmodels.AppInfo, error) {
 	op, err := ctx.Action.Operations.CreateAndStart(
 		amactions.OperationTypeAppStore_FindById,
@@ -309,6 +310,7 @@ func (s *AppStore) GetTypeById(ctx *actions.OperationContext, id uint64) (models
 	return t, nil
 }
 
+// GetStatusById gets an app status by the specified app ID.
 func (s *AppStore) GetStatusById(ctx *actions.OperationContext, id uint64) (models.AppStatus, error) {
 	op, err := ctx.Action.Operations.CreateAndStart(
 		amactions.OperationTypeAppStore_GetStatusById,
