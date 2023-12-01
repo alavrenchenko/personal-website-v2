@@ -229,3 +229,21 @@ func (m *AppGroupManager) GetTypeById(ctx *actions.OperationContext, id uint64) 
 	}
 	return t, nil
 }
+
+// GetStatusById gets an app group status by the specified app group ID.
+func (m *AppGroupManager) GetStatusById(ctx *actions.OperationContext, id uint64) (models.AppGroupStatus, error) {
+	var s models.AppGroupStatus
+	err := m.opExecutor.Exec(ctx, amactions.OperationTypeAppGroupManager_GetStatusById, []*actions.OperationParam{actions.NewOperationParam("id", id)},
+		func(opCtx *actions.OperationContext) error {
+			var err error
+			if s, err = m.appGroupStore.GetStatusById(opCtx, id); err != nil {
+				return fmt.Errorf("[manager.AppGroupManager.GetStatusById] get an app group status by id: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return s, fmt.Errorf("[manager.AppGroupManager.GetStatusById] execute an operation: %w", err)
+	}
+	return s, nil
+}

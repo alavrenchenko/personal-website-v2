@@ -278,6 +278,34 @@ func (s *AppGroupStore) GetTypeById(ctx *actions.OperationContext, id uint64) (m
 	return t, nil
 }
 
+// GetStatusById gets an app group status by the specified app group ID.
+func (s *AppGroupStore) GetStatusById(ctx *actions.OperationContext, id uint64) (models.AppGroupStatus, error) {
+	var status models.AppGroupStatus
+	err := s.opExecutor.Exec(ctx, amactions.OperationTypeAppGroupStore_GetStatusById, []*actions.OperationParam{actions.NewOperationParam("id", id)},
+		func(opCtx *actions.OperationContext) error {
+			conn, err := s.db.ConnPool.Acquire(opCtx.Ctx)
+			if err != nil {
+				return fmt.Errorf("[stores.AppGroupStore.GetStatusById] acquire a connection: %w", err)
+			}
+			defer conn.Release()
+
+			const query = "SELECT status FROM " + appGroupsTable + " WHERE id = $1 LIMIT 1"
+
+			if err = conn.QueryRow(opCtx.Ctx, query, id).Scan(&status); err != nil {
+				if errors.Is(err, pgx.ErrNoRows) {
+					return amerrors.ErrAppGroupNotFound
+				}
+				return fmt.Errorf("[stores.AppGroupStore.GetStatusById] execute a query: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return status, fmt.Errorf("[stores.AppGroupStore.GetStatusById] execute an operation: %w", err)
+	}
+	return status, nil
+}
+
 /*
 func (s *AppGroupStore) findBy(ctx *actions.OperationContext, query string, args ...any) (*dbmodels.AppGroup, error) {
 	conn, err := s.db.ConnPool.Acquire(ctx.Ctx)
