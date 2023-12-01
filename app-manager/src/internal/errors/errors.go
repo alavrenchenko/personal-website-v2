@@ -23,10 +23,12 @@ import "personal-website-v2/pkg/errors"
 
 const (
 	// App (Apps) error codes (31000-31199).
-	ErrorCodeAppNotFound errors.ErrorCode = 31000
+	ErrorCodeAppNotFound      errors.ErrorCode = 31000
+	ErrorCodeAppAlreadyExists errors.ErrorCode = 31001
 
 	// App group error codes (31200-31399).
-	ErrorCodeAppGroupNotFound errors.ErrorCode = 31200
+	ErrorCodeAppGroupNotFound      errors.ErrorCode = 31200
+	ErrorCodeAppGroupAlreadyExists errors.ErrorCode = 31201
 
 	// App session error codes (31400-31599).
 	ErrorCodeAppSessionNotFound errors.ErrorCode = 31400
@@ -34,10 +36,12 @@ const (
 
 var (
 	// App (Apps) errors.
-	ErrAppNotFound = errors.NewError(ErrorCodeAppNotFound, "app not found")
+	ErrAppNotFound      = errors.NewError(ErrorCodeAppNotFound, "app not found")
+	ErrAppAlreadyExists = errors.NewError(ErrorCodeAppAlreadyExists, "app with the same name already exists")
 
 	// App group errors.
-	ErrAppGroupNotFound = errors.NewError(ErrorCodeAppGroupNotFound, "app group not found")
+	ErrAppGroupNotFound      = errors.NewError(ErrorCodeAppGroupNotFound, "app group not found")
+	ErrAppGroupAlreadyExists = errors.NewError(ErrorCodeAppGroupAlreadyExists, "app group with the same name already exists")
 
 	// App session errors.
 	ErrAppSessionNotFound = errors.NewError(ErrorCodeAppSessionNotFound, "app session not found")
