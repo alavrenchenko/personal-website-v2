@@ -143,6 +143,8 @@ App session statuses:
     New         = 1
     Active      = 2
     Ended       = 3
+    Deleting    = 4
+    Deleted     = 5
 */
 CREATE TABLE IF NOT EXISTS public.app_sessions
 (
@@ -164,7 +166,13 @@ CREATE TABLE IF NOT EXISTS public.app_sessions
     CONSTRAINT app_sessions_app_id_fkey FOREIGN KEY (app_id)
         REFERENCES public.apps (id) MATCH SIMPLE
         ON UPDATE CASCADE
-        ON DELETE RESTRICT
+        ON DELETE RESTRICT,
+    CONSTRAINT app_sessions_status_check CHECK (status >= 1 AND status <= 5)
 )
 TABLESPACE pg_default;
 
+CREATE INDEX IF NOT EXISTS app_sessions_app_id_idx ON public.app_sessions (app_id);
+CREATE INDEX IF NOT EXISTS app_sessions_created_at_idx ON public.app_sessions (created_at);
+CREATE INDEX IF NOT EXISTS app_sessions_updated_at_idx ON public.app_sessions (updated_at);
+CREATE INDEX IF NOT EXISTS app_sessions_status_idx ON public.app_sessions (status);
+CREATE INDEX IF NOT EXISTS app_sessions_status_updated_at_idx ON public.app_sessions (status_updated_at);
