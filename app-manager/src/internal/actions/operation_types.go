@@ -24,9 +24,14 @@ const (
 	OperationTypeApplication actions.OperationType = 10000
 
 	// AppManager operation types (11000-11199).
-	OperationTypeAppManager_FindById      actions.OperationType = 11000
-	OperationTypeAppManager_FindByName    actions.OperationType = 11001
-	OperationTypeAppManager_GetStatusById actions.OperationType = 11002
+	OperationTypeAppManager_Create          actions.OperationType = 11000
+	OperationTypeAppManager_Delete          actions.OperationType = 11001
+	OperationTypeAppManager_FindById        actions.OperationType = 11002
+	OperationTypeAppManager_FindByName      actions.OperationType = 11003
+	OperationTypeAppManager_GetAllByGroupId actions.OperationType = 11004
+	OperationTypeAppManager_Exists          actions.OperationType = 11005
+	OperationTypeAppManager_GetTypeById     actions.OperationType = 11006
+	OperationTypeAppManager_GetStatusById   actions.OperationType = 11007
 
 	// AppGroupManager operation types (11200-11399).
 	OperationTypeAppGroupManager_Create        actions.OperationType = 11200
@@ -47,18 +52,25 @@ const (
 	// ApplicationStore operation types (20000-20999).
 
 	// AppStore operation types (21000-21199).
-	OperationTypeAppStore_FindById      actions.OperationType = 21000
-	OperationTypeAppStore_FindByName    actions.OperationType = 21001
-	OperationTypeAppStore_GetStatusById actions.OperationType = 21002
+	OperationTypeAppStore_Create          actions.OperationType = 21000
+	OperationTypeAppStore_StartDeleting   actions.OperationType = 21001
+	OperationTypeAppStore_Delete          actions.OperationType = 21002
+	OperationTypeAppStore_FindById        actions.OperationType = 21003
+	OperationTypeAppStore_FindByName      actions.OperationType = 21004
+	OperationTypeAppStore_GetAllByGroupId actions.OperationType = 21005
+	OperationTypeAppStore_Exists          actions.OperationType = 21006
+	OperationTypeAppStore_GetTypeById     actions.OperationType = 21007
+	OperationTypeAppStore_GetStatusById   actions.OperationType = 21008
 
 	// AppGroupStore operation types (21200-21399).
 	OperationTypeAppGroupStore_Create        actions.OperationType = 21200
-	OperationTypeAppGroupStore_Delete        actions.OperationType = 21201
-	OperationTypeAppGroupStore_FindById      actions.OperationType = 21202
-	OperationTypeAppGroupStore_FindByName    actions.OperationType = 21203
-	OperationTypeAppGroupStore_Exists        actions.OperationType = 21204
-	OperationTypeAppGroupStore_GetTypeById   actions.OperationType = 21205
-	OperationTypeAppGroupStore_GetStatusById actions.OperationType = 21206
+	OperationTypeAppGroupStore_StartDeleting actions.OperationType = 21201
+	OperationTypeAppGroupStore_Delete        actions.OperationType = 21202
+	OperationTypeAppGroupStore_FindById      actions.OperationType = 21203
+	OperationTypeAppGroupStore_FindByName    actions.OperationType = 21204
+	OperationTypeAppGroupStore_Exists        actions.OperationType = 21205
+	OperationTypeAppGroupStore_GetTypeById   actions.OperationType = 21206
+	OperationTypeAppGroupStore_GetStatusById actions.OperationType = 21207
 
 	// AppSessionStore operation types (22000-22499)
 	OperationTypeAppSessionStore_Create         actions.OperationType = 22000
