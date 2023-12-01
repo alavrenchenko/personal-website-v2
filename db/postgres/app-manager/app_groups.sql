@@ -25,3 +25,55 @@ BEGIN
     RETURN EXISTS (SELECT 1 FROM public.app_groups WHERE lower(name) = lower(_name) AND status <> 5 LIMIT 1);
 END;
 $$ LANGUAGE plpgsql;
+
+-- PROCEDURE: public.create_app_group(character varying, smallint, character varying, bigint, text, character varying, text)
+/*
+App group statuses:
+    Active = 2
+
+Error codes:
+    NoError               = 0
+    AppGroupAlreadyExists = 11201
+*/
+-- Minimum transaction isolation level: Read committed.
+CREATE OR REPLACE PROCEDURE public.create_app_group(
+    IN _name public.app_groups.name%TYPE,
+    IN _type public.app_groups.type%TYPE,
+    IN _title public.app_groups.title%TYPE,
+    IN _created_by public.app_groups.created_by%TYPE,
+    IN _status_comment public.app_groups.status_comment%TYPE,
+    IN _version public.app_groups.version%TYPE,
+    IN _description public.app_groups.description%TYPE,
+    OUT _id public.app_groups.id%TYPE,
+    OUT err_code bigint,
+    OUT err_msg text) AS $$
+DECLARE
+    _time timestamp(6) without time zone;
+BEGIN
+    _id := 0;
+    err_code := 0; -- NoError
+    err_msg := '';
+
+    IF public.app_group_exists(_name) THEN
+        err_code := 11201; -- AppGroupAlreadyExists
+        err_msg := 'app group with the same name already exists';
+        RETURN;
+    END IF;
+
+    _time := (clock_timestamp() AT TIME ZONE 'UTC');
+    -- app group status: Active(2)
+    INSERT INTO public.app_groups(name, type, title, created_at, created_by, updated_at, updated_by, status, status_updated_at, status_updated_by,
+            status_comment, version, description, _version_stamp, _timestamp)
+        VALUES (_name, _type, _title, _time, _created_by, _time, _created_by, 2, _time, _created_by, _status_comment, _version, _description, 1, _time)
+        RETURNING id INTO _id;
+
+    EXCEPTION
+        WHEN unique_violation THEN
+            IF public.app_group_exists(_name) THEN
+                err_code := 11201; -- AppGroupAlreadyExists
+                err_msg := 'app group with the same name already exists';
+                RETURN;
+            END IF;
+            RAISE;
+END;
+$$ LANGUAGE plpgsql;
