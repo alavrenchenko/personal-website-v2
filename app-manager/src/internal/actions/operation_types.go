@@ -42,78 +42,89 @@ const (
 	OperationTypeAppGroupManager_GetTypeById   actions.OperationType = 11205
 	OperationTypeAppGroupManager_GetStatusById actions.OperationType = 11206
 
-	// AppSessionManager operation types (12000-12499)
-	OperationTypeAppSessionManager_Create         actions.OperationType = 12000
-	OperationTypeAppSessionManager_Start          actions.OperationType = 12001
-	OperationTypeAppSessionManager_CreateAndStart actions.OperationType = 12002
-	OperationTypeAppSessionManager_Terminate      actions.OperationType = 12003
-	OperationTypeAppSessionManager_FindById       actions.OperationType = 12004
+	// AppSessionManager operation types (11400-11599)
+	OperationTypeAppSessionManager_Create         actions.OperationType = 11400
+	OperationTypeAppSessionManager_Start          actions.OperationType = 11401
+	OperationTypeAppSessionManager_CreateAndStart actions.OperationType = 11402
+	OperationTypeAppSessionManager_Terminate      actions.OperationType = 11403
+	OperationTypeAppSessionManager_Delete         actions.OperationType = 11404
+	OperationTypeAppSessionManager_FindById       actions.OperationType = 11405
+	OperationTypeAppSessionManager_GetAllByAppId  actions.OperationType = 11406
+	OperationTypeAppSessionManager_Exists         actions.OperationType = 11407
+	OperationTypeAppSessionManager_GetOwnerIdById actions.OperationType = 11408
+	OperationTypeAppSessionManager_GetStatusById  actions.OperationType = 11409
 
-	// ApplicationStore operation types (20000-20999).
+	// ApplicationStore operation types (30000-30999).
 
-	// AppStore operation types (21000-21199).
-	OperationTypeAppStore_Create          actions.OperationType = 21000
-	OperationTypeAppStore_StartDeleting   actions.OperationType = 21001
-	OperationTypeAppStore_Delete          actions.OperationType = 21002
-	OperationTypeAppStore_FindById        actions.OperationType = 21003
-	OperationTypeAppStore_FindByName      actions.OperationType = 21004
-	OperationTypeAppStore_GetAllByGroupId actions.OperationType = 21005
-	OperationTypeAppStore_Exists          actions.OperationType = 21006
-	OperationTypeAppStore_GetTypeById     actions.OperationType = 21007
-	OperationTypeAppStore_GetStatusById   actions.OperationType = 21008
+	// AppStore operation types (31000-31199).
+	OperationTypeAppStore_Create          actions.OperationType = 31000
+	OperationTypeAppStore_StartDeleting   actions.OperationType = 31001
+	OperationTypeAppStore_Delete          actions.OperationType = 31002
+	OperationTypeAppStore_FindById        actions.OperationType = 31003
+	OperationTypeAppStore_FindByName      actions.OperationType = 31004
+	OperationTypeAppStore_GetAllByGroupId actions.OperationType = 31005
+	OperationTypeAppStore_Exists          actions.OperationType = 31006
+	OperationTypeAppStore_GetTypeById     actions.OperationType = 31007
+	OperationTypeAppStore_GetStatusById   actions.OperationType = 31008
 
-	// AppGroupStore operation types (21200-21399).
-	OperationTypeAppGroupStore_Create        actions.OperationType = 21200
-	OperationTypeAppGroupStore_StartDeleting actions.OperationType = 21201
-	OperationTypeAppGroupStore_Delete        actions.OperationType = 21202
-	OperationTypeAppGroupStore_FindById      actions.OperationType = 21203
-	OperationTypeAppGroupStore_FindByName    actions.OperationType = 21204
-	OperationTypeAppGroupStore_Exists        actions.OperationType = 21205
-	OperationTypeAppGroupStore_GetTypeById   actions.OperationType = 21206
-	OperationTypeAppGroupStore_GetStatusById actions.OperationType = 21207
+	// AppGroupStore operation types (31200-31399).
+	OperationTypeAppGroupStore_Create        actions.OperationType = 31200
+	OperationTypeAppGroupStore_StartDeleting actions.OperationType = 31201
+	OperationTypeAppGroupStore_Delete        actions.OperationType = 31202
+	OperationTypeAppGroupStore_FindById      actions.OperationType = 31203
+	OperationTypeAppGroupStore_FindByName    actions.OperationType = 31204
+	OperationTypeAppGroupStore_Exists        actions.OperationType = 31205
+	OperationTypeAppGroupStore_GetTypeById   actions.OperationType = 31206
+	OperationTypeAppGroupStore_GetStatusById actions.OperationType = 31207
 
-	// AppSessionStore operation types (22000-22499)
-	OperationTypeAppSessionStore_Create         actions.OperationType = 22000
-	OperationTypeAppSessionStore_Start          actions.OperationType = 22001
-	OperationTypeAppSessionStore_CreateAndStart actions.OperationType = 22002
-	OperationTypeAppSessionStore_Terminate      actions.OperationType = 22003
-	OperationTypeAppSessionStore_FindById       actions.OperationType = 22004
+	// AppSessionStore operation types (31400-31599).
+	OperationTypeAppSessionStore_Create         actions.OperationType = 31400
+	OperationTypeAppSessionStore_Start          actions.OperationType = 31401
+	OperationTypeAppSessionStore_CreateAndStart actions.OperationType = 31402
+	OperationTypeAppSessionStore_Terminate      actions.OperationType = 31403
+	OperationTypeAppSessionStore_StartDeleting  actions.OperationType = 31404
+	OperationTypeAppSessionStore_Delete         actions.OperationType = 31405
+	OperationTypeAppSessionStore_FindById       actions.OperationType = 31406
+	OperationTypeAppSessionStore_GetAllByAppId  actions.OperationType = 31407
+	OperationTypeAppSessionStore_Exists         actions.OperationType = 31408
+	OperationTypeAppSessionStore_GetOwnerIdById actions.OperationType = 31409
+	OperationTypeAppSessionStore_GetStatusById  actions.OperationType = 31410
 
-	// caching (30000-39999)
+	// caching (50000-69999)
 
-	// [HTTP] app.AppController operation types (100000-100499)
+	// [HTTP] app.AppController operation types (100000-100999).
 
-	// [HTTP] apps.AppController operation types (100500-100999)
-	OperationTypeAppController_GetById       actions.OperationType = 100500
-	OperationTypeAppController_GetByName     actions.OperationType = 100501
-	OperationTypeAppController_GetByIdOrName actions.OperationType = 100502
-	OperationTypeAppController_GetStatusById actions.OperationType = 100503
+	// [HTTP] apps.AppController operation types (101000-101199).
+	OperationTypeAppController_GetById       actions.OperationType = 101000
+	OperationTypeAppController_GetByName     actions.OperationType = 101001
+	OperationTypeAppController_GetByIdOrName actions.OperationType = 101002
+	OperationTypeAppController_GetStatusById actions.OperationType = 101003
 
-	// [HTTP] AppGroupController operation types (101000-101499)
-	OperationTypeAppGroupController_GetById       actions.OperationType = 101000
-	OperationTypeAppGroupController_GetByName     actions.OperationType = 101001
-	OperationTypeAppGroupController_GetByIdOrName actions.OperationType = 101002
+	// [HTTP] AppGroupController operation types (101200-101399).
+	OperationTypeAppGroupController_GetById       actions.OperationType = 101200
+	OperationTypeAppGroupController_GetByName     actions.OperationType = 101201
+	OperationTypeAppGroupController_GetByIdOrName actions.OperationType = 101202
 
-	// [HTTP] AppSessionController operation types (101500-101999)
-	OperationTypeAppSessionController_CreateAndStart actions.OperationType = 101500
-	OperationTypeAppSessionController_Terminate      actions.OperationType = 101501
-	OperationTypeAppSessionController_GetById        actions.OperationType = 101502
+	// [HTTP] AppSessionController operation types (101400-101599).
+	OperationTypeAppSessionController_CreateAndStart actions.OperationType = 101400
+	OperationTypeAppSessionController_Terminate      actions.OperationType = 101401
+	OperationTypeAppSessionController_GetById        actions.OperationType = 101402
 
-	// [gRPC] app.AppService operation types (200000-200499)
+	// [gRPC] app.AppService operation types (200000-200999).
 
-	// [gRPC] apps.AppService operation types (200500-200999)
-	OperationTypeAppService_GetById       actions.OperationType = 200500
-	OperationTypeAppService_GetByName     actions.OperationType = 200501
-	OperationTypeAppService_GetByIdOrName actions.OperationType = 200502
-	OperationTypeAppService_GetStatusById actions.OperationType = 200503
+	// [gRPC] apps.AppService operation types (201000-201199).
+	OperationTypeAppService_GetById       actions.OperationType = 201000
+	OperationTypeAppService_GetByName     actions.OperationType = 201001
+	OperationTypeAppService_GetByIdOrName actions.OperationType = 201002
+	OperationTypeAppService_GetStatusById actions.OperationType = 201003
 
-	// [gRPC] AppGroupService operation types (201000-201499)
-	OperationTypeAppGroupService_GetById       actions.OperationType = 201000
-	OperationTypeAppGroupService_GetByName     actions.OperationType = 201001
-	OperationTypeAppGroupService_GetByIdOrName actions.OperationType = 201002
+	// [gRPC] AppGroupService operation types (201200-201399).
+	OperationTypeAppGroupService_GetById       actions.OperationType = 201200
+	OperationTypeAppGroupService_GetByName     actions.OperationType = 201201
+	OperationTypeAppGroupService_GetByIdOrName actions.OperationType = 201202
 
-	// [gRPC] AppSessionService operation types (201500-201999)
-	OperationTypeAppSessionService_CreateAndStart actions.OperationType = 201500
-	OperationTypeAppSessionService_Terminate      actions.OperationType = 201501
-	OperationTypeAppSessionService_GetById        actions.OperationType = 201502
+	// [gRPC] AppSessionService operation types (201400-201599).
+	OperationTypeAppSessionService_CreateAndStart actions.OperationType = 201400
+	OperationTypeAppSessionService_Terminate      actions.OperationType = 201401
+	OperationTypeAppSessionService_GetById        actions.OperationType = 201402
 )
