@@ -16,6 +16,7 @@ package stores
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/google/uuid"
@@ -247,6 +248,34 @@ func (s *AppGroupStore) Exists(ctx *actions.OperationContext, name string) (bool
 		return false, fmt.Errorf("[stores.AppGroupStore.Exists] execute an operation: %w", err)
 	}
 	return exists, nil
+}
+
+// GetTypeById gets an app group type by the specified app group ID.
+func (s *AppGroupStore) GetTypeById(ctx *actions.OperationContext, id uint64) (models.AppGroupType, error) {
+	var t models.AppGroupType
+	err := s.opExecutor.Exec(ctx, amactions.OperationTypeAppGroupStore_GetTypeById, []*actions.OperationParam{actions.NewOperationParam("id", id)},
+		func(opCtx *actions.OperationContext) error {
+			conn, err := s.db.ConnPool.Acquire(opCtx.Ctx)
+			if err != nil {
+				return fmt.Errorf("[stores.AppGroupStore.GetTypeById] acquire a connection: %w", err)
+			}
+			defer conn.Release()
+
+			const query = "SELECT type FROM " + appGroupsTable + " WHERE id = $1 LIMIT 1"
+
+			if err = conn.QueryRow(opCtx.Ctx, query, id).Scan(&t); err != nil {
+				if errors.Is(err, pgx.ErrNoRows) {
+					return amerrors.ErrAppGroupNotFound
+				}
+				return fmt.Errorf("[stores.AppGroupStore.GetTypeById] execute a query: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return t, fmt.Errorf("[stores.AppGroupStore.GetTypeById] execute an operation: %w", err)
+	}
+	return t, nil
 }
 
 /*

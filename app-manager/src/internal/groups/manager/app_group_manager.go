@@ -22,6 +22,7 @@ import (
 	amactions "personal-website-v2/app-manager/src/internal/actions"
 	"personal-website-v2/app-manager/src/internal/groups"
 	"personal-website-v2/app-manager/src/internal/groups/dbmodels"
+	"personal-website-v2/app-manager/src/internal/groups/models"
 	groupoperations "personal-website-v2/app-manager/src/internal/groups/operations/groups"
 	"personal-website-v2/app-manager/src/internal/logging/events"
 	"personal-website-v2/pkg/actions"
@@ -209,4 +210,22 @@ func (m *AppGroupManager) Exists(ctx *actions.OperationContext, name string) (bo
 		return false, fmt.Errorf("[manager.AppGroupManager.Exists] execute an operation: %w", err)
 	}
 	return exists, nil
+}
+
+// GetTypeById gets an app group type by the specified app group ID.
+func (m *AppGroupManager) GetTypeById(ctx *actions.OperationContext, id uint64) (models.AppGroupType, error) {
+	var t models.AppGroupType
+	err := m.opExecutor.Exec(ctx, amactions.OperationTypeAppGroupManager_GetTypeById, []*actions.OperationParam{actions.NewOperationParam("id", id)},
+		func(opCtx *actions.OperationContext) error {
+			var err error
+			if t, err = m.appGroupStore.GetTypeById(opCtx, id); err != nil {
+				return fmt.Errorf("[manager.AppGroupManager.GetTypeById] get an app group type by id: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return t, fmt.Errorf("[manager.AppGroupManager.GetTypeById] execute an operation: %w", err)
+	}
+	return t, nil
 }
