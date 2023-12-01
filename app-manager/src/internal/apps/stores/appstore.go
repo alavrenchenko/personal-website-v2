@@ -302,6 +302,34 @@ func (s *AppStore) Exists(ctx *actions.OperationContext, name string) (bool, err
 	return exists, nil
 }
 
+// GetTypeById gets an app type by the specified app ID.
+func (s *AppStore) GetTypeById(ctx *actions.OperationContext, id uint64) (models.AppType, error) {
+	var t models.AppType
+	err := s.opExecutor.Exec(ctx, amactions.OperationTypeAppStore_GetTypeById, []*actions.OperationParam{actions.NewOperationParam("id", id)},
+		func(opCtx *actions.OperationContext) error {
+			conn, err := s.db.ConnPool.Acquire(opCtx.Ctx)
+			if err != nil {
+				return fmt.Errorf("[stores.AppStore.GetTypeById] acquire a connection: %w", err)
+			}
+			defer conn.Release()
+
+			const query = "SELECT type FROM " + appsTable + " WHERE id = $1 LIMIT 1"
+
+			if err = conn.QueryRow(opCtx.Ctx, query, id).Scan(&t); err != nil {
+				if errors.Is(err, pgx.ErrNoRows) {
+					return amerrors.ErrAppNotFound
+				}
+				return fmt.Errorf("[stores.AppStore.GetTypeById] execute a query: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return t, fmt.Errorf("[stores.AppStore.GetTypeById] execute an operation: %w", err)
+	}
+	return t, nil
+}
+
 func (s *AppStore) GetStatusById(ctx *actions.OperationContext, id uint64) (models.AppStatus, error) {
 	op, err := ctx.Action.Operations.CreateAndStart(
 		amactions.OperationTypeAppStore_GetStatusById,

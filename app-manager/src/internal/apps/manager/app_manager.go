@@ -232,6 +232,24 @@ func (m *AppManager) Exists(ctx *actions.OperationContext, name string) (bool, e
 	return exists, nil
 }
 
+// GetTypeById gets an app type by the specified app ID.
+func (m *AppManager) GetTypeById(ctx *actions.OperationContext, id uint64) (models.AppType, error) {
+	var t models.AppType
+	err := m.opExecutor.Exec(ctx, amactions.OperationTypeAppManager_GetTypeById, []*actions.OperationParam{actions.NewOperationParam("id", id)},
+		func(opCtx *actions.OperationContext) error {
+			var err error
+			if t, err = m.appStore.GetTypeById(opCtx, id); err != nil {
+				return fmt.Errorf("[manager.AppManager.GetTypeById] get an app type by id: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return t, fmt.Errorf("[manager.AppManager.GetTypeById] execute an operation: %w", err)
+	}
+	return t, nil
+}
+
 func (m *AppManager) GetStatusById(ctx *actions.OperationContext, id uint64) (models.AppStatus, error) {
 	op, err := ctx.Action.Operations.CreateAndStart(
 		amactions.OperationTypeAppManager_GetStatusById,
