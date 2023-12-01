@@ -22,10 +22,12 @@ import "personal-website-v2/pkg/db/errors"
 
 const (
 	// App (Apps) error codes (11000-11199).
-	DbErrorCodeAppNotFound errors.DbErrorCode = 11000
+	DbErrorCodeAppNotFound      errors.DbErrorCode = 11000
+	DbErrorCodeAppAlreadyExists errors.DbErrorCode = 11001
 
 	// App group error codes (11200-11399).
-	DbErrorCodeAppGroupNotFound errors.DbErrorCode = 11200
+	DbErrorCodeAppGroupNotFound      errors.DbErrorCode = 11200
+	DbErrorCodeAppGroupAlreadyExists errors.DbErrorCode = 11201
 
 	// App session error codes (11400-11599).
 	DbErrorCodeAppSessionNotFound errors.DbErrorCode = 11400
