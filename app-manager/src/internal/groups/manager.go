@@ -16,14 +16,31 @@ package groups
 
 import (
 	"personal-website-v2/app-manager/src/internal/groups/dbmodels"
+	"personal-website-v2/app-manager/src/internal/groups/models"
+	"personal-website-v2/app-manager/src/internal/groups/operations/groups"
 	"personal-website-v2/pkg/actions"
 )
 
 // AppGroupManager is an app group manager.
 type AppGroupManager interface {
+	// Create creates an app group and returns the app group ID if the operation is successful.
+	Create(ctx *actions.OperationContext, data *groups.CreateOperationData) (uint64, error)
+
+	// Delete deletes an app group by the specified app group ID.
+	Delete(ctx *actions.OperationContext, id uint64) error
+
 	// FindById finds and returns an app group, if any, by the specified app group ID.
 	FindById(ctx *actions.OperationContext, id uint64) (*dbmodels.AppGroup, error)
 
 	// FindByName finds and returns an app group, if any, by the specified app group name.
 	FindByName(ctx *actions.OperationContext, name string) (*dbmodels.AppGroup, error)
+
+	// Exists returns true if the app group exists.
+	Exists(ctx *actions.OperationContext, name string) (bool, error)
+
+	// GetTypeById gets an app group type by the specified app group ID.
+	GetTypeById(ctx *actions.OperationContext, id uint64) (models.AppGroupType, error)
+
+	// GetStatusById gets an app group status by the specified app group ID.
+	GetStatusById(ctx *actions.OperationContext, id uint64) (models.AppGroupStatus, error)
 }
