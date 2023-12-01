@@ -36,12 +36,15 @@ App group statuses:
     New         = 1
     Active      = 2
     Inactive    = 3
+    Deleting    = 4
+    Deleted     = 5
 */
 CREATE TABLE IF NOT EXISTS public.app_groups
 (
     id bigint NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 9223372036854775807 CACHE 1 ),
     name character varying(256) COLLATE pg_catalog."default" NOT NULL,
     type smallint NOT NULL,
+    title character varying(256) COLLATE pg_catalog."default" NOT NULL,
     created_at timestamp(6) without time zone NOT NULL,
     created_by bigint NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL DEFAULT (clock_timestamp() AT TIME ZONE 'UTC'::text),
@@ -55,9 +58,21 @@ CREATE TABLE IF NOT EXISTS public.app_groups
     _version_stamp bigint NOT NULL,
     _timestamp timestamp(6) without time zone NOT NULL DEFAULT (clock_timestamp() AT TIME ZONE 'UTC'::text),
     CONSTRAINT app_groups_pkey PRIMARY KEY (id),
-    CONSTRAINT app_groups_name_key UNIQUE (name)
+    CONSTRAINT app_groups_type_check CHECK (type = 1),
+    CONSTRAINT app_groups_status_check CHECK (status >= 1 AND status <= 5)
 )
 TABLESPACE pg_default;
+
+CREATE UNIQUE INDEX IF NOT EXISTS app_groups_name_lc_idx
+    ON public.app_groups (lower(name))
+    WHERE status <> 5;
+
+CREATE INDEX IF NOT EXISTS app_groups_type_idx ON public.app_groups (type);
+CREATE INDEX IF NOT EXISTS app_groups_created_at_idx ON public.app_groups (created_at);
+CREATE INDEX IF NOT EXISTS app_groups_updated_at_idx ON public.app_groups (updated_at);
+CREATE INDEX IF NOT EXISTS app_groups_status_idx ON public.app_groups (status);
+CREATE INDEX IF NOT EXISTS app_groups_status_updated_at_idx ON public.app_groups (status_updated_at);
+CREATE INDEX IF NOT EXISTS app_groups_version_idx ON public.app_groups (version);
 
 -- Table: public.apps
 /*
