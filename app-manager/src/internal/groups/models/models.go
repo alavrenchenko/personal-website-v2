@@ -14,8 +14,10 @@
 
 package models
 
+import "fmt"
+
 // The app group type.
-type AppGroupType uint16
+type AppGroupType uint8
 
 const (
 	// Unspecified = 0 // Do not use.
@@ -23,8 +25,20 @@ const (
 	AppGroupTypeService AppGroupType = 1
 )
 
+func (t AppGroupType) IsValid() bool {
+	return t == AppGroupTypeService
+}
+
+func (t AppGroupType) String() string {
+	switch t {
+	case AppGroupTypeService:
+		return "service"
+	}
+	return fmt.Sprintf("AppGroupType(%d)", t)
+}
+
 // The app group status.
-type AppGroupStatus uint16
+type AppGroupStatus uint8
 
 const (
 	// Unspecified = 0 // Do not use.
@@ -32,4 +46,6 @@ const (
 	AppGroupStatusNew      AppGroupStatus = 1
 	AppGroupStatusActive   AppGroupStatus = 2
 	AppGroupStatusInactive AppGroupStatus = 3
+	AppGroupStatusDeleting AppGroupStatus = 4
+	AppGroupStatusDeleted  AppGroupStatus = 5
 )
