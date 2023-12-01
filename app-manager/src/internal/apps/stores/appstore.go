@@ -205,44 +205,23 @@ func (s *AppStore) FindById(ctx *actions.OperationContext, id uint64) (*dbmodels
 	return a, nil
 }
 
+// FindByName finds and returns an app, if any, by the specified app name.
 func (s *AppStore) FindByName(ctx *actions.OperationContext, name string) (*dbmodels.AppInfo, error) {
-	op, err := ctx.Action.Operations.CreateAndStart(
-		amactions.OperationTypeAppStore_FindByName,
-		actions.OperationCategoryDatabase,
-		amactions.OperationGroupApps,
-		uuid.NullUUID{UUID: ctx.Operation.Id(), Valid: true},
-		actions.NewOperationParam("name", name),
+	var a *dbmodels.AppInfo
+	err := s.opExecutor.Exec(ctx, amactions.OperationTypeAppStore_FindByName, []*actions.OperationParam{actions.NewOperationParam("name", name)},
+		func(opCtx *actions.OperationContext) error {
+			// must be case-sensitive
+			const query = "SELECT * FROM " + appsTable + " WHERE lower(name) = lower($1) AND name = $1 AND status <> $2 LIMIT 1"
+			var err error
+			if a, err = s.store.Find(opCtx.Ctx, query, name, models.AppStatusDeleted); err != nil {
+				return fmt.Errorf("[stores.AppStore.FindByName] find an app by name: %w", err)
+			}
+			return nil
+		},
 	)
-
 	if err != nil {
-		return nil, fmt.Errorf("[stores.AppStore.FindByName] create and start an operation: %w", err)
+		return nil, fmt.Errorf("[stores.AppStore.FindByName] execute an operation: %w", err)
 	}
-
-	succeeded := false
-	opCtx := ctx.Clone()
-	opCtx.Operation = op
-
-	defer func() {
-		if err := ctx.Action.Operations.Complete(op, succeeded); err != nil {
-			leCtx := opCtx.CreateLogEntryContext()
-			s.logger.FatalWithEventAndError(leCtx, events.AppStoreEvent, err, "[stores.AppStore.FindByName] complete an operation")
-
-			go func() {
-				if err := app.Stop(); err != nil {
-					s.logger.ErrorWithEvent(leCtx, events.AppStoreEvent, err, "[stores.AppStore.FindByName] stop an app")
-				}
-			}()
-		}
-	}()
-
-	const query = "SELECT * FROM " + appsTable + " WHERE name = $1 LIMIT 1"
-	a, err := s.store.Find(opCtx.Ctx, query, name)
-
-	if err != nil {
-		return nil, fmt.Errorf("[stores.AppStore.FindByName] find an app by name: %w", err)
-	}
-
-	succeeded = true
 	return a, nil
 }
 
