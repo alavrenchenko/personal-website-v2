@@ -15,7 +15,7 @@
 package models
 
 // The app session status.
-type AppSessionStatus uint16
+type AppSessionStatus uint8
 
 const (
 	// Unspecified = 0 // Do not use.
@@ -23,4 +23,10 @@ const (
 	AppSessionStatusNew    AppSessionStatus = 1
 	AppSessionStatusActive AppSessionStatus = 2
 	AppSessionStatusEnded  AppSessionStatus = 3
+
+	// AppSessionStatusDeleting is used when the app session status is 'New'.
+	AppSessionStatusDeleting AppSessionStatus = 4
+
+	// AppSessionStatusDeleted is used when the app session status is 'New' or 'Deleting'.
+	AppSessionStatusDeleted AppSessionStatus = 5
 )
