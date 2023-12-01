@@ -74,13 +74,16 @@ App statuses:
     New         = 1
     Active      = 2
     Inactive    = 3
+    Deleting    = 4
+    Deleted     = 5
 */
 CREATE TABLE IF NOT EXISTS public.apps
 (
     id bigint NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 9223372036854775807 CACHE 1 ),
-    group_id bigint NOT NULL,
     name character varying(256) COLLATE pg_catalog."default" NOT NULL,
+    group_id bigint NOT NULL,
     type smallint NOT NULL,
+    title character varying(256) COLLATE pg_catalog."default" NOT NULL,
     category smallint NOT NULL,
     created_at timestamp(6) without time zone NOT NULL,
     created_by bigint NOT NULL,
@@ -95,13 +98,28 @@ CREATE TABLE IF NOT EXISTS public.apps
     _version_stamp bigint NOT NULL,
     _timestamp timestamp(6) without time zone NOT NULL DEFAULT (clock_timestamp() AT TIME ZONE 'UTC'::text),
     CONSTRAINT apps_pkey PRIMARY KEY (id),
-    CONSTRAINT apps_name_key UNIQUE (name),
     CONSTRAINT apps_group_id_fkey FOREIGN KEY (group_id)
         REFERENCES public.app_groups (id) MATCH SIMPLE
         ON UPDATE CASCADE
-        ON DELETE RESTRICT
+        ON DELETE RESTRICT,
+    CONSTRAINT apps_type_check CHECK (type = 1),
+    CONSTRAINT apps_category_check CHECK (category = 1),
+    CONSTRAINT apps_status_check CHECK (status >= 1 AND status <= 5)
 )
 TABLESPACE pg_default;
+
+CREATE UNIQUE INDEX IF NOT EXISTS apps_name_lc_idx
+    ON public.apps (lower(name))
+    WHERE status <> 5;
+
+CREATE INDEX IF NOT EXISTS apps_group_id_idx ON public.apps (group_id);
+CREATE INDEX IF NOT EXISTS apps_type_idx ON public.apps (type);
+CREATE INDEX IF NOT EXISTS apps_category_idx ON public.apps (category);
+CREATE INDEX IF NOT EXISTS apps_created_at_idx ON public.apps (created_at);
+CREATE INDEX IF NOT EXISTS apps_updated_at_idx ON public.apps (updated_at);
+CREATE INDEX IF NOT EXISTS apps_status_idx ON public.apps (status);
+CREATE INDEX IF NOT EXISTS apps_status_updated_at_idx ON public.apps (status_updated_at);
+CREATE INDEX IF NOT EXISTS apps_version_idx ON public.apps (version);
 
 -- Table: public.app_sessions
 /*
