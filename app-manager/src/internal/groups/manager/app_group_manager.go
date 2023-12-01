@@ -92,6 +92,27 @@ func (m *AppGroupManager) Create(ctx *actions.OperationContext, data *groupopera
 	return id, nil
 }
 
+// Delete deletes an app group by the specified app group ID.
+func (m *AppGroupManager) Delete(ctx *actions.OperationContext, id uint64) error {
+	err := m.opExecutor.Exec(ctx, amactions.OperationTypeAppGroupManager_Delete, []*actions.OperationParam{actions.NewOperationParam("id", id)},
+		func(opCtx *actions.OperationContext) error {
+			if err := m.appGroupStore.Delete(opCtx, id); err != nil {
+				return fmt.Errorf("[manager.AppGroupManager.Delete] delete an app group: %w", err)
+			}
+
+			m.logger.InfoWithEvent(opCtx.CreateLogEntryContext(), events.AppGroupEvent,
+				"[manager.AppGroupManager.Delete] app group has been deleted",
+				logging.NewField("id", id),
+			)
+			return nil
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("[manager.AppGroupManager.Delete] execute an operation: %w", err)
+	}
+	return nil
+}
+
 func (m *AppGroupManager) FindById(ctx *actions.OperationContext, id uint64) (*dbmodels.AppGroup, error) {
 	op, err := ctx.Action.Operations.CreateAndStart(
 		amactions.OperationTypeAppGroupManager_FindById,

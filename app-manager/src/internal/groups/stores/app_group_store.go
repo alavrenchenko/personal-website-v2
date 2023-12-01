@@ -32,6 +32,7 @@ import (
 	"personal-website-v2/pkg/app"
 	dberrors "personal-website-v2/pkg/db/errors"
 	"personal-website-v2/pkg/db/postgres"
+	errs "personal-website-v2/pkg/errors"
 	actionhelper "personal-website-v2/pkg/helper/actions"
 	"personal-website-v2/pkg/logging"
 	lcontext "personal-website-v2/pkg/logging/context"
@@ -119,6 +120,44 @@ func (s *AppGroupStore) Create(ctx *actions.OperationContext, data *groupoperati
 		return 0, fmt.Errorf("[stores.AppGroupStore.Create] execute an operation: %w", err)
 	}
 	return id, nil
+}
+
+// Delete deletes an app group by the specified app group ID.
+func (s *AppGroupStore) Delete(ctx *actions.OperationContext, id uint64) error {
+	err := s.opExecutor.Exec(ctx, amactions.OperationTypeAppGroupStore_Delete, []*actions.OperationParam{actions.NewOperationParam("id", id)},
+		func(opCtx *actions.OperationContext) error {
+			err := s.txManager.ExecWithReadCommittedLevel(opCtx.Ctx, func(txCtx context.Context, tx pgx.Tx) error {
+				var errCode dberrors.DbErrorCode
+				var errMsg string
+				// PROCEDURE: public.delete_app_group(IN _id, IN _deleted_by, IN _status_comment, OUT err_code, OUT err_msg)
+				// Minimum transaction isolation level: Read committed.
+				const query = "CALL public.delete_app_group($1, $2, 'deletion', NULL, NULL)"
+
+				if err := tx.QueryRow(txCtx, query, id, opCtx.UserId.Value).Scan(&errCode, &errMsg); err != nil {
+					return fmt.Errorf("[stores.AppGroupStore.Delete] execute a query (delete_app_group): %w", err)
+				}
+
+				switch errCode {
+				case dberrors.DbErrorCodeNoError:
+					return nil
+				case dberrors.DbErrorCodeInvalidOperation:
+					return errs.NewError(errs.ErrorCodeInvalidOperation, errMsg)
+				case amdberrors.DbErrorCodeAppGroupNotFound:
+					return amerrors.ErrAppGroupNotFound
+				}
+				// unknown error
+				return fmt.Errorf("[stores.AppGroupStore.Delete] invalid operation: %w", dberrors.NewDbError(errCode, errMsg))
+			})
+			if err != nil {
+				return fmt.Errorf("[stores.AppGroupStore.Delete] execute a transaction: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("[stores.AppGroupStore.Delete] execute an operation: %w", err)
+	}
+	return nil
 }
 
 func (s *AppGroupStore) FindById(ctx *actions.OperationContext, id uint64) (*dbmodels.AppGroup, error) {
