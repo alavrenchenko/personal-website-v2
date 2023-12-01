@@ -77,3 +77,60 @@ BEGIN
             RAISE;
 END;
 $$ LANGUAGE plpgsql;
+
+-- PROCEDURE: public.delete_app_group(bigint, bigint, text)
+/*
+App group statuses:
+    Deleted = 5
+
+App statuses:
+    Deleted = 5
+
+Error codes:
+    NoError          = 0
+    InvalidOperation = 3
+    AppGroupNotFound = 11200
+*/
+-- Minimum transaction isolation level: Read committed.
+CREATE OR REPLACE PROCEDURE public.delete_app_group(
+    IN _id public.app_groups.id%TYPE,
+    IN _deleted_by public.app_groups.updated_by%TYPE,
+    IN _status_comment public.app_groups.status_comment%TYPE,
+    OUT err_code bigint,
+    OUT err_msg text) AS $$
+DECLARE
+    _time timestamp(6) without time zone;
+    _status public.app_groups.status%TYPE;
+BEGIN
+    err_code := 0; -- NoError
+    err_msg := '';
+
+    SELECT status INTO _status FROM public.app_groups WHERE id = _id LIMIT 1 FOR UPDATE;
+    IF NOT FOUND THEN
+        err_code := 11200; -- AppGroupNotFound
+        err_msg := 'app group not found';
+        RETURN;
+    END IF;
+
+    -- app group status: Deleted(5)
+    IF _status = 5 THEN
+        err_code := 3; -- InvalidOperation
+        err_msg := 'app group has already been deleted';
+        RETURN;
+    END IF;
+
+    -- app status: Deleted(5)
+    IF EXISTS (SELECT 1 FROM public.apps WHERE group_id = _id AND status <> 5 LIMIT 1) THEN
+        err_code := 3; -- InvalidOperation
+        err_msg := 'app group contains apps';
+        RETURN;
+    END IF;
+
+    _time := (clock_timestamp() AT TIME ZONE 'UTC');
+    -- app group status: Deleted(5)
+    UPDATE public.app_groups
+        SET updated_at = _time, updated_by = _deleted_by, status = 5, status_updated_at = _time, status_updated_by = _deleted_by,
+            status_comment = _status_comment, _version_stamp = _version_stamp + 1, _timestamp = _time
+        WHERE id = _id;
+END;
+$$ LANGUAGE plpgsql;
