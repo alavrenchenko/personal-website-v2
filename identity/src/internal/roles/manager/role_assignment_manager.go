@@ -27,7 +27,6 @@ import (
 	assignmentoperations "personal-website-v2/identity/src/internal/roles/operations/assignments"
 	graoperations "personal-website-v2/identity/src/internal/roles/operations/grouproleassignments"
 	uraoperations "personal-website-v2/identity/src/internal/roles/operations/userroleassignments"
-	"personal-website-v2/identity/src/internal/roles/state"
 	"personal-website-v2/pkg/actions"
 	actionhelper "personal-website-v2/pkg/helper/actions"
 	"personal-website-v2/pkg/logging"
@@ -37,7 +36,7 @@ import (
 // RoleAssignmentManager is a role assignment manager.
 type RoleAssignmentManager struct {
 	opExecutor          *actionhelper.OperationExecutor
-	rolesState          state.RolesState
+	rolesState          roles.RolesState
 	uraManager          roles.UserRoleAssignmentManager
 	graManager          roles.GroupRoleAssignmentManager
 	roleAssignmentStore roles.RoleAssignmentStore
@@ -47,7 +46,7 @@ type RoleAssignmentManager struct {
 var _ roles.RoleAssignmentManager = (*RoleAssignmentManager)(nil)
 
 func NewRoleAssignmentManager(
-	rolesState state.RolesState,
+	rolesState roles.RolesState,
 	uraManager roles.UserRoleAssignmentManager,
 	graManager roles.GroupRoleAssignmentManager,
 	roleAssignmentStore roles.RoleAssignmentStore,
