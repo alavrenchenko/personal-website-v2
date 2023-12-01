@@ -19,7 +19,6 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 
 	amactions "personal-website-v2/app-manager/src/internal/actions"
@@ -29,9 +28,7 @@ import (
 	"personal-website-v2/app-manager/src/internal/groups/dbmodels"
 	"personal-website-v2/app-manager/src/internal/groups/models"
 	groupoperations "personal-website-v2/app-manager/src/internal/groups/operations/groups"
-	"personal-website-v2/app-manager/src/internal/logging/events"
 	"personal-website-v2/pkg/actions"
-	"personal-website-v2/pkg/app"
 	dberrors "personal-website-v2/pkg/db/errors"
 	"personal-website-v2/pkg/db/postgres"
 	errs "personal-website-v2/pkg/errors"
@@ -162,45 +159,22 @@ func (s *AppGroupStore) Delete(ctx *actions.OperationContext, id uint64) error {
 	return nil
 }
 
+// FindById finds and returns an app group, if any, by the specified app group ID.
 func (s *AppGroupStore) FindById(ctx *actions.OperationContext, id uint64) (*dbmodels.AppGroup, error) {
-	op, err := ctx.Action.Operations.CreateAndStart(
-		amactions.OperationTypeAppGroupStore_FindById,
-		actions.OperationCategoryDatabase,
-		amactions.OperationGroupAppGroup,
-		uuid.NullUUID{UUID: ctx.Operation.Id(), Valid: true},
-		actions.NewOperationParam("id", id),
+	var g *dbmodels.AppGroup
+	err := s.opExecutor.Exec(ctx, amactions.OperationTypeAppGroupStore_FindById, []*actions.OperationParam{actions.NewOperationParam("id", id)},
+		func(opCtx *actions.OperationContext) error {
+			const query = "SELECT * FROM " + appGroupsTable + " WHERE id = $1 LIMIT 1"
+			var err error
+			if g, err = s.store.Find(opCtx.Ctx, query, id); err != nil {
+				return fmt.Errorf("[stores.AppGroupStore.FindById] find an app group by id: %w", err)
+			}
+			return nil
+		},
 	)
-
 	if err != nil {
-		return nil, fmt.Errorf("[stores.AppGroupStore.FindById] create and start an operation: %w", err)
+		return nil, fmt.Errorf("[stores.AppGroupStore.FindById] execute an operation: %w", err)
 	}
-
-	succeeded := false
-	opCtx := ctx.Clone()
-	opCtx.Operation = op
-
-	defer func() {
-		if err := ctx.Action.Operations.Complete(op, succeeded); err != nil {
-			leCtx := opCtx.CreateLogEntryContext()
-			s.logger.FatalWithEventAndError(leCtx, events.AppGroupStoreEvent, err, "[stores.AppGroupStore.FindById] complete an operation")
-
-			go func() {
-				if err := app.Stop(); err != nil {
-					s.logger.ErrorWithEvent(leCtx, events.AppGroupStoreEvent, err, "[stores.AppGroupStore.FindById] stop an app")
-				}
-			}()
-		}
-	}()
-
-	const query = "SELECT * FROM " + appGroupsTable + " WHERE id = $1 LIMIT 1"
-	// g, err := s.findBy(ctx, query, id)
-	g, err := s.store.Find(opCtx.Ctx, query, id)
-
-	if err != nil {
-		return nil, fmt.Errorf("[stores.AppGroupStore.FindById] find an app group by id: %w", err)
-	}
-
-	succeeded = true
 	return g, nil
 }
 
@@ -305,32 +279,3 @@ func (s *AppGroupStore) GetStatusById(ctx *actions.OperationContext, id uint64) 
 	}
 	return status, nil
 }
-
-/*
-func (s *AppGroupStore) findBy(ctx *actions.OperationContext, query string, args ...any) (*dbmodels.AppGroup, error) {
-	conn, err := s.db.ConnPool.Acquire(ctx.Ctx)
-
-	if err != nil {
-		return nil, fmt.Errorf("[stores.AppGroupStore.findBy] acquire a connection: %w", err)
-	}
-
-	defer conn.Release()
-	rows, err := conn.Query(ctx.Ctx, query, args...)
-
-	if err != nil {
-		return nil, fmt.Errorf("[stores.AppGroupStore.findBy] execute a query: %w", err)
-	}
-
-	defer rows.Close()
-	g, err := pgx.CollectOneRow(rows, pgx.RowToAddrOfStructByName[dbmodels.AppGroup])
-
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, nil
-		} else {
-			return nil, fmt.Errorf("[stores.AppGroupStore.findBy] collect one row: %w", err)
-		}
-	}
-	return g, nil
-}
-*/
