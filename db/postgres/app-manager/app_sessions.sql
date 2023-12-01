@@ -40,6 +40,7 @@ Error codes:
     InvalidOperation = 3
     AppNotFound      = 11000
 */
+-- Minimum transaction isolation level: Read committed.
 CREATE OR REPLACE PROCEDURE public.create_and_start_app_session(
     IN _app_id public.app_sessions.app_id%TYPE,
     IN _created_by public.app_sessions.created_by%TYPE,
@@ -71,7 +72,8 @@ BEGIN
 
     _time := (clock_timestamp() AT TIME ZONE 'UTC');
     -- app session status: Active(2)
-    INSERT INTO public.app_sessions(app_id, created_at, created_by, updated_at, updated_by, status, status_updated_at, status_updated_by, status_comment, start_time, _version_stamp, _timestamp)
+    INSERT INTO public.app_sessions(app_id, created_at, created_by, updated_at, updated_by, status, status_updated_at, status_updated_by,
+            status_comment, start_time, _version_stamp, _timestamp)
         VALUES (_app_id, _time, _created_by, _time, _created_by, 2, _time, _created_by, _status_comment, _time, 1, _time)
         RETURNING id INTO _id;
 END;
@@ -88,6 +90,7 @@ Error codes:
     InvalidOperation   = 3
     AppSessionNotFound = 11400
 */
+-- Minimum transaction isolation level: Read committed.
 CREATE OR REPLACE PROCEDURE public.terminate_app_session(
     IN _id public.app_sessions.id%TYPE,
     IN _updated_by public.app_sessions.updated_by%TYPE,
