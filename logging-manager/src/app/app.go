@@ -326,6 +326,7 @@ func (a *Application) Start() (err error) {
 
 	a.isStarted.Store(true)
 	a.log(logging.LogLevelInfo, events.ApplicationStarted, nil, "[app.Application.Start] app has been started",
+		logging.NewField("mode", a.config.Mode.String()),
 		logging.NewField("appSessionId", a.appSessionId.Value),
 		logging.NewField("loggingSessionId", a.loggingSessionId.Value),
 	)
