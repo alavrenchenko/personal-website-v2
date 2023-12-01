@@ -237,7 +237,7 @@ func (s *stores) Init(databases map[string]*postgres.Database) error {
 
 	userRoleAssignmentStore, err := rolestores.NewUserRoleAssignmentStore(database, s.loggerFactory)
 	if err != nil {
-		return fmt.Errorf("[postgres.stores.Init] new client store: %w", err)
+		return fmt.Errorf("[postgres.stores.Init] new user role assignment store: %w", err)
 	}
 
 	database, ok = databases[webClientCategory]
@@ -247,7 +247,7 @@ func (s *stores) Init(databases map[string]*postgres.Database) error {
 
 	webClientStore, err := clientstores.NewClientStore(clientmodels.ClientTypeWeb, database, s.loggerFactory)
 	if err != nil {
-		return fmt.Errorf("[postgres.stores.Init] new client store: %w", err)
+		return fmt.Errorf("[postgres.stores.Init] new web client store: %w", err)
 	}
 
 	database, ok = databases[mobileClientCategory]
@@ -257,7 +257,7 @@ func (s *stores) Init(databases map[string]*postgres.Database) error {
 
 	mobileClientStore, err := clientstores.NewClientStore(clientmodels.ClientTypeMobile, database, s.loggerFactory)
 	if err != nil {
-		return fmt.Errorf("[postgres.stores.Init] new client store: %w", err)
+		return fmt.Errorf("[postgres.stores.Init] new mobile client store: %w", err)
 	}
 
 	database, ok = databases[userGroupCategory]
@@ -267,7 +267,7 @@ func (s *stores) Init(databases map[string]*postgres.Database) error {
 
 	groupRoleAssignmentStore, err := rolestores.NewGroupRoleAssignmentStore(database, s.loggerFactory)
 	if err != nil {
-		return fmt.Errorf("[postgres.stores.Init] new client store: %w", err)
+		return fmt.Errorf("[postgres.stores.Init] new group role assignment store: %w", err)
 	}
 
 	database, ok = databases[roleCategory]
@@ -277,12 +277,12 @@ func (s *stores) Init(databases map[string]*postgres.Database) error {
 
 	roleStore, err := rolestores.NewRoleStore(database, s.loggerFactory)
 	if err != nil {
-		return fmt.Errorf("[postgres.stores.Init] new client store: %w", err)
+		return fmt.Errorf("[postgres.stores.Init] new role store: %w", err)
 	}
 
 	rolesStateStore, err := rolestores.NewRolesStateStore(database, s.loggerFactory)
 	if err != nil {
-		return fmt.Errorf("[postgres.stores.Init] new client store: %w", err)
+		return fmt.Errorf("[postgres.stores.Init] new store of the state of roles: %w", err)
 	}
 
 	database, ok = databases[roleAssignmentCategory]
@@ -292,7 +292,7 @@ func (s *stores) Init(databases map[string]*postgres.Database) error {
 
 	roleAssignmentStore, err := rolestores.NewRoleAssignmentStore(database, s.loggerFactory)
 	if err != nil {
-		return fmt.Errorf("[postgres.stores.Init] new client store: %w", err)
+		return fmt.Errorf("[postgres.stores.Init] new role assignment store: %w", err)
 	}
 
 	database, ok = databases[permissionCategory]
@@ -302,17 +302,17 @@ func (s *stores) Init(databases map[string]*postgres.Database) error {
 
 	permissionStore, err := permissionstores.NewPermissionStore(database, s.loggerFactory)
 	if err != nil {
-		return fmt.Errorf("[postgres.stores.Init] new client store: %w", err)
+		return fmt.Errorf("[postgres.stores.Init] new permission store: %w", err)
 	}
 
 	permissionGroupStore, err := permissionstores.NewPermissionGroupStore(database, s.loggerFactory)
 	if err != nil {
-		return fmt.Errorf("[postgres.stores.Init] new client store: %w", err)
+		return fmt.Errorf("[postgres.stores.Init] new permission group store: %w", err)
 	}
 
 	rolePermissionStore, err := permissionstores.NewRolePermissionStore(database, s.loggerFactory)
 	if err != nil {
-		return fmt.Errorf("[postgres.stores.Init] new client store: %w", err)
+		return fmt.Errorf("[postgres.stores.Init] new role permission store: %w", err)
 	}
 
 	database, ok = databases[webUserAgentCategory]
@@ -322,12 +322,12 @@ func (s *stores) Init(databases map[string]*postgres.Database) error {
 
 	webUserAgentStore, err := useragentstores.NewUserAgentStore(useragentmodels.UserAgentTypeWeb, database, s.loggerFactory)
 	if err != nil {
-		return fmt.Errorf("[postgres.stores.Init] new client store: %w", err)
+		return fmt.Errorf("[postgres.stores.Init] new web user agent store: %w", err)
 	}
 
 	userAgentWebSessionStore, err := sessionstores.NewUserAgentSessionStore(sessionmodels.UserAgentSessionTypeWeb, database, s.loggerFactory)
 	if err != nil {
-		return fmt.Errorf("[postgres.stores.Init] new client store: %w", err)
+		return fmt.Errorf("[postgres.stores.Init] new store of web sessions of user agents: %w", err)
 	}
 
 	database, ok = databases[mobileUserAgentCategory]
@@ -337,12 +337,12 @@ func (s *stores) Init(databases map[string]*postgres.Database) error {
 
 	mobileUserAgentStore, err := useragentstores.NewUserAgentStore(useragentmodels.UserAgentTypeMobile, database, s.loggerFactory)
 	if err != nil {
-		return fmt.Errorf("[postgres.stores.Init] new client store: %w", err)
+		return fmt.Errorf("[postgres.stores.Init] new mobile user agent store: %w", err)
 	}
 
 	userAgentMobileSessionStore, err := sessionstores.NewUserAgentSessionStore(sessionmodels.UserAgentSessionTypeMobile, database, s.loggerFactory)
 	if err != nil {
-		return fmt.Errorf("[postgres.stores.Init] new client store: %w", err)
+		return fmt.Errorf("[postgres.stores.Init] new store of mobile sessions of user agents: %w", err)
 	}
 
 	database, ok = databases[userWebSessionCategory]
@@ -352,7 +352,7 @@ func (s *stores) Init(databases map[string]*postgres.Database) error {
 
 	userWebSessionStore, err := sessionstores.NewUserSessionStore(sessionmodels.UserSessionTypeWeb, database, s.loggerFactory)
 	if err != nil {
-		return fmt.Errorf("[postgres.stores.Init] new client store: %w", err)
+		return fmt.Errorf("[postgres.stores.Init] new store of users' web sessions: %w", err)
 	}
 
 	database, ok = databases[userWebSessionCategory]
@@ -362,7 +362,7 @@ func (s *stores) Init(databases map[string]*postgres.Database) error {
 
 	userMobileSessionStore, err := sessionstores.NewUserSessionStore(sessionmodels.UserSessionTypeMobile, database, s.loggerFactory)
 	if err != nil {
-		return fmt.Errorf("[postgres.stores.Init] new client store: %w", err)
+		return fmt.Errorf("[postgres.stores.Init] new store of users' mobile sessions: %w", err)
 	}
 
 	s.userStore = userStore
