@@ -22,17 +22,29 @@ import (
 	amapierrors "personal-website-v2/app-manager/src/api/errors"
 	"personal-website-v2/app-manager/src/api/http/sessions/converter"
 	amactions "personal-website-v2/app-manager/src/internal/actions"
+	amerrors "personal-website-v2/app-manager/src/internal/errors"
 	amidentity "personal-website-v2/app-manager/src/internal/identity"
 	"personal-website-v2/app-manager/src/internal/logging/events"
 	"personal-website-v2/app-manager/src/internal/sessions"
 	"personal-website-v2/pkg/actions"
 	apierrors "personal-website-v2/pkg/api/errors"
 	apihttp "personal-website-v2/pkg/api/http"
+	"personal-website-v2/pkg/errors"
 	httpserverhelper "personal-website-v2/pkg/helper/net/http/server"
 	"personal-website-v2/pkg/identity"
 	"personal-website-v2/pkg/logging"
 	lcontext "personal-website-v2/pkg/logging/context"
 	"personal-website-v2/pkg/net/http/server"
+)
+
+var (
+	allowedRolesIfNotOwner = []string{
+		identity.RoleSuperuser,
+		identity.RoleAdmin,
+		identity.RoleOwner,
+		amidentity.RoleAdmin,
+		amidentity.RoleAppSessionAdmin,
+	}
 )
 
 type AppSessionController struct {
@@ -104,6 +116,10 @@ func (c *AppSessionController) GetById(ctx *server.HttpContext) {
 				return false
 			}
 
+			if !c.checkAccess(opCtx, ctx, id, amidentity.PermissionAppSession_Get) {
+				return false
+			}
+
 			appSessionInfo, err := c.appSessionManager.FindById(opCtx, id)
 			if err != nil {
 				c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppSessionControllerEvent, err,
@@ -140,4 +156,39 @@ func (c *AppSessionController) GetById(ctx *server.HttpContext) {
 			return true
 		},
 	)
+}
+
+func (c *AppSessionController) checkAccess(opCtx *actions.OperationContext, httpCtx *server.HttpContext, id uint64, permissions ...string) bool {
+	ownerId, err := c.appSessionManager.GetOwnerIdById(opCtx, id)
+	if err != nil {
+		leCtx := opCtx.CreateLogEntryContext()
+		c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppSessionControllerEvent, err,
+			"[sessions.AppSessionController.checkAccess] get an app session owner id by id",
+		)
+		if err2 := errors.Unwrap(err); err2 == amerrors.ErrAppSessionNotFound {
+			if err = apihttp.NotFound(httpCtx, amapierrors.ErrAppSessionNotFound); err != nil {
+				c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppSessionControllerEvent, err,
+					"[sessions.AppSessionController.checkAccess] write NotFound",
+				)
+			}
+		}
+		return false
+	}
+
+	// userId must not be null. If userId.HasValue is false, then it is an error.
+	// userId is checked in RequestProcessor.ProcessWithAuthnCheck() or RequestProcessor.ProcessWithAuthnCheckAndAuthz().
+	userId := httpCtx.User.UserId()
+	if !userId.HasValue || userId.Value != ownerId && !httpCtx.User.HasAnyOfRolesWithPermissions(allowedRolesIfNotOwner, permissions...) {
+		leCtx := opCtx.CreateLogEntryContext()
+		c.logger.WarningWithEvent(leCtx, events.HttpControllers_AppSessionControllerEvent,
+			"[sessions.AppSessionController.checkAccess] no access (user isn't an app session owner)",
+		)
+		if err = apihttp.Forbidden(httpCtx, apierrors.ErrPermissionDenied); err != nil {
+			c.logger.ErrorWithEvent(leCtx, events.HttpControllers_AppSessionControllerEvent, err,
+				"[sessions.AppSessionController.checkAccess] write Forbidden",
+			)
+		}
+		return false
+	}
+	return true
 }
