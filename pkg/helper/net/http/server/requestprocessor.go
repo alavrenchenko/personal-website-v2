@@ -80,7 +80,7 @@ func (p *RequestProcessor) Process(ctx *server.HttpContext, atype actions.Action
 		p.logger.ErrorWithEvent(leCtx, events.NetHttp_ServerEvent, err, "[server.RequestProcessor.Process] create and start an action")
 
 		if err = apihttp.InternalServerError(ctx); err != nil {
-			p.logger.ErrorWithEvent(leCtx, events.NetHttp_ServerEvent, err, "[server.RequestProcessor.Process] write an error (InternalServerError)")
+			p.logger.ErrorWithEvent(leCtx, events.NetHttp_ServerEvent, err, "[server.RequestProcessor.Process] write InternalServerError")
 		}
 		return
 	}
@@ -111,7 +111,7 @@ func (p *RequestProcessor) Process(ctx *server.HttpContext, atype actions.Action
 		p.logger.ErrorWithEvent(leCtx, events.NetHttp_ServerEvent, err, "[server.RequestProcessor.Process] create and start an operation")
 
 		if err = apihttp.InternalServerError(ctx); err != nil {
-			p.logger.ErrorWithEvent(leCtx, events.NetHttp_ServerEvent, err, "[server.RequestProcessor.Process] write an error (InternalServerError)")
+			p.logger.ErrorWithEvent(leCtx, events.NetHttp_ServerEvent, err, "[server.RequestProcessor.Process] write InternalServerError")
 		}
 		return
 	}
@@ -153,6 +153,16 @@ func (p *RequestProcessor) ProcessWithAuthnCheck(ctx *server.HttpContext, atype 
 				}
 				return false
 			}
+
+			// userId must not be null. If userId.HasValue is false, then it is an error.
+			if !ctx.User.UserId().HasValue {
+				leCtx := opCtx.CreateLogEntryContext()
+				p.logger.ErrorWithEvent(leCtx, events.NetHttp_ServerEvent, nil, "[server.RequestProcessor.ProcessWithAuthnCheck] userId is null")
+
+				if err := apihttp.InternalServerError(ctx); err != nil {
+					p.logger.ErrorWithEvent(leCtx, events.NetHttp_ServerEvent, err, "[server.RequestProcessor.ProcessWithAuthnCheck] write InternalServerError")
+				}
+			}
 			return f(opCtx)
 		},
 	)
@@ -167,9 +177,8 @@ func (p *RequestProcessor) ProcessWithAuthz(
 ) {
 	p.Process(ctx, atype, otype,
 		func(opCtx *actions.OperationContext) bool {
-			leCtx := opCtx.CreateLogEntryContext()
-
 			if authorized, err := p.identityManager.Authorize(opCtx, ctx.User, requiredPermissions); err != nil {
+				leCtx := opCtx.CreateLogEntryContext()
 				p.logger.ErrorWithEvent(leCtx, events.NetHttp_ServerEvent, err, "[server.RequestProcessor.ProcessWithAuthz] authorize a user")
 
 				if err = apihttp.InternalServerError(ctx); err != nil {
@@ -177,6 +186,7 @@ func (p *RequestProcessor) ProcessWithAuthz(
 				}
 				return false
 			} else if !authorized {
+				leCtx := opCtx.CreateLogEntryContext()
 				p.logger.ErrorWithEvent(leCtx, events.NetHttp_ServerEvent, nil, "[server.RequestProcessor.ProcessWithAuthz] user not authorized")
 
 				if err = apihttp.Forbidden(ctx, apierrors.ErrPermissionDenied); err != nil {
@@ -198,9 +208,8 @@ func (p *RequestProcessor) ProcessWithAuthnCheckAndAuthz(
 ) {
 	p.Process(ctx, atype, otype,
 		func(opCtx *actions.OperationContext) bool {
-			leCtx := opCtx.CreateLogEntryContext()
-
 			if !ctx.User.IsAuthenticated() {
+				leCtx := opCtx.CreateLogEntryContext()
 				p.logger.ErrorWithEvent(leCtx, events.NetHttp_ServerEvent, nil, "[server.RequestProcessor.ProcessWithAuthnCheckAndAuthz] user not authenticated")
 
 				if err := apihttp.Unauthorized(ctx, apierrors.ErrUnauthenticated); err != nil {
@@ -209,7 +218,18 @@ func (p *RequestProcessor) ProcessWithAuthnCheckAndAuthz(
 				return false
 			}
 
+			// userId must not be null. If userId.HasValue is false, then it is an error.
+			if !ctx.User.UserId().HasValue {
+				leCtx := opCtx.CreateLogEntryContext()
+				p.logger.ErrorWithEvent(leCtx, events.NetHttp_ServerEvent, nil, "[server.RequestProcessor.ProcessWithAuthnCheckAndAuthz] userId is null")
+
+				if err := apihttp.InternalServerError(ctx); err != nil {
+					p.logger.ErrorWithEvent(leCtx, events.NetHttp_ServerEvent, err, "[server.RequestProcessor.ProcessWithAuthnCheckAndAuthz] write InternalServerError")
+				}
+			}
+
 			if authorized, err := p.identityManager.Authorize(opCtx, ctx.User, requiredPermissions); err != nil {
+				leCtx := opCtx.CreateLogEntryContext()
 				p.logger.ErrorWithEvent(leCtx, events.NetHttp_ServerEvent, err, "[server.RequestProcessor.ProcessWithAuthnCheckAndAuthz] authorize a user")
 
 				if err = apihttp.InternalServerError(ctx); err != nil {
@@ -217,6 +237,7 @@ func (p *RequestProcessor) ProcessWithAuthnCheckAndAuthz(
 				}
 				return false
 			} else if !authorized {
+				leCtx := opCtx.CreateLogEntryContext()
 				p.logger.ErrorWithEvent(leCtx, events.NetHttp_ServerEvent, nil, "[server.RequestProcessor.ProcessWithAuthnCheckAndAuthz] user not authorized")
 
 				if err = apihttp.Forbidden(ctx, apierrors.ErrPermissionDenied); err != nil {
