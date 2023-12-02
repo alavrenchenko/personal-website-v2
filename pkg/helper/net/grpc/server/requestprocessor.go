@@ -142,7 +142,7 @@ func (p *RequestProcessor) Process(incomingCtx context.Context, atype actions.Ac
 		}
 	}()
 
-	err = f(NewGrpcOperationContext(grpcCtx, opCtx))
+	err = f(NewGrpcOperationContext(opCtx, grpcCtx))
 	succeeded = err == nil
 	return err
 }
@@ -235,13 +235,13 @@ func (p *RequestProcessor) ProcessWithAuthnCheckAndAuthz(
 }
 
 type GrpcOperationContext struct {
-	GrpcCtx      *server.GrpcContext
 	OperationCtx *actions.OperationContext
+	GrpcCtx      *server.GrpcContext
 }
 
-func NewGrpcOperationContext(grpcCtx *server.GrpcContext, opCtx *actions.OperationContext) *GrpcOperationContext {
+func NewGrpcOperationContext(opCtx *actions.OperationContext, grpcCtx *server.GrpcContext) *GrpcOperationContext {
 	return &GrpcOperationContext{
-		GrpcCtx:      grpcCtx,
 		OperationCtx: opCtx,
+		GrpcCtx:      grpcCtx,
 	}
 }
