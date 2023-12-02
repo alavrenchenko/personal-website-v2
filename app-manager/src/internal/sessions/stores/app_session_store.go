@@ -16,6 +16,7 @@ package stores
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/google/uuid"
@@ -32,7 +33,7 @@ import (
 	"personal-website-v2/pkg/app"
 	dberrors "personal-website-v2/pkg/db/errors"
 	"personal-website-v2/pkg/db/postgres"
-	"personal-website-v2/pkg/errors"
+	errs "personal-website-v2/pkg/errors"
 	actionhelper "personal-website-v2/pkg/helper/actions"
 	"personal-website-v2/pkg/logging"
 	lcontext "personal-website-v2/pkg/logging/context"
@@ -151,7 +152,7 @@ func (s *AppSessionStore) createAndStart(ctx context.Context, appId uint64, oper
 		case dberrors.DbErrorCodeNoError:
 			return nil
 		case dberrors.DbErrorCodeInvalidOperation:
-			return errors.NewError(errors.ErrorCodeInvalidOperation, errMsg)
+			return errs.NewError(errs.ErrorCodeInvalidOperation, errMsg)
 		case amdberrors.DbErrorCodeAppNotFound:
 			return amerrors.ErrAppNotFound
 		}
@@ -227,7 +228,7 @@ func (s *AppSessionStore) terminate(ctx context.Context, id uint64, operationUse
 		case dberrors.DbErrorCodeNoError:
 			return nil
 		case dberrors.DbErrorCodeInvalidOperation:
-			return errors.NewError(errors.ErrorCodeInvalidOperation, errMsg)
+			return errs.NewError(errs.ErrorCodeInvalidOperation, errMsg)
 		case amdberrors.DbErrorCodeAppSessionNotFound:
 			return amerrors.ErrAppSessionNotFound
 		}
@@ -334,4 +335,32 @@ func (s *AppSessionStore) Exists(ctx *actions.OperationContext, appId uint64) (b
 		return false, fmt.Errorf("[stores.AppSessionStore.Exists] execute an operation: %w", err)
 	}
 	return exists, nil
+}
+
+// GetOwnerIdById gets an app session owner ID (user ID) by the specified app session ID.
+func (s *AppSessionStore) GetOwnerIdById(ctx *actions.OperationContext, id uint64) (uint64, error) {
+	var ownerId uint64
+	err := s.opExecutor.Exec(ctx, amactions.OperationTypeAppSessionStore_GetOwnerIdById, []*actions.OperationParam{actions.NewOperationParam("id", id)},
+		func(opCtx *actions.OperationContext) error {
+			conn, err := s.db.ConnPool.Acquire(opCtx.Ctx)
+			if err != nil {
+				return fmt.Errorf("[stores.AppSessionStore.GetOwnerIdById] acquire a connection: %w", err)
+			}
+			defer conn.Release()
+
+			const query = "SELECT created_by FROM " + appSessionsTable + " WHERE id = $1 LIMIT 1"
+
+			if err = conn.QueryRow(opCtx.Ctx, query, id).Scan(&ownerId); err != nil {
+				if errors.Is(err, pgx.ErrNoRows) {
+					return amerrors.ErrAppSessionNotFound
+				}
+				return fmt.Errorf("[stores.AppSessionStore.GetOwnerIdById] execute a query: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return 0, fmt.Errorf("[stores.AppSessionStore.GetOwnerIdById] execute an operation: %w", err)
+	}
+	return ownerId, nil
 }

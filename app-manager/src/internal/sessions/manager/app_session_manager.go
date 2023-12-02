@@ -261,3 +261,21 @@ func (m *AppSessionManager) Exists(ctx *actions.OperationContext, appId uint64) 
 	}
 	return exists, nil
 }
+
+// GetOwnerIdById gets an app session owner ID (user ID) by the specified app session ID.
+func (m *AppSessionManager) GetOwnerIdById(ctx *actions.OperationContext, id uint64) (uint64, error) {
+	var ownerId uint64
+	err := m.opExecutor.Exec(ctx, amactions.OperationTypeAppSessionManager_GetOwnerIdById, []*actions.OperationParam{actions.NewOperationParam("id", id)},
+		func(opCtx *actions.OperationContext) error {
+			var err error
+			if ownerId, err = m.appSessionStore.GetOwnerIdById(opCtx, id); err != nil {
+				return fmt.Errorf("[manager.AppSessionManager.GetOwnerIdById] get an app session owner id by id: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return 0, fmt.Errorf("[manager.AppSessionManager.GetOwnerIdById] execute an operation: %w", err)
+	}
+	return ownerId, nil
+}
