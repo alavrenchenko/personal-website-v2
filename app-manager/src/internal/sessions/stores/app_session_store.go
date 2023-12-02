@@ -309,3 +309,29 @@ func (s *AppSessionStore) GetAllByAppId(ctx *actions.OperationContext, appId uin
 	}
 	return ss, nil
 }
+
+// Exists returns true if the app session exists.
+func (s *AppSessionStore) Exists(ctx *actions.OperationContext, appId uint64) (bool, error) {
+	var exists bool
+	err := s.opExecutor.Exec(ctx, amactions.OperationTypeAppSessionStore_Exists, []*actions.OperationParam{actions.NewOperationParam("appId", appId)},
+		func(opCtx *actions.OperationContext) error {
+			conn, err := s.db.ConnPool.Acquire(opCtx.Ctx)
+			if err != nil {
+				return fmt.Errorf("[stores.AppSessionStore.Exists] acquire a connection: %w", err)
+			}
+			defer conn.Release()
+
+			// FUNCTION: public.app_session_exists(_app_id) RETURNS boolean
+			const query = "SELECT public.app_session_exists($1)"
+
+			if err = conn.QueryRow(opCtx.Ctx, query, appId).Scan(&exists); err != nil {
+				return fmt.Errorf("[stores.AppSessionStore.Exists] execute a query (app_session_exists): %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return false, fmt.Errorf("[stores.AppSessionStore.Exists] execute an operation: %w", err)
+	}
+	return exists, nil
+}

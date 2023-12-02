@@ -243,3 +243,21 @@ func (m *AppSessionManager) GetAllByAppId(ctx *actions.OperationContext, appId u
 	}
 	return ss, nil
 }
+
+// Exists returns true if the app session exists.
+func (m *AppSessionManager) Exists(ctx *actions.OperationContext, appId uint64) (bool, error) {
+	var exists bool
+	err := m.opExecutor.Exec(ctx, amactions.OperationTypeAppSessionManager_Exists, []*actions.OperationParam{actions.NewOperationParam("appId", appId)},
+		func(opCtx *actions.OperationContext) error {
+			var err error
+			if exists, err = m.appSessionStore.Exists(opCtx, appId); err != nil {
+				return fmt.Errorf("[manager.AppSessionManager.Exists] app session exists: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return false, fmt.Errorf("[manager.AppSessionManager.Exists] execute an operation: %w", err)
+	}
+	return exists, nil
+}
