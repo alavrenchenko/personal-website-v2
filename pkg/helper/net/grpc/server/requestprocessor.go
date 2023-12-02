@@ -156,6 +156,14 @@ func (p *RequestProcessor) ProcessWithAuthnCheck(incomingCtx context.Context, at
 				)
 				return apigrpcerrors.CreateGrpcError(codes.Unauthenticated, apierrors.ErrUnauthenticated)
 			}
+
+			// userId must not be null. If userId.HasValue is false, then it is an error.
+			if !opCtx.GrpcCtx.User.UserId().HasValue {
+				p.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.NetGrpc_ServerEvent, nil,
+					"[server.RequestProcessor.ProcessWithAuthnCheck] userId is null",
+				)
+				return apigrpcerrors.CreateGrpcError(codes.Internal, apierrors.ErrInternal)
+			}
 			return f(opCtx)
 		},
 	)
@@ -200,6 +208,14 @@ func (p *RequestProcessor) ProcessWithAuthnCheckAndAuthz(
 					"[server.RequestProcessor.ProcessWithAuthnCheckAndAuthz] user not authenticated",
 				)
 				return apigrpcerrors.CreateGrpcError(codes.Unauthenticated, apierrors.ErrUnauthenticated)
+			}
+
+			// userId must not be null. If userId.HasValue is false, then it is an error.
+			if !opCtx.GrpcCtx.User.UserId().HasValue {
+				p.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.NetGrpc_ServerEvent, nil,
+					"[server.RequestProcessor.ProcessWithAuthnCheckAndAuthz] userId is null",
+				)
+				return apigrpcerrors.CreateGrpcError(codes.Internal, apierrors.ErrInternal)
 			}
 
 			if authorized, err := p.identityManager.Authorize(opCtx.OperationCtx, opCtx.GrpcCtx.User, requiredPermissions); err != nil {
