@@ -91,10 +91,13 @@ type Identity interface {
 	SetUserGroup(g UserGroup)
 	ClientId() nullable.Nullable[uint64]
 	IsAuthenticated() bool
-	HasRole(name string) bool
-	HasRoleWithPermissions(roleName string, permissionNames []string) bool
-	HasPermissions(names []string) bool
 	AddPermissionRoles(permissionRoles []*PermissionWithRoles)
+	HasRole(name string) bool
+	HasRoles(names ...string) bool
+	HasAnyOfRoles(names ...string) bool
+	HasRoleWithPermissions(roleName string, permissionNames ...string) bool
+	HasAnyOfRolesWithPermissions(roleNames []string, permissionNames ...string) bool
+	HasPermissions(names ...string) bool
 }
 
 // The permission with roles.

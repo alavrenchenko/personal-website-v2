@@ -63,58 +63,6 @@ func (i *DefaultIdentity) IsAuthenticated() bool {
 	return i.userId.HasValue
 }
 
-func (i *DefaultIdentity) HasRole(name string) bool {
-	return i.roles[name]
-}
-
-func (i *DefaultIdentity) HasRoleWithPermissions(roleName string, permissionNames []string) bool {
-	if !i.roles[roleName] {
-		return false
-	}
-
-	pnslen := len(permissionNames)
-	if pnslen == 0 {
-		return false
-	} else if pnslen == 1 {
-		rs, ok := i.permissionRoles[permissionNames[0]]
-		return ok && rs[roleName]
-	}
-
-	for j := 0; ; {
-		if rs, ok := i.permissionRoles[permissionNames[j]]; !ok || !rs[roleName] {
-			return false
-		}
-
-		j++
-		if j == pnslen {
-			break
-		}
-	}
-	return true
-}
-
-func (i *DefaultIdentity) HasPermissions(names []string) bool {
-	nslen := len(names)
-	if nslen == 0 {
-		return false
-	} else if nslen == 1 {
-		_, ok := i.permissionRoles[names[0]]
-		return ok
-	}
-
-	for j := 0; ; {
-		if _, ok := i.permissionRoles[names[j]]; !ok {
-			return false
-		}
-
-		j++
-		if j == nslen {
-			break
-		}
-	}
-	return true
-}
-
 func (i *DefaultIdentity) AddPermissionRoles(permissionRoles []*PermissionWithRoles) {
 	if len(permissionRoles) == 0 {
 		return
@@ -147,4 +95,113 @@ func (i *DefaultIdentity) AddPermissionRoles(permissionRoles []*PermissionWithRo
 			}
 		}
 	}
+}
+
+func (i *DefaultIdentity) HasRole(name string) bool {
+	return i.roles[name]
+}
+
+func (i *DefaultIdentity) HasRoles(names ...string) bool {
+	nslen := len(names)
+	if nslen == 0 {
+		return false
+	}
+
+	for j := 0; j < nslen; j++ {
+		if !i.roles[names[j]] {
+			return false
+		}
+	}
+	return true
+}
+
+func (i *DefaultIdentity) HasAnyOfRoles(names ...string) bool {
+	for _, n := range names {
+		if i.roles[n] {
+			return true
+		}
+	}
+	return false
+}
+
+func (i *DefaultIdentity) HasRoleWithPermissions(roleName string, permissionNames ...string) bool {
+	pnslen := len(permissionNames)
+	if pnslen == 0 || !i.roles[roleName] {
+		return false
+	} else if pnslen == 1 {
+		rs, ok := i.permissionRoles[permissionNames[0]]
+		return ok && rs[roleName]
+	}
+
+	for j := 0; ; {
+		if rs, ok := i.permissionRoles[permissionNames[j]]; !ok || !rs[roleName] {
+			return false
+		}
+
+		j++
+		if j == pnslen {
+			break
+		}
+	}
+	return true
+}
+
+func (i *DefaultIdentity) HasAnyOfRolesWithPermissions(roleNames []string, permissionNames ...string) bool {
+	rnslen := len(roleNames)
+	pnslen := len(permissionNames)
+	if rnslen == 0 || pnslen == 0 {
+		return false
+	}
+
+	if pnslen == 1 {
+		rs, ok := i.permissionRoles[permissionNames[0]]
+		if !ok {
+			return false
+		}
+
+		for j := 0; j < rnslen; j++ {
+			if rs[roleNames[j]] {
+				return true
+			}
+		}
+		return false
+	}
+
+PermissionLoop:
+	for j := 0; j < pnslen; j++ {
+		rs, ok := i.permissionRoles[permissionNames[j]]
+		if !ok {
+			return false
+		}
+
+		for x := 0; x < rnslen; x++ {
+			if rs[roleNames[x]] {
+				continue PermissionLoop
+			}
+		}
+		return false
+	}
+	return true
+}
+
+func (i *DefaultIdentity) HasPermissions(names ...string) bool {
+	nslen := len(names)
+	if nslen == 0 {
+		return false
+	} else if nslen == 1 {
+		_, ok := i.permissionRoles[names[0]]
+		return ok
+	}
+
+	for j := 0; ; {
+		if _, ok := i.permissionRoles[names[j]]; !ok {
+			return false
+		}
+
+		j++
+		if j == nslen {
+			break
+		}
+	}
+	return true
 }
