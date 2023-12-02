@@ -25,11 +25,14 @@ import (
 	"personal-website-v2/app-manager/src/internal/sessions/dbmodels"
 	"personal-website-v2/pkg/actions"
 	"personal-website-v2/pkg/app"
+	actionhelper "personal-website-v2/pkg/helper/actions"
 	"personal-website-v2/pkg/logging"
 	"personal-website-v2/pkg/logging/context"
 )
 
+// AppSessionManager is an app session manager.
 type AppSessionManager struct {
+	opExecutor      *actionhelper.OperationExecutor
 	appSessionStore sessions.AppSessionStore
 	logger          logging.Logger[*context.LogEntryContext]
 }
@@ -38,19 +41,31 @@ var _ sessions.AppSessionManager = (*AppSessionManager)(nil)
 
 func NewAppSessionManager(appSessionStore sessions.AppSessionStore, loggerFactory logging.LoggerFactory[*context.LogEntryContext]) (*AppSessionManager, error) {
 	l, err := loggerFactory.CreateLogger("internal.sessions.manager.AppSessionManager")
-
 	if err != nil {
 		return nil, fmt.Errorf("[manager.NewAppSessionManager] create a logger: %w", err)
 	}
 
+	c := &actionhelper.OperationExecutorConfig{
+		DefaultCategory: actions.OperationCategoryCommon,
+		DefaultGroup:    amactions.OperationGroupAppSession,
+		StopAppIfError:  true,
+	}
+	e, err := actionhelper.NewOperationExecutor(c, loggerFactory)
+	if err != nil {
+		return nil, fmt.Errorf("[manager.NewAppSessionManager] new operation executor: %w", err)
+	}
+
 	return &AppSessionManager{
+		opExecutor:      e,
 		appSessionStore: appSessionStore,
 		logger:          l,
 	}, nil
 }
 
-func (m *AppSessionManager) CreateAndStart(appId uint64, userId uint64) (uint64, error) {
-	id, err := m.appSessionStore.CreateAndStart(appId, userId)
+// CreateAndStart creates and starts an app session for the specified app
+// and returns app session ID if the operation is successful.
+func (m *AppSessionManager) CreateAndStart(appId uint64, operationUserId uint64) (uint64, error) {
+	id, err := m.appSessionStore.CreateAndStart(appId, operationUserId)
 	if err != nil {
 		return 0, fmt.Errorf("[manager.AppSessionManager.CreateAndStart] create and start an app session: %w", err)
 	}
@@ -64,6 +79,8 @@ func (m *AppSessionManager) CreateAndStart(appId uint64, userId uint64) (uint64,
 	return id, nil
 }
 
+// CreateAndStartWithContext creates and starts an app session for the specified app
+// and returns app session ID if the operation is successful.
 func (m *AppSessionManager) CreateAndStartWithContext(ctx *actions.OperationContext, appId uint64) (uint64, error) {
 	op, err := ctx.Action.Operations.CreateAndStart(
 		amactions.OperationTypeAppSessionManager_CreateAndStart,
@@ -108,8 +125,9 @@ func (m *AppSessionManager) CreateAndStartWithContext(ctx *actions.OperationCont
 	return id, nil
 }
 
-func (m *AppSessionManager) Terminate(id uint64, userId uint64) error {
-	if err := m.appSessionStore.Terminate(id, userId); err != nil {
+// Terminate terminates an app session by the specified app session ID.
+func (m *AppSessionManager) Terminate(id uint64, operationUserId uint64) error {
+	if err := m.appSessionStore.Terminate(id, operationUserId); err != nil {
 		return fmt.Errorf("[manager.AppSessionManager.Terminate] terminate an app session: %w", err)
 	}
 
@@ -122,6 +140,7 @@ func (m *AppSessionManager) Terminate(id uint64, userId uint64) error {
 	return nil
 }
 
+// TerminateWithContext terminates an app session by the specified app session ID.
 func (m *AppSessionManager) TerminateWithContext(ctx *actions.OperationContext, id uint64) error {
 	op, err := ctx.Action.Operations.CreateAndStart(
 		amactions.OperationTypeAppSessionManager_Terminate,
@@ -166,6 +185,7 @@ func (m *AppSessionManager) TerminateWithContext(ctx *actions.OperationContext, 
 	return nil
 }
 
+// FindById finds and returns app session info, if any, by the specified app session ID.
 func (m *AppSessionManager) FindById(ctx *actions.OperationContext, id uint64) (*dbmodels.AppSessionInfo, error) {
 	op, err := ctx.Action.Operations.CreateAndStart(
 		amactions.OperationTypeAppSessionManager_FindById,
@@ -202,4 +222,24 @@ func (m *AppSessionManager) FindById(ctx *actions.OperationContext, id uint64) (
 
 	succeeded = true
 	return s, nil
+}
+
+// GetAllByAppId gets all sessions of the app by the specified app ID.
+// If onlyExisting is true, then it returns only existing sessions of the app.
+func (m *AppSessionManager) GetAllByAppId(ctx *actions.OperationContext, appId uint64, onlyExisting bool) ([]*dbmodels.AppSessionInfo, error) {
+	var ss []*dbmodels.AppSessionInfo
+	err := m.opExecutor.Exec(ctx, amactions.OperationTypeAppSessionManager_GetAllByAppId,
+		[]*actions.OperationParam{actions.NewOperationParam("appId", appId), actions.NewOperationParam("onlyExisting", onlyExisting)},
+		func(opCtx *actions.OperationContext) error {
+			var err error
+			if ss, err = m.appSessionStore.GetAllByAppId(opCtx, appId, onlyExisting); err != nil {
+				return fmt.Errorf("[manager.AppSessionManager.GetAllByAppId] get all sessions of the app by app id: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("[manager.AppSessionManager.GetAllByAppId] execute an operation: %w", err)
+	}
+	return ss, nil
 }

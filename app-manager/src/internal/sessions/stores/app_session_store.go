@@ -27,6 +27,7 @@ import (
 	"personal-website-v2/app-manager/src/internal/logging/events"
 	"personal-website-v2/app-manager/src/internal/sessions"
 	"personal-website-v2/app-manager/src/internal/sessions/dbmodels"
+	"personal-website-v2/app-manager/src/internal/sessions/models"
 	"personal-website-v2/pkg/actions"
 	"personal-website-v2/pkg/app"
 	dberrors "personal-website-v2/pkg/db/errors"
@@ -277,4 +278,34 @@ func (s *AppSessionStore) FindById(ctx *actions.OperationContext, id uint64) (*d
 
 	succeeded = true
 	return as, nil
+}
+
+// GetAllByAppId gets all sessions of the app by the specified app ID.
+// If onlyExisting is true, then it returns only existing sessions of the app.
+func (s *AppSessionStore) GetAllByAppId(ctx *actions.OperationContext, appId uint64, onlyExisting bool) ([]*dbmodels.AppSessionInfo, error) {
+	var ss []*dbmodels.AppSessionInfo
+	err := s.opExecutor.Exec(ctx, amactions.OperationTypeAppSessionStore_GetAllByAppId,
+		[]*actions.OperationParam{actions.NewOperationParam("appId", appId), actions.NewOperationParam("onlyExisting", onlyExisting)},
+		func(opCtx *actions.OperationContext) error {
+			var query string
+			var args []any
+			if onlyExisting {
+				query = "SELECT * FROM " + appSessionsTable + " WHERE app_id = $1 AND status <> $2 AND status <> $3"
+				args = []any{appId, models.AppSessionStatusEnded, models.AppSessionStatusDeleted}
+			} else {
+				query = "SELECT * FROM " + appSessionsTable + " WHERE app_id = $1"
+				args = []any{appId}
+			}
+
+			var err error
+			if ss, err = s.store.FindAll(opCtx.Ctx, query, args...); err != nil {
+				return fmt.Errorf("[stores.AppSessionStore.GetAllByAppId] find all sessions of the app by app id: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("[stores.AppSessionStore.GetAllByAppId] execute an operation: %w", err)
+	}
+	return ss, nil
 }
