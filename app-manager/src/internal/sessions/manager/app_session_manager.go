@@ -23,6 +23,7 @@ import (
 	"personal-website-v2/app-manager/src/internal/logging/events"
 	"personal-website-v2/app-manager/src/internal/sessions"
 	"personal-website-v2/app-manager/src/internal/sessions/dbmodels"
+	"personal-website-v2/app-manager/src/internal/sessions/models"
 	"personal-website-v2/pkg/actions"
 	"personal-website-v2/pkg/app"
 	actionhelper "personal-website-v2/pkg/helper/actions"
@@ -278,4 +279,22 @@ func (m *AppSessionManager) GetOwnerIdById(ctx *actions.OperationContext, id uin
 		return 0, fmt.Errorf("[manager.AppSessionManager.GetOwnerIdById] execute an operation: %w", err)
 	}
 	return ownerId, nil
+}
+
+// GetStatusById gets an app session status by the specified app session ID.
+func (m *AppSessionManager) GetStatusById(ctx *actions.OperationContext, id uint64) (models.AppSessionStatus, error) {
+	var s models.AppSessionStatus
+	err := m.opExecutor.Exec(ctx, amactions.OperationTypeAppSessionManager_GetStatusById, []*actions.OperationParam{actions.NewOperationParam("id", id)},
+		func(opCtx *actions.OperationContext) error {
+			var err error
+			if s, err = m.appSessionStore.GetStatusById(opCtx, id); err != nil {
+				return fmt.Errorf("[manager.AppSessionManager.GetStatusById] get an app session status by id: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return s, fmt.Errorf("[manager.AppSessionManager.GetStatusById] execute an operation: %w", err)
+	}
+	return s, nil
 }

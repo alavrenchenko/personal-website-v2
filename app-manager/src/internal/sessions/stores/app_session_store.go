@@ -364,3 +364,31 @@ func (s *AppSessionStore) GetOwnerIdById(ctx *actions.OperationContext, id uint6
 	}
 	return ownerId, nil
 }
+
+// GetStatusById gets an app session status by the specified app session ID.
+func (s *AppSessionStore) GetStatusById(ctx *actions.OperationContext, id uint64) (models.AppSessionStatus, error) {
+	var status models.AppSessionStatus
+	err := s.opExecutor.Exec(ctx, amactions.OperationTypeAppSessionStore_GetStatusById, []*actions.OperationParam{actions.NewOperationParam("id", id)},
+		func(opCtx *actions.OperationContext) error {
+			conn, err := s.db.ConnPool.Acquire(opCtx.Ctx)
+			if err != nil {
+				return fmt.Errorf("[stores.AppSessionStore.GetStatusById] acquire a connection: %w", err)
+			}
+			defer conn.Release()
+
+			const query = "SELECT status FROM " + appSessionsTable + " WHERE id = $1 LIMIT 1"
+
+			if err = conn.QueryRow(opCtx.Ctx, query, id).Scan(&status); err != nil {
+				if errors.Is(err, pgx.ErrNoRows) {
+					return amerrors.ErrAppSessionNotFound
+				}
+				return fmt.Errorf("[stores.AppSessionStore.GetStatusById] execute a query: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return status, fmt.Errorf("[stores.AppSessionStore.GetStatusById] execute an operation: %w", err)
+	}
+	return status, nil
+}
