@@ -22,9 +22,10 @@ import (
 func ConvertToApiAppInfo(appInfo *dbmodels.AppInfo) *apimodels.AppInfo {
 	return &apimodels.AppInfo{
 		Id:              appInfo.Id,
-		GroupId:         appInfo.GroupId,
 		Name:            appInfo.Name,
+		GroupId:         appInfo.GroupId,
 		Type:            appInfo.Type,
+		Title:           appInfo.Title,
 		Category:        appInfo.Category,
 		CreatedAt:       appInfo.CreatedAt,
 		CreatedBy:       appInfo.CreatedBy,

@@ -22,9 +22,10 @@ import (
 
 type AppInfo struct {
 	Id              uint64             `json:"id"`
-	GroupId         uint64             `json:"groupId"`
 	Name            string             `json:"name"`
+	GroupId         uint64             `json:"groupId"`
 	Type            models.AppType     `json:"type"`
+	Title           string             `json:"title"`
 	Category        models.AppCategory `json:"category"`
 	CreatedAt       time.Time          `json:"createdAt"`
 	CreatedBy       uint64             `json:"createdBy"`

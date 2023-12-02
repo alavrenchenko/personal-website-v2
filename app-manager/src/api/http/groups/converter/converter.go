@@ -24,6 +24,7 @@ func ConvertToApiAppGroup(appGroup *dbmodels.AppGroup) *apimodels.AppGroup {
 		Id:              appGroup.Id,
 		Name:            appGroup.Name,
 		Type:            appGroup.Type,
+		Title:           appGroup.Title,
 		CreatedAt:       appGroup.CreatedAt,
 		CreatedBy:       appGroup.CreatedBy,
 		UpdatedAt:       appGroup.UpdatedAt,
@@ -32,6 +33,7 @@ func ConvertToApiAppGroup(appGroup *dbmodels.AppGroup) *apimodels.AppGroup {
 		StatusUpdatedAt: appGroup.StatusUpdatedAt,
 		StatusUpdatedBy: appGroup.StatusUpdatedBy,
 		StatusComment:   appGroup.StatusComment,
+		Version:         appGroup.Version,
 		Description:     appGroup.Description,
 	}
 }

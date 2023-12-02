@@ -24,6 +24,7 @@ type AppGroup struct {
 	Id              uint64                `json:"id"`
 	Name            string                `json:"name"`
 	Type            models.AppGroupType   `json:"type"`
+	Title           string                `json:"title"`
 	CreatedAt       time.Time             `json:"createdAt"`
 	CreatedBy       uint64                `json:"createdBy"`
 	UpdatedAt       time.Time             `json:"updatedAt"`
@@ -32,5 +33,6 @@ type AppGroup struct {
 	StatusUpdatedAt time.Time             `json:"statusUpdatedAt"`
 	StatusUpdatedBy uint64                `json:"statusUpdatedBy"`
 	StatusComment   *string               `json:"statusComment"`
+	Version         string                `json:"version"`
 	Description     string                `json:"description"`
 }
