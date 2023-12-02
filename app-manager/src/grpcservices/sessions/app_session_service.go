@@ -39,6 +39,16 @@ import (
 	lcontext "personal-website-v2/pkg/logging/context"
 )
 
+var (
+	allowedRolesIfNotOwner = []string{
+		identity.RoleSuperuser,
+		identity.RoleAdmin,
+		identity.RoleOwner,
+		amidentity.RoleAdmin,
+		amidentity.RoleAppSessionAdmin,
+	}
+)
+
 type AppSessionService struct {
 	sessionspb.UnimplementedAppSessionServiceServer
 	reqProcessor      *grpcserverhelper.RequestProcessor
@@ -112,26 +122,8 @@ func (s *AppSessionService) Terminate(ctx context.Context, req *sessionspb.Termi
 	err := s.reqProcessor.ProcessWithAuthnCheckAndAuthz(ctx, amactions.ActionTypeAppSession_Terminate, amactions.OperationTypeAppSessionService_Terminate,
 		[]string{amidentity.PermissionAppSession_Terminate},
 		func(opCtx *grpcserverhelper.GrpcOperationContext) error {
-			ownerId, err := s.appSessionManager.GetOwnerIdById(opCtx.OperationCtx, req.Id)
-			if err != nil {
-				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AppSessionServiceEvent, err,
-					"[sessions.AppSessionService.Terminate] get an app session owner id by id",
-				)
-				if err2 := errors.Unwrap(err); err2 == amerrors.ErrAppSessionNotFound {
-					return apigrpcerrors.CreateGrpcError(codes.NotFound, amapierrors.ErrAppSessionNotFound)
-				}
-				return apigrpcerrors.CreateGrpcError(codes.Internal, apierrors.ErrInternal)
-			}
-
-			// userId must not be null. If userId.HasValue is false, then it is an error.
-			// userId is checked in reqProcessor.ProcessWithAuthnCheckAndAuthz().
-			userId := opCtx.GrpcCtx.User.UserId()
-			if !userId.HasValue || userId.Value != ownerId &&
-				!opCtx.GrpcCtx.User.HasAnyOfRolesWithPermissions([]string{amidentity.RoleAdmin, amidentity.RoleAppSessionAdmin}, amidentity.PermissionAppSession_Terminate) {
-				s.logger.WarningWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AppSessionServiceEvent,
-					"[sessions.AppSessionService.Terminate] user isn't an app session owner",
-				)
-				return apigrpcerrors.CreateGrpcError(codes.PermissionDenied, apierrors.ErrPermissionDenied)
+			if err := s.checkAccess(opCtx, req.Id, amidentity.PermissionAppSession_Terminate); err != nil {
+				return err
 			}
 
 			if err := s.appSessionManager.TerminateWithContext(opCtx.OperationCtx, req.Id); err != nil {
@@ -163,6 +155,10 @@ func (s *AppSessionService) GetById(ctx context.Context, req *sessionspb.GetById
 	err := s.reqProcessor.ProcessWithAuthnCheckAndAuthz(ctx, amactions.ActionTypeAppSession_GetById, amactions.OperationTypeAppSessionService_GetById,
 		[]string{amidentity.PermissionAppSession_Get},
 		func(opCtx *grpcserverhelper.GrpcOperationContext) error {
+			if err := s.checkAccess(opCtx, req.Id, amidentity.PermissionAppSession_Get); err != nil {
+				return err
+			}
+
 			appSessionInfo, err := s.appSessionManager.FindById(opCtx.OperationCtx, req.Id)
 			if err != nil {
 				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AppSessionServiceEvent, err,
@@ -185,4 +181,28 @@ func (s *AppSessionService) GetById(ctx context.Context, req *sessionspb.GetById
 		return nil, err
 	}
 	return res, nil
+}
+
+func (s *AppSessionService) checkAccess(ctx *grpcserverhelper.GrpcOperationContext, id uint64, permissions ...string) error {
+	ownerId, err := s.appSessionManager.GetOwnerIdById(ctx.OperationCtx, id)
+	if err != nil {
+		s.logger.ErrorWithEvent(ctx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AppSessionServiceEvent, err,
+			"[sessions.AppSessionService.checkAccess] get an app session owner id by id",
+		)
+		if err2 := errors.Unwrap(err); err2 == amerrors.ErrAppSessionNotFound {
+			return apigrpcerrors.CreateGrpcError(codes.NotFound, amapierrors.ErrAppSessionNotFound)
+		}
+		return apigrpcerrors.CreateGrpcError(codes.Internal, apierrors.ErrInternal)
+	}
+
+	// userId must not be null. If userId.HasValue is false, then it is an error.
+	// userId is checked in RequestProcessor.ProcessWithAuthnCheck() or RequestProcessor.ProcessWithAuthnCheckAndAuthz().
+	userId := ctx.GrpcCtx.User.UserId()
+	if !userId.HasValue || userId.Value != ownerId && !ctx.GrpcCtx.User.HasAnyOfRolesWithPermissions(allowedRolesIfNotOwner, permissions...) {
+		s.logger.WarningWithEvent(ctx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AppSessionServiceEvent,
+			"[sessions.AppSessionService.checkAccess] no access (user isn't an app session owner)",
+		)
+		return apigrpcerrors.CreateGrpcError(codes.PermissionDenied, apierrors.ErrPermissionDenied)
+	}
+	return nil
 }
