@@ -112,6 +112,28 @@ func (s *AppSessionService) Terminate(ctx context.Context, req *sessionspb.Termi
 	err := s.reqProcessor.ProcessWithAuthnCheckAndAuthz(ctx, amactions.ActionTypeAppSession_Terminate, amactions.OperationTypeAppSessionService_Terminate,
 		[]string{amidentity.PermissionAppSession_Terminate},
 		func(opCtx *grpcserverhelper.GrpcOperationContext) error {
+			ownerId, err := s.appSessionManager.GetOwnerIdById(opCtx.OperationCtx, req.Id)
+			if err != nil {
+				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AppSessionServiceEvent, err,
+					"[sessions.AppSessionService.Terminate] get an app session owner id by id",
+				)
+				if err2 := errors.Unwrap(err); err2 == amerrors.ErrAppSessionNotFound {
+					return apigrpcerrors.CreateGrpcError(codes.NotFound, amapierrors.ErrAppSessionNotFound)
+				}
+				return apigrpcerrors.CreateGrpcError(codes.Internal, apierrors.ErrInternal)
+			}
+
+			// userId must not be null. If userId.HasValue is false, then it is an error.
+			// userId is checked in reqProcessor.ProcessWithAuthnCheckAndAuthz().
+			userId := opCtx.GrpcCtx.User.UserId()
+			if !userId.HasValue || userId.Value != ownerId &&
+				!opCtx.GrpcCtx.User.HasAnyOfRolesWithPermissions([]string{amidentity.RoleAdmin, amidentity.RoleAppSessionAdmin}, amidentity.PermissionAppSession_Terminate) {
+				s.logger.WarningWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AppSessionServiceEvent,
+					"[sessions.AppSessionService.Terminate] user isn't an app session owner",
+				)
+				return apigrpcerrors.CreateGrpcError(codes.PermissionDenied, apierrors.ErrPermissionDenied)
+			}
+
 			if err := s.appSessionManager.TerminateWithContext(opCtx.OperationCtx, req.Id); err != nil {
 				s.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.GrpcServices_AppSessionServiceEvent, err,
 					"[sessions.AppSessionService.Terminate] terminate an app session",
