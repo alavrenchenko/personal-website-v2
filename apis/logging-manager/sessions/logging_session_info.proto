@@ -43,7 +43,7 @@ message LoggingSessionInfo {
     // The user ID to identify the user who updated the logging session.
     uint64 updated_by = 6;
 
-    // The status of the logging session can be New(1) or Started(2).
+    // The logging session status.
     LoggingSessionStatus status = 7;
 
     // It stores the date and time at which the logging session status was updated.
@@ -65,4 +65,6 @@ enum LoggingSessionStatus {
     LOGGING_SESSION_STATUS_UNSPECIFIED = 0;
     NEW = 1;
     STARTED = 2;
+    DELETING = 4;
+    DELETED = 5;
 }
