@@ -20,14 +20,16 @@ import "personal-website-v2/pkg/actions"
 // Common (system) action types (1-9999)
 
 const (
-	// Application action types (10000-10099)
+	// Application action types (10000-10999).
 	ActionTypeApplication actions.ActionType = 10000
 
-	// Log action types (10100-10299)
+	// Log action types (11000-11199).
 
-	// Log group action types (10300-10499)
+	// Log group action types (11200-11399).
 
-	// Logging session action types (10500-10699)
-	ActionTypeLoggingSession_CreateAndStart actions.ActionType = 10500
-	ActionTypeLoggingSession_GetById        actions.ActionType = 10501
+	// Logging session action types (11400-11599).
+	ActionTypeLoggingSession_Create         actions.ActionType = 11400
+	ActionTypeLoggingSession_Start          actions.ActionType = 11401
+	ActionTypeLoggingSession_CreateAndStart actions.ActionType = 11402
+	ActionTypeLoggingSession_GetById        actions.ActionType = 11403
 )

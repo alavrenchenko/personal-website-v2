@@ -20,44 +20,54 @@ import "personal-website-v2/pkg/actions"
 // Common (system) operation types (1-9999)
 
 const (
-	// Application operation types (10000-10999)
+	// Application operation types (10000-10999).
 	OperationTypeApplication actions.OperationType = 10000
 
-	// LogManager operation types (11000-11499)
+	// LogManager operation types (11000-11199).
 
-	// LogGroupManager operation types (11500-11999)
+	// LogGroupManager operation types (11200-11399).
 
-	// LoggingSessionManager operation types (12000-12499)
-	OperationTypeLoggingSessionManager_Create         actions.OperationType = 12000
-	OperationTypeLoggingSessionManager_Start          actions.OperationType = 12001
-	OperationTypeLoggingSessionManager_CreateAndStart actions.OperationType = 12002
-	OperationTypeLoggingSessionManager_FindById       actions.OperationType = 12003
+	// LoggingSessionManager operation types (11400-11599).
+	OperationTypeLoggingSessionManager_Create         actions.OperationType = 11400
+	OperationTypeLoggingSessionManager_Start          actions.OperationType = 11401
+	OperationTypeLoggingSessionManager_CreateAndStart actions.OperationType = 11402
+	OperationTypeLoggingSessionManager_FindById       actions.OperationType = 11403
 
-	// LogStore operation types (21000-21499)
+	// ApplicationStore operation types (30000-30999).
 
-	// LogGroupStore operation types (21500-21999)
+	// LogStore operation types (31000-31199).
 
-	// LoggingSessionStore operation types (22000-22499)
-	OperationTypeLoggingSessionStore_Create         actions.OperationType = 22000
-	OperationTypeLoggingSessionStore_Start          actions.OperationType = 22001
-	OperationTypeLoggingSessionStore_CreateAndStart actions.OperationType = 22002
-	OperationTypeLoggingSessionStore_FindById       actions.OperationType = 22003
+	// LogGroupStore operation types (31200-31399).
 
-	// caching (30000-39999)
+	// LoggingSessionStore operation types (31400-31599).
+	OperationTypeLoggingSessionStore_Create         actions.OperationType = 31400
+	OperationTypeLoggingSessionStore_Start          actions.OperationType = 31401
+	OperationTypeLoggingSessionStore_CreateAndStart actions.OperationType = 31402
+	OperationTypeLoggingSessionStore_FindById       actions.OperationType = 31403
 
-	// [HTTP] LogController operation types (100500-100999)
+	// caching (50000-69999)
 
-	// [HTTP] LogGroupController operation types (101000-101499)
+	// [HTTP] app.AppController operation types (100000-100999).
 
-	// [HTTP] LoggingSessionController operation types (101500-101999)
-	OperationTypeLoggingSessionController_CreateAndStart actions.OperationType = 101500
-	OperationTypeLoggingSessionController_GetById        actions.OperationType = 101501
+	// [HTTP] LogController operation types (101000-101199).
 
-	// [gRPC] LogService operation types (200500-20999)
+	// [HTTP] LogGroupController operation types (101200-101399).
 
-	// [gRPC] LogGroupService operation types (201000-201499)
+	// [HTTP] LoggingSessionController operation types (101400-101599).
+	OperationTypeLoggingSessionController_Create         actions.OperationType = 101400
+	OperationTypeLoggingSessionController_Start          actions.OperationType = 101401
+	OperationTypeLoggingSessionController_CreateAndStart actions.OperationType = 101402
+	OperationTypeLoggingSessionController_GetById        actions.OperationType = 101403
 
-	// [gRPC] LoggingSessionService operation types (201500-201999)
-	OperationTypeLoggingSessionService_CreateAndStart actions.OperationType = 201500
-	OperationTypeLoggingSessionService_GetById        actions.OperationType = 201501
+	// [gRPC] app.AppService operation types (200000-200999).
+
+	// [gRPC] LogService operation types (201000-201199).
+
+	// [gRPC] LogGroupService operation types (201200-201399).
+
+	// [gRPC] LoggingSessionService operation types (201400-201599).
+	OperationTypeLoggingSessionService_Create         actions.OperationType = 201400
+	OperationTypeLoggingSessionService_Start          actions.OperationType = 201401
+	OperationTypeLoggingSessionService_CreateAndStart actions.OperationType = 201402
+	OperationTypeLoggingSessionService_GetById        actions.OperationType = 201403
 )
