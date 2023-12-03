@@ -34,6 +34,7 @@ import (
 	"personal-website-v2/pkg/logging/context"
 )
 
+// LoggingSessionManager is a logging session manager.
 type LoggingSessionManager struct {
 	apps                appmanager.Apps
 	loggingSessionStore sessions.LoggingSessionStore
@@ -55,12 +56,14 @@ func NewLoggingSessionManager(apps appmanager.Apps, loggingSessionStore sessions
 	}, nil
 }
 
-func (m *LoggingSessionManager) CreateAndStart(appId uint64, userId uint64) (uint64, error) {
-	if err := m.checkApp(nil, appId, userId); err != nil {
+// CreateAndStart creates and starts a logging session for the specified app
+// and returns logging session ID if the operation is successful.
+func (m *LoggingSessionManager) CreateAndStart(appId uint64, operationUserId uint64) (uint64, error) {
+	if err := m.checkApp(nil, appId, operationUserId); err != nil {
 		return 0, fmt.Errorf("[manager.LoggingSessionManager.CreateAndStart] check an app: %w", err)
 	}
 
-	id, err := m.loggingSessionStore.CreateAndStart(appId, userId)
+	id, err := m.loggingSessionStore.CreateAndStart(appId, operationUserId)
 	if err != nil {
 		return 0, fmt.Errorf("[manager.LoggingSessionManager.CreateAndStart] create and start a logging session: %w", err)
 	}
@@ -69,6 +72,8 @@ func (m *LoggingSessionManager) CreateAndStart(appId uint64, userId uint64) (uin
 	return id, nil
 }
 
+// CreateAndStartWithContext creates and starts a logging session for the specified app
+// and returns logging session ID if the operation is successful.
 func (m *LoggingSessionManager) CreateAndStartWithContext(ctx *actions.OperationContext, appId uint64) (uint64, error) {
 	op, err := ctx.Action.Operations.CreateAndStart(
 		lmactions.OperationTypeLoggingSessionManager_CreateAndStart,
@@ -118,7 +123,7 @@ func (m *LoggingSessionManager) CreateAndStartWithContext(ctx *actions.Operation
 }
 
 // for creating a logging session
-func (m *LoggingSessionManager) checkApp(ctx *actions.OperationContext, appId uint64, userId uint64) error {
+func (m *LoggingSessionManager) checkApp(ctx *actions.OperationContext, appId uint64, operationUserId uint64) error {
 	var as appspb.AppStatus
 	var err error
 	var leCtx *context.LogEntryContext
@@ -127,7 +132,7 @@ func (m *LoggingSessionManager) checkApp(ctx *actions.OperationContext, appId ui
 		leCtx = ctx.CreateLogEntryContext()
 		as, err = m.apps.GetStatusByIdWithContext(ctx, appId)
 	} else {
-		as, err = m.apps.GetStatusById(appId, userId)
+		as, err = m.apps.GetStatusById(appId, operationUserId)
 	}
 
 	if err != nil {
@@ -146,6 +151,7 @@ func (m *LoggingSessionManager) checkApp(ctx *actions.OperationContext, appId ui
 	return nil
 }
 
+// FindById finds and returns logging session info, if any, by the specified logging session ID.
 func (m *LoggingSessionManager) FindById(ctx *actions.OperationContext, id uint64) (*dbmodels.LoggingSessionInfo, error) {
 	op, err := ctx.Action.Operations.CreateAndStart(
 		lmactions.OperationTypeLoggingSessionManager_FindById,

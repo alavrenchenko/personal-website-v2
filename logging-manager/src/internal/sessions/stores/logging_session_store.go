@@ -37,6 +37,7 @@ const (
 	loggingSessionsTable = "public.logging_sessions"
 )
 
+// LoggingSessionStore is a logging session store.
 type LoggingSessionStore struct {
 	db        *postgres.Database
 	store     *postgres.Store[dbmodels.LoggingSessionInfo]
@@ -65,14 +66,18 @@ func NewLoggingSessionStore(db *postgres.Database, loggerFactory logging.LoggerF
 	}, nil
 }
 
-func (s *LoggingSessionStore) CreateAndStart(appId uint64, userId uint64) (uint64, error) {
-	id, err := s.createAndStart(context.Background(), appId, userId)
+// CreateAndStart creates and starts a logging session for the specified app
+// and returns logging session ID if the operation is successful.
+func (s *LoggingSessionStore) CreateAndStart(appId uint64, operationUserId uint64) (uint64, error) {
+	id, err := s.createAndStart(context.Background(), appId, operationUserId)
 	if err != nil {
 		return 0, fmt.Errorf("[stores.LoggingSessionStore.CreateAndStart] create and start a logging session: %w", err)
 	}
 	return id, nil
 }
 
+// CreateAndStartWithContext creates and starts a logging session for the specified app
+// and returns logging session ID if the operation is successful.
 func (s *LoggingSessionStore) CreateAndStartWithContext(ctx *actions.OperationContext, appId uint64) (uint64, error) {
 	op, err := ctx.Action.Operations.CreateAndStart(
 		lmactions.OperationTypeLoggingSessionStore_CreateAndStart,
@@ -112,7 +117,7 @@ func (s *LoggingSessionStore) CreateAndStartWithContext(ctx *actions.OperationCo
 	return id, nil
 }
 
-func (s *LoggingSessionStore) createAndStart(ctx context.Context, appId uint64, userId uint64) (uint64, error) {
+func (s *LoggingSessionStore) createAndStart(ctx context.Context, appId uint64, operationUserId uint64) (uint64, error) {
 	var id uint64
 	var errCode dberrors.DbErrorCode
 	var errMsg string
@@ -120,7 +125,7 @@ func (s *LoggingSessionStore) createAndStart(ctx context.Context, appId uint64, 
 	const query = "CALL public.create_and_start_logging_session($1, $2, NULL, NULL, NULL, NULL)"
 
 	err := s.txManager.ExecWithReadCommittedLevel(ctx, func(txCtx context.Context, tx pgx.Tx) error {
-		if err := tx.QueryRow(txCtx, query, appId, userId).Scan(&id, &errCode, &errMsg); err != nil {
+		if err := tx.QueryRow(txCtx, query, appId, operationUserId).Scan(&id, &errCode, &errMsg); err != nil {
 			return fmt.Errorf("[stores.LoggingSessionStore.createAndStart] execute a query (create_and_start_logging_session): %w", err)
 		}
 		return nil
@@ -137,6 +142,7 @@ func (s *LoggingSessionStore) createAndStart(ctx context.Context, appId uint64, 
 	return id, nil
 }
 
+// FindById finds and returns logging session info, if any, by the specified logging session ID.
 func (s *LoggingSessionStore) FindById(ctx *actions.OperationContext, id uint64) (*dbmodels.LoggingSessionInfo, error) {
 	op, err := ctx.Action.Operations.CreateAndStart(
 		lmactions.OperationTypeLoggingSessionStore_FindById,

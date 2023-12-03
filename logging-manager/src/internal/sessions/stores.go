@@ -19,8 +19,16 @@ import (
 	"personal-website-v2/pkg/actions"
 )
 
+// LoggingSessionStore is a logging session store.
 type LoggingSessionStore interface {
-	CreateAndStart(appId uint64, userId uint64) (uint64, error)
+	// CreateAndStart creates and starts a logging session for the specified app
+	// and returns logging session ID if the operation is successful.
+	CreateAndStart(appId uint64, operationUserId uint64) (uint64, error)
+
+	// CreateAndStartWithContext creates and starts a logging session for the specified app
+	// and returns logging session ID if the operation is successful.
 	CreateAndStartWithContext(ctx *actions.OperationContext, appId uint64) (uint64, error)
+
+	// FindById finds and returns logging session info, if any, by the specified logging session ID.
 	FindById(ctx *actions.OperationContext, id uint64) (*dbmodels.LoggingSessionInfo, error)
 }
