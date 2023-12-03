@@ -27,6 +27,7 @@ func ConvertToApiAppGroup(appGroup *dbmodels.AppGroup) *groupspb.AppGroup {
 		Id:              appGroup.Id,
 		Name:            appGroup.Name,
 		Type:            groupspb.AppGroupType(appGroup.Type),
+		Title:           appGroup.Title,
 		CreatedAt:       timestamppb.New(appGroup.CreatedAt),
 		CreatedBy:       appGroup.CreatedBy,
 		UpdatedAt:       timestamppb.New(appGroup.UpdatedAt),

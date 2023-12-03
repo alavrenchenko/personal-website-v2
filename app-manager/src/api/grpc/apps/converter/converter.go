@@ -25,9 +25,10 @@ import (
 func ConvertToApiAppInfo(appInfo *dbmodels.AppInfo) *appspb.AppInfo {
 	info := &appspb.AppInfo{
 		Id:              appInfo.Id,
-		GroupId:         appInfo.GroupId,
 		Name:            appInfo.Name,
+		GroupId:         appInfo.GroupId,
 		Type:            appspb.AppTypeEnum_AppType(appInfo.Type),
+		Title:           appInfo.Title,
 		Category:        appspb.AppCategoryEnum_AppCategory(appInfo.Category),
 		CreatedAt:       timestamppb.New(appInfo.CreatedAt),
 		CreatedBy:       appInfo.CreatedBy,
