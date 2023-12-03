@@ -31,6 +31,8 @@ Logging session statuses:
     Unspecified = 0
     New         = 1
     Started     = 2
+    Deleting    = 4
+    Deleted     = 5
 */
 CREATE TABLE IF NOT EXISTS public.logging_sessions
 (
@@ -47,6 +49,13 @@ CREATE TABLE IF NOT EXISTS public.logging_sessions
     start_time timestamp(6) without time zone,
     _version_stamp bigint NOT NULL,
     _timestamp timestamp(6) without time zone NOT NULL DEFAULT (clock_timestamp() AT TIME ZONE 'UTC'::text),
-    CONSTRAINT logging_sessions_pkey PRIMARY KEY (id)
+    CONSTRAINT logging_sessions_pkey PRIMARY KEY (id),
+    CONSTRAINT logging_sessions_status_check CHECK (status IN (1, 2, 4, 5))
 )
 TABLESPACE pg_default;
+
+CREATE INDEX IF NOT EXISTS logging_sessions_app_id_idx ON public.logging_sessions (app_id);
+CREATE INDEX IF NOT EXISTS logging_sessions_created_at_idx ON public.logging_sessions (created_at);
+CREATE INDEX IF NOT EXISTS logging_sessions_updated_at_idx ON public.logging_sessions (updated_at);
+CREATE INDEX IF NOT EXISTS logging_sessions_status_idx ON public.logging_sessions (status);
+CREATE INDEX IF NOT EXISTS logging_sessions_status_updated_at_idx ON public.logging_sessions (status_updated_at);
