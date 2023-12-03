@@ -40,7 +40,7 @@ type LoggingSessionInfo struct {
 	// The user ID to identify the user who updated the logging session.
 	UpdatedBy uint64 `db:"updated_by"`
 
-	// The status of the logging session can be New(1) or Started(2).
+	// The logging session status.
 	Status models.LoggingSessionStatus `db:"status"`
 
 	// It stores the date and time at which the logging session status was updated.

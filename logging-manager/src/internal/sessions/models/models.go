@@ -22,4 +22,11 @@ const (
 
 	LoggingSessionStatusNew     LoggingSessionStatus = 1
 	LoggingSessionStatusStarted LoggingSessionStatus = 2
+	// LoggingSessionStatusEnded   LoggingSessionStatus = 3 // reserved
+
+	// LoggingSessionStatusDeleting is used when the logging session status is 'New'.
+	LoggingSessionStatusDeleting LoggingSessionStatus = 4
+
+	// LoggingSessionStatusDeleted is used when the logging session status is 'New' or 'Deleting'.
+	LoggingSessionStatusDeleted LoggingSessionStatus = 5
 )
