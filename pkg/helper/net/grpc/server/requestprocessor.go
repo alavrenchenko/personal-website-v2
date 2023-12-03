@@ -120,13 +120,9 @@ func (p *RequestProcessor) Process(incomingCtx context.Context, atype actions.Ac
 		return apigrpcerrors.CreateGrpcError(codes.Internal, apierrors.ErrInternal)
 	}
 
-	opCtx := actions.NewOperationContext(incomingCtx, p.appSessionId, grpcCtx.Transaction, a, op)
-	opCtx.UserId = grpcCtx.User.UserId()
-	opCtx.ClientId = grpcCtx.User.ClientId()
-
 	defer func() {
 		if err := a.Operations.Complete(op, succeeded); err != nil {
-			leCtx := opCtx.CreateLogEntryContext()
+			leCtx := logginghelper.CreateLogEntryContext(p.appSessionId, grpcCtx.Transaction, a, op)
 			msg := "[server.RequestProcessor.Process] complete an operation"
 			if !p.config.StopAppIfError {
 				p.logger.ErrorWithEvent(leCtx, events.NetGrpc_ServerEvent, err, msg)
@@ -141,6 +137,12 @@ func (p *RequestProcessor) Process(incomingCtx context.Context, atype actions.Ac
 			}()
 		}
 	}()
+
+	opCtx := actions.NewOperationContext(incomingCtx, p.appSessionId, grpcCtx.Transaction, a, op)
+	if grpcCtx.User != nil {
+		opCtx.UserId = grpcCtx.User.UserId()
+		opCtx.ClientId = grpcCtx.User.ClientId()
+	}
 
 	err = f(NewGrpcOperationContext(opCtx, grpcCtx))
 	succeeded = err == nil
