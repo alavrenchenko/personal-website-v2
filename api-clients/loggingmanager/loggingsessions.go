@@ -45,8 +45,8 @@ func newLoggingSessionsService(conn *grpc.ClientConn, config *serviceConfig) *Lo
 
 // CreateAndStart creates and starts a logging session for the specified app
 // and returns logging session ID if the operation is successful.
-func (s *LoggingSessionsService) CreateAndStart(appId uint64, userId uint64) (uint64, error) {
-	md := metadata.New(map[string]string{apimetadata.UserIdMDKey: strconv.FormatUint(userId, 10)})
+func (s *LoggingSessionsService) CreateAndStart(appId uint64, operationUserId uint64) (uint64, error) {
+	md := metadata.New(map[string]string{apimetadata.UserIdMDKey: strconv.FormatUint(operationUserId, 10)})
 	ctx2 := metadata.NewOutgoingContext(context.Background(), md)
 
 	ctx2, cancel := context.WithTimeout(ctx2, s.config.CallTimeout)
