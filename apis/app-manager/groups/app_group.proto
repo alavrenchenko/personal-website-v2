@@ -27,42 +27,45 @@ option go_package = "personal-website-v2/go-apis/app-manager/groups;groups";
 message AppGroup {
     // The unique ID to identify the app group.
     uint64 id = 1;
-    
+
     // The unique name to identify the app group.
     string name = 2;
 
     // The app group type.
     AppGroupType type = 3;
 
+    // The app group title.
+    string title = 4;
+
     // It stores the date and time at which the app group was created.
-    google.protobuf.Timestamp created_at = 4;
+    google.protobuf.Timestamp created_at = 5;
 
     // The user ID to identify the user who added the app group.
-    uint64 created_by = 5;
+    uint64 created_by = 6;
 
     // It stores the date and time at which the app group was updated.
-    google.protobuf.Timestamp updated_at = 6;
+    google.protobuf.Timestamp updated_at = 7;
 
     // The user ID to identify the user who updated the app group.
-    uint64 updated_by = 7;
+    uint64 updated_by = 8;
 
-    // The status of the app group can be New(1), Active(2), or Inactive(3).
-    AppGroupStatus status = 8;
+    // The app group status.
+    AppGroupStatus status = 9;
 
     // It stores the date and time at which the app group status was updated.
-    google.protobuf.Timestamp status_updated_at = 9;
+    google.protobuf.Timestamp status_updated_at = 10;
 
     // The user ID to identify the user who updated the app group status.
-    uint64 status_updated_by = 10;
+    uint64 status_updated_by = 11;
 
     // Optional. The app group status comment.
-    google.protobuf.StringValue status_comment = 11;
+    google.protobuf.StringValue status_comment = 12;
 
     // The app group version.
-    string version = 12;
+    string version = 13;
 
     // The app group description.
-    string description = 13;
+    string description = 14;
 }
 
 // The app group type.
@@ -79,4 +82,6 @@ enum AppGroupStatus {
     NEW = 1;
     ACTIVE = 2;
     INACTIVE = 3;
+    DELETING = 4;
+    DELETED = 5;
 }

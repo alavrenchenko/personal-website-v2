@@ -43,7 +43,7 @@ message AppSessionInfo {
     // The user ID to identify the user who updated the app session.
     uint64 updated_by = 6;
 
-    // The status of the app session can be New(1), Active(2), or Ended(3).
+    // The app session status.
     AppSessionStatus status = 7;
 
     // It stores the date and time at which the app session status was updated.
@@ -69,4 +69,6 @@ enum AppSessionStatus {
     NEW = 1;
     ACTIVE = 2;
     ENDED = 3;
+    DELETING = 4;
+    DELETED = 5;
 }

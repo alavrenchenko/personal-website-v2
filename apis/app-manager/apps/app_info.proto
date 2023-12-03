@@ -27,48 +27,51 @@ option go_package = "personal-website-v2/go-apis/app-manager/apps;apps";
 message AppInfo {
     // The unique ID to identify the app.
     uint64 id = 1;
-    
-    // The app group ID.
-    uint64 group_id = 2;
 
     // The unique name to identify the app.
-    string name = 3;
+    string name = 2;
 
+    // The app group ID.
+    uint64 group_id = 3;
+    
     // The app type.
     AppTypeEnum.AppType type = 4;
 
+    // The app title.
+    string title = 5;
+
     // The app category.
-    AppCategoryEnum.AppCategory category = 5;
+    AppCategoryEnum.AppCategory category = 6;
 
     // It stores the date and time at which the app was created.
-    google.protobuf.Timestamp created_at = 6;
+    google.protobuf.Timestamp created_at = 7;
 
     // The user ID to identify the user who added the app.
-    uint64 created_by = 7;
+    uint64 created_by = 8;
 
     // It stores the date and time at which the app was updated.
-    google.protobuf.Timestamp updated_at = 8;
+    google.protobuf.Timestamp updated_at = 9;
 
     // The user ID to identify the user who updated the app.
-    uint64 updated_by = 9;
+    uint64 updated_by = 10;
 
-    // The status of the app can be New(1), Active(2), or Inactive(3).
-    AppStatus status = 10;
+    // The app status.
+    AppStatus status = 11;
 
     // It stores the date and time at which the app status was updated.
-    google.protobuf.Timestamp status_updated_at = 11;
+    google.protobuf.Timestamp status_updated_at = 12;
 
     // The user ID to identify the user who updated the app status.
-    uint64 status_updated_by = 12;
+    uint64 status_updated_by = 13;
 
     // Optional. The app status comment.
-    google.protobuf.StringValue status_comment = 13;
+    google.protobuf.StringValue status_comment = 14;
 
     // The app version.
-    string version = 14;
+    string version = 15;
 
     // The app description.
-    string description = 15;
+    string description = 16;
 }
 
 // Container for enum describing the app type.
@@ -98,4 +101,6 @@ enum AppStatus {
     NEW = 1;
     ACTIVE = 2;
     INACTIVE = 3;
+    DELETING = 4;
+    DELETED = 5;
 }
