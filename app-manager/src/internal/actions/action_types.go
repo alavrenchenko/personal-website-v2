@@ -20,22 +20,39 @@ import "personal-website-v2/pkg/actions"
 // Common (system) action types (1-9999)
 
 const (
-	// Application action types (10000-10099)
+	// Application action types (10000-10999).
 	ActionTypeApplication actions.ActionType = 10000
 
-	// Action types of Apps (10100-10299)
-	ActionTypeApps_GetById       actions.ActionType = 10100
-	ActionTypeApps_GetByName     actions.ActionType = 10101
-	ActionTypeApps_GetByIdOrName actions.ActionType = 10102
-	ActionTypeApps_GetStatusById actions.ActionType = 10103
+	// Action types of Apps (11000-11199).
+	ActionTypeApps_Create          actions.ActionType = 11000
+	ActionTypeApps_Delete          actions.ActionType = 11001
+	ActionTypeApps_GetById         actions.ActionType = 11002
+	ActionTypeApps_GetByName       actions.ActionType = 11003
+	ActionTypeApps_GetByIdOrName   actions.ActionType = 11004
+	ActionTypeApps_GetAllByGroupId actions.ActionType = 11005
+	ActionTypeApps_Exists          actions.ActionType = 11006
+	ActionTypeApps_GetTypeById     actions.ActionType = 11007
+	ActionTypeApps_GetStatusById   actions.ActionType = 11008
 
-	// App group action types (10300-10499)
-	ActionTypeAppGroup_GetById       actions.ActionType = 10300
-	ActionTypeAppGroup_GetByName     actions.ActionType = 10301
-	ActionTypeAppGroup_GetByIdOrName actions.ActionType = 10302
+	// App group action types (11200-11399).
+	ActionTypeAppGroup_Create        actions.ActionType = 11200
+	ActionTypeAppGroup_Delete        actions.ActionType = 11201
+	ActionTypeAppGroup_GetById       actions.ActionType = 11202
+	ActionTypeAppGroup_GetByName     actions.ActionType = 11203
+	ActionTypeAppGroup_GetByIdOrName actions.ActionType = 11204
+	ActionTypeAppGroup_Exists        actions.ActionType = 11205
+	ActionTypeAppGroup_GetTypeById   actions.ActionType = 11206
+	ActionTypeAppGroup_GetStatusById actions.ActionType = 11207
 
-	// App session action types (10500-10699)
-	ActionTypeAppSession_CreateAndStart actions.ActionType = 10500
-	ActionTypeAppSession_Terminate      actions.ActionType = 10501
-	ActionTypeAppSession_GetById        actions.ActionType = 10502
+	// App session action types (11400-11599).
+	ActionTypeAppSession_Create         actions.ActionType = 11400
+	ActionTypeAppSession_Start          actions.ActionType = 11401
+	ActionTypeAppSession_CreateAndStart actions.ActionType = 11402
+	ActionTypeAppSession_Terminate      actions.ActionType = 11403
+	ActionTypeAppSession_Delete         actions.ActionType = 11404
+	ActionTypeAppSession_GetById        actions.ActionType = 11405
+	ActionTypeAppSession_GetAllByAppId  actions.ActionType = 11406
+	ActionTypeAppSession_Exists         actions.ActionType = 11407
+	ActionTypeAppSession_GetOwnerIdById actions.ActionType = 11408
+	ActionTypeAppSession_GetStatusById  actions.ActionType = 11409
 )

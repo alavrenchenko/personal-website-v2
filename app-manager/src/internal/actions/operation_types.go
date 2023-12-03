@@ -42,7 +42,7 @@ const (
 	OperationTypeAppGroupManager_GetTypeById   actions.OperationType = 11205
 	OperationTypeAppGroupManager_GetStatusById actions.OperationType = 11206
 
-	// AppSessionManager operation types (11400-11599)
+	// AppSessionManager operation types (11400-11599).
 	OperationTypeAppSessionManager_Create         actions.OperationType = 11400
 	OperationTypeAppSessionManager_Start          actions.OperationType = 11401
 	OperationTypeAppSessionManager_CreateAndStart actions.OperationType = 11402
