@@ -17,6 +17,7 @@ package server
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	"google.golang.org/grpc/codes"
@@ -77,9 +78,9 @@ func NewRequestPipelineLifetime(
 }
 
 func (l *RequestPipelineLifetime) BeginRequest(ctx *server.GrpcContext) error {
-	opCtxVal := ctx.IncomingMetadata.Get(metadata.OperationContextMDKey)
 	var t *actions.Transaction
 	var err error
+	opCtxVal := ctx.IncomingMetadata.Get(metadata.OperationContextMDKey)
 
 	if len(opCtxVal) > 0 {
 		opCtx, err := metadata.DecodeOperationContextFromString(opCtxVal[0])
@@ -127,14 +128,34 @@ func (l *RequestPipelineLifetime) BeginRequest(ctx *server.GrpcContext) error {
 }
 
 func (l *RequestPipelineLifetime) Authenticate(ctx *server.GrpcContext) error {
-	if ctx.IncomingOperationCtx == nil || !ctx.IncomingOperationCtx.UserId.HasValue && !ctx.IncomingOperationCtx.ClientId.HasValue {
+	var userId, clientId nullable.Nullable[uint64]
+	if ctx.IncomingOperationCtx != nil {
+		if !ctx.IncomingOperationCtx.UserId.HasValue && !ctx.IncomingOperationCtx.ClientId.HasValue {
+			ctx.User = identity.NewDefaultIdentity(nullable.Nullable[uint64]{}, identity.UserTypeUser, nullable.Nullable[uint64]{})
+			return nil
+		}
+
+		userId = ctx.IncomingOperationCtx.UserId
+		clientId = ctx.IncomingOperationCtx.ClientId
+	} else if userIdVal := ctx.IncomingMetadata.Get(metadata.UserIdMDKey); len(userIdVal) > 0 {
+		id, err := strconv.ParseUint(userIdVal[0], 10, 64)
+		if err != nil {
+			l.logger.ErrorWithEvent(&lcontext.LogEntryContext{AppSessionId: nullable.NewNullable(l.appSessionId)}, events.NetGrpcServer_RequestPipelineLifetimeEvent, err,
+				"[server.RequestPipelineLifetime.Authenticate] invalid user id",
+			)
+			return apigrpcerrors.CreateGrpcError(codes.PermissionDenied, apierrors.NewApiError(apierrors.ApiErrorCodeInvalidData, "invalid user id"))
+		}
+
+		userId = nullable.NewNullable(id)
+	} else {
 		ctx.User = identity.NewDefaultIdentity(nullable.Nullable[uint64]{}, identity.UserTypeUser, nullable.Nullable[uint64]{})
 		return nil
 	}
+
 	return l.reqProcessor.Process(server.NewIncomingContextWithGrpcContext(context.Background(), ctx),
 		actions.ActionTypeNetGrpcServer_RequestPipelineLifetime_Authenticate, actions.OperationTypeNetGrpcServer_RequestPipelineLifetime_Authenticate,
 		func(opCtx *grpcserverhelper.GrpcOperationContext) error {
-			i, err := l.identityManager.AuthenticateById(opCtx.OperationCtx, ctx.IncomingOperationCtx.UserId, ctx.IncomingOperationCtx.ClientId)
+			i, err := l.identityManager.AuthenticateById(opCtx.OperationCtx, userId, clientId)
 			if err != nil {
 				l.logger.ErrorWithEvent(opCtx.OperationCtx.CreateLogEntryContext(), events.NetGrpcServer_RequestPipelineLifetimeEvent, err,
 					"[server.RequestPipelineLifetime.Authenticate] authenticate a user and a client by id",
