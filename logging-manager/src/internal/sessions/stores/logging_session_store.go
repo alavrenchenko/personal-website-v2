@@ -119,25 +119,25 @@ func (s *LoggingSessionStore) CreateAndStartWithContext(ctx *actions.OperationCo
 
 func (s *LoggingSessionStore) createAndStart(ctx context.Context, appId uint64, operationUserId uint64) (uint64, error) {
 	var id uint64
-	var errCode dberrors.DbErrorCode
-	var errMsg string
-	// public.create_and_start_logging_session(IN _app_id, IN _created_by, IN _status_comment, OUT _id, OUT err_code, OUT err_msg)
-	const query = "CALL public.create_and_start_logging_session($1, $2, NULL, NULL, NULL, NULL)"
-
 	err := s.txManager.ExecWithReadCommittedLevel(ctx, func(txCtx context.Context, tx pgx.Tx) error {
+		var errCode dberrors.DbErrorCode
+		var errMsg string
+		// PROCEDURE: public.create_and_start_logging_session(IN _app_id, IN _created_by, IN _status_comment, OUT _id, OUT err_code, OUT err_msg)
+		// Minimum transaction isolation level: Read committed.
+		const query = "CALL public.create_and_start_logging_session($1, $2, NULL, NULL, NULL, NULL)"
+
 		if err := tx.QueryRow(txCtx, query, appId, operationUserId).Scan(&id, &errCode, &errMsg); err != nil {
 			return fmt.Errorf("[stores.LoggingSessionStore.createAndStart] execute a query (create_and_start_logging_session): %w", err)
 		}
+
+		if errCode != dberrors.DbErrorCodeNoError {
+			// unknown error
+			return fmt.Errorf("[stores.LoggingSessionStore.createAndStart] invalid operation: %w", dberrors.NewDbError(errCode, errMsg))
+		}
 		return nil
 	})
-
 	if err != nil {
-		return 0, fmt.Errorf("[stores.LoggingSessionStore.createAndStart] execute a transaction with the 'read committed' isolation level: %w", err)
-	}
-
-	if errCode != dberrors.DbErrorCodeNoError {
-		// unknown error
-		return 0, fmt.Errorf("[stores.LoggingSessionStore.createAndStart] invalid operation: %w", dberrors.NewDbError(errCode, errMsg))
+		return 0, fmt.Errorf("[stores.LoggingSessionStore.createAndStart] execute a transaction: %w", err)
 	}
 	return id, nil
 }
