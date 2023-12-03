@@ -29,8 +29,12 @@ import (
 )
 
 type appSessions interface {
-	CreateAndStart(appId uint64, userId uint64) (uint64, error)
-	Terminate(id uint64, userId uint64) error
+	// CreateAndStart creates and starts an app session for the specified app
+	// and returns app session ID if the operation is successful.
+	CreateAndStart(appId uint64, operationUserId uint64) (uint64, error)
+
+	// Terminate terminates an app session by the specified app session ID.
+	Terminate(id uint64, operationUserId uint64) error
 	// TerminateWithContext(ctx *actions.OperationContext, id uint64) error
 }
 
