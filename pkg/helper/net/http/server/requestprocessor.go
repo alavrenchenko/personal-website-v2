@@ -116,13 +116,9 @@ func (p *RequestProcessor) Process(ctx *server.HttpContext, atype actions.Action
 		return
 	}
 
-	opCtx := actions.NewOperationContext(context.Background(), p.appSessionId, ctx.Transaction, a, op)
-	opCtx.UserId = ctx.User.UserId()
-	opCtx.ClientId = ctx.User.ClientId()
-
 	defer func() {
 		if err := a.Operations.Complete(op, succeeded); err != nil {
-			leCtx := opCtx.CreateLogEntryContext()
+			leCtx := logginghelper.CreateLogEntryContext(p.appSessionId, ctx.Transaction, a, op)
 			msg := "[server.RequestProcessor.Process] complete an operation"
 			if !p.config.StopAppIfError {
 				p.logger.ErrorWithEvent(leCtx, events.NetHttp_ServerEvent, err, msg)
@@ -137,6 +133,12 @@ func (p *RequestProcessor) Process(ctx *server.HttpContext, atype actions.Action
 			}()
 		}
 	}()
+
+	opCtx := actions.NewOperationContext(context.Background(), p.appSessionId, ctx.Transaction, a, op)
+	if ctx.User != nil {
+		opCtx.UserId = ctx.User.UserId()
+		opCtx.ClientId = ctx.User.ClientId()
+	}
 
 	succeeded = f(opCtx)
 }
