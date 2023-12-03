@@ -25,7 +25,9 @@ import (
 )
 
 type loggingSessions interface {
-	CreateAndStart(appId uint64, userId uint64) (uint64, error)
+	// CreateAndStart creates and starts a logging session for the specified app
+	// and returns logging session ID if the operation is successful.
+	CreateAndStart(appId uint64, operationUserId uint64) (uint64, error)
 }
 
 type LoggingSession struct {
