@@ -128,12 +128,18 @@ func (m *startupIdentityManager) Authorize(ctx *actions.OperationContext, user i
 			prs := make([]*identity.PermissionWithRoles, rpsLen)
 			for i := 0; i < rpsLen; i++ {
 				p := requiredPermissions[i]
-				if p != PermissionAppSession_CreateAndStart && p != PermissionAppSession_Terminate {
+				var r string
+				switch p {
+				case PermissionApps_GetStatus:
+					r = RoleAppsViewer
+				case PermissionAppSession_CreateAndStart, PermissionAppSession_Terminate:
+					r = RoleAppSessionUser
+				default:
 					m.logger.WarningWithEvent(opCtx.CreateLogEntryContext(), events.IdentityEvent, "[identity.startupIdentityManager.Authorize] permission not granted")
 					return nil
 				}
 
-				prs[i] = &identity.PermissionWithRoles{PermissionName: p, RoleNames: []string{RoleAppSessionUser}}
+				prs[i] = &identity.PermissionWithRoles{PermissionName: p, RoleNames: []string{r}}
 			}
 
 			user.AddPermissionRoles(prs)
