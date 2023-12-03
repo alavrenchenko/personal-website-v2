@@ -29,7 +29,7 @@ type Apps interface {
 	GetByName(ctx *actions.OperationContext, name string) (*appspb.AppInfo, error)
 
 	// GetStatusById gets an app status by the specified app ID.
-	GetStatusById(id uint64, userId uint64) (appspb.AppStatus, error)
+	GetStatusById(id uint64, operationUserId uint64) (appspb.AppStatus, error)
 
 	// GetStatusByIdWithContext gets an app status by the specified app ID.
 	GetStatusByIdWithContext(ctx *actions.OperationContext, id uint64) (appspb.AppStatus, error)
@@ -46,10 +46,10 @@ type AppGroups interface {
 type AppSessions interface {
 	// CreateAndStart creates and starts an app session for the specified app
 	// and returns app session ID if the operation is successful.
-	CreateAndStart(appId uint64, userId uint64) (uint64, error)
+	CreateAndStart(appId uint64, operationUserId uint64) (uint64, error)
 
 	// Terminate terminates an app session by the specified app session ID.
-	Terminate(id uint64, userId uint64) error
+	Terminate(id uint64, operationUserId uint64) error
 	// Terminate(ctx *actions.OperationContext, id uint64) error
 
 	// GetById gets app session info by the specified app session ID.

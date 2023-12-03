@@ -45,8 +45,8 @@ func newAppSessionsService(conn *grpc.ClientConn, config *serviceConfig) *AppSes
 
 // CreateAndStart creates and starts an app session for the specified app
 // and returns app session ID if the operation is successful.
-func (s *AppSessionsService) CreateAndStart(appId uint64, userId uint64) (uint64, error) {
-	md := metadata.New(map[string]string{apimetadata.UserIdMDKey: strconv.FormatUint(userId, 10)})
+func (s *AppSessionsService) CreateAndStart(appId uint64, operationUserId uint64) (uint64, error) {
+	md := metadata.New(map[string]string{apimetadata.UserIdMDKey: strconv.FormatUint(operationUserId, 10)})
 	ctx2 := metadata.NewOutgoingContext(context.Background(), md)
 
 	ctx2, cancel := context.WithTimeout(ctx2, s.config.CallTimeout)
@@ -62,8 +62,8 @@ func (s *AppSessionsService) CreateAndStart(appId uint64, userId uint64) (uint64
 }
 
 // Terminate terminates an app session by the specified app session ID.
-func (s *AppSessionsService) Terminate(id uint64, userId uint64) error {
-	md := metadata.New(map[string]string{apimetadata.UserIdMDKey: strconv.FormatUint(userId, 10)})
+func (s *AppSessionsService) Terminate(id uint64, operationUserId uint64) error {
+	md := metadata.New(map[string]string{apimetadata.UserIdMDKey: strconv.FormatUint(operationUserId, 10)})
 	ctx2 := metadata.NewOutgoingContext(context.Background(), md)
 
 	ctx2, cancel := context.WithTimeout(ctx2, s.config.CallTimeout)

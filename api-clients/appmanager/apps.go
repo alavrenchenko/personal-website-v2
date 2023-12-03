@@ -84,8 +84,8 @@ func (s *AppsService) GetByName(ctx *actions.OperationContext, name string) (*ap
 }
 
 // GetStatusById gets an app status by the specified app ID.
-func (s *AppsService) GetStatusById(id uint64, userId uint64) (appspb.AppStatus, error) {
-	md := metadata.New(map[string]string{apimetadata.UserIdMDKey: strconv.FormatUint(userId, 10)})
+func (s *AppsService) GetStatusById(id uint64, operationUserId uint64) (appspb.AppStatus, error) {
+	md := metadata.New(map[string]string{apimetadata.UserIdMDKey: strconv.FormatUint(operationUserId, 10)})
 	ctx2 := metadata.NewOutgoingContext(context.Background(), md)
 
 	ctx2, cancel := context.WithTimeout(ctx2, s.config.CallTimeout)
