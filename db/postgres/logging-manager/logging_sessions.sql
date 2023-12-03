@@ -20,6 +20,7 @@ Logging session statuses:
 Error codes:
     NoError = 0
 */
+-- Minimum transaction isolation level: Read committed.
 CREATE OR REPLACE PROCEDURE public.create_and_start_logging_session(
     IN _app_id public.logging_sessions.app_id%TYPE,
     IN _created_by public.logging_sessions.created_by%TYPE,
@@ -36,7 +37,8 @@ BEGIN
 
     _time := (clock_timestamp() AT TIME ZONE 'UTC');
     -- logging session status: Started(2)
-    INSERT INTO public.logging_sessions(app_id, created_at, created_by, updated_at, updated_by, status, status_updated_at, status_updated_by, status_comment, start_time, _version_stamp, _timestamp)
+    INSERT INTO public.logging_sessions(app_id, created_at, created_by, updated_at, updated_by, status, status_updated_at,
+            status_updated_by, status_comment, start_time, _version_stamp, _timestamp)
         VALUES (_app_id, _time, _created_by, _time, _created_by, 2, _time, _created_by, _status_comment, _time, 1, _time)
         RETURNING id INTO _id;
 END;
