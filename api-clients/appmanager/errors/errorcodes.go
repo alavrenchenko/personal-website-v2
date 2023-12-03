@@ -25,10 +25,12 @@ import (
 
 const (
 	// App (Apps) error codes (31000-31199).
-	ApiErrorCodeAppNotFound errors.ApiErrorCode = 31000
+	ApiErrorCodeAppNotFound      errors.ApiErrorCode = 31000
+	ApiErrorCodeAppAlreadyExists errors.ApiErrorCode = 31001
 
 	// App group error codes (31200-31399).
-	ApiErrorCodeAppGroupNotFound errors.ApiErrorCode = 31200
+	ApiErrorCodeAppGroupNotFound      errors.ApiErrorCode = 31200
+	ApiErrorCodeAppGroupAlreadyExists errors.ApiErrorCode = 31201
 
 	// App session error codes (31400-31599).
 	ApiErrorCodeAppSessionNotFound errors.ApiErrorCode = 31400
