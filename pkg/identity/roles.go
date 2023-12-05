@@ -24,4 +24,5 @@ const (
 	RoleOwner         = "owner"
 	RoleEditor        = "editor"
 	RoleViewer        = "viewer"
+	RoleEmployee      = "employee"
 )
