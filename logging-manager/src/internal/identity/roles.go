@@ -41,6 +41,7 @@ var Roles = []string{
 	identity.RoleOwner,
 	identity.RoleEditor,
 	identity.RoleViewer,
+	identity.RoleEmployee,
 	RoleAdmin,
 	RoleViewer,
 	RoleAppAdmin,
