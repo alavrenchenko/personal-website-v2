@@ -126,7 +126,7 @@ CREATE TABLE IF NOT EXISTS public.personal_info
     first_name character varying(512) COLLATE pg_catalog."default" NOT NULL,
     last_name character varying(512) COLLATE pg_catalog."default" NOT NULL,
     display_name character varying(512) COLLATE pg_catalog."default" NOT NULL,
-    birth_date timestamp(6) without time zone,
+    birth_date date,
     gender smallint NOT NULL,
     _version_stamp bigint NOT NULL,
     _timestamp timestamp(6) without time zone NOT NULL DEFAULT (clock_timestamp() AT TIME ZONE 'UTC'::text),
