@@ -26,9 +26,16 @@ const (
 	// Application roles.
 	RoleAppAdmin = "identity.appAdmin"
 
+	// Authentication roles.
+	RoleAuthenticationUser = "identity.authenticationUser"
+
+	// Authorization roles.
+	RoleAuthorizationUser = "identity.authorizationUser"
+
 	// Client roles.
-	RoleClientAdmin  = "identity.clientAdmin"
-	RoleClientViewer = "identity.clientViewer"
+	RoleClientAdmin   = "identity.clientAdmin"
+	RoleClientCreator = "identity.clientCreator"
+	RoleClientViewer  = "identity.clientViewer"
 
 	// Permission roles.
 	RolePermissionAdmin  = "identity.permissionAdmin"
@@ -96,7 +103,10 @@ var Roles = []string{
 	RoleAdmin,
 	RoleViewer,
 	RoleAppAdmin,
+	RoleAuthenticationUser,
+	RoleAuthorizationUser,
 	RoleClientAdmin,
+	RoleClientCreator,
 	RoleClientViewer,
 	RolePermissionAdmin,
 	RolePermissionViewer,
