@@ -33,7 +33,7 @@ const (
 	EventGroupAuthorization    logging.EventGroup = 1010
 
 	// Authentication token encryption key event group.
-	EventGroupAuthTokenEncryptionKey logging.EventGroup = 1011
+	EventGroupAuthnTokenEncryptionKey logging.EventGroup = 1011
 
 	EventGroupRoleAssignment      logging.EventGroup = 1012
 	EventGroupUserRoleAssignment  logging.EventGroup = 1013
@@ -55,7 +55,7 @@ const (
 	EventGroupAuthorizationStore    logging.EventGroup = 1060
 
 	// Authentication TokenEncryptionKeyStore event group.
-	EventGroupAuthTokenEncryptionKeyStore logging.EventGroup = 1061
+	EventGroupAuthnTokenEncryptionKeyStore logging.EventGroup = 1061
 
 	EventGroupHttpControllers_UserController   logging.EventGroup = 2000
 	EventGroupHttpControllers_ClientController logging.EventGroup = 2001
@@ -73,7 +73,7 @@ const (
 	EventGroupGrpcServices_AuthorizationService    logging.EventGroup = 3010
 
 	// Authentication token encryption key service.
-	EventGroupGrpcServices_AuthTokenEncryptionKeyService logging.EventGroup = 3011
+	EventGroupGrpcServices_AuthnTokenEncryptionKeyService logging.EventGroup = 3011
 
 	EventGroupGrpcServices_RoleAssignmentService      logging.EventGroup = 3012
 	EventGroupGrpcServices_UserRoleAssignmentService  logging.EventGroup = 3013

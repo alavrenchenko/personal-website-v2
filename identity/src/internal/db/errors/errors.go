@@ -80,7 +80,7 @@ const (
 	// Authorization error codes (13000-13199).
 
 	// Authentication token encryption key error codes (13200-13399).
-	DbErrorCodeAuthTokenEncryptionKeyNotFound errors.DbErrorCode = 13200
+	DbErrorCodeAuthnTokenEncryptionKeyNotFound errors.DbErrorCode = 13200
 
 	// Role assignment error codes (13400-13599).
 	// (User or Group) role assignment not found.

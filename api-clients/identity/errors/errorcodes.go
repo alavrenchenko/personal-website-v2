@@ -74,9 +74,9 @@ const (
 	ApiErrorCodeUserAgentSessionAlreadyExists errors.ApiErrorCode = 32602
 
 	// Authentication error codes (32800-32999).
-	ApiErrorCodeInvalidAuthToken       errors.ApiErrorCode = 32800
-	ApiErrorCodeInvalidUserAuthToken   errors.ApiErrorCode = 32801
-	ApiErrorCodeInvalidClientAuthToken errors.ApiErrorCode = 32802
+	ApiErrorCodeInvalidAuthnToken       errors.ApiErrorCode = 32800
+	ApiErrorCodeInvalidUserAuthnToken   errors.ApiErrorCode = 32801
+	ApiErrorCodeInvalidClientAuthnToken errors.ApiErrorCode = 32802
 
 	// Authorization error codes (33000-33199).
 	// Authentication token encryption key error codes (33200-33399).

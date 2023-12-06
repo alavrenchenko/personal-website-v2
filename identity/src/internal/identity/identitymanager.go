@@ -225,8 +225,8 @@ func (m *identityManager) AuthenticateByToken(ctx *actions.OperationContext, use
 			if len(userToken) > 0 && len(clientToken) > 0 {
 				if r, err := m.authenticationManager.Authenticate(opCtx, userToken, clientToken); err != nil {
 					msg := "[identity.identityManager.AuthenticateByToken] authenticate a user and a client"
-					if err2 := errs.Unwrap(err); err2 == nil || err2.Code() != ierrors.ErrorCodeInvalidAuthToken &&
-						err2.Code() != ierrors.ErrorCodeInvalidUserAuthToken && err2.Code() != ierrors.ErrorCodeInvalidClientAuthToken {
+					if err2 := errs.Unwrap(err); err2 == nil || err2.Code() != ierrors.ErrorCodeInvalidAuthnToken &&
+						err2.Code() != ierrors.ErrorCodeInvalidUserAuthnToken && err2.Code() != ierrors.ErrorCodeInvalidClientAuthnToken {
 						return fmt.Errorf("%s: %w", msg, err)
 					}
 					m.logger.ErrorWithEvent(opCtx.CreateLogEntryContext(), events.IdentityEvent, err, msg)
@@ -245,7 +245,7 @@ func (m *identityManager) AuthenticateByToken(ctx *actions.OperationContext, use
 				if r, err := m.authenticationManager.AuthenticateUser(opCtx, userToken); err != nil {
 					msg := "[identity.identityManager.AuthenticateByToken] authenticate a user"
 					if err2 := errs.Unwrap(err); err2 == nil ||
-						err2.Code() != ierrors.ErrorCodeInvalidAuthToken && err2.Code() != ierrors.ErrorCodeInvalidUserAuthToken {
+						err2.Code() != ierrors.ErrorCodeInvalidAuthnToken && err2.Code() != ierrors.ErrorCodeInvalidUserAuthnToken {
 						return fmt.Errorf("%s: %w", msg, err)
 					}
 					m.logger.ErrorWithEvent(opCtx.CreateLogEntryContext(), events.IdentityEvent, err, msg)
@@ -263,7 +263,7 @@ func (m *identityManager) AuthenticateByToken(ctx *actions.OperationContext, use
 				if r, err := m.authenticationManager.AuthenticateClient(opCtx, clientToken); err != nil {
 					msg := "[identity.identityManager.AuthenticateByToken] authenticate a client"
 					if err2 := errs.Unwrap(err); err2 == nil ||
-						err2.Code() != ierrors.ErrorCodeInvalidAuthToken && err2.Code() != ierrors.ErrorCodeInvalidClientAuthToken {
+						err2.Code() != ierrors.ErrorCodeInvalidAuthnToken && err2.Code() != ierrors.ErrorCodeInvalidClientAuthnToken {
 						return fmt.Errorf("%s: %w", msg, err)
 					}
 					m.logger.ErrorWithEvent(opCtx.CreateLogEntryContext(), events.IdentityEvent, err, msg)

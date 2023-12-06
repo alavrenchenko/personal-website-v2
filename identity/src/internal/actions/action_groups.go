@@ -33,7 +33,7 @@ const (
 	ActionGroupAuthorization    actions.ActionGroup = 1010
 
 	// Authentication token encryption key operation group.
-	ActionGroupAuthTokenEncryptionKey actions.ActionGroup = 1011
+	ActionGroupAuthnTokenEncryptionKey actions.ActionGroup = 1011
 
 	ActionGroupRoleAssignment      actions.ActionGroup = 1012
 	ActionGroupUserRoleAssignment  actions.ActionGroup = 1013

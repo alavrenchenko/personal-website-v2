@@ -72,14 +72,14 @@ const (
 	ErrorCodeUserAgentSessionAlreadyExists errors.ErrorCode = 32602
 
 	// Authentication error codes (32800-32999).
-	ErrorCodeInvalidAuthToken       errors.ErrorCode = 32800
-	ErrorCodeInvalidUserAuthToken   errors.ErrorCode = 32801
-	ErrorCodeInvalidClientAuthToken errors.ErrorCode = 32802
+	ErrorCodeInvalidAuthnToken       errors.ErrorCode = 32800
+	ErrorCodeInvalidUserAuthnToken   errors.ErrorCode = 32801
+	ErrorCodeInvalidClientAuthnToken errors.ErrorCode = 32802
 
 	// Authorization error codes (33000-33199).
 
 	// Authentication token encryption key error codes (33200-33399).
-	ErrorCodeAuthTokenEncryptionKeyNotFound errors.ErrorCode = 33200
+	ErrorCodeAuthnTokenEncryptionKeyNotFound errors.ErrorCode = 33200
 
 	// Role assignment error codes (33400-33599).
 	// (User or Group) role assignment not found.
@@ -141,14 +141,14 @@ var (
 	ErrUserAgentSessionAlreadyExists = errors.NewError(ErrorCodeUserAgentSessionAlreadyExists, "user agent session with the same params already exists")
 
 	// Authentication errors.
-	ErrInvalidAuthToken       = errors.NewError(ErrorCodeInvalidAuthToken, "invalid authentication token")
-	ErrInvalidUserAuthToken   = errors.NewError(ErrorCodeInvalidUserAuthToken, "invalid user's authentication token")
-	ErrInvalidClientAuthToken = errors.NewError(ErrorCodeInvalidClientAuthToken, "invalid client authentication token")
+	ErrInvalidAuthnToken       = errors.NewError(ErrorCodeInvalidAuthnToken, "invalid authentication token")
+	ErrInvalidUserAuthnToken   = errors.NewError(ErrorCodeInvalidUserAuthnToken, "invalid user's authentication token")
+	ErrInvalidClientAuthnToken = errors.NewError(ErrorCodeInvalidClientAuthnToken, "invalid client authentication token")
 
 	// Authorization errors.
 
 	// Authentication token encryption key errors.
-	ErrAuthTokenEncryptionKeyNotFound = errors.NewError(ErrorCodeAuthTokenEncryptionKeyNotFound, "authentication token encryption key not found")
+	ErrAuthnTokenEncryptionKeyNotFound = errors.NewError(ErrorCodeAuthnTokenEncryptionKeyNotFound, "authentication token encryption key not found")
 
 	// Role assignment error codes.
 	// (User or Group) role assignment not found.

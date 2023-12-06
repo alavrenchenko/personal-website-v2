@@ -145,17 +145,17 @@ func (s *AuthenticationService) Authenticate(ctx context.Context, req *authentic
 				if err2 := errors.Unwrap(err); err2 != nil {
 					switch err2 {
 					case ierrors.ErrUserNotFound, ierrors.ErrUserSessionNotFound:
-						return apigrpcerrors.CreateGrpcError(codes.InvalidArgument, iapierrors.ErrInvalidUserAuthToken)
+						return apigrpcerrors.CreateGrpcError(codes.InvalidArgument, iapierrors.ErrInvalidUserAuthnToken)
 					case ierrors.ErrClientNotFound:
-						return apigrpcerrors.CreateGrpcError(codes.InvalidArgument, iapierrors.ErrInvalidClientAuthToken)
+						return apigrpcerrors.CreateGrpcError(codes.InvalidArgument, iapierrors.ErrInvalidClientAuthnToken)
 					}
 					switch err2.Code() {
-					case errors.ErrorCodeInvalidOperation, ierrors.ErrorCodeInvalidAuthToken:
-						return apigrpcerrors.CreateGrpcError(codes.InvalidArgument, iapierrors.ErrInvalidAuthToken)
-					case ierrors.ErrorCodeInvalidUserAuthToken:
-						return apigrpcerrors.CreateGrpcError(codes.InvalidArgument, iapierrors.ErrInvalidUserAuthToken)
-					case ierrors.ErrorCodeInvalidClientAuthToken:
-						return apigrpcerrors.CreateGrpcError(codes.InvalidArgument, iapierrors.ErrInvalidClientAuthToken)
+					case errors.ErrorCodeInvalidOperation, ierrors.ErrorCodeInvalidAuthnToken:
+						return apigrpcerrors.CreateGrpcError(codes.InvalidArgument, iapierrors.ErrInvalidAuthnToken)
+					case ierrors.ErrorCodeInvalidUserAuthnToken:
+						return apigrpcerrors.CreateGrpcError(codes.InvalidArgument, iapierrors.ErrInvalidUserAuthnToken)
+					case ierrors.ErrorCodeInvalidClientAuthnToken:
+						return apigrpcerrors.CreateGrpcError(codes.InvalidArgument, iapierrors.ErrInvalidClientAuthnToken)
 					}
 				}
 				return apigrpcerrors.CreateGrpcError(codes.Internal, apierrors.ErrInternal)
@@ -197,13 +197,13 @@ func (s *AuthenticationService) AuthenticateUser(ctx context.Context, req *authe
 				if err2 := errors.Unwrap(err); err2 != nil {
 					switch err2 {
 					case ierrors.ErrUserNotFound, ierrors.ErrUserSessionNotFound:
-						return apigrpcerrors.CreateGrpcError(codes.InvalidArgument, iapierrors.ErrInvalidUserAuthToken)
+						return apigrpcerrors.CreateGrpcError(codes.InvalidArgument, iapierrors.ErrInvalidUserAuthnToken)
 					}
 					switch err2.Code() {
-					case errors.ErrorCodeInvalidOperation, ierrors.ErrorCodeInvalidAuthToken:
-						return apigrpcerrors.CreateGrpcError(codes.InvalidArgument, iapierrors.ErrInvalidAuthToken)
-					case ierrors.ErrorCodeInvalidUserAuthToken:
-						return apigrpcerrors.CreateGrpcError(codes.InvalidArgument, iapierrors.ErrInvalidUserAuthToken)
+					case errors.ErrorCodeInvalidOperation, ierrors.ErrorCodeInvalidAuthnToken:
+						return apigrpcerrors.CreateGrpcError(codes.InvalidArgument, iapierrors.ErrInvalidAuthnToken)
+					case ierrors.ErrorCodeInvalidUserAuthnToken:
+						return apigrpcerrors.CreateGrpcError(codes.InvalidArgument, iapierrors.ErrInvalidUserAuthnToken)
 					}
 				}
 				return apigrpcerrors.CreateGrpcError(codes.Internal, apierrors.ErrInternal)
@@ -244,13 +244,13 @@ func (s *AuthenticationService) AuthenticateClient(ctx context.Context, req *aut
 				if err2 := errors.Unwrap(err); err2 != nil {
 					switch err2 {
 					case ierrors.ErrClientNotFound:
-						return apigrpcerrors.CreateGrpcError(codes.InvalidArgument, iapierrors.ErrInvalidClientAuthToken)
+						return apigrpcerrors.CreateGrpcError(codes.InvalidArgument, iapierrors.ErrInvalidClientAuthnToken)
 					}
 					switch err2.Code() {
-					case errors.ErrorCodeInvalidOperation, ierrors.ErrorCodeInvalidAuthToken:
-						return apigrpcerrors.CreateGrpcError(codes.InvalidArgument, iapierrors.ErrInvalidAuthToken)
-					case ierrors.ErrorCodeInvalidClientAuthToken:
-						return apigrpcerrors.CreateGrpcError(codes.InvalidArgument, iapierrors.ErrInvalidClientAuthToken)
+					case errors.ErrorCodeInvalidOperation, ierrors.ErrorCodeInvalidAuthnToken:
+						return apigrpcerrors.CreateGrpcError(codes.InvalidArgument, iapierrors.ErrInvalidAuthnToken)
+					case ierrors.ErrorCodeInvalidClientAuthnToken:
+						return apigrpcerrors.CreateGrpcError(codes.InvalidArgument, iapierrors.ErrInvalidClientAuthnToken)
 					}
 				}
 				return apigrpcerrors.CreateGrpcError(codes.Internal, apierrors.ErrInternal)

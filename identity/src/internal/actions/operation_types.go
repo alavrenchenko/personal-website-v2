@@ -143,12 +143,12 @@ const (
 	OperationTypeAuthorizationManager_Authorize actions.OperationType = 16000
 
 	// Authentication TokenEncryptionKeyManager operation types (16500-16999).
-	OperationTypeAuthTokenEncryptionKeyManager_FindById                         actions.OperationType = 16500
-	OperationTypeAuthTokenEncryptionKeyManager_GetAll                           actions.OperationType = 16501
-	OperationTypeAuthTokenEncryptionKeyManager_FindUserTokenEncryptionKeyById   actions.OperationType = 16502
-	OperationTypeAuthTokenEncryptionKeyManager_GetAllUserTokenEncryptionKeys    actions.OperationType = 16503
-	OperationTypeAuthTokenEncryptionKeyManager_FindClientTokenEncryptionKeyById actions.OperationType = 16504
-	OperationTypeAuthTokenEncryptionKeyManager_GetAllClientTokenEncryptionKeys  actions.OperationType = 16505
+	OperationTypeAuthnTokenEncryptionKeyManager_FindById                         actions.OperationType = 16500
+	OperationTypeAuthnTokenEncryptionKeyManager_GetAll                           actions.OperationType = 16501
+	OperationTypeAuthnTokenEncryptionKeyManager_FindUserTokenEncryptionKeyById   actions.OperationType = 16502
+	OperationTypeAuthnTokenEncryptionKeyManager_GetAllUserTokenEncryptionKeys    actions.OperationType = 16503
+	OperationTypeAuthnTokenEncryptionKeyManager_FindClientTokenEncryptionKeyById actions.OperationType = 16504
+	OperationTypeAuthnTokenEncryptionKeyManager_GetAllClientTokenEncryptionKeys  actions.OperationType = 16505
 
 	// RoleAssignmentManager operation types (17000-17499).
 	OperationTypeRoleAssignmentManager_Create                   actions.OperationType = 17000
@@ -440,12 +440,12 @@ const (
 	// AuthorizationStore operation types (36000-36499).
 
 	// Authentication TokenEncryptionKeyStore operation types (36500-36999).
-	OperationTypeAuthTokenEncryptionKeyStore_FindById                         actions.OperationType = 36500
-	OperationTypeAuthTokenEncryptionKeyStore_GetAll                           actions.OperationType = 36501
-	OperationTypeAuthTokenEncryptionKeyStore_FindUserTokenEncryptionKeyById   actions.OperationType = 36502
-	OperationTypeAuthTokenEncryptionKeyStore_GetAllUserTokenEncryptionKeys    actions.OperationType = 36503
-	OperationTypeAuthTokenEncryptionKeyStore_FindClientTokenEncryptionKeyById actions.OperationType = 36504
-	OperationTypeAuthTokenEncryptionKeyStore_GetAllClientTokenEncryptionKeys  actions.OperationType = 36505
+	OperationTypeAuthnTokenEncryptionKeyStore_FindById                         actions.OperationType = 36500
+	OperationTypeAuthnTokenEncryptionKeyStore_GetAll                           actions.OperationType = 36501
+	OperationTypeAuthnTokenEncryptionKeyStore_FindUserTokenEncryptionKeyById   actions.OperationType = 36502
+	OperationTypeAuthnTokenEncryptionKeyStore_GetAllUserTokenEncryptionKeys    actions.OperationType = 36503
+	OperationTypeAuthnTokenEncryptionKeyStore_FindClientTokenEncryptionKeyById actions.OperationType = 36504
+	OperationTypeAuthnTokenEncryptionKeyStore_GetAllClientTokenEncryptionKeys  actions.OperationType = 36505
 
 	// RoleAssignmentStore operation types (37000-37499).
 	OperationTypeRoleAssignmentStore_Create                   actions.OperationType = 37000

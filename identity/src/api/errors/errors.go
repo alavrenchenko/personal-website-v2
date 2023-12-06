@@ -74,9 +74,9 @@ const (
 	ApiErrorCodeUserAgentSessionAlreadyExists errors.ApiErrorCode = 32602
 
 	// Authentication error codes (32800-32999).
-	ApiErrorCodeInvalidAuthToken       errors.ApiErrorCode = 32800
-	ApiErrorCodeInvalidUserAuthToken   errors.ApiErrorCode = 32801
-	ApiErrorCodeInvalidClientAuthToken errors.ApiErrorCode = 32802
+	ApiErrorCodeInvalidAuthnToken       errors.ApiErrorCode = 32800
+	ApiErrorCodeInvalidUserAuthnToken   errors.ApiErrorCode = 32801
+	ApiErrorCodeInvalidClientAuthnToken errors.ApiErrorCode = 32802
 
 	// Authorization error codes (33000-33199).
 	// Authentication token encryption key error codes (33200-33399).
@@ -141,9 +141,9 @@ var (
 	ErrUserAgentSessionAlreadyExists = errors.NewApiError(ApiErrorCodeUserAgentSessionAlreadyExists, "user agent session with the same params already exists")
 
 	// Authentication errors.
-	ErrInvalidAuthToken       = errors.NewApiError(ApiErrorCodeInvalidAuthToken, "invalid authentication token")
-	ErrInvalidUserAuthToken   = errors.NewApiError(ApiErrorCodeInvalidUserAuthToken, "invalid user's authentication token")
-	ErrInvalidClientAuthToken = errors.NewApiError(ApiErrorCodeInvalidClientAuthToken, "invalid client authentication token")
+	ErrInvalidAuthnToken       = errors.NewApiError(ApiErrorCodeInvalidAuthnToken, "invalid authentication token")
+	ErrInvalidUserAuthnToken   = errors.NewApiError(ApiErrorCodeInvalidUserAuthnToken, "invalid user's authentication token")
+	ErrInvalidClientAuthnToken = errors.NewApiError(ApiErrorCodeInvalidClientAuthnToken, "invalid client authentication token")
 
 	// Authorization errors.
 	// Authentication token encryption key errors.

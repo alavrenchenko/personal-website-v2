@@ -60,7 +60,7 @@ var (
 	AuthorizationEvent = logging.NewEvent(0, "Authorization", logging.EventCategoryCommon, amlogging.EventGroupAuthorization)
 
 	// Authentication token encryption key events (id: 0, 12200-12399).
-	AuthTokenEncryptionKeyEvent = logging.NewEvent(0, "AuthTokenEncryptionKey", logging.EventCategoryCommon, amlogging.EventGroupAuthTokenEncryptionKey)
+	AuthnTokenEncryptionKeyEvent = logging.NewEvent(0, "AuthnTokenEncryptionKey", logging.EventCategoryCommon, amlogging.EventGroupAuthnTokenEncryptionKey)
 
 	// RoleAssignment events (id: 0, 12400-12599).
 	RoleAssignmentEvent = logging.NewEvent(0, "RoleAssignment", logging.EventCategoryCommon, amlogging.EventGroupRoleAssignment)
@@ -113,7 +113,7 @@ var (
 	AuthorizationStoreEvent = logging.NewEvent(0, "AuthorizationStore", logging.EventCategoryCommon, amlogging.EventGroupAuthorizationStore)
 
 	// Authentication TokenEncryptionKeyStore events (id: 0, 22400-22599).
-	AuthTokenEncryptionKeyStoreEvent = logging.NewEvent(0, "AuthTokenEncryptionKeyStore", logging.EventCategoryCommon, amlogging.EventGroupAuthTokenEncryptionKeyStore)
+	AuthnTokenEncryptionKeyStoreEvent = logging.NewEvent(0, "AuthnTokenEncryptionKeyStore", logging.EventCategoryCommon, amlogging.EventGroupAuthnTokenEncryptionKeyStore)
 
 	// HttpControllers_UserController events (id: 0, 100000-100199).
 	HttpControllers_UserControllerEvent = logging.NewEvent(0, "HttpControllers_UserController", logging.EventCategoryCommon, amlogging.EventGroupHttpControllers_UserController)
@@ -154,7 +154,7 @@ var (
 	GrpcServices_AuthorizationServiceEvent = logging.NewEvent(0, "GrpcServices_AuthorizationService", logging.EventCategoryCommon, amlogging.EventGroupGrpcServices_AuthorizationService)
 
 	// Authentication token encryption key service events (id: 0, 202200-202399).
-	GrpcServices_AuthTokenEncryptionKeyServiceEvent = logging.NewEvent(0, "GrpcServices_AuthTokenEncryptionKeyService", logging.EventCategoryCommon, amlogging.EventGroupGrpcServices_AuthTokenEncryptionKeyService)
+	GrpcServices_AuthnTokenEncryptionKeyServiceEvent = logging.NewEvent(0, "GrpcServices_AuthnTokenEncryptionKeyService", logging.EventCategoryCommon, amlogging.EventGroupGrpcServices_AuthnTokenEncryptionKeyService)
 
 	// GrpcServices_RoleAssignmentService events (id: 0, 202400-202599).
 	GrpcServices_RoleAssignmentServiceEvent = logging.NewEvent(0, "GrpcServices_RoleAssignmentService", logging.EventCategoryCommon, amlogging.EventGroupGrpcServices_RoleAssignmentService)
