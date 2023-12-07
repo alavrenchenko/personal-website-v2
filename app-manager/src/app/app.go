@@ -590,7 +590,7 @@ func (a *Application) configureIdentity() error {
 	var err error
 
 	if a.config.Mode == amappconfig.AppModeStartup {
-		if im, err = amidentity.NewStartupIdentityManager(a.config.Startup.AllowedUsers, a.loggerFactory); err != nil {
+		if im, err = amidentity.NewStartupIdentityManager(a.config.UserId, a.config.Startup.AllowedUsers, a.loggerFactory); err != nil {
 			return fmt.Errorf("[app.Application.configureIdentity] new startup identity manager: %w", err)
 		}
 	} else {
