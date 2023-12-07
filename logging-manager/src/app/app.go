@@ -615,7 +615,7 @@ func (a *Application) configureIdentity() error {
 	var err error
 
 	if a.config.Mode == lmappconfig.AppModeStartup {
-		if im, err = lmidentity.NewStartupIdentityManager(a.config.Startup.AllowedUsers, a.loggerFactory); err != nil {
+		if im, err = lmidentity.NewStartupIdentityManager(a.config.UserId, a.config.Startup.AllowedUsers, a.loggerFactory); err != nil {
 			return fmt.Errorf("[app.Application.configureIdentity] new startup identity manager: %w", err)
 		}
 	} else {
@@ -723,7 +723,7 @@ func (a *Application) getDbSettings() *postgres.DbSettings {
 }
 
 func (a *Application) configure() error {
-	loggingSessionManager, err := sessionmanager.NewLoggingSessionManager(a.appManagerService.Apps, a.postgresManager.Stores.LoggingSessionStore, a.loggerFactory)
+	loggingSessionManager, err := sessionmanager.NewLoggingSessionManager(a.config.UserId, a.appManagerService.Apps, a.postgresManager.Stores.LoggingSessionStore, a.loggerFactory)
 	if err != nil {
 		return fmt.Errorf("[app.Application.configure] new logging session manager: %w", err)
 	}
