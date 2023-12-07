@@ -17,6 +17,7 @@ package identity
 import (
 	"errors"
 	"fmt"
+	"sync"
 
 	"personal-website-v2/api-clients/identity"
 	ierrors "personal-website-v2/api-clients/identity/errors"
@@ -27,6 +28,7 @@ import (
 	"personal-website-v2/pkg/actions"
 	apierrors "personal-website-v2/pkg/api/errors"
 	"personal-website-v2/pkg/base/nullable"
+	"personal-website-v2/pkg/base/utils/runtime"
 	errs "personal-website-v2/pkg/errors"
 	actionhelper "personal-website-v2/pkg/helper/actions"
 	"personal-website-v2/pkg/logging"
@@ -42,8 +44,8 @@ type IdentityManager interface {
 }
 
 type identityManager struct {
-	opExecutor          *actionhelper.OperationExecutor
 	appUserId           uint64
+	opExecutor          *actionhelper.OperationExecutor
 	identityService     *identity.IdentityService
 	roleNames           []string
 	permissionNames     []string
@@ -73,8 +75,8 @@ func NewIdentityManager(appUserId uint64, identityService *identity.IdentityServ
 	}
 
 	return &identityManager{
-		opExecutor:      e,
 		appUserId:       appUserId,
+		opExecutor:      e,
 		identityService: identityService,
 		roleNames:       roles,
 		permissionNames: permissions,
@@ -121,11 +123,47 @@ func (m *identityManager) AuthenticateById(ctx *actions.OperationContext, userId
 		return nil, errors.New("[identity.identityManager.AuthenticateById] identityManager not initialized")
 	}
 
+	ctx = ctx.Clone()
+	ctx.UserId = nullable.NewNullable(m.appUserId)
+	ctx.ClientId = nullable.Nullable[uint64]{}
+
 	var i *DefaultIdentity
 	err := m.opExecutor.Exec(ctx, actions.OperationTypeIdentityManager_AuthenticateById,
 		[]*actions.OperationParam{actions.NewOperationParam("userId", userId.Ptr()), actions.NewOperationParam("clientId", clientId.Ptr())},
 		func(opCtx *actions.OperationContext) error {
 			i = &DefaultIdentity{userType: UserTypeUser}
+
+			if !userId.HasValue && !clientId.HasValue {
+				return nil
+			}
+
+			var wg sync.WaitGroup
+			var clientErr error
+
+			if clientId.HasValue {
+				wg.Add(1)
+				go func() {
+					defer wg.Done()
+					defer runtime.CatchPanic(func(p *runtime.PanicInfo) {
+						clientErr = errs.NewErrorWithStackTrace(errs.ErrorCodeInternalError, fmt.Sprint("panic: ", p.Value), p.StackTrace)
+					})
+
+					if s, err := m.identityService.Clients.GetStatusById(opCtx, clientId.Value); err != nil {
+						msg := "[identity.identityManager.AuthenticateById] get a client status by id"
+						if err2 := apierrors.Unwrap(err); err2 == nil || err2.Code() != ierrors.ApiErrorCodeClientNotFound && err2.Code() != ierrors.ApiErrorCodeInvalidClientId {
+							clientErr = fmt.Errorf("%s: %w", msg, err)
+							return
+						}
+						m.logger.ErrorWithEvent(opCtx.CreateLogEntryContext(), events.IdentityEvent, err, msg)
+					} else if s == clientspb.ClientStatus_ACTIVE {
+						i.clientId = clientId
+					} else {
+						m.logger.WarningWithEvent(opCtx.CreateLogEntryContext(), events.IdentityEvent, "[identity.identityManager.AuthenticateById] invalid client status",
+							logging.NewField("clientStatus", s),
+						)
+					}
+				}()
+			}
 
 			if userId.HasValue {
 				if t, s, err := m.identityService.Users.GetTypeAndStatusById(opCtx, userId.Value); err != nil {
@@ -145,18 +183,9 @@ func (m *identityManager) AuthenticateById(ctx *actions.OperationContext, userId
 			}
 
 			if clientId.HasValue {
-				if s, err := m.identityService.Clients.GetStatusById(opCtx, clientId.Value); err != nil {
-					msg := "[identity.identityManager.AuthenticateById] get a client status by id"
-					if err2 := apierrors.Unwrap(err); err2 == nil || err2.Code() != ierrors.ApiErrorCodeClientNotFound && err2.Code() != ierrors.ApiErrorCodeInvalidClientId {
-						return fmt.Errorf("%s: %w", msg, err)
-					}
-					m.logger.ErrorWithEvent(opCtx.CreateLogEntryContext(), events.IdentityEvent, err, msg)
-				} else if s == clientspb.ClientStatus_ACTIVE {
-					i.clientId = clientId
-				} else {
-					m.logger.WarningWithEvent(opCtx.CreateLogEntryContext(), events.IdentityEvent, "[identity.identityManager.AuthenticateById] invalid client status",
-						logging.NewField("clientStatus", s),
-					)
+				wg.Wait()
+				if clientErr != nil {
+					return clientErr
 				}
 			}
 
@@ -196,6 +225,10 @@ func (m *identityManager) AuthenticateByToken(ctx *actions.OperationContext, use
 	if !m.isInitialized {
 		return nil, errors.New("[identity.identityManager.AuthenticateByToken] identityManager not initialized")
 	}
+
+	ctx = ctx.Clone()
+	ctx.UserId = nullable.NewNullable(m.appUserId)
+	ctx.ClientId = nullable.Nullable[uint64]{}
 
 	var i *DefaultIdentity
 	err := m.opExecutor.Exec(ctx, actions.OperationTypeIdentityManager_AuthenticateByToken, nil,
@@ -274,6 +307,10 @@ func (m *identityManager) Authorize(ctx *actions.OperationContext, user Identity
 	if !m.isInitialized {
 		return false, errors.New("[identity.identityManager.Authorize] identityManager not initialized")
 	}
+
+	ctx = ctx.Clone()
+	ctx.UserId = nullable.NewNullable(m.appUserId)
+	ctx.ClientId = nullable.Nullable[uint64]{}
 
 	authorized := false
 	err := m.opExecutor.Exec(ctx, actions.OperationTypeIdentityManager_Authorize,

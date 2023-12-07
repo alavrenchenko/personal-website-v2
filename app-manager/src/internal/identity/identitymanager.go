@@ -28,6 +28,7 @@ import (
 )
 
 type startupIdentityManager struct {
+	appUserId    uint64
 	opExecutor   *actionhelper.OperationExecutor
 	allowedUsers map[uint64]bool
 	logger       logging.Logger[*context.LogEntryContext]
@@ -35,7 +36,7 @@ type startupIdentityManager struct {
 
 var _ identity.IdentityManager = (*startupIdentityManager)(nil)
 
-func NewStartupIdentityManager(allowedUsers []uint64, loggerFactory logging.LoggerFactory[*context.LogEntryContext]) (identity.IdentityManager, error) {
+func NewStartupIdentityManager(appUserId uint64, allowedUsers []uint64, loggerFactory logging.LoggerFactory[*context.LogEntryContext]) (identity.IdentityManager, error) {
 	l, err := loggerFactory.CreateLogger("internal.identity.startupIdentityManager")
 	if err != nil {
 		return nil, fmt.Errorf("[identity.NewStartupIdentityManager] create a logger: %w", err)
@@ -57,6 +58,7 @@ func NewStartupIdentityManager(allowedUsers []uint64, loggerFactory logging.Logg
 	}
 
 	return &startupIdentityManager{
+		appUserId:    appUserId,
 		opExecutor:   e,
 		allowedUsers: us,
 		logger:       l,
@@ -68,6 +70,10 @@ func (m *startupIdentityManager) Init() error {
 }
 
 func (m *startupIdentityManager) AuthenticateById(ctx *actions.OperationContext, userId, clientId nullable.Nullable[uint64]) (identity.Identity, error) {
+	ctx = ctx.Clone()
+	ctx.UserId = nullable.NewNullable(m.appUserId)
+	ctx.ClientId = nullable.Nullable[uint64]{}
+
 	var i *identity.DefaultIdentity
 	err := m.opExecutor.Exec(ctx, actions.OperationTypeIdentityManager_AuthenticateById,
 		[]*actions.OperationParam{actions.NewOperationParam("userId", userId.Ptr()), actions.NewOperationParam("clientId", clientId.Ptr())},
@@ -92,6 +98,10 @@ func (m *startupIdentityManager) AuthenticateById(ctx *actions.OperationContext,
 }
 
 func (m *startupIdentityManager) AuthenticateByToken(ctx *actions.OperationContext, userToken, clientToken []byte) (identity.Identity, error) {
+	ctx = ctx.Clone()
+	ctx.UserId = nullable.NewNullable(m.appUserId)
+	ctx.ClientId = nullable.Nullable[uint64]{}
+
 	var i *identity.DefaultIdentity
 	err := m.opExecutor.Exec(ctx, actions.OperationTypeIdentityManager_AuthenticateByToken, nil,
 		func(opCtx *actions.OperationContext) error {
@@ -106,6 +116,10 @@ func (m *startupIdentityManager) AuthenticateByToken(ctx *actions.OperationConte
 }
 
 func (m *startupIdentityManager) Authorize(ctx *actions.OperationContext, user identity.Identity, requiredPermissions []string) (bool, error) {
+	ctx = ctx.Clone()
+	ctx.UserId = nullable.NewNullable(m.appUserId)
+	ctx.ClientId = nullable.Nullable[uint64]{}
+
 	authorized := false
 	err := m.opExecutor.Exec(ctx, actions.OperationTypeIdentityManager_Authorize,
 		[]*actions.OperationParam{
