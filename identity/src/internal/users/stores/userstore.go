@@ -447,7 +447,7 @@ func (s *UserStore) GetGroupById(ctx *actions.OperationContext, id uint64) (grou
 			}
 			defer conn.Release()
 
-			const query = "SELECT group FROM " + usersTable + " WHERE id = $1 LIMIT 1"
+			const query = `SELECT "group" FROM ` + usersTable + " WHERE id = $1 LIMIT 1"
 
 			if err = conn.QueryRow(opCtx.Ctx, query, id).Scan(&g); err != nil {
 				if errors.Is(err, pgx.ErrNoRows) {
@@ -535,7 +535,7 @@ func (s *UserStore) GetGroupAndStatusById(ctx *actions.OperationContext, id uint
 			}
 			defer conn.Release()
 
-			const query = "SELECT group, status FROM " + usersTable + " WHERE id = $1 LIMIT 1"
+			const query = `SELECT "group", status FROM ` + usersTable + " WHERE id = $1 LIMIT 1"
 
 			if err = conn.QueryRow(opCtx.Ctx, query, id).Scan(&g, &status); err != nil {
 				if errors.Is(err, pgx.ErrNoRows) {
