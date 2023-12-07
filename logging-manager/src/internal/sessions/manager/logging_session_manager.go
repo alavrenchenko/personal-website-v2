@@ -29,6 +29,7 @@ import (
 	"personal-website-v2/pkg/actions"
 	apierrors "personal-website-v2/pkg/api/errors"
 	"personal-website-v2/pkg/app"
+	"personal-website-v2/pkg/base/nullable"
 	"personal-website-v2/pkg/errors"
 	"personal-website-v2/pkg/logging"
 	"personal-website-v2/pkg/logging/context"
@@ -36,6 +37,7 @@ import (
 
 // LoggingSessionManager is a logging session manager.
 type LoggingSessionManager struct {
+	appUserId           uint64
 	apps                appmanager.Apps
 	loggingSessionStore sessions.LoggingSessionStore
 	logger              logging.Logger[*context.LogEntryContext]
@@ -43,13 +45,19 @@ type LoggingSessionManager struct {
 
 var _ sessions.LoggingSessionManager = (*LoggingSessionManager)(nil)
 
-func NewLoggingSessionManager(apps appmanager.Apps, loggingSessionStore sessions.LoggingSessionStore, loggerFactory logging.LoggerFactory[*context.LogEntryContext]) (*LoggingSessionManager, error) {
+func NewLoggingSessionManager(
+	appUserId uint64,
+	apps appmanager.Apps,
+	loggingSessionStore sessions.LoggingSessionStore,
+	loggerFactory logging.LoggerFactory[*context.LogEntryContext],
+) (*LoggingSessionManager, error) {
 	l, err := loggerFactory.CreateLogger("internal.sessions.manager.LoggingSessionManager")
 	if err != nil {
 		return nil, fmt.Errorf("[manager.NewLoggingSessionManager] create a logger: %w", err)
 	}
 
 	return &LoggingSessionManager{
+		appUserId:           appUserId,
 		apps:                apps,
 		loggingSessionStore: loggingSessionStore,
 		logger:              l,
@@ -59,7 +67,7 @@ func NewLoggingSessionManager(apps appmanager.Apps, loggingSessionStore sessions
 // CreateAndStart creates and starts a logging session for the specified app
 // and returns logging session ID if the operation is successful.
 func (m *LoggingSessionManager) CreateAndStart(appId uint64, operationUserId uint64) (uint64, error) {
-	if err := m.checkApp(nil, appId, operationUserId); err != nil {
+	if err := m.checkApp(nil, appId); err != nil {
 		return 0, fmt.Errorf("[manager.LoggingSessionManager.CreateAndStart] check an app: %w", err)
 	}
 
@@ -103,7 +111,7 @@ func (m *LoggingSessionManager) CreateAndStartWithContext(ctx *actions.Operation
 		}
 	}()
 
-	if err = m.checkApp(ctx2, appId, ctx2.UserId.Value); err != nil {
+	if err = m.checkApp(ctx2, appId); err != nil {
 		return 0, fmt.Errorf("[manager.LoggingSessionManager.CreateAndStartWithContext] check an app: %w", err)
 	}
 
@@ -123,16 +131,20 @@ func (m *LoggingSessionManager) CreateAndStartWithContext(ctx *actions.Operation
 }
 
 // for creating a logging session
-func (m *LoggingSessionManager) checkApp(ctx *actions.OperationContext, appId uint64, operationUserId uint64) error {
+func (m *LoggingSessionManager) checkApp(ctx *actions.OperationContext, appId uint64) error {
 	var as appspb.AppStatus
 	var err error
 	var leCtx *context.LogEntryContext
 
 	if ctx != nil {
+		ctx = ctx.Clone()
+		ctx.UserId = nullable.NewNullable(m.appUserId)
+		ctx.ClientId = nullable.Nullable[uint64]{}
 		leCtx = ctx.CreateLogEntryContext()
+
 		as, err = m.apps.GetStatusByIdWithContext(ctx, appId)
 	} else {
-		as, err = m.apps.GetStatusById(appId, operationUserId)
+		as, err = m.apps.GetStatusById(appId, m.appUserId)
 	}
 
 	if err != nil {
