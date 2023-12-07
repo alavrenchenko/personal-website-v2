@@ -34,6 +34,7 @@ import (
 	usermodels "personal-website-v2/identity/src/internal/users/models"
 	"personal-website-v2/pkg/actions"
 	"personal-website-v2/pkg/base/nullable"
+	"personal-website-v2/pkg/base/utils/runtime"
 	errs "personal-website-v2/pkg/errors"
 	actionhelper "personal-website-v2/pkg/helper/actions"
 	"personal-website-v2/pkg/logging"
@@ -168,19 +169,27 @@ func (m *AuthorizationManager) authorizeUser(ctx *actions.OperationContext, user
 
 		for i := 0; i < pslen; i++ {
 			go func(idx int) {
+				defer wg.Done()
+				defer runtime.CatchPanic(func(p *runtime.PanicInfo) {
+					hasErr.Store(true)
+					m.logger.ErrorWithEvent(ctx.CreateLogEntryContext(), events.AuthorizationEvent,
+						errs.NewErrorWithStackTrace(errs.ErrorCodeInternalError, fmt.Sprint("[manager.AuthorizationManager.authorizeUser] panic: ", p.Value), p.StackTrace),
+						"[manager.AuthorizationManager.authorizeUser] an error occurred while getting all role ids by permission id",
+					)
+				})
+
 				var err error
 				if prs[idx], err = m.rolePermissionManager.GetAllRoleIdsByPermissionId(ctx, requiredPermissionIds[idx]); err != nil {
 					hasErr.Store(true)
-					m.logger.ErrorWithEvent(ctx.CreateLogEntryContext(), events.AuthorizationEvent, err, "[manager.AuthorizationManager.authorizeUser] get all role ids by permission id",
+					m.logger.ErrorWithEvent(ctx.CreateLogEntryContext(), events.AuthorizationEvent, err,
+						"[manager.AuthorizationManager.authorizeUser] get all role ids by permission id",
 						logging.NewField("permissionId", requiredPermissionIds[idx]),
 					)
 				} else if len(prs[idx]) == 0 {
 					areGranted.Store(false)
 				}
-				wg.Done()
 			}(i)
 		}
-
 		wg.Wait()
 
 		if hasErr.Load() {
@@ -194,11 +203,21 @@ func (m *AuthorizationManager) authorizeUser(ctx *actions.OperationContext, user
 		wg.Add(pslen)
 		for i := 0; i < pslen; i++ {
 			go func(idx int) {
+				defer wg.Done()
+				defer runtime.CatchPanic(func(p *runtime.PanicInfo) {
+					hasErr.Store(true)
+					m.logger.ErrorWithEvent(ctx.CreateLogEntryContext(), events.AuthorizationEvent,
+						errs.NewErrorWithStackTrace(errs.ErrorCodeInternalError, fmt.Sprint("[manager.AuthorizationManager.authorizeUser] panic: ", p.Value), p.StackTrace),
+						"[manager.AuthorizationManager.authorizeUser] an error occurred while getting combined user and group roles",
+					)
+				})
+
 				rf := prs[idx]
 				var err error
 				if prs[idx], err = m.getCombinedUserAndGroupRoles(ctx, userId, ug, rf); err != nil {
 					hasErr.Store(true)
-					m.logger.ErrorWithEvent(ctx.CreateLogEntryContext(), events.AuthorizationEvent, err, "[manager.AuthorizationManager.authorizeUser] get combined user and group roles",
+					m.logger.ErrorWithEvent(ctx.CreateLogEntryContext(), events.AuthorizationEvent, err,
+						"[manager.AuthorizationManager.authorizeUser] get combined user and group roles",
 						logging.NewField("userId", userId),
 						logging.NewField("group", ug),
 						logging.NewField("roleFilter", rf),
@@ -206,10 +225,8 @@ func (m *AuthorizationManager) authorizeUser(ctx *actions.OperationContext, user
 				} else if len(prs[idx]) == 0 {
 					areGranted.Store(false)
 				}
-				wg.Done()
 			}(i)
 		}
-
 		wg.Wait()
 
 		if hasErr.Load() {
@@ -284,7 +301,7 @@ func (m *AuthorizationManager) getCombinedUserAndGroupRoles(ctx *actions.Operati
 	idx := 0
 
 	if urIdsLen > 0 {
-		rs := make([]uint64, roleFilterLen)
+		rs = make([]uint64, roleFilterLen)
 		rf = make([]uint64, rflen)
 		rfIdx := 0
 	MainLoop:
