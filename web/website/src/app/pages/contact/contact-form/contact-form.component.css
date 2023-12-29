@@ -1,0 +1,45 @@
+pw-contact-form .pw-contact__form {
+    display: flex;
+    flex-direction: column;
+}
+
+pw-contact-form .pw-contact__form>button {
+    background-color: rgba(75, 90, 190, 0.7) !important;
+    align-self: center;
+    margin-top: 15px;
+}
+
+pw-contact-form .pw-contact__form>button:disabled {
+    background-color: rgba(190, 190, 255, 0.2) !important;
+}
+
+pw-contact-form .mdc-text-field--filled:not(.mdc-text-field--disabled) {
+    background-color: rgba(255, 255, 255, 0.01);
+}
+
+pw-contact-form .mdc-text-field--filled:not(.mdc-text-field--disabled) .mdc-floating-label,
+pw-contact-form .mdc-text-field--filled:not(.mdc-text-field--disabled) .mdc-floating-label--float-above {
+    color: #fff;
+}
+
+pw-contact-form .mdc-text-field--filled:not(.mdc-text-field--disabled).mdc-text-field--focused .mdc-floating-label,
+pw-contact-form .mdc-text-field--filled:not(.mdc-text-field--disabled).mdc-text-field--focused .mdc-floating-label--float-above {
+    color: #9caafb;
+}
+
+pw-contact-form .mdc-text-field--filled:not(.mdc-text-field--disabled) .mdc-text-field__input {
+    color: #fff;
+}
+
+pw-contact-form input::placeholder,
+pw-contact-form input::-webkit-input-placeholder {
+    color: #fff !important;
+}
+
+pw-contact-form input:-webkit-autofill,
+pw-contact-form input:-webkit-autofill:focus,
+pw-contact-form input:-webkit-autofill:hover {
+    -webkit-text-fill-color: #ddd;
+    -webkit-box-shadow: 0 0 0px 1000px rgba(232, 240, 254, 0.07) inset;
+    transition: background-color 5000s ease-in-out 0s !important;
+}

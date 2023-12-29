@@ -1,0 +1,22 @@
+pw-contact {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.pw-contact-content {
+    width: 100%;
+    max-width: 900px;
+}
+
+pw-contact .pw-page-row {
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+pw-contact .pw-page-row-item {
+    background-color: rgba(0, 0, 0, 0.1);
+    padding: 35px;
+    border: var(--pw-primary-border);
+    border-radius: 10px;
+}

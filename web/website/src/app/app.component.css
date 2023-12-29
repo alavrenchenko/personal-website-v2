@@ -1,0 +1,10 @@
+.pw-page-content {
+    position: relative;
+}
+
+.pw-full-page {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    min-height: 100vh;
+}

@@ -1,0 +1,35 @@
+/**
+ * @license
+ * Copyright 2023 Alexey Lavrenchenko. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+import { Component, ViewEncapsulation } from "@angular/core";
+
+import { ContactFormComponent, CREATE_MSG_REQ_URL_TOKEN } from "./contact-form";
+
+@Component({
+    selector: "pw-contact",
+    standalone: true,
+    templateUrl: './contact.component.html',
+    styleUrls: ['./contact.component.css'],
+    encapsulation: ViewEncapsulation.None,
+    providers: [
+        { provide: CREATE_MSG_REQ_URL_TOKEN, useValue: '/contact/messages' }
+    ],
+    imports: [ContactFormComponent]
+})
+export class ContactComponent {
+    constructor() { }
+}

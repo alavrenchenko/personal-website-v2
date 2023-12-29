@@ -1,0 +1,88 @@
+{
+    "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
+    "version": 1,
+    "newProjectRoot": "projects",
+    "projects": {
+        "website": {
+            "root": "web/website",
+            "sourceRoot": "web/website/src",
+            "projectType": "application",
+            "architect": {
+                "build": {
+                    "builder": "@angular-devkit/build-angular:browser",
+                    "options": {
+                        "sourceMap": true,
+                        "outputPath": "web/dist/website",
+                        "index": "web/website/src/index.html",
+                        "main": "web/website/src/main.ts",
+                        "polyfills": [
+                            "zone.js"
+                        ],
+                        "tsConfig": "tsconfig.json",
+                        "aot": true,
+                        "assets": [
+                            {
+                                "glob": "**/*",
+                                "input": "web/website/src/assets",
+                                "output": "/assets"
+                            },
+                            {
+                                "glob": "favicon.ico",
+                                "input": "web/website/src",
+                                "output": "/"
+                            },
+                            "web/website/src/robots.txt",
+                            "web/website/src/sitemap.xml"
+                        ],
+                        "styles": [
+                            {
+                                "input": "web/website/src/styles.scss"
+                            }
+                        ],
+                        "stylePreprocessorOptions": {
+                            "includePaths": [
+                                "web/website/src/styles"
+                            ]
+                        },
+                        "scripts": [],
+                        "vendorChunk": true,
+                        "extractLicenses": false,
+                        "buildOptimizer": false,
+                        "optimization": false,
+                        "namedChunks": true
+                    },
+                    "configurations": {
+                        "production": {
+                            "budgets": [
+                                {
+                                    "type": "anyComponentStyle",
+                                    "maximumWarning": "6kb"
+                                }
+                            ],
+                            "commonChunk": false,
+                            "optimization": true,
+                            "outputHashing": "all",
+                            "sourceMap": false,
+                            "namedChunks": false,
+                            "extractLicenses": true,
+                            "vendorChunk": false,
+                            "buildOptimizer": true,
+                            "fileReplacements": []
+                        }
+                    }
+                },
+                "serve": {
+                    "builder": "@angular-devkit/build-angular:dev-server",
+                    "options": {
+                        "buildTarget": "website:build"
+                    },
+                    "configurations": {
+                        "production": {
+                            "buildTarget": "website:build:production"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,9 @@
+pw-dot-image {
+    display: block;
+    min-height: 1px;
+}
+
+.pw-dot-image__canvas {
+    position: absolute;
+    border-radius: 7px;
+}

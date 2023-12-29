@@ -1,0 +1,48 @@
+<form class="pw-contact__form" [formGroup]="form" (ngSubmit)="submit()">
+    <mat-form-field>
+        <mat-label>Name</mat-label>
+        <input matInput name="name" formControlName="name" [(ngModel)]="message.name" [errorStateMatcher]="nameMatcher"
+            maxlength="100">
+        @if (form.controls['name'].hasError('required')) {
+        <mat-error>Name is <strong>required</strong></mat-error>
+        }
+        @if (form.controls['name'].hasError('maxLength')) {
+        <mat-error>The maximum name length is 100 characters</mat-error>
+        }
+        @if (form.controls['name'].hasError('whitespace')) {
+        <mat-error>Please enter a valid name</mat-error>
+        }
+    </mat-form-field>
+    <mat-form-field>
+        <mat-label>Email</mat-label>
+        <input matInput name="email" type="email" formControlName="email" [(ngModel)]="message.email"
+            [errorStateMatcher]="emailMatcher" maxlength="500" placeholder="example@example.com">
+        @if (form.controls['email'].hasError('email') && !form.controls['email'].hasError('required')) {
+        <mat-error>Please enter a valid email address</mat-error>
+        }
+        @if (form.controls['email'].hasError('required')) {
+        <mat-error>Email is <strong>required</strong></mat-error>
+        }
+        @if (form.controls['email'].hasError('maxLength')) {
+        <mat-error>The maximum email address length is 500 characters</mat-error>
+        }
+    </mat-form-field>
+    <mat-form-field>
+        <mat-label>Message</mat-label>
+        <textarea matInput name="message" formControlName="msg" [(ngModel)]="message.message"
+            [errorStateMatcher]="msgMatcher" maxlength="1000"></textarea>
+        @if (form.controls['msg'].hasError('required')) {
+        <mat-error>Message is <strong>required</strong></mat-error>
+        }
+        @if (form.controls['msg'].hasError('maxLength')) {
+        <mat-error>The maximum message length is 1000 characters</mat-error>
+        }
+        @if (form.controls['msg'].hasError('whitespace')) {
+        <mat-error>Please enter a valid message</mat-error>
+        }
+        <mat-hint align="end">{{form.controls['msg'].value.length}} / 1000</mat-hint>
+    </mat-form-field>
+    <button mat-raised-button color="primary" [disabled]="form.invalid || sending">
+        {{sending ? 'Sending...' : 'Send'}}
+    </button>
+</form>

@@ -1,0 +1,29 @@
+<a mat-button class="pw-navbar-brand" color="primary" routerLink="/" aria-label="Alexey Lavrenchenko">Alexey Lavrenchenko</a>
+<nav class="pw-navbar-nav pw-nav-top">
+    <div class="pw-nav-router-links">
+        @for (item of routerLinks; track item.name) {
+        <a mat-button class="pw-nav-item" color="primary" [routerLink]="item.link"
+            routerLinkActive="pw-nav-item-selected" [routerLinkActiveOptions]="{exact: true}"
+            [attr.aria-label]="item.label" tabindex="0">
+            <div class="pw-nav-item__label">{{item.label}}</div>
+        </a>
+        }
+    </div>
+    <div class="flex-spacer"></div>
+    <div class="pw-nav-external-links">
+        @for (item of externalLinks; track item.name) {
+        <a mat-button class="pw-nav-item" [attr.href]="item.link" target="_blank" color="primary"
+            [attr.aria-label]="item.label">
+            <div class="pw-nav-item__label">{{item.label}}</div>
+        </a>
+        }
+    </div>
+</nav>
+<nav class="pw-navbar-nav pw-nav-bottom">
+    @for (item of routerLinks; track item.name) {
+    <a mat-button class="pw-nav-item" color="primary" [routerLink]="item.link" routerLinkActive="pw-nav-item-selected"
+        [routerLinkActiveOptions]="{exact: true}" [attr.aria-label]="item.label">
+        <div class="pw-nav-item__label">{{item.label}}</div>
+    </a>
+    }
+</nav>
