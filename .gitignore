@@ -18,7 +18,9 @@ bin/
 /cdn/
 /config-storage/
 /email-notifier/
-/web/
+/web/dist/
+/web/website/src/envs/
+/web/website/src/assets/
 /website/
 
 /db/postgres/identity/**/private/
@@ -29,3 +31,8 @@ bin/
 /setup/
 
 /build
+
+/node_modules/
+package-lock.json
+
+/.angular/
