@@ -21,7 +21,6 @@ bin/
 /web/dist/
 /web/website/src/envs/
 /web/website/src/assets/
-/website/
 
 /db/postgres/identity/**/private/
 
