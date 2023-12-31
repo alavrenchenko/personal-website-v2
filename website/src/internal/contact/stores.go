@@ -13,3 +13,14 @@
 // limitations under the License.
 
 package contact
+
+import (
+	"personal-website-v2/pkg/actions"
+	"personal-website-v2/website/src/internal/contact/operations/messages"
+)
+
+// ContactMessageStore is a contact message store.
+type ContactMessageStore interface {
+	// Create creates a message and returns the message ID if the operation is successful.
+	Create(ctx *actions.OperationContext, data *messages.CreateOperationData) (uint64, error)
+}
