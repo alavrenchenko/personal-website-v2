@@ -15,12 +15,13 @@
 package users
 
 import (
+	"time"
+
 	groupmodels "personal-website-v2/identity/src/internal/groups/models"
 	"personal-website-v2/identity/src/internal/users/models"
 	"personal-website-v2/pkg/base/nullable"
 	"personal-website-v2/pkg/base/strings"
 	"personal-website-v2/pkg/errors"
-	"time"
 )
 
 type CreateOperationData struct {
