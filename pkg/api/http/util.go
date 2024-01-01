@@ -57,6 +57,7 @@ func Created[TData any](ctx *server.HttpContext, data TData) error {
 	b, err := json.Marshal(r)
 
 	if err != nil {
+		_ = InternalServerError(ctx)
 		return fmt.Errorf("[http.Created] marshal the response to JSON: %w", err)
 	}
 
