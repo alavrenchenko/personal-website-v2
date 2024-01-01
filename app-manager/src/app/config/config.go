@@ -29,7 +29,7 @@ type AppConfig struct {
 	Actions *config.Actions `json:"actions"`
 	Net     *config.Net     `json:"net"`
 	Db      *config.Db      `json:"db"`
-	Apis    Apis            `json:"apis"`
+	Apis    *Apis           `json:"apis"`
 }
 
 type Startup struct {
@@ -37,7 +37,7 @@ type Startup struct {
 }
 
 type Apis struct {
-	Clients ApiClients `json:"clients"`
+	Clients *ApiClients `json:"clients"`
 }
 
 type ApiClients struct {
