@@ -25,19 +25,18 @@ import (
 )
 
 func Ok[TData any](ctx *server.HttpContext, data TData) error {
-	h := ctx.Response.Writer.Header()
-	h.Set("Content-Type", "application/json; charset=UTF-8")
-	h.Set("X-Content-Type-Options", "nosniff")
-	ctx.Response.Writer.WriteHeader(http.StatusOK)
-
 	r := models.NewResponse(data, nil)
 	// json.NewEncoder(ctx.Response.Writer).Encode(r)
 	b, err := json.Marshal(r)
-
 	if err != nil {
 		_ = InternalServerError(ctx)
 		return fmt.Errorf("[http.Ok] marshal the response to JSON: %w", err)
 	}
+
+	h := ctx.Response.Writer.Header()
+	h.Set("Content-Type", "application/json; charset=UTF-8")
+	h.Set("X-Content-Type-Options", "nosniff")
+	ctx.Response.Writer.WriteHeader(http.StatusOK)
 
 	if _, err := ctx.Response.Writer.Write(b); err != nil {
 		return fmt.Errorf("[http.Ok] write data: %w", err)
@@ -46,20 +45,19 @@ func Ok[TData any](ctx *server.HttpContext, data TData) error {
 }
 
 func Created[TData any](ctx *server.HttpContext, data TData) error {
+	r := models.NewResponse(data, nil)
+	// json.NewEncoder(ctx.Response.Writer).Encode(r)
+	b, err := json.Marshal(r)
+	if err != nil {
+		_ = InternalServerError(ctx)
+		return fmt.Errorf("[http.Created] marshal the response to JSON: %w", err)
+	}
+
 	h := ctx.Response.Writer.Header()
 	h.Set("Cache-Control", "no-cache, no-store, must-revalidate")
 	h.Set("Content-Type", "application/json; charset=UTF-8")
 	h.Set("X-Content-Type-Options", "nosniff")
 	ctx.Response.Writer.WriteHeader(http.StatusCreated)
-
-	r := models.NewResponse(data, nil)
-	// json.NewEncoder(ctx.Response.Writer).Encode(r)
-	b, err := json.Marshal(r)
-
-	if err != nil {
-		_ = InternalServerError(ctx)
-		return fmt.Errorf("[http.Created] marshal the response to JSON: %w", err)
-	}
 
 	if _, err := ctx.Response.Writer.Write(b); err != nil {
 		return fmt.Errorf("[http.Created] write data: %w", err)
@@ -119,7 +117,6 @@ func Error(ctx *server.HttpContext, statusCode int, err *errors.ApiError) error 
 	r := models.NewResponse[*struct{}](nil, models.NewError(err.Code(), err.Message()))
 	// json.NewEncoder(ctx.Response.Writer).Encode(r)
 	b, err2 := json.Marshal(r)
-
 	if err2 != nil {
 		return fmt.Errorf("[http.Error] marshal the response to JSON: %w", err2)
 	}
