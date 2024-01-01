@@ -127,8 +127,6 @@ func (c *ContactMessageController) Create(ctx *server.HttpContext) {
 				return false
 			}
 
-			ctx.Response.Writer.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
-
 			if err := apihttp.Created(ctx, true); err != nil {
 				c.logger.ErrorWithEvent(leCtx, events.HttpControllers_ContactMessageControllerEvent, err,
 					"[contact.ContactMessageController.Create] write Created",
