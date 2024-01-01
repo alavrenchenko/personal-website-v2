@@ -47,6 +47,7 @@ export const enum ApiErrorCode {
 
     // Network Requests, Operations (11000-11999).
     INVALID_QUERY_STRING = 11000,
+    INVALID_REQUEST_BODY = 11001,
 
     INVALID_OPERATION = 12000,
     INVALID_DATA = 12001,
