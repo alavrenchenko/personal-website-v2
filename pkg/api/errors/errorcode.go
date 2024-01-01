@@ -49,6 +49,7 @@ const (
 
 	// Network Requests, Operations (11000-11999).
 	ApiErrorCodeInvalidQueryString ApiErrorCode = 11000
+	ApiErrorCodeInvalidRequestBody ApiErrorCode = 11001
 
 	ApiErrorCodeInvalidOperation ApiErrorCode = 12000
 	ApiErrorCodeInvalidData      ApiErrorCode = 12001

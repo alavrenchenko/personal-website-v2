@@ -29,4 +29,5 @@ var (
 
 	// Network Requests, Operations (11000-11999).
 	ErrInvalidQueryString = NewApiError(ApiErrorCodeInvalidQueryString, "invalid query string")
+	ErrInvalidRequestBody = NewApiError(ApiErrorCodeInvalidRequestBody, "invalid request body")
 )
