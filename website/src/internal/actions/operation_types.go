@@ -53,7 +53,10 @@ const (
 	OperationTypePageController_GetContact actions.OperationType = 101004
 
 	// [HTTP] StaticFileController operation types (101200-101399).
-	OperationTypeStaticFileController_Get actions.OperationType = 101200
+	OperationTypeStaticFileController_Get    actions.OperationType = 101200
+	OperationTypeStaticFileController_GetJS  actions.OperationType = 101201
+	OperationTypeStaticFileController_GetCSS actions.OperationType = 101202
+	OperationTypeStaticFileController_GetImg actions.OperationType = 101203
 
 	// [HTTP] ContactMessageController operation types (101400-101599).
 	OperationTypeContactMessageController_Create actions.OperationType = 101400
