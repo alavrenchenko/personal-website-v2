@@ -24,11 +24,7 @@ const (
 	OperationTypeApplication actions.OperationType = 10000
 
 	// Page operation types (11000-11199).
-	OperationTypePages_Get        actions.OperationType = 11000
-	OperationTypePages_GetHome    actions.OperationType = 11001
-	OperationTypePages_GetInfo    actions.OperationType = 11002
-	OperationTypePages_GetAbout   actions.OperationType = 11003
-	OperationTypePages_GetContact actions.OperationType = 11004
+	OperationTypePages_Get actions.OperationType = 11000
 
 	// Static file operation types (11200-11399).
 	OperationTypeStaticFiles_Get actions.OperationType = 11200
