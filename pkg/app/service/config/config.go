@@ -30,6 +30,18 @@ type AppConfig[TApis any] struct {
 	Apis    TApis    `json:"apis"`
 }
 
+type WebAppConfig[TApis any] struct {
+	AppInfo *AppInfo `json:"appInfo"`
+	Env     string   `json:"env"`
+	UserId  uint64   `json:"userId"`
+	Logging *Logging `json:"logging"`
+	Actions *Actions `json:"actions"`
+	Net     *Net     `json:"net"`
+	Db      *Db      `json:"db"`
+	Apis    TApis    `json:"apis"`
+	Web     *Web     `json:"web"`
+}
+
 type AppInfo struct {
 	Id      uint64 `json:"id"`
 	GroupId uint64 `json:"groupId"`
@@ -159,4 +171,18 @@ type DbConfig struct {
 	MaxConnLifetime   int64  `json:"maxConnLifetime"`   // in seconds
 	MaxConnIdleTime   int64  `json:"maxConnIdleTime"`   // in seconds
 	HealthCheckPeriod int64  `json:"healthCheckPeriod"` // in seconds
+}
+
+type Web struct {
+	Views       *Views       `json:"views"`
+	StaticFiles *StaticFiles `json:"staticFiles"`
+}
+
+type Views struct {
+	Dir string `json:"dir"`
+}
+
+type StaticFiles struct {
+	Dir                  string `json:"dir"`
+	RequestUrlPathPrefix string `json:"requestUrlPathPrefix"`
 }
