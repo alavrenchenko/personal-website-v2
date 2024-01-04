@@ -289,5 +289,14 @@
                 "callTimeout": 30000
             }
         }
+    },
+    "web": {
+        "views": {
+            "dir": "views"
+        },
+        "staticFiles": {
+            "dir": "static",
+            "requestUrlPathPrefix": "/static/"
+        }
     }
 }
