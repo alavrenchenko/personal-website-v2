@@ -31,7 +31,10 @@ const (
 	ActionTypePages_GetContact actions.ActionType = 11004
 
 	// Static file action types (11200-11399).
-	ActionTypeStaticFiles_Get actions.ActionType = 11200
+	ActionTypeStaticFiles_Get    actions.ActionType = 11200
+	ActionTypeStaticFiles_GetJS  actions.ActionType = 11201
+	ActionTypeStaticFiles_GetCSS actions.ActionType = 11202
+	ActionTypeStaticFiles_GetImg actions.ActionType = 11203
 
 	// Contact message action types (11400-11599).
 	ActionTypeContactMessages_Create actions.ActionType = 11400
