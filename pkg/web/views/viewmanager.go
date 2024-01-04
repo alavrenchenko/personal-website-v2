@@ -97,6 +97,8 @@ func (m *ViewManager) get(name string) (*view, error) {
 		if v, err = m.load(name); err != nil {
 			return nil, fmt.Errorf("[views.ViewManager.get] load a view: %w", err)
 		}
+
+		m.views[name] = v
 	}
 	return v, nil
 }
