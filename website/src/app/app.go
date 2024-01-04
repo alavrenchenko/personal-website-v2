@@ -65,8 +65,12 @@ import (
 	httpserver "personal-website-v2/pkg/net/http/server"
 	httpserverlogging "personal-website-v2/pkg/net/http/server/logging"
 	httpserverrouting "personal-website-v2/pkg/net/http/server/routing"
+	"personal-website-v2/pkg/web/staticfiles"
+	"personal-website-v2/pkg/web/views"
 	wappconfig "personal-website-v2/website/src/app/config"
 	contactcontrollers "personal-website-v2/website/src/httpcontrollers/contact"
+	pagecontrollers "personal-website-v2/website/src/httpcontrollers/pages"
+	staticcontrollers "personal-website-v2/website/src/httpcontrollers/static"
 	contactmanager "personal-website-v2/website/src/internal/contact/manager"
 	wpostgres "personal-website-v2/website/src/internal/db/postgres"
 	widentity "personal-website-v2/website/src/internal/identity"
@@ -90,7 +94,7 @@ type Application struct {
 	fileLoggerFactory logging.LoggerFactory[*context.LogEntryContext]
 	fileLogger        logging.Logger[*context.LogEntryContext]
 	configPath        string
-	config            *config.AppConfig[*wappconfig.Apis]
+	config            *config.WebAppConfig[*wappconfig.Apis]
 	isStarted         atomic.Bool
 	isStopped         bool
 	wg                sync.WaitGroup
@@ -321,7 +325,7 @@ func (a *Application) loadConfig() error {
 		return fmt.Errorf("[app.Application.loadConfig] read a file: %w", err)
 	}
 
-	config := new(config.AppConfig[*wappconfig.Apis])
+	config := new(config.WebAppConfig[*wappconfig.Apis])
 	if err = json.Unmarshal(c, config); err != nil {
 		return fmt.Errorf("[app.Application.loadConfig] unmarshal JSON-encoded data (config): %w", err)
 	}
@@ -737,15 +741,40 @@ func (a *Application) configureHttpRouting(router *httpserverrouting.Router) err
 		return fmt.Errorf("[app.Application.configureHttpRouting] new application controller: %w", err)
 	}
 
+	vm := views.NewViewManager(a.config.Web.Views.Dir)
+	pageController, err := pagecontrollers.NewPageController(a.appSessionId.Value, a.actionManager, a.identityManager, vm, a.loggerFactory)
+	if err != nil {
+		return fmt.Errorf("[app.Application.configureHttpRouting] new page controller: %w", err)
+	}
+
+	sfm := staticfiles.NewStaticFileManager(a.config.Web.StaticFiles.Dir, a.config.Web.StaticFiles.RequestUrlPathPrefix)
+	staticFileController, err := staticcontrollers.NewStaticFileController(a.appSessionId.Value, a.actionManager, a.identityManager, sfm, a.loggerFactory)
+	if err != nil {
+		return fmt.Errorf("[app.Application.configureHttpRouting] new static file controller: %w", err)
+	}
+
 	contactMessageController, err := contactcontrollers.NewContactMessageController(a.appSessionId.Value, a.actionManager, a.identityManager, a.contactMessageManager, a.loggerFactory)
 	if err != nil {
 		return fmt.Errorf("[app.Application.configureHttpRouting] new contact message controller: %w", err)
 	}
 
 	// private
+	// api
 	router.AddPost("App_Stop", "/private/api/app/stop", appController.Stop)
 
 	// public
+	// pages
+	router.AddGet("Pages_GetHome", "/", pageController.GetHome)
+	router.AddGet("Pages_GetInfo", "/info", pageController.GetInfo)
+	router.AddGet("Pages_GetAbout", "/about", pageController.GetAbout)
+	router.AddGet("Pages_GetContact", "/contact", pageController.GetContact)
+
+	// static files
+	router.AddGet("StaticFiles_GetJS", "/static/js/", staticFileController.GetJS)
+	router.AddGet("StaticFiles_GetCSS", "/static/css/", staticFileController.GetCSS)
+	router.AddGet("StaticFiles_GetImg", "/static/img/", staticFileController.GetImg)
+
+	// api
 	router.AddGet("ContactMessages_Create", "/api/contact/messages", contactMessageController.Create)
 	return nil
 }
