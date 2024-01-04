@@ -19,6 +19,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -770,9 +771,9 @@ func (a *Application) configureHttpRouting(router *httpserverrouting.Router) err
 	router.AddGet("Pages_GetContact", "/contact", pageController.GetContact)
 
 	// static files
-	router.AddGet("StaticFiles_GetJS", "/static/js/", staticFileController.GetJS)
-	router.AddGet("StaticFiles_GetCSS", "/static/css/", staticFileController.GetCSS)
-	router.AddGet("StaticFiles_GetImg", "/static/img/", staticFileController.GetImg)
+	router.Add("StaticFiles_GetJS", "/static/js/", staticFileController.GetJS, http.MethodGet, http.MethodHead, http.MethodOptions)
+	router.Add("StaticFiles_GetCSS", "/static/css/", staticFileController.GetCSS, http.MethodGet, http.MethodHead, http.MethodOptions)
+	router.Add("StaticFiles_GetImg", "/static/img/", staticFileController.GetImg, http.MethodGet, http.MethodHead, http.MethodOptions)
 
 	// api
 	router.AddGet("ContactMessages_Create", "/api/contact/messages", contactMessageController.Create)
