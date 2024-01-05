@@ -33,6 +33,10 @@ const (
 	RoleAboutPageUser   = "website.aboutPageUser"
 	RoleContactPageUser = "website.contactPageUser"
 
+	// Web resource roles.
+	RoleWebResourceAdmin = "website.webResourceAdmin"
+	RoleWebResourceUser  = "website.webResourceUser"
+
 	// Static file roles.
 	RoleStaticFileAdmin = "website.staticFileAdmin"
 	RoleStaticFileUser  = "website.staticFileUser"
@@ -60,6 +64,8 @@ var Roles = []string{
 	RoleInfoPageUser,
 	RoleAboutPageUser,
 	RoleContactPageUser,
+	RoleWebResourceAdmin,
+	RoleWebResourceUser,
 	RoleStaticFileAdmin,
 	RoleStaticFileUser,
 	RoleContactMessageAdmin,
