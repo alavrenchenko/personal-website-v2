@@ -19,11 +19,14 @@ const (
 	PermissionApp_Stop = "website.app.stop"
 
 	// Page permissions.
-	PermissionPages_Get        = "website.pages.get"
-	PermissionPages_GetHome    = "website.pages.getHome"
-	PermissionPages_GetInfo    = "website.pages.getInfo"
-	PermissionPages_GetAbout   = "website.pages.getAbout"
-	PermissionPages_GetContact = "website.pages.getContact"
+	PermissionPage_Get        = "website.pages.get"
+	PermissionPage_GetHome    = "website.pages.getHome"
+	PermissionPage_GetInfo    = "website.pages.getInfo"
+	PermissionPage_GetAbout   = "website.pages.getAbout"
+	PermissionPage_GetContact = "website.pages.getContact"
+
+	// Web resource permissions.
+	PermissionWebResource_Get = "website.webResources.get"
 
 	// Static file permissions.
 	PermissionStaticFile_Get = "website.staticFiles.get"
@@ -34,11 +37,12 @@ const (
 
 var Permissions = []string{
 	PermissionApp_Stop,
-	PermissionPages_Get,
-	PermissionPages_GetHome,
-	PermissionPages_GetInfo,
-	PermissionPages_GetAbout,
-	PermissionPages_GetContact,
+	PermissionPage_Get,
+	PermissionPage_GetHome,
+	PermissionPage_GetInfo,
+	PermissionPage_GetAbout,
+	PermissionPage_GetContact,
+	PermissionWebResource_Get,
 	PermissionStaticFile_Get,
 	PermissionContactMessage_Create,
 }
