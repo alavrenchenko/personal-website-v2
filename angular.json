@@ -24,7 +24,7 @@
                             {
                                 "glob": "**/*",
                                 "input": "web/website/src/assets",
-                                "output": "/assets"
+                                "output": "/static"
                             },
                             {
                                 "glob": "favicon.ico",
