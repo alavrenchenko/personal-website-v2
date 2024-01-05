@@ -21,6 +21,7 @@ import (
 	"personal-website-v2/pkg/actions"
 	apierrors "personal-website-v2/pkg/api/errors"
 	apihttp "personal-website-v2/pkg/api/http"
+	"personal-website-v2/pkg/base/nullable"
 	"personal-website-v2/pkg/errors"
 	httpserverhelper "personal-website-v2/pkg/helper/net/http/server"
 	"personal-website-v2/pkg/identity"
@@ -36,12 +37,14 @@ import (
 )
 
 type ContactMessageController struct {
+	appUserId      uint64
 	reqProcessor   *httpserverhelper.RequestProcessor
 	messageManager contact.ContactMessageManager
 	logger         logging.Logger[*lcontext.LogEntryContext]
 }
 
 func NewContactMessageController(
+	appUserId uint64,
 	appSessionId uint64,
 	actionManager *actions.ActionManager,
 	identityManager identity.IdentityManager,
@@ -64,6 +67,7 @@ func NewContactMessageController(
 	}
 
 	return &ContactMessageController{
+		appUserId:      appUserId,
 		reqProcessor:   p,
 		messageManager: messageManager,
 		logger:         l,
@@ -109,7 +113,13 @@ func (c *ContactMessageController) Create(ctx *server.HttpContext) {
 				Message: req.Message,
 			}
 
-			if _, err := c.messageManager.Create(opCtx, d); err != nil {
+			opCtx2 := opCtx
+			if !opCtx.UserId.HasValue {
+				opCtx2 = opCtx.Clone()
+				opCtx2.UserId = nullable.NewNullable(c.appUserId)
+			}
+
+			if _, err := c.messageManager.Create(opCtx2, d); err != nil {
 				c.logger.ErrorWithEvent(leCtx, events.HttpControllers_ContactMessageControllerEvent, err,
 					"[contact.ContactMessageController.Create] create a message",
 				)
