@@ -26,7 +26,7 @@ import { DotImageComponent, IMAGE_URL_TOKEN } from "../../shared/components/dot-
     styleUrls: ['./home.component.css'],
     encapsulation: ViewEncapsulation.None,
     providers: [
-        { provide: IMAGE_URL_TOKEN, useValue: '/assets/img/me/me.png' }
+        { provide: IMAGE_URL_TOKEN, useValue: '/static/img/me/me.png' }
     ],
     imports: [DotImageComponent]
 })

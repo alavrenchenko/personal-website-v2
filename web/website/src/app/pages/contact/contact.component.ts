@@ -26,7 +26,7 @@ import { ContactFormComponent, CREATE_MSG_REQ_URL_TOKEN } from "./contact-form";
     styleUrls: ['./contact.component.css'],
     encapsulation: ViewEncapsulation.None,
     providers: [
-        { provide: CREATE_MSG_REQ_URL_TOKEN, useValue: '/contact/messages' }
+        { provide: CREATE_MSG_REQ_URL_TOKEN, useValue: '/api/contact/messages' }
     ],
     imports: [ContactFormComponent]
 })
