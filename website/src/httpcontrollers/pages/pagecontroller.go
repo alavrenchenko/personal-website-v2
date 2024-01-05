@@ -70,7 +70,7 @@ func NewPageController(
 //	[GET] /
 func (c *PageController) GetHome(ctx *server.HttpContext) {
 	c.reqProcessor.ProcessWithAuthz(ctx, wactions.ActionTypePages_GetHome, wactions.OperationTypePageController_GetHome,
-		[]string{widentity.PermissionPages_GetHome},
+		[]string{widentity.PermissionPage_GetHome},
 		func(opCtx *actions.OperationContext) bool {
 			ctx.Response.Writer.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 
@@ -96,7 +96,7 @@ func (c *PageController) GetHome(ctx *server.HttpContext) {
 //	[GET] /info
 func (c *PageController) GetInfo(ctx *server.HttpContext) {
 	c.reqProcessor.ProcessWithAuthz(ctx, wactions.ActionTypePages_GetInfo, wactions.OperationTypePageController_GetInfo,
-		[]string{widentity.PermissionPages_GetInfo},
+		[]string{widentity.PermissionPage_GetInfo},
 		func(opCtx *actions.OperationContext) bool {
 			ctx.Response.Writer.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 
@@ -122,7 +122,7 @@ func (c *PageController) GetInfo(ctx *server.HttpContext) {
 //	[GET] /about
 func (c *PageController) GetAbout(ctx *server.HttpContext) {
 	c.reqProcessor.ProcessWithAuthz(ctx, wactions.ActionTypePages_GetAbout, wactions.OperationTypePageController_GetAbout,
-		[]string{widentity.PermissionPages_GetAbout},
+		[]string{widentity.PermissionPage_GetAbout},
 		func(opCtx *actions.OperationContext) bool {
 			ctx.Response.Writer.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 
@@ -148,7 +148,7 @@ func (c *PageController) GetAbout(ctx *server.HttpContext) {
 //	[GET] /contact
 func (c *PageController) GetContact(ctx *server.HttpContext) {
 	c.reqProcessor.ProcessWithAuthz(ctx, wactions.ActionTypePages_GetContact, wactions.OperationTypePageController_GetContact,
-		[]string{widentity.PermissionPages_GetContact},
+		[]string{widentity.PermissionPage_GetContact},
 		func(opCtx *actions.OperationContext) bool {
 			ctx.Response.Writer.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 
