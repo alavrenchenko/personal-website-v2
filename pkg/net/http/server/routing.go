@@ -21,7 +21,7 @@ func (f HandlerFunc) Invoke(ctx *HttpContext) {
 }
 
 type Router interface {
-	Add(name, pattern string, handler HandlerFunc, methods ...string)
+	Add(name, pattern string, handler HandlerFunc, methods ...string) Route
 	Find(ctx *HttpContext) Route
 }
 
@@ -30,4 +30,5 @@ type Route interface {
 	Pattern() string
 	Handler() HandlerFunc
 	Methods() []string
+	WithFullPathMatch() Route
 }

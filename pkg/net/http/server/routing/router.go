@@ -51,11 +51,10 @@ func NewRouter() *Router {
 	}
 }
 
-func (r *Router) Add(name, pattern string, handler server.HandlerFunc, methods ...string) {
+func (r *Router) Add(name, pattern string, handler server.HandlerFunc, methods ...string) server.Route {
 	if len(pattern) == 0 {
 		panic("[routing.Router.Add] invalid pattern")
 	}
-
 	if handler == nil {
 		panic("[routing.Router.Add] handler is nil")
 	}
@@ -103,26 +102,27 @@ func (r *Router) Add(name, pattern string, handler server.HandlerFunc, methods .
 		r.optionsMux.Handle(pattern, h)
 		r.traceMux.Handle(pattern, h)
 	}
+	return route
 }
 
-func (r *Router) AddGet(name, pattern string, handler server.HandlerFunc) {
-	r.Add(name, pattern, handler, http.MethodGet)
+func (r *Router) AddGet(name, pattern string, handler server.HandlerFunc) server.Route {
+	return r.Add(name, pattern, handler, http.MethodGet)
 }
 
-func (r *Router) AddPost(name, pattern string, handler server.HandlerFunc) {
-	r.Add(name, pattern, handler, http.MethodPost)
+func (r *Router) AddPost(name, pattern string, handler server.HandlerFunc) server.Route {
+	return r.Add(name, pattern, handler, http.MethodPost)
 }
 
-func (r *Router) AddPut(name, pattern string, handler server.HandlerFunc) {
-	r.Add(name, pattern, handler, http.MethodPut)
+func (r *Router) AddPut(name, pattern string, handler server.HandlerFunc) server.Route {
+	return r.Add(name, pattern, handler, http.MethodPut)
 }
 
-func (r *Router) AddPatch(name, pattern string, handler server.HandlerFunc) {
-	r.Add(name, pattern, handler, http.MethodPatch)
+func (r *Router) AddPatch(name, pattern string, handler server.HandlerFunc) server.Route {
+	return r.Add(name, pattern, handler, http.MethodPatch)
 }
 
-func (r *Router) AddDelete(name, pattern string, handler server.HandlerFunc) {
-	r.Add(name, pattern, handler, http.MethodDelete)
+func (r *Router) AddDelete(name, pattern string, handler server.HandlerFunc) server.Route {
+	return r.Add(name, pattern, handler, http.MethodDelete)
 }
 
 func (r *Router) Find(ctx *server.HttpContext) server.Route {
@@ -152,12 +152,14 @@ func (r *Router) Find(ctx *server.HttpContext) server.Route {
 	}
 
 	h, pattern := mux.Handler(ctx.Request)
-
 	if h == nil {
 		return nil
 	}
 
 	if h2, ok := h.(*handler); ok {
+		if h2.route.fullPathMatch && h2.route.pattern != ctx.Request.URL.Path {
+			return nil
+		}
 		return h2.route
 	}
 

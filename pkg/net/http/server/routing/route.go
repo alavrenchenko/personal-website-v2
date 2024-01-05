@@ -17,10 +17,11 @@ package routing
 import "personal-website-v2/pkg/net/http/server"
 
 type Route struct {
-	name    string
-	pattern string
-	handler server.HandlerFunc
-	methods []string
+	name          string
+	pattern       string
+	handler       server.HandlerFunc
+	methods       []string
+	fullPathMatch bool
 }
 
 var _ server.Route = (*Route)(nil)
@@ -48,4 +49,9 @@ func (r *Route) Handler() server.HandlerFunc {
 
 func (r *Route) Methods() []string {
 	return r.methods
+}
+
+func (r *Route) WithFullPathMatch() server.Route {
+	r.fullPathMatch = true
+	return r
 }
