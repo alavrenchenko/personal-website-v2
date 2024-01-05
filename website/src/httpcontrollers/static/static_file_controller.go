@@ -48,8 +48,8 @@ func NewStaticFileController(
 	}
 
 	c := &httpserverhelper.RequestProcessorConfig{
-		ActionGroup:    wactions.ActionGroupPage,
-		OperationGroup: wactions.OperationGroupPage,
+		ActionGroup:    wactions.ActionGroupStaticFile,
+		OperationGroup: wactions.OperationGroupStaticFile,
 		StopAppIfError: true,
 	}
 	p, err := httpserverhelper.NewRequestProcessor(appSessionId, actionManager, identityManager, c, loggerFactory)
