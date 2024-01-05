@@ -66,12 +66,14 @@ import (
 	httpserver "personal-website-v2/pkg/net/http/server"
 	httpserverlogging "personal-website-v2/pkg/net/http/server/logging"
 	httpserverrouting "personal-website-v2/pkg/net/http/server/routing"
+	"personal-website-v2/pkg/web/resources"
 	"personal-website-v2/pkg/web/staticfiles"
 	"personal-website-v2/pkg/web/views"
 	wappconfig "personal-website-v2/website/src/app/config"
 	contactcontrollers "personal-website-v2/website/src/httpcontrollers/contact"
 	pagecontrollers "personal-website-v2/website/src/httpcontrollers/pages"
 	staticcontrollers "personal-website-v2/website/src/httpcontrollers/static"
+	webrootcontrollers "personal-website-v2/website/src/httpcontrollers/webroot"
 	contactmanager "personal-website-v2/website/src/internal/contact/manager"
 	wpostgres "personal-website-v2/website/src/internal/db/postgres"
 	widentity "personal-website-v2/website/src/internal/identity"
@@ -748,6 +750,12 @@ func (a *Application) configureHttpRouting(router *httpserverrouting.Router) err
 		return fmt.Errorf("[app.Application.configureHttpRouting] new page controller: %w", err)
 	}
 
+	rm := resources.NewResourceManager(a.config.Web.RootDir)
+	webResourceController, err := webrootcontrollers.NewWebResourceController(a.appSessionId.Value, a.actionManager, a.identityManager, rm, a.loggerFactory)
+	if err != nil {
+		return fmt.Errorf("[app.Application.configureHttpRouting] new web resource controller: %w", err)
+	}
+
 	sfm := staticfiles.NewStaticFileManager(a.config.Web.StaticFiles.Dir, a.config.Web.StaticFiles.RequestUrlPathPrefix)
 	staticFileController, err := staticcontrollers.NewStaticFileController(a.appSessionId.Value, a.actionManager, a.identityManager, sfm, a.loggerFactory)
 	if err != nil {
@@ -769,6 +777,11 @@ func (a *Application) configureHttpRouting(router *httpserverrouting.Router) err
 	router.AddGet("Pages_GetInfo", "/info", pageController.GetInfo)
 	router.AddGet("Pages_GetAbout", "/about", pageController.GetAbout)
 	router.AddGet("Pages_GetContact", "/contact", pageController.GetContact)
+
+	// web resources
+	router.Add("WebResources_GetFavicon", "/favicon.ico", webResourceController.Get, http.MethodGet, http.MethodHead, http.MethodOptions)
+	router.Add("WebResources_GetRobots", "/robots.txt", webResourceController.Get, http.MethodGet, http.MethodHead, http.MethodOptions)
+	router.Add("WebResources_GetSitemap", "/sitemap.xml", webResourceController.Get, http.MethodGet, http.MethodHead, http.MethodOptions)
 
 	// static files
 	router.Add("StaticFiles_GetJS", "/static/js/", staticFileController.GetJS, http.MethodGet, http.MethodHead, http.MethodOptions)
