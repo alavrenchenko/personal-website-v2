@@ -754,7 +754,7 @@ func (a *Application) configureHttpRouting(router *httpserverrouting.Router) err
 		return fmt.Errorf("[app.Application.configureHttpRouting] new static file controller: %w", err)
 	}
 
-	contactMessageController, err := contactcontrollers.NewContactMessageController(a.appSessionId.Value, a.actionManager, a.identityManager, a.contactMessageManager, a.loggerFactory)
+	contactMessageController, err := contactcontrollers.NewContactMessageController(a.config.UserId, a.appSessionId.Value, a.actionManager, a.identityManager, a.contactMessageManager, a.loggerFactory)
 	if err != nil {
 		return fmt.Errorf("[app.Application.configureHttpRouting] new contact message controller: %w", err)
 	}
