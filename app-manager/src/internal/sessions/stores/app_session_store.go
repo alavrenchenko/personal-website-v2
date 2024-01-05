@@ -31,6 +31,7 @@ import (
 	"personal-website-v2/app-manager/src/internal/sessions/models"
 	"personal-website-v2/pkg/actions"
 	"personal-website-v2/pkg/app"
+	"personal-website-v2/pkg/base/nullable"
 	dberrors "personal-website-v2/pkg/db/errors"
 	"personal-website-v2/pkg/db/postgres"
 	errs "personal-website-v2/pkg/errors"
@@ -87,7 +88,7 @@ func NewAppSessionStore(db *postgres.Database, loggerFactory logging.LoggerFacto
 // CreateAndStart creates and starts an app session for the specified app
 // and returns app session ID if the operation is successful.
 func (s *AppSessionStore) CreateAndStart(appId uint64, operationUserId uint64) (uint64, error) {
-	id, err := s.createAndStart(context.Background(), appId, operationUserId)
+	id, err := s.createAndStart(context.Background(), appId, nullable.NewNullable(operationUserId))
 	if err != nil {
 		return 0, fmt.Errorf("[stores.AppSessionStore.CreateAndStart] create and start an app session: %w", err)
 	}
@@ -126,7 +127,7 @@ func (s *AppSessionStore) CreateAndStartWithContext(ctx *actions.OperationContex
 	}()
 
 	txCtx := postgres.NewTxContextWithOperationContext(opCtx.Ctx, opCtx)
-	id, err := s.createAndStart(txCtx, appId, ctx.UserId.Value)
+	id, err := s.createAndStart(txCtx, appId, ctx.UserId)
 	if err != nil {
 		return 0, fmt.Errorf("[stores.AppSessionStore.CreateAndStartWithContext] create and start an app session: %w", err)
 	}
@@ -135,7 +136,7 @@ func (s *AppSessionStore) CreateAndStartWithContext(ctx *actions.OperationContex
 	return id, nil
 }
 
-func (s *AppSessionStore) createAndStart(ctx context.Context, appId uint64, operationUserId uint64) (uint64, error) {
+func (s *AppSessionStore) createAndStart(ctx context.Context, appId uint64, operationUserId nullable.Nullable[uint64]) (uint64, error) {
 	var id uint64
 	err := s.txManager.ExecWithReadCommittedLevel(ctx, func(txCtx context.Context, tx pgx.Tx) error {
 		var errCode dberrors.DbErrorCode
@@ -144,7 +145,7 @@ func (s *AppSessionStore) createAndStart(ctx context.Context, appId uint64, oper
 		// Minimum transaction isolation level: Read committed.
 		const query = "CALL public.create_and_start_app_session($1, $2, NULL, NULL, NULL, NULL)"
 
-		if err := tx.QueryRow(txCtx, query, appId, operationUserId).Scan(&id, &errCode, &errMsg); err != nil {
+		if err := tx.QueryRow(txCtx, query, appId, operationUserId.Ptr()).Scan(&id, &errCode, &errMsg); err != nil {
 			return fmt.Errorf("[stores.AppSessionStore.createAndStart] execute a query (create_and_start_app_session): %w", err)
 		}
 
@@ -167,7 +168,7 @@ func (s *AppSessionStore) createAndStart(ctx context.Context, appId uint64, oper
 
 // Terminate terminates an app session by the specified app session ID.
 func (s *AppSessionStore) Terminate(id uint64, operationUserId uint64) error {
-	if err := s.terminate(context.Background(), id, operationUserId); err != nil {
+	if err := s.terminate(context.Background(), id, nullable.NewNullable(operationUserId)); err != nil {
 		return fmt.Errorf("[stores.AppSessionStore.Terminate] terminate an app session: %w", err)
 	}
 	return nil
@@ -204,7 +205,7 @@ func (s *AppSessionStore) TerminateWithContext(ctx *actions.OperationContext, id
 	}()
 
 	txCtx := postgres.NewTxContextWithOperationContext(opCtx.Ctx, opCtx)
-	if err = s.terminate(txCtx, id, ctx.UserId.Value); err != nil {
+	if err = s.terminate(txCtx, id, ctx.UserId); err != nil {
 		return fmt.Errorf("[stores.AppSessionStore.TerminateWithContext] terminate an app session: %w", err)
 	}
 
@@ -212,7 +213,7 @@ func (s *AppSessionStore) TerminateWithContext(ctx *actions.OperationContext, id
 	return nil
 }
 
-func (s *AppSessionStore) terminate(ctx context.Context, id uint64, operationUserId uint64) error {
+func (s *AppSessionStore) terminate(ctx context.Context, id uint64, operationUserId nullable.Nullable[uint64]) error {
 	err := s.txManager.ExecWithReadCommittedLevel(ctx, func(txCtx context.Context, tx pgx.Tx) error {
 		var errCode dberrors.DbErrorCode
 		var errMsg string
@@ -220,7 +221,7 @@ func (s *AppSessionStore) terminate(ctx context.Context, id uint64, operationUse
 		// Minimum transaction isolation level: Read committed.
 		const query = "CALL public.terminate_app_session($1, $2, 'termination', NULL, NULL)"
 
-		if err := tx.QueryRow(txCtx, query, id, operationUserId).Scan(&errCode, &errMsg); err != nil {
+		if err := tx.QueryRow(txCtx, query, id, operationUserId.Ptr()).Scan(&errCode, &errMsg); err != nil {
 			return fmt.Errorf("[stores.AppSessionStore.terminate] execute a query (terminate_app_session): %w", err)
 		}
 

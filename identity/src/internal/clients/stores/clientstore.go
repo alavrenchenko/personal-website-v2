@@ -129,7 +129,7 @@ func (s *ClientStore) Create(ctx *actions.OperationContext, data *clientoperatio
 				// OUT _id, OUT err_code, OUT err_msg)
 				// Minimum transaction isolation level: Read committed.
 				const query = "CALL public.create_client($1, $2, NULL, $3, $4, $5, NULL, NULL, NULL)"
-				r := tx.QueryRow(txCtx, query, opCtx.UserId.Value, data.Status, data.AppId.Ptr(), data.UserAgent.Ptr(), data.IP)
+				r := tx.QueryRow(txCtx, query, opCtx.UserId.Ptr(), data.Status, data.AppId.Ptr(), data.UserAgent.Ptr(), data.IP)
 
 				if err := r.Scan(&id, &errCode, &errMsg); err != nil {
 					return fmt.Errorf("[stores.ClientStore.Create] execute a query (create_client): %w", err)
@@ -164,7 +164,7 @@ func (s *ClientStore) StartDeleting(ctx *actions.OperationContext, id uint64) er
 				// Minimum transaction isolation level: Read committed.
 				const query = "CALL public.start_deleting_client($1, $2, 'deletion', NULL, NULL)"
 
-				if err := tx.QueryRow(txCtx, query, id, opCtx.UserId.Value).Scan(&errCode, &errMsg); err != nil {
+				if err := tx.QueryRow(txCtx, query, id, opCtx.UserId.Ptr()).Scan(&errCode, &errMsg); err != nil {
 					return fmt.Errorf("[stores.ClientStore.StartDeleting] execute a query (start_deleting_client): %w", err)
 				}
 
@@ -202,7 +202,7 @@ func (s *ClientStore) Delete(ctx *actions.OperationContext, id uint64) error {
 				// Minimum transaction isolation level: Read committed.
 				const query = "CALL public.delete_client($1, $2, 'deletion', NULL, NULL)"
 
-				if err := tx.QueryRow(txCtx, query, id, opCtx.UserId.Value).Scan(&errCode, &errMsg); err != nil {
+				if err := tx.QueryRow(txCtx, query, id, opCtx.UserId.Ptr()).Scan(&errCode, &errMsg); err != nil {
 					return fmt.Errorf("[stores.ClientStore.Delete] execute a query (delete_client): %w", err)
 				}
 

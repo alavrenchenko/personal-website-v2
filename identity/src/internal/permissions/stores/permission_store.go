@@ -93,7 +93,7 @@ func (s *PermissionStore) Create(ctx *actions.OperationContext, data *permission
 				// PROCEDURE: public.create_permission(IN _name, IN _group_id, IN _created_by, IN _status_comment, IN _app_id, IN _app_group_id, IN _description,
 				// OUT _id, OUT err_code, OUT err_msg)
 				const query = "CALL public.create_permission($1, $2, $3, NULL, $4, $5, $6, NULL, NULL, NULL)"
-				r := tx.QueryRow(txCtx, query, data.Name, data.GroupId, opCtx.UserId.Value, data.AppId.Ptr(), data.AppGroupId.Ptr(), data.Description)
+				r := tx.QueryRow(txCtx, query, data.Name, data.GroupId, opCtx.UserId.Ptr(), data.AppId.Ptr(), data.AppGroupId.Ptr(), data.Description)
 
 				if err := r.Scan(&id, &errCode, &errMsg); err != nil {
 					return fmt.Errorf("[stores.PermissionStore.Create] execute a query (create_permission): %w", err)
@@ -133,7 +133,7 @@ func (s *PermissionStore) StartDeleting(ctx *actions.OperationContext, id uint64
 				var errMsg string
 				// PROCEDURE: public.start_deleting_permission(IN _id, IN _deleted_by, IN _status_comment, OUT err_code, OUT err_msg)
 				const query = "CALL public.start_deleting_permission($1, $2, 'deletion', NULL, NULL)"
-				r := tx.QueryRow(txCtx, query, id, opCtx.UserId.Value)
+				r := tx.QueryRow(txCtx, query, id, opCtx.UserId.Ptr())
 
 				if err := r.Scan(&errCode, &errMsg); err != nil {
 					return fmt.Errorf("[stores.PermissionStore.StartDeleting] execute a query (start_deleting_permission): %w", err)
@@ -171,7 +171,7 @@ func (s *PermissionStore) Delete(ctx *actions.OperationContext, id uint64) error
 				var errMsg string
 				// PROCEDURE: public.delete_permission(IN _id, IN _deleted_by, IN _status_comment, OUT err_code, OUT err_msg)
 				const query = "CALL public.delete_permission($1, $2, 'deletion', NULL, NULL)"
-				r := tx.QueryRow(txCtx, query, id, opCtx.UserId.Value)
+				r := tx.QueryRow(txCtx, query, id, opCtx.UserId.Ptr())
 
 				if err := r.Scan(&errCode, &errMsg); err != nil {
 					return fmt.Errorf("[stores.PermissionStore.Delete] execute a query (delete_permission): %w", err)

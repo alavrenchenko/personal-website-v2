@@ -94,7 +94,7 @@ func (s *RoleAssignmentStore) Create(ctx *actions.OperationContext, data *assign
 				// PROCEDURE: public.create_role_assignment(IN _role_id, IN _assigned_to, IN _assignee_type, IN _created_by, IN _status_comment, IN _description,
 				// OUT _id, OUT err_code, OUT err_msg)
 				const query = "CALL public.create_role_assignment($1, $2, $3, $4, NULL, $5, NULL, NULL, NULL)"
-				r := tx.QueryRow(txCtx, query, data.RoleId, data.AssignedTo, data.AssigneeType, opCtx.UserId.Value, data.Description.Ptr())
+				r := tx.QueryRow(txCtx, query, data.RoleId, data.AssignedTo, data.AssigneeType, opCtx.UserId.Ptr(), data.Description.Ptr())
 
 				if err := r.Scan(&id, &errCode, &errMsg); err != nil {
 					return fmt.Errorf("[stores.RoleAssignmentStore.Create] execute a query (create_role_assignment): %w", err)
@@ -132,7 +132,7 @@ func (s *RoleAssignmentStore) StartDeleting(ctx *actions.OperationContext, id ui
 				var errMsg string
 				// PROCEDURE: public.start_deleting_role_assignment(IN _id, IN _deleted_by, IN _status_comment, OUT _old_status, OUT err_code, OUT err_msg)
 				const query = "CALL public.start_deleting_role_assignment($1, $2, 'deletion', NULL, NULL, NULL)"
-				r := tx.QueryRow(txCtx, query, id, opCtx.UserId.Value)
+				r := tx.QueryRow(txCtx, query, id, opCtx.UserId.Ptr())
 
 				if err := r.Scan(&status, &errCode, &errMsg); err != nil {
 					return fmt.Errorf("[stores.RoleAssignmentStore.StartDeleting] execute a query (start_deleting_role_assignment): %w", err)
@@ -170,7 +170,7 @@ func (s *RoleAssignmentStore) Delete(ctx *actions.OperationContext, id uint64) e
 				var errMsg string
 				// PROCEDURE: public.delete_role_assignment(IN _id, IN _deleted_by, IN _status_comment, OUT err_code, OUT err_msg)
 				const query = "CALL public.delete_role_assignment($1, $2, 'deletion', NULL, NULL)"
-				r := tx.QueryRow(txCtx, query, id, opCtx.UserId.Value)
+				r := tx.QueryRow(txCtx, query, id, opCtx.UserId.Ptr())
 
 				if err := r.Scan(&errCode, &errMsg); err != nil {
 					return fmt.Errorf("[stores.RoleAssignmentStore.Delete] execute a query (delete_role_assignment): %w", err)

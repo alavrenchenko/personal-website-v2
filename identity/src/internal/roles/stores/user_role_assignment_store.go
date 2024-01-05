@@ -94,7 +94,7 @@ func (s *UserRoleAssignmentStore) Create(ctx *actions.OperationContext, data *ur
 				// PROCEDURE: public.create_user_role_assignment(IN _role_assignment_id, IN _user_id, IN _role_id, IN _created_by, IN _status_comment,
 				// OUT _id, OUT err_code, OUT err_msg)
 				const query = "CALL public.create_user_role_assignment($1, $2, $3, $4, NULL, NULL, NULL, NULL)"
-				r := tx.QueryRow(txCtx, query, data.RoleAssignmentId, data.UserId, data.RoleId, opCtx.UserId.Value)
+				r := tx.QueryRow(txCtx, query, data.RoleAssignmentId, data.UserId, data.RoleId, opCtx.UserId.Ptr())
 
 				if err := r.Scan(&id, &errCode, &errMsg); err != nil {
 					return fmt.Errorf("[stores.UserRoleAssignmentStore.Create] execute a query (create_user_role_assignment): %w", err)
@@ -167,7 +167,7 @@ func (s *UserRoleAssignmentStore) delete(ctx *actions.OperationContext, id uint6
 		var errMsg string
 		// PROCEDURE: public.delete_user_role_assignment(IN _id, IN _deleted_by, IN _status_comment, OUT err_code, OUT err_msg)
 		const query = "CALL public.delete_user_role_assignment($1, $2, 'deletion', NULL, NULL)"
-		r := tx.QueryRow(txCtx, query, id, ctx.UserId.Value)
+		r := tx.QueryRow(txCtx, query, id, ctx.UserId.Ptr())
 
 		if err := r.Scan(&errCode, &errMsg); err != nil {
 			return fmt.Errorf("[stores.UserRoleAssignmentStore.delete] execute a query (delete_user_role_assignment): %w", err)

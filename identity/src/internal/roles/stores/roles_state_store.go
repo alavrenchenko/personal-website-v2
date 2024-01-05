@@ -84,7 +84,7 @@ func (s *RolesStateStore) StartAssigning(ctx *actions.OperationContext, operatio
 				var errMsg string
 				// PROCEDURE: public.start_assigning_role(IN _operation_id, IN _role_id, IN _operation_user_id, OUT err_code, OUT err_msg)
 				const query = "CALL public.start_assigning_role($1, $2, $3, NULL, NULL)"
-				r := tx.QueryRow(txCtx, query, operationId, roleId, opCtx.UserId.Value)
+				r := tx.QueryRow(txCtx, query, operationId, roleId, opCtx.UserId.Ptr())
 
 				if err := r.Scan(&errCode, &errMsg); err != nil {
 					return fmt.Errorf("[stores.RolesStateStore.StartAssigning] execute a query (start_assigning_role): %w", err)
@@ -123,7 +123,7 @@ func (s *RolesStateStore) FinishAssigning(ctx *actions.OperationContext, operati
 				var errMsg string
 				// PROCEDURE: public.finish_assigning_role(IN _operation_id, IN _succeeded, IN _operation_user_id, OUT err_code, OUT err_msg)
 				const query = "CALL public.finish_assigning_role($1, $2, $3, NULL, NULL)"
-				r := tx.QueryRow(txCtx, query, operationId, succeeded, opCtx.UserId.Value)
+				r := tx.QueryRow(txCtx, query, operationId, succeeded, opCtx.UserId.Ptr())
 
 				if err := r.Scan(&errCode, &errMsg); err != nil {
 					return fmt.Errorf("[stores.RolesStateStore.FinishAssigning] execute a query (finish_assigning_role): %w", err)
@@ -164,7 +164,7 @@ func (s *RolesStateStore) DecrAssignments(ctx *actions.OperationContext, roleId 
 				// PROCEDURE: public.decr_role_assignments(IN _role_id, IN _operation_user_id, OUT err_code, OUT err_msg)
 				const query = "CALL public.decr_role_assignments($1, $2, NULL, NULL)"
 
-				if err := tx.QueryRow(txCtx, query, roleId, opCtx.UserId.Value).Scan(&errCode, &errMsg); err != nil {
+				if err := tx.QueryRow(txCtx, query, roleId, opCtx.UserId.Ptr()).Scan(&errCode, &errMsg); err != nil {
 					return fmt.Errorf("[stores.RolesStateStore.DecrAssignments] execute a query (decr_role_assignments): %w", err)
 				}
 
@@ -203,7 +203,7 @@ func (s *RolesStateStore) IncrActiveAssignments(ctx *actions.OperationContext, r
 				// PROCEDURE: public.incr_active_role_assignments(IN _role_id, IN _operation_user_id, OUT err_code, OUT err_msg)
 				const query = "CALL public.incr_active_role_assignments($1, $2, NULL, NULL)"
 
-				if err := tx.QueryRow(txCtx, query, roleId, opCtx.UserId.Value).Scan(&errCode, &errMsg); err != nil {
+				if err := tx.QueryRow(txCtx, query, roleId, opCtx.UserId.Ptr()).Scan(&errCode, &errMsg); err != nil {
 					return fmt.Errorf("[stores.RolesStateStore.IncrActiveAssignments] execute a query (incr_active_role_assignments): %w", err)
 				}
 
@@ -242,7 +242,7 @@ func (s *RolesStateStore) DecrActiveAssignments(ctx *actions.OperationContext, r
 				// PROCEDURE: public.decr_active_role_assignments(IN _role_id, IN _operation_user_id, OUT err_code, OUT err_msg)
 				const query = "CALL public.decr_active_role_assignments($1, $2, NULL, NULL)"
 
-				if err := tx.QueryRow(txCtx, query, roleId, opCtx.UserId.Value).Scan(&errCode, &errMsg); err != nil {
+				if err := tx.QueryRow(txCtx, query, roleId, opCtx.UserId.Ptr()).Scan(&errCode, &errMsg); err != nil {
 					return fmt.Errorf("[stores.RolesStateStore.DecrActiveAssignments] execute a query (decr_active_role_assignments): %w", err)
 				}
 
@@ -281,7 +281,7 @@ func (s *RolesStateStore) DecrExistingAssignments(ctx *actions.OperationContext,
 				// PROCEDURE: public.decr_existing_role_assignments(IN _role_id, IN _operation_user_id, OUT err_code, OUT err_msg)
 				const query = "CALL public.decr_existing_role_assignments($1, $2, NULL, NULL)"
 
-				if err := tx.QueryRow(txCtx, query, roleId, opCtx.UserId.Value).Scan(&errCode, &errMsg); err != nil {
+				if err := tx.QueryRow(txCtx, query, roleId, opCtx.UserId.Ptr()).Scan(&errCode, &errMsg); err != nil {
 					return fmt.Errorf("[stores.RolesStateStore.DecrExistingAssignments] execute a query (decr_existing_role_assignments): %w", err)
 				}
 

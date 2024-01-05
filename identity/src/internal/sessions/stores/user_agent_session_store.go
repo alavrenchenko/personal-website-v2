@@ -155,7 +155,7 @@ func (s *UserAgentSessionStore) CreateAndStart(ctx *actions.OperationContext, da
 				// IN _status_comment, IN _ip, OUT _id, OUT err_code, OUT err_msg)
 				// Minimum transaction isolation level: Read committed.
 				const query = "CALL public.create_and_start_user_agent_session($1, $2, $3, $4, $5, NULL, $6, NULL, NULL, NULL)"
-				r := tx.QueryRow(txCtx, query, data.UserId, data.ClientId, data.UserAgentId, data.UserSessionId, opCtx.UserId.Value, data.IP)
+				r := tx.QueryRow(txCtx, query, data.UserId, data.ClientId, data.UserAgentId, data.UserSessionId, opCtx.UserId.Ptr(), data.IP)
 
 				if err := r.Scan(&id, &errCode, &errMsg); err != nil {
 					return fmt.Errorf("[stores.UserAgentSessionStore.CreateAndStart] execute a query (create_and_start_user_agent_session): %w", err)
@@ -200,7 +200,7 @@ func (s *UserAgentSessionStore) Start(ctx *actions.OperationContext, id, userSes
 				// OUT err_code, OUT err_msg)
 				// Minimum transaction isolation level: Read committed.
 				const query = "CALL public.start_user_agent_session($1, $2, NULL, $3, $4, NULL, NULL)"
-				r := tx.QueryRow(txCtx, query, id, userSessionId, ip, opCtx.UserId.Value)
+				r := tx.QueryRow(txCtx, query, id, userSessionId, ip, opCtx.UserId.Ptr())
 
 				if err := r.Scan(&errCode, &errMsg); err != nil {
 					return fmt.Errorf("[stores.UserAgentSessionStore.Start] execute a query (start_user_agent_session): %w", err)
@@ -252,7 +252,7 @@ func (s *UserAgentSessionStore) Terminate(ctx *actions.OperationContext, id uint
 					sc = "termination"
 				}
 
-				if err := tx.QueryRow(txCtx, query, id, signOut, opCtx.UserId.Value, sc).Scan(&errCode, &errMsg); err != nil {
+				if err := tx.QueryRow(txCtx, query, id, signOut, opCtx.UserId.Ptr(), sc).Scan(&errCode, &errMsg); err != nil {
 					return fmt.Errorf("[stores.UserAgentSessionStore.Terminate] execute a query (terminate_user_agent_session): %w", err)
 				}
 
@@ -290,7 +290,7 @@ func (s *UserAgentSessionStore) StartDeleting(ctx *actions.OperationContext, id 
 				// Minimum transaction isolation level: Read committed.
 				const query = "CALL public.start_deleting_user_agent_session($1, $2, 'deletion', NULL, NULL)"
 
-				if err := tx.QueryRow(txCtx, query, id, opCtx.UserId.Value).Scan(&errCode, &errMsg); err != nil {
+				if err := tx.QueryRow(txCtx, query, id, opCtx.UserId.Ptr()).Scan(&errCode, &errMsg); err != nil {
 					return fmt.Errorf("[stores.UserAgentSessionStore.StartDeleting] execute a query (start_deleting_user_agent_session): %w", err)
 				}
 
@@ -328,7 +328,7 @@ func (s *UserAgentSessionStore) Delete(ctx *actions.OperationContext, id uint64)
 				// Minimum transaction isolation level: Read committed.
 				const query = "CALL public.delete_user_agent_session($1, $2, 'deletion', NULL, NULL)"
 
-				if err := tx.QueryRow(txCtx, query, id, opCtx.UserId.Value).Scan(&errCode, &errMsg); err != nil {
+				if err := tx.QueryRow(txCtx, query, id, opCtx.UserId.Ptr()).Scan(&errCode, &errMsg); err != nil {
 					return fmt.Errorf("[stores.UserAgentSessionStore.Delete] execute a query (delete_user_agent_session): %w", err)
 				}
 

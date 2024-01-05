@@ -94,7 +94,7 @@ func (s *AppGroupStore) Create(ctx *actions.OperationContext, data *groupoperati
 				// OUT _id, OUT err_code, OUT err_msg)
 				// Minimum transaction isolation level: Read committed.
 				const query = "CALL public.create_app_group($1, $2, $3, $4, NULL, $5, $6, NULL, NULL, NULL)"
-				r := tx.QueryRow(txCtx, query, data.Name, data.Type, data.Title, opCtx.UserId.Value, data.Version, data.Description)
+				r := tx.QueryRow(txCtx, query, data.Name, data.Type, data.Title, opCtx.UserId.Ptr(), data.Version, data.Description)
 
 				if err := r.Scan(&id, &errCode, &errMsg); err != nil {
 					return fmt.Errorf("[stores.AppGroupStore.Create] execute a query (create_app_group): %w", err)
@@ -132,7 +132,7 @@ func (s *AppGroupStore) Delete(ctx *actions.OperationContext, id uint64) error {
 				// Minimum transaction isolation level: Read committed.
 				const query = "CALL public.delete_app_group($1, $2, 'deletion', NULL, NULL)"
 
-				if err := tx.QueryRow(txCtx, query, id, opCtx.UserId.Value).Scan(&errCode, &errMsg); err != nil {
+				if err := tx.QueryRow(txCtx, query, id, opCtx.UserId.Ptr()).Scan(&errCode, &errMsg); err != nil {
 					return fmt.Errorf("[stores.AppGroupStore.Delete] execute a query (delete_app_group): %w", err)
 				}
 

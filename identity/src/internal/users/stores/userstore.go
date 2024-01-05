@@ -97,7 +97,7 @@ func (s *UserStore) Create(ctx *actions.OperationContext, data *useroperations.C
 				// IN _display_name, IN _birth_date, IN _gender, OUT _id, OUT err_code, OUT err_msg)
 				// Minimum transaction isolation level: Read committed.
 				const query = "CALL public.create_user($1, $2, $3, $4, NULL, $5, $6, $7, $8, $9, $10, NULL, NULL, NULL)"
-				r := tx.QueryRow(txCtx, query, data.Type, data.Group, opCtx.UserId.Value, data.Status, data.Email.Ptr(), data.FirstName, data.LastName,
+				r := tx.QueryRow(txCtx, query, data.Type, data.Group, opCtx.UserId.Ptr(), data.Status, data.Email.Ptr(), data.FirstName, data.LastName,
 					data.DisplayName, data.BirthDate.Ptr(), data.Gender,
 				)
 
@@ -137,7 +137,7 @@ func (s *UserStore) StartDeleting(ctx *actions.OperationContext, id uint64) erro
 				// Minimum transaction isolation level: Read committed.
 				const query = "CALL public.start_deleting_user($1, $2, 'deletion', NULL, NULL)"
 
-				if err := tx.QueryRow(txCtx, query, id, opCtx.UserId.Value).Scan(&errCode, &errMsg); err != nil {
+				if err := tx.QueryRow(txCtx, query, id, opCtx.UserId.Ptr()).Scan(&errCode, &errMsg); err != nil {
 					return fmt.Errorf("[stores.UserStore.StartDeleting] execute a query (start_deleting_user): %w", err)
 				}
 
@@ -175,7 +175,7 @@ func (s *UserStore) Delete(ctx *actions.OperationContext, id uint64) error {
 				// Minimum transaction isolation level: Read committed.
 				const query = "CALL public.delete_user($1, $2, 'deletion', NULL, NULL)"
 
-				if err := tx.QueryRow(txCtx, query, id, opCtx.UserId.Value).Scan(&errCode, &errMsg); err != nil {
+				if err := tx.QueryRow(txCtx, query, id, opCtx.UserId.Ptr()).Scan(&errCode, &errMsg); err != nil {
 					return fmt.Errorf("[stores.UserStore.Delete] execute a query (delete_user): %w", err)
 				}
 
@@ -352,7 +352,7 @@ func (s *UserStore) SetNameById(ctx *actions.OperationContext, id uint64, name n
 				// Minimum transaction isolation level: Read committed.
 				const query = "CALL public.set_username($1, $2, $3, NULL, NULL)"
 
-				if err := tx.QueryRow(txCtx, query, id, name.Ptr(), opCtx.UserId.Value).Scan(&errCode, &errMsg); err != nil {
+				if err := tx.QueryRow(txCtx, query, id, name.Ptr(), opCtx.UserId.Ptr()).Scan(&errCode, &errMsg); err != nil {
 					return fmt.Errorf("[stores.UserStore.SetNameById] execute a query (set_username): %w", err)
 				}
 

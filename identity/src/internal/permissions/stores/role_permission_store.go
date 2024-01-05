@@ -25,6 +25,7 @@ import (
 	ierrors "personal-website-v2/identity/src/internal/errors"
 	"personal-website-v2/identity/src/internal/permissions"
 	"personal-website-v2/pkg/actions"
+	"personal-website-v2/pkg/base/nullable"
 	dberrors "personal-website-v2/pkg/db/errors"
 	"personal-website-v2/pkg/db/postgres"
 	errs "personal-website-v2/pkg/errors"
@@ -87,7 +88,7 @@ func (s *RolePermissionStore) Grant(ctx *actions.OperationContext, roleId uint64
 			}
 
 			err := s.txManager.ExecWithSerializableLevel(opCtx.Ctx, func(txCtx context.Context, tx pgx.Tx) error {
-				if err := s.grant(txCtx, tx, roleId, permissionIds, opCtx.UserId.Value); err != nil {
+				if err := s.grant(txCtx, tx, roleId, permissionIds, opCtx.UserId); err != nil {
 					return fmt.Errorf("[stores.RolePermissionStore.Grant] grant permissions to the role: %w", err)
 				}
 				return nil
@@ -104,12 +105,12 @@ func (s *RolePermissionStore) Grant(ctx *actions.OperationContext, roleId uint64
 	return nil
 }
 
-func (s *RolePermissionStore) grant(ctx context.Context, tx pgx.Tx, roleId uint64, permissionIds []uint64, operationUserId uint64) error {
+func (s *RolePermissionStore) grant(ctx context.Context, tx pgx.Tx, roleId uint64, permissionIds []uint64, operationUserId nullable.Nullable[uint64]) error {
 	var errCode dberrors.DbErrorCode
 	var errMsg string
 	// PROCEDURE: public.grant_permissions(IN _role_id, IN _permission_ids, IN _operation_user_id, OUT err_code, OUT err_msg)
 	const query = "CALL public.grant_permissions($1, $2, $3, NULL, NULL)"
-	r := tx.QueryRow(ctx, query, roleId, permissionIds, operationUserId)
+	r := tx.QueryRow(ctx, query, roleId, permissionIds, operationUserId.Ptr())
 
 	if err := r.Scan(&errCode, &errMsg); err != nil {
 		return fmt.Errorf("[stores.RolePermissionStore.grant] execute a query (grant_permissions): %w", err)
@@ -141,7 +142,7 @@ func (s *RolePermissionStore) Revoke(ctx *actions.OperationContext, roleId uint6
 			}
 
 			err := s.txManager.ExecWithReadCommittedLevel(opCtx.Ctx, func(txCtx context.Context, tx pgx.Tx) error {
-				if err := s.revoke(txCtx, tx, roleId, permissionIds, opCtx.UserId.Value); err != nil {
+				if err := s.revoke(txCtx, tx, roleId, permissionIds, opCtx.UserId); err != nil {
 					return fmt.Errorf("[stores.RolePermissionStore.Revoke] revoke permissions from the role: %w", err)
 				}
 				return nil
@@ -158,12 +159,12 @@ func (s *RolePermissionStore) Revoke(ctx *actions.OperationContext, roleId uint6
 	return nil
 }
 
-func (s *RolePermissionStore) revoke(ctx context.Context, tx pgx.Tx, roleId uint64, permissionIds []uint64, operationUserId uint64) error {
+func (s *RolePermissionStore) revoke(ctx context.Context, tx pgx.Tx, roleId uint64, permissionIds []uint64, operationUserId nullable.Nullable[uint64]) error {
 	var errCode dberrors.DbErrorCode
 	var errMsg string
 	// PROCEDURE: public.revoke_permissions(IN _role_id, IN _permission_ids, IN _operation_user_id, OUT err_code, OUT err_msg)
 	const query = "CALL public.revoke_permissions($1, $2, $3, NULL, NULL)"
-	r := tx.QueryRow(ctx, query, roleId, permissionIds, operationUserId)
+	r := tx.QueryRow(ctx, query, roleId, permissionIds, operationUserId.Ptr())
 
 	if err := r.Scan(&errCode, &errMsg); err != nil {
 		return fmt.Errorf("[stores.RolePermissionStore.revoke] execute a query (revoke_permissions): %w", err)
@@ -193,7 +194,7 @@ func (s *RolePermissionStore) RevokeAll(ctx *actions.OperationContext, roleId ui
 				// PROCEDURE: public.revoke_all_permissions(IN _role_id, IN _operation_user_id, OUT err_code, OUT err_msg)
 				const query = "CALL public.revoke_all_permissions($1, $2, NULL, NULL)"
 
-				if err := tx.QueryRow(txCtx, query, roleId, opCtx.UserId.Value).Scan(&errCode, &errMsg); err != nil {
+				if err := tx.QueryRow(txCtx, query, roleId, opCtx.UserId.Ptr()).Scan(&errCode, &errMsg); err != nil {
 					return fmt.Errorf("[stores.RolePermissionStore.RevokeAll] execute a query (revoke_all_permissions): %w", err)
 				}
 
@@ -232,7 +233,7 @@ func (s *RolePermissionStore) RevokeFromAll(ctx *actions.OperationContext, permi
 				// PROCEDURE: public.revoke_permissions_from_all(IN _permission_ids, IN _operation_user_id, OUT err_code, OUT err_msg)
 				const query = "CALL public.revoke_permissions_from_all($1, $2, NULL, NULL)"
 
-				if err := tx.QueryRow(txCtx, query, permissionIds, opCtx.UserId.Value).Scan(&errCode, &errMsg); err != nil {
+				if err := tx.QueryRow(txCtx, query, permissionIds, opCtx.UserId.Ptr()).Scan(&errCode, &errMsg); err != nil {
 					return fmt.Errorf("[stores.RolePermissionStore.RevokeFromAll] execute a query (revoke_permissions_from_all): %w", err)
 				}
 
@@ -274,13 +275,13 @@ func (s *RolePermissionStore) Update(ctx *actions.OperationContext, roleId uint6
 
 			err := s.txManager.ExecWithSerializableLevel(opCtx.Ctx, func(txCtx context.Context, tx pgx.Tx) error {
 				if len(permissionIdsToGrant) > 0 {
-					if err := s.grant(txCtx, tx, roleId, permissionIdsToGrant, opCtx.UserId.Value); err != nil {
+					if err := s.grant(txCtx, tx, roleId, permissionIdsToGrant, opCtx.UserId); err != nil {
 						return fmt.Errorf("[stores.RolePermissionStore.Update] grant permissions to the role: %w", err)
 					}
 				}
 
 				if len(permissionIdsToRevoke) > 0 {
-					if err := s.revoke(txCtx, tx, roleId, permissionIdsToRevoke, opCtx.UserId.Value); err != nil {
+					if err := s.revoke(txCtx, tx, roleId, permissionIdsToRevoke, opCtx.UserId); err != nil {
 						return fmt.Errorf("[stores.RolePermissionStore.Update] revoke permissions from the role: %w", err)
 					}
 				}

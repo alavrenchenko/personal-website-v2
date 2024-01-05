@@ -97,7 +97,7 @@ func (s *AppStore) Create(ctx *actions.OperationContext, data *appoperations.Cre
 				// IN _version, IN _description, OUT _id, OUT err_code, OUT err_msg)
 				// Minimum transaction isolation level: Read committed.
 				const query = "CALL public.create_app($1, $2, $3, $4, $5, $6, NULL, $7, $8, NULL, NULL, NULL)"
-				r := tx.QueryRow(txCtx, query, data.Name, data.GroupId, data.Type, data.Title, data.Category, opCtx.UserId.Value, data.Version, data.Description)
+				r := tx.QueryRow(txCtx, query, data.Name, data.GroupId, data.Type, data.Title, data.Category, opCtx.UserId.Ptr(), data.Version, data.Description)
 
 				if err := r.Scan(&id, &errCode, &errMsg); err != nil {
 					return fmt.Errorf("[stores.AppStore.Create] execute a query (create_app): %w", err)
@@ -137,7 +137,7 @@ func (s *AppStore) Delete(ctx *actions.OperationContext, id uint64) error {
 				// Minimum transaction isolation level: Read committed.
 				const query = "CALL public.delete_app($1, $2, 'deletion', NULL, NULL)"
 
-				if err := tx.QueryRow(txCtx, query, id, opCtx.UserId.Value).Scan(&errCode, &errMsg); err != nil {
+				if err := tx.QueryRow(txCtx, query, id, opCtx.UserId.Ptr()).Scan(&errCode, &errMsg); err != nil {
 					return fmt.Errorf("[stores.AppStore.Delete] execute a query (delete_app): %w", err)
 				}
 

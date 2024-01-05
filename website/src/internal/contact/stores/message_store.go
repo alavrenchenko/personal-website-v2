@@ -86,7 +86,7 @@ func (s *ContactMessageStore) Create(ctx *actions.OperationContext, data *messag
 				// OUT _id, OUT err_code, OUT err_msg)
 				// Minimum transaction isolation level: Read committed.
 				const query = "CALL public.create_contact_message($1, NULL, $2, $3, $4, NULL, NULL, NULL)"
-				r := tx.QueryRow(txCtx, query, opCtx.UserId.Value, data.Name, data.Email, data.Message)
+				r := tx.QueryRow(txCtx, query, opCtx.UserId.Ptr(), data.Name, data.Email, data.Message)
 
 				if err := r.Scan(&id, &errCode, &errMsg); err != nil {
 					return fmt.Errorf("[stores.ContactMessageStore.Create] execute a query (create_contact_message): %w", err)

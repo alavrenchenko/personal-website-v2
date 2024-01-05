@@ -155,7 +155,7 @@ func (s *UserSessionStore) CreateAndStart(ctx *actions.OperationContext, data *u
 				// IN _app_id, IN _first_ip, OUT _id, OUT err_code, OUT err_msg)
 				// Minimum transaction isolation level: Read committed.
 				const query = "CALL public.create_and_start_user_session($1, $2, $3, $4, NULL, $5, $6, NULL, NULL, NULL)"
-				r := tx.QueryRow(txCtx, query, data.UserId, data.ClientId, data.UserAgentId, opCtx.UserId.Value, data.AppId.Ptr(), data.FirstIP)
+				r := tx.QueryRow(txCtx, query, data.UserId, data.ClientId, data.UserAgentId, opCtx.UserId.Ptr(), data.AppId.Ptr(), data.FirstIP)
 
 				if err := r.Scan(&id, &errCode, &errMsg); err != nil {
 					return fmt.Errorf("[stores.UserSessionStore.CreateAndStart] execute a query (create_and_start_user_session): %w", err)
@@ -192,7 +192,7 @@ func (s *UserSessionStore) Terminate(ctx *actions.OperationContext, id uint64) e
 				// PROCEDURE: public.terminate_user_session(IN _id, IN _updated_by, IN _status_comment, OUT err_code, OUT err_msg)
 				// Minimum transaction isolation level: Read committed.
 				const query = "CALL public.terminate_user_session($1, $2, 'termination', NULL, NULL)"
-				if err := tx.QueryRow(txCtx, query, id, opCtx.UserId.Value).Scan(&errCode, &errMsg); err != nil {
+				if err := tx.QueryRow(txCtx, query, id, opCtx.UserId.Ptr()).Scan(&errCode, &errMsg); err != nil {
 					return fmt.Errorf("[stores.UserSessionStore.Terminate] execute a query (terminate_user_session): %w", err)
 				}
 

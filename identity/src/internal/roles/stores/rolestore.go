@@ -94,7 +94,7 @@ func (s *RoleStore) Create(ctx *actions.OperationContext, data *roleoperations.C
 				// PROCEDURE: public.create_role(IN _name, IN _type, IN _title, IN _created_by, IN _status_comment, IN _app_id, IN _app_group_id, IN _description,
 				// OUT _id, OUT err_code, OUT err_msg)
 				const query = "CALL public.create_role($1, $2, $3, $4, NULL, $5, $6, $7, NULL, NULL, NULL)"
-				r := tx.QueryRow(txCtx, query, data.Name, data.Type, data.Title, opCtx.UserId.Value, data.AppId.Ptr(), data.AppGroupId.Ptr(), data.Description)
+				r := tx.QueryRow(txCtx, query, data.Name, data.Type, data.Title, opCtx.UserId.Ptr(), data.AppId.Ptr(), data.AppGroupId.Ptr(), data.Description)
 
 				if err := r.Scan(&id, &errCode, &errMsg); err != nil {
 					return fmt.Errorf("[stores.RoleStore.Create] execute a query (create_role): %w", err)
@@ -131,7 +131,7 @@ func (s *RoleStore) Delete(ctx *actions.OperationContext, id uint64) error {
 				// PROCEDURE: public.delete_role(IN _id, IN _deleted_by, IN _status_comment, OUT err_code, OUT err_msg)
 				const query = "CALL public.delete_role($1, $2, 'deletion', NULL, NULL)"
 
-				if err := tx.QueryRow(txCtx, query, id, opCtx.UserId.Value).Scan(&errCode, &errMsg); err != nil {
+				if err := tx.QueryRow(txCtx, query, id, opCtx.UserId.Ptr()).Scan(&errCode, &errMsg); err != nil {
 					return fmt.Errorf("[stores.RoleStore.Delete] execute a query (delete_role): %w", err)
 				}
 

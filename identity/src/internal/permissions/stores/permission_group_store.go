@@ -94,7 +94,7 @@ func (s *PermissionGroupStore) Create(ctx *actions.OperationContext, data *group
 				// PROCEDURE: public.create_permission_group(IN _name, IN _created_by, IN _status_comment, IN _app_id, IN _app_group_id, IN _description,
 				// OUT _id, OUT err_code, OUT err_msg)
 				const query = "CALL public.create_permission_group($1, $2, NULL, $3, $4, $5, NULL, NULL, NULL)"
-				r := tx.QueryRow(txCtx, query, data.Name, opCtx.UserId.Value, data.AppId.Ptr(), data.AppGroupId.Ptr(), data.Description)
+				r := tx.QueryRow(txCtx, query, data.Name, opCtx.UserId.Ptr(), data.AppId.Ptr(), data.AppGroupId.Ptr(), data.Description)
 
 				if err := r.Scan(&id, &errCode, &errMsg); err != nil {
 					return fmt.Errorf("[stores.PermissionGroupStore.Create] execute a query (create_permission_group): %w", err)
@@ -130,7 +130,7 @@ func (s *PermissionGroupStore) Delete(ctx *actions.OperationContext, id uint64) 
 				var errMsg string
 				// PROCEDURE: public.delete_permission_group(IN _id, IN _deleted_by, IN _status_comment, OUT err_code, OUT err_msg)
 				const query = "CALL public.delete_permission_group($1, $2, 'deletion', NULL, NULL)"
-				r := tx.QueryRow(txCtx, query, id, opCtx.UserId.Value)
+				r := tx.QueryRow(txCtx, query, id, opCtx.UserId.Ptr())
 
 				if err := r.Scan(&errCode, &errMsg); err != nil {
 					return fmt.Errorf("[stores.PermissionGroupStore.Delete] execute a query (delete_permission_group): %w", err)

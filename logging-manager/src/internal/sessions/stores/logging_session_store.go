@@ -27,6 +27,7 @@ import (
 	"personal-website-v2/logging-manager/src/internal/sessions/dbmodels"
 	"personal-website-v2/pkg/actions"
 	"personal-website-v2/pkg/app"
+	"personal-website-v2/pkg/base/nullable"
 	dberrors "personal-website-v2/pkg/db/errors"
 	"personal-website-v2/pkg/db/postgres"
 	"personal-website-v2/pkg/logging"
@@ -69,7 +70,7 @@ func NewLoggingSessionStore(db *postgres.Database, loggerFactory logging.LoggerF
 // CreateAndStart creates and starts a logging session for the specified app
 // and returns logging session ID if the operation is successful.
 func (s *LoggingSessionStore) CreateAndStart(appId uint64, operationUserId uint64) (uint64, error) {
-	id, err := s.createAndStart(context.Background(), appId, operationUserId)
+	id, err := s.createAndStart(context.Background(), appId, nullable.NewNullable(operationUserId))
 	if err != nil {
 		return 0, fmt.Errorf("[stores.LoggingSessionStore.CreateAndStart] create and start a logging session: %w", err)
 	}
@@ -108,7 +109,7 @@ func (s *LoggingSessionStore) CreateAndStartWithContext(ctx *actions.OperationCo
 	}()
 
 	txCtx := postgres.NewTxContextWithOperationContext(opCtx.Ctx, opCtx)
-	id, err := s.createAndStart(txCtx, appId, ctx.UserId.Value)
+	id, err := s.createAndStart(txCtx, appId, ctx.UserId)
 	if err != nil {
 		return 0, fmt.Errorf("[stores.LoggingSessionStore.CreateAndStartWithContext] create and start a logging session: %w", err)
 	}
@@ -117,7 +118,7 @@ func (s *LoggingSessionStore) CreateAndStartWithContext(ctx *actions.OperationCo
 	return id, nil
 }
 
-func (s *LoggingSessionStore) createAndStart(ctx context.Context, appId uint64, operationUserId uint64) (uint64, error) {
+func (s *LoggingSessionStore) createAndStart(ctx context.Context, appId uint64, operationUserId nullable.Nullable[uint64]) (uint64, error) {
 	var id uint64
 	err := s.txManager.ExecWithReadCommittedLevel(ctx, func(txCtx context.Context, tx pgx.Tx) error {
 		var errCode dberrors.DbErrorCode
@@ -126,7 +127,7 @@ func (s *LoggingSessionStore) createAndStart(ctx context.Context, appId uint64, 
 		// Minimum transaction isolation level: Read committed.
 		const query = "CALL public.create_and_start_logging_session($1, $2, NULL, NULL, NULL, NULL)"
 
-		if err := tx.QueryRow(txCtx, query, appId, operationUserId).Scan(&id, &errCode, &errMsg); err != nil {
+		if err := tx.QueryRow(txCtx, query, appId, operationUserId.Ptr()).Scan(&id, &errCode, &errMsg); err != nil {
 			return fmt.Errorf("[stores.LoggingSessionStore.createAndStart] execute a query (create_and_start_logging_session): %w", err)
 		}
 
