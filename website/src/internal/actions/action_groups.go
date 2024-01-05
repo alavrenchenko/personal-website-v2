@@ -21,6 +21,7 @@ import "personal-website-v2/pkg/actions"
 
 const (
 	ActionGroupPage           actions.ActionGroup = 1000
-	ActionGroupStaticFile     actions.ActionGroup = 1001
-	ActionGroupContactMessage actions.ActionGroup = 1002
+	ActionGroupWebResource    actions.ActionGroup = 1001
+	ActionGroupStaticFile     actions.ActionGroup = 1002
+	ActionGroupContactMessage actions.ActionGroup = 1003
 )

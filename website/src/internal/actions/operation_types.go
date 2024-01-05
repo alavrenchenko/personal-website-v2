@@ -26,11 +26,14 @@ const (
 	// Page operation types (11000-11199).
 	OperationTypePages_Get actions.OperationType = 11000
 
-	// Static file operation types (11200-11399).
-	OperationTypeStaticFiles_Get actions.OperationType = 11200
+	// Web resource operation types (11200-11399).
+	OperationTypeWebResources_Get actions.OperationType = 11200
 
-	// ContactMessageManager operation types (11400-11599).
-	OperationTypeContactMessageManager_Create actions.OperationType = 11400
+	// Static file operation types (11400-11599).
+	OperationTypeStaticFiles_Get actions.OperationType = 11400
+
+	// ContactMessageManager operation types (11600-11799).
+	OperationTypeContactMessageManager_Create actions.OperationType = 11600
 
 	// ApplicationStore operation types (30000-30999).
 
@@ -48,14 +51,17 @@ const (
 	OperationTypePageController_GetAbout   actions.OperationType = 101003
 	OperationTypePageController_GetContact actions.OperationType = 101004
 
-	// [HTTP] StaticFileController operation types (101200-101399).
-	OperationTypeStaticFileController_Get    actions.OperationType = 101200
-	OperationTypeStaticFileController_GetJS  actions.OperationType = 101201
-	OperationTypeStaticFileController_GetCSS actions.OperationType = 101202
-	OperationTypeStaticFileController_GetImg actions.OperationType = 101203
+	// [HTTP] WebResourceController operation types (101200-101399).
+	OperationTypeWebResourceController_Get actions.OperationType = 101200
 
-	// [HTTP] ContactMessageController operation types (101400-101599).
-	OperationTypeContactMessageController_Create actions.OperationType = 101400
+	// [HTTP] StaticFileController operation types (101400-101599).
+	OperationTypeStaticFileController_Get    actions.OperationType = 101400
+	OperationTypeStaticFileController_GetJS  actions.OperationType = 101401
+	OperationTypeStaticFileController_GetCSS actions.OperationType = 101402
+	OperationTypeStaticFileController_GetImg actions.OperationType = 101403
+
+	// [HTTP] ContactMessageController operation types (101600-101799).
+	OperationTypeContactMessageController_Create actions.OperationType = 101600
 
 	// [gRPC] app.AppService operation types (200000-200999).
 )
