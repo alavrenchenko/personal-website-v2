@@ -291,11 +291,12 @@
         }
     },
     "web": {
+        "rootDir": "web/root",
         "views": {
-            "dir": "views"
+            "dir": "web/views"
         },
         "staticFiles": {
-            "dir": "static",
+            "dir": "web/root/static",
             "requestUrlPathPrefix": "/static/"
         }
     }
