@@ -21,12 +21,14 @@ import "personal-website-v2/pkg/logging"
 
 const (
 	EventGroupPage           logging.EventGroup = 1000
-	EventGroupStaticFile     logging.EventGroup = 1001
-	EventGroupContactMessage logging.EventGroup = 1002
+	EventGroupWebResource    logging.EventGroup = 1001
+	EventGroupStaticFile     logging.EventGroup = 1002
+	EventGroupContactMessage logging.EventGroup = 1003
 
 	EventGroupContactMessageStore logging.EventGroup = 1050
 
 	EventGroupHttpControllers_PageController           logging.EventGroup = 2000
-	EventGroupHttpControllers_StaticFileController     logging.EventGroup = 2001
-	EventGroupHttpControllers_ContactMessageController logging.EventGroup = 2002
+	EventGroupHttpControllers_WebResourceController    logging.EventGroup = 2001
+	EventGroupHttpControllers_StaticFileController     logging.EventGroup = 2002
+	EventGroupHttpControllers_ContactMessageController logging.EventGroup = 2003
 )
