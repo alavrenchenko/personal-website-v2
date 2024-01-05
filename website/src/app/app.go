@@ -765,7 +765,7 @@ func (a *Application) configureHttpRouting(router *httpserverrouting.Router) err
 
 	// public
 	// pages
-	router.AddGet("Pages_GetHome", "/", pageController.GetHome)
+	router.AddGet("Pages_GetHome", "/", pageController.GetHome).WithFullPathMatch()
 	router.AddGet("Pages_GetInfo", "/info", pageController.GetInfo)
 	router.AddGet("Pages_GetAbout", "/about", pageController.GetAbout)
 	router.AddGet("Pages_GetContact", "/contact", pageController.GetContact)
