@@ -776,7 +776,7 @@ func (a *Application) configureHttpRouting(router *httpserverrouting.Router) err
 	router.Add("StaticFiles_GetImg", "/static/img/", staticFileController.GetImg, http.MethodGet, http.MethodHead, http.MethodOptions)
 
 	// api
-	router.AddGet("ContactMessages_Create", "/api/contact/messages", contactMessageController.Create)
+	router.AddPut("ContactMessages_Create", "/api/contact/messages", contactMessageController.Create)
 	return nil
 }
 
