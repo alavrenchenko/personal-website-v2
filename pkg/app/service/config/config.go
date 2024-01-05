@@ -174,6 +174,7 @@ type DbConfig struct {
 }
 
 type Web struct {
+	RootDir     string       `json:"rootDir"`
 	Views       *Views       `json:"views"`
 	StaticFiles *StaticFiles `json:"staticFiles"`
 }
