@@ -149,7 +149,7 @@ func (m *LoggingSessionManager) checkApp(ctx *actions.OperationContext, appId ui
 
 	if err != nil {
 		if err2 := apierrors.Unwrap(err); err2 != nil && err2.Code() == amerrors.ApiErrorCodeAppNotFound {
-			m.logger.WarningWithEventAndError(leCtx, events.LoggingSessionEvent, err2, "[manager.LoggingSessionManager.checkApp] get an app status by id", logging.NewField("appId", appId))
+			m.logger.ErrorWithEvent(leCtx, events.LoggingSessionEvent, err, "[manager.LoggingSessionManager.checkApp] get an app status by id", logging.NewField("appId", appId))
 			return errors.NewError(errors.ErrorCodeInvalidOperation, err2.Message())
 		}
 		return fmt.Errorf("[manager.LoggingSessionManager.checkApp] get an app status by id: %w", err)
