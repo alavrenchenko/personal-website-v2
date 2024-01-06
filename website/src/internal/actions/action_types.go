@@ -24,21 +24,21 @@ const (
 	ActionTypeApplication actions.ActionType = 10000
 
 	// Page action types (11000-11199).
-	ActionTypePages_Get        actions.ActionType = 11000
-	ActionTypePages_GetHome    actions.ActionType = 11001
-	ActionTypePages_GetInfo    actions.ActionType = 11002
-	ActionTypePages_GetAbout   actions.ActionType = 11003
-	ActionTypePages_GetContact actions.ActionType = 11004
+	ActionTypePage_Get        actions.ActionType = 11000
+	ActionTypePage_GetHome    actions.ActionType = 11001
+	ActionTypePage_GetInfo    actions.ActionType = 11002
+	ActionTypePage_GetAbout   actions.ActionType = 11003
+	ActionTypePage_GetContact actions.ActionType = 11004
 
 	// Web resource action types (11200-11399).
-	ActionTypeWebResources_Get actions.ActionType = 11200
+	ActionTypeWebResource_Get actions.ActionType = 11200
 
 	// Static file action types (11400-11599).
-	ActionTypeStaticFiles_Get    actions.ActionType = 11400
-	ActionTypeStaticFiles_GetJS  actions.ActionType = 11401
-	ActionTypeStaticFiles_GetCSS actions.ActionType = 11402
-	ActionTypeStaticFiles_GetImg actions.ActionType = 11403
+	ActionTypeStaticFile_Get    actions.ActionType = 11400
+	ActionTypeStaticFile_GetJS  actions.ActionType = 11401
+	ActionTypeStaticFile_GetCSS actions.ActionType = 11402
+	ActionTypeStaticFile_GetImg actions.ActionType = 11403
 
 	// Contact message action types (11600-11799).
-	ActionTypeContactMessages_Create actions.ActionType = 11600
+	ActionTypeContactMessage_Create actions.ActionType = 11600
 )

@@ -24,13 +24,8 @@ const (
 	OperationTypeApplication actions.OperationType = 10000
 
 	// Page operation types (11000-11199).
-	OperationTypePages_Get actions.OperationType = 11000
-
 	// Web resource operation types (11200-11399).
-	OperationTypeWebResources_Get actions.OperationType = 11200
-
 	// Static file operation types (11400-11599).
-	OperationTypeStaticFiles_Get actions.OperationType = 11400
 
 	// ContactMessageManager operation types (11600-11799).
 	OperationTypeContactMessageManager_Create actions.OperationType = 11600

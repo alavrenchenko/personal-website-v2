@@ -78,7 +78,7 @@ func NewContactMessageController(
 //
 //	[PUT] /api/contact/messages
 func (c *ContactMessageController) Create(ctx *server.HttpContext) {
-	c.reqProcessor.ProcessWithAuthz(ctx, wactions.ActionTypeContactMessages_Create, wactions.OperationTypeContactMessageController_Create,
+	c.reqProcessor.ProcessWithAuthz(ctx, wactions.ActionTypeContactMessage_Create, wactions.OperationTypeContactMessageController_Create,
 		[]string{widentity.PermissionContactMessage_Create},
 		func(opCtx *actions.OperationContext) bool {
 			leCtx := opCtx.CreateLogEntryContext()

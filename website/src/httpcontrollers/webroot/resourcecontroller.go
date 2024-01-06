@@ -68,7 +68,7 @@ func NewWebResourceController(
 //
 //	[GET, HEAD, OPTIONS] /{filename}
 func (c *WebResourceController) Get(ctx *server.HttpContext) {
-	c.reqProcessor.ProcessWithAuthz(ctx, wactions.ActionTypeWebResources_Get, wactions.OperationTypeWebResourceController_Get,
+	c.reqProcessor.ProcessWithAuthz(ctx, wactions.ActionTypeWebResource_Get, wactions.OperationTypeWebResourceController_Get,
 		[]string{widentity.PermissionWebResource_Get},
 		func(opCtx *actions.OperationContext) bool {
 			ctx.Response.Writer.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")

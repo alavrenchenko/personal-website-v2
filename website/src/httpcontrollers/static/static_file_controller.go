@@ -68,7 +68,7 @@ func NewStaticFileController(
 //
 //	[GET, HEAD, OPTIONS] /static/js/{filename}
 func (c *StaticFileController) GetJS(ctx *server.HttpContext) {
-	c.reqProcessor.ProcessWithAuthz(ctx, wactions.ActionTypeStaticFiles_GetJS, wactions.OperationTypeStaticFileController_GetJS,
+	c.reqProcessor.ProcessWithAuthz(ctx, wactions.ActionTypeStaticFile_GetJS, wactions.OperationTypeStaticFileController_GetJS,
 		[]string{widentity.PermissionStaticFile_Get},
 		func(opCtx *actions.OperationContext) bool {
 			ctx.Response.Writer.Header().Set("Cache-Control", "public, max-age=2592000") // 30d
@@ -89,7 +89,7 @@ func (c *StaticFileController) GetJS(ctx *server.HttpContext) {
 //
 //	[GET, HEAD, OPTIONS] /static/css/{filename}
 func (c *StaticFileController) GetCSS(ctx *server.HttpContext) {
-	c.reqProcessor.ProcessWithAuthz(ctx, wactions.ActionTypeStaticFiles_GetCSS, wactions.OperationTypeStaticFileController_GetCSS,
+	c.reqProcessor.ProcessWithAuthz(ctx, wactions.ActionTypeStaticFile_GetCSS, wactions.OperationTypeStaticFileController_GetCSS,
 		[]string{widentity.PermissionStaticFile_Get},
 		func(opCtx *actions.OperationContext) bool {
 			ctx.Response.Writer.Header().Set("Cache-Control", "public, max-age=2592000") // 30d
@@ -110,7 +110,7 @@ func (c *StaticFileController) GetCSS(ctx *server.HttpContext) {
 //
 //	[GET, HEAD, OPTIONS] /static/img/{filename}
 func (c *StaticFileController) GetImg(ctx *server.HttpContext) {
-	c.reqProcessor.ProcessWithAuthz(ctx, wactions.ActionTypeStaticFiles_GetImg, wactions.OperationTypeStaticFileController_GetImg,
+	c.reqProcessor.ProcessWithAuthz(ctx, wactions.ActionTypeStaticFile_GetImg, wactions.OperationTypeStaticFileController_GetImg,
 		[]string{widentity.PermissionStaticFile_Get},
 		func(opCtx *actions.OperationContext) bool {
 			ctx.Response.Writer.Header().Set("Cache-Control", "public, max-age=300") // 5m
