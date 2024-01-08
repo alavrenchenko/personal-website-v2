@@ -81,6 +81,7 @@ import (
 	httpserver "personal-website-v2/pkg/net/http/server"
 	httpserverlogging "personal-website-v2/pkg/net/http/server/logging"
 	httpserverrouting "personal-website-v2/pkg/net/http/server/routing"
+	"personal-website-v2/pkg/web/identity/authn/cookies"
 )
 
 const (
@@ -727,7 +728,12 @@ func (a *Application) configureActions() error {
 }
 
 func (a *Application) configureHttpServer() error {
-	rpl, err := apphttpserver.NewRequestPipelineLifetime(a.appSessionId.Value, a.tranManager, a.actionManager, a.identityManager, a.loggerFactory)
+	am, err := cookies.NewCookieAuthnManager(a.identityManager, cookies.NewCookieAuthnConfig(), a.loggerFactory)
+	if err != nil {
+		return fmt.Errorf("[app.Application.configureHttpServer] new cookie authentication manager: %w", err)
+	}
+
+	rpl, err := apphttpserver.NewRequestPipelineLifetime(a.appSessionId.Value, a.tranManager, a.actionManager, a.identityManager, am, a.loggerFactory)
 	if err != nil {
 		return fmt.Errorf("[app.Application.configureHttpServer] new request pipeline lifetime: %w", err)
 	}
