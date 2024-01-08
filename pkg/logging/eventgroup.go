@@ -37,6 +37,9 @@ const (
 	EventGroupNetGrpcClient                         EventGroup = 17
 	EventGroupNetGrpc_Client                        EventGroup = 18
 	EventGroupDb                                    EventGroup = 19
+	EventGroupCaching                               EventGroup = 20
+	EventGroupWeb                                   EventGroup = 21
+	EventGroupWebIdentity                           EventGroup = 22
 
 	// Store event groups (500-549).
 

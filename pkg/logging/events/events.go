@@ -107,6 +107,15 @@ var (
 	// Database events (id: 0, 3900-4099)
 	DbEvent = logging.NewEvent(0, "Database", logging.EventCategoryDatabase, logging.EventGroupDb)
 
+	// Caching events (id: 0, 4100-4299)
+	CachingEvent = logging.NewEvent(0, "Caching", logging.EventCategoryCacheStorage, logging.EventGroupCaching)
+
+	// Web events (id: 0, 4300-4499)
+	WebEvent = logging.NewEvent(0, "Web", logging.EventCategoryCommon, logging.EventGroupWeb)
+
+	// WebIdentity events (id: 0, 4500-4699)
+	WebIdentityEvent = logging.NewEvent(0, "WebIdentity", logging.EventCategoryIdentity, logging.EventGroupWebIdentity)
+
 	// Store events (id: 0, 9000-9199)
 	// ApplicationStore events (id: 0, 9000-9019)
 
