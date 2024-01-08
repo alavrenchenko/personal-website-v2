@@ -17,11 +17,8 @@ package errors
 type ApiErrorCode uint64
 
 const (
-	ApiErrorCodeNoError ApiErrorCode = 0
-
-	ApiErrorCodeUnknownError ApiErrorCode = 1
-
-	// Internal error codes (2-9999).
+	ApiErrorCodeNoError       ApiErrorCode = 0
+	ApiErrorCodeUnknownError  ApiErrorCode = 1
 	ApiErrorCodeInternalError ApiErrorCode = 2
 
 	// Common error codes (10000-19999).
