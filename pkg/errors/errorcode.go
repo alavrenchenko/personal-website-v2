@@ -17,11 +17,8 @@ package errors
 type ErrorCode uint64
 
 const (
-	ErrorCodeNoError ErrorCode = 0
-
-	ErrorCodeUnknownError ErrorCode = 1
-
-	// Internal error codes (2-9999).
+	ErrorCodeNoError       ErrorCode = 0
+	ErrorCodeUnknownError  ErrorCode = 1
 	ErrorCodeInternalError ErrorCode = 2
 
 	// Application error codes (1000-1199).
@@ -57,6 +54,10 @@ const (
 	ErrorCodeGrpcServer_CreateCallIdError    ErrorCode = 2201
 	ErrorCodeGrpcServer_RequestHandlingError ErrorCode = 2203
 	ErrorCodeGrpcServer_CallLoggingError     ErrorCode = 2204
+
+	// Web Identity (../pkg/web/identity) error codes (2400-2599).
+	ErrorCodeWebIdentityError              ErrorCode = 2400
+	ErrorCodeWebIdentity_InvalidAuthnToken ErrorCode = 2401
 
 	// Common error codes (10000-19999).
 	ErrorCodeInvalidOperation ErrorCode = 10000
