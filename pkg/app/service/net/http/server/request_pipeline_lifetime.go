@@ -21,6 +21,7 @@ import (
 	"personal-website-v2/pkg/actions"
 	apihttp "personal-website-v2/pkg/api/http"
 	"personal-website-v2/pkg/app"
+	"personal-website-v2/pkg/auth/authn"
 	"personal-website-v2/pkg/base/nullable"
 	httpserverhelper "personal-website-v2/pkg/helper/net/http/server"
 	"personal-website-v2/pkg/identity"
@@ -35,6 +36,7 @@ type RequestPipelineLifetime struct {
 	tranManager     *actions.TransactionManager
 	reqProcessor    *httpserverhelper.RequestProcessor
 	identityManager identity.IdentityManager
+	authnManager    authn.HttpAuthnManager
 	logger          logging.Logger[*context.LogEntryContext]
 }
 
@@ -45,6 +47,7 @@ func NewRequestPipelineLifetime(
 	tranManager *actions.TransactionManager,
 	actionManager *actions.ActionManager,
 	identityManager identity.IdentityManager,
+	authnManager authn.HttpAuthnManager,
 	loggerFactory logging.LoggerFactory[*context.LogEntryContext],
 ) (*RequestPipelineLifetime, error) {
 	l, err := loggerFactory.CreateLogger("app.service.net.http.server.RequestPipelineLifetime")
@@ -67,6 +70,7 @@ func NewRequestPipelineLifetime(
 		tranManager:     tranManager,
 		reqProcessor:    p,
 		identityManager: identityManager,
+		authnManager:    authnManager,
 		logger:          l,
 	}, nil
 }
@@ -80,7 +84,7 @@ func (l *RequestPipelineLifetime) BeginRequest(ctx *server.HttpContext) {
 		)
 
 		if err = apihttp.InternalServerError(ctx); err != nil {
-			l.logger.ErrorWithEvent(leCtx, events.NetHttpServer_RequestPipelineLifetimeEvent, err, "[server.RequestPipelineLifetime.BeginRequest] write an error (InternalServerError)")
+			l.logger.ErrorWithEvent(leCtx, events.NetHttpServer_RequestPipelineLifetimeEvent, err, "[server.RequestPipelineLifetime.BeginRequest] write InternalServerError")
 		}
 
 		go func() {
@@ -98,7 +102,7 @@ func (l *RequestPipelineLifetime) BeginRequest(ctx *server.HttpContext) {
 	)
 	if err != nil {
 		if err = apihttp.InternalServerError(ctx); err != nil {
-			l.logger.ErrorWithEvent(leCtx, events.NetHttpServer_RequestPipelineLifetimeEvent, err, "[server.RequestPipelineLifetime.BeginRequest] write an error (InternalServerError)")
+			l.logger.ErrorWithEvent(leCtx, events.NetHttpServer_RequestPipelineLifetimeEvent, err, "[server.RequestPipelineLifetime.BeginRequest] write InternalServerError")
 		}
 
 		go func() {
@@ -110,25 +114,46 @@ func (l *RequestPipelineLifetime) BeginRequest(ctx *server.HttpContext) {
 }
 
 func (l *RequestPipelineLifetime) Authenticate(ctx *server.HttpContext) {
-	if ctx.IncomingOperationCtx == nil || !ctx.IncomingOperationCtx.UserId.HasValue && !ctx.IncomingOperationCtx.ClientId.HasValue {
-		ctx.User = identity.NewDefaultIdentity(nullable.Nullable[uint64]{}, identity.UserTypeUser, nullable.Nullable[uint64]{})
-		return
-	}
-
 	l.reqProcessor.Process(ctx, actions.ActionTypeNetHttpServer_RequestPipelineLifetime_Authenticate, actions.OperationTypeNetHttpServer_RequestPipelineLifetime_Authenticate,
 		func(opCtx *actions.OperationContext) bool {
-			i, err := l.identityManager.AuthenticateById(opCtx, ctx.IncomingOperationCtx.UserId, ctx.IncomingOperationCtx.ClientId)
-			if err != nil {
-				leCtx := opCtx.CreateLogEntryContext()
-				l.logger.ErrorWithEvent(leCtx, events.NetHttpServer_RequestPipelineLifetimeEvent, err, "[server.RequestPipelineLifetime.Authenticate] authenticate a user and a client by id")
-
-				if err = apihttp.InternalServerError(ctx); err != nil {
-					l.logger.ErrorWithEvent(leCtx, events.NetHttpServer_RequestPipelineLifetimeEvent, err, "[server.RequestPipelineLifetime.Authenticate] write an error (InternalServerError)")
+			if ctx.IncomingOperationCtx != nil {
+				if !ctx.IncomingOperationCtx.UserId.HasValue && !ctx.IncomingOperationCtx.ClientId.HasValue {
+					ctx.User = identity.NewDefaultIdentity(nullable.Nullable[uint64]{}, identity.UserTypeUser, nullable.Nullable[uint64]{})
+					return true
 				}
-				return false
-			}
 
-			ctx.User = i
+				i, err := l.identityManager.AuthenticateById(opCtx, ctx.IncomingOperationCtx.UserId, ctx.IncomingOperationCtx.ClientId)
+				if err != nil {
+					leCtx := opCtx.CreateLogEntryContext()
+					l.logger.ErrorWithEvent(leCtx, events.NetHttpServer_RequestPipelineLifetimeEvent, err,
+						"[server.RequestPipelineLifetime.Authenticate] authenticate a user and a client by id",
+					)
+					if err = apihttp.InternalServerError(ctx); err != nil {
+						l.logger.ErrorWithEvent(leCtx, events.NetHttpServer_RequestPipelineLifetimeEvent, err,
+							"[server.RequestPipelineLifetime.Authenticate] write InternalServerError",
+						)
+					}
+					return false
+				}
+
+				ctx.User = i
+			} else {
+				i, err := l.authnManager.Authenticate(opCtx, ctx.Request)
+				if err != nil {
+					leCtx := opCtx.CreateLogEntryContext()
+					l.logger.ErrorWithEvent(leCtx, events.NetHttpServer_RequestPipelineLifetimeEvent, err,
+						"[server.RequestPipelineLifetime.Authenticate] authenticate a user and a client",
+					)
+					if err = apihttp.InternalServerError(ctx); err != nil {
+						l.logger.ErrorWithEvent(leCtx, events.NetHttpServer_RequestPipelineLifetimeEvent, err,
+							"[server.RequestPipelineLifetime.Authenticate] write InternalServerError",
+						)
+					}
+					return false
+				}
+
+				ctx.User = i
+			}
 			return true
 		},
 	)
@@ -153,7 +178,7 @@ func (l *RequestPipelineLifetime) Error(ctx *server.HttpContext, err error) {
 		logging.NewField("reqId", ctx.RequestId()),
 	)
 	if err = apihttp.InternalServerError(ctx); err != nil {
-		l.logger.ErrorWithEvent(leCtx, events.NetHttpServer_RequestPipelineLifetimeEvent, err, "[server.RequestPipelineLifetime.Error] write an error (InternalServerError)")
+		l.logger.ErrorWithEvent(leCtx, events.NetHttpServer_RequestPipelineLifetimeEvent, err, "[server.RequestPipelineLifetime.Error] write InternalServerError")
 	}
 }
 
