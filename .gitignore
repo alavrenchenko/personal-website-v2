@@ -24,6 +24,9 @@ bin/
 
 /db/postgres/identity/**/private/
 
+/pkg/auth/authn/
+/pkg/web/identity/authn/
+
 /docs/
 **/_docs/
 
