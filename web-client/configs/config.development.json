@@ -249,5 +249,33 @@
                 "callTimeout": 30000
             }
         }
+    },
+    "auth": {
+        "authn": {
+            "http": {
+                "cookies": {
+                    "userToken": {
+                        "name": "",
+                        "domain": "",
+                        "path": "",
+                        "minAge": 0,
+                        "maxAge": 0,
+                        "secure": true,
+                        "httpOnly": true,
+                        "sameSite": "Strict"
+                    },
+                    "clientToken": {
+                        "name": "",
+                        "domain": "",
+                        "path": "",
+                        "minAge": 0,
+                        "maxAge": 0,
+                        "secure": true,
+                        "httpOnly": true,
+                        "sameSite": "Strict"
+                    }
+                }
+            }
+        }
     }
 }
