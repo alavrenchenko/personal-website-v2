@@ -15,8 +15,14 @@
 package config
 
 import (
+	"bytes"
+	"errors"
+	"fmt"
+	"net/http"
+
 	"personal-website-v2/pkg/logging"
 	grpclogging "personal-website-v2/pkg/net/grpc/logging"
+	"personal-website-v2/pkg/web/identity/authn/cookies"
 )
 
 type AppConfig[TApis any] struct {
@@ -28,6 +34,7 @@ type AppConfig[TApis any] struct {
 	Net     *Net     `json:"net"`
 	Db      *Db      `json:"db"`
 	Apis    TApis    `json:"apis"`
+	Auth    *Auth    `json:"auth"`
 }
 
 type WebAppConfig[TApis any] struct {
@@ -39,6 +46,7 @@ type WebAppConfig[TApis any] struct {
 	Net     *Net     `json:"net"`
 	Db      *Db      `json:"db"`
 	Apis    TApis    `json:"apis"`
+	Auth    *Auth    `json:"auth"`
 	Web     *Web     `json:"web"`
 }
 
@@ -186,4 +194,132 @@ type Views struct {
 type StaticFiles struct {
 	Dir                  string `json:"dir"`
 	RequestUrlPathPrefix string `json:"requestUrlPathPrefix"`
+}
+
+type Auth struct {
+	Authn *Authn `json:"authn"`
+}
+
+type Authn struct {
+	Http *HttpAuthn `json:"http"`
+}
+
+type HttpAuthn struct {
+	Cookies *CookieAuthn `json:"cookies"`
+}
+
+type CookieAuthn struct {
+	UserToken   *AuthnTokenCookie `json:"userToken"`
+	ClientToken *AuthnTokenCookie `json:"clientToken"`
+}
+
+var errUnmarshalNilSameSiteMode = errors.New("[config] can't unmarshal a nil *SameSiteMode")
+
+type SameSiteMode uint8
+
+const (
+	SameSiteModeUnspecified SameSiteMode = iota
+	SameSiteModeNone
+	SameSiteModeLax
+	SameSiteModeStrict
+)
+
+var sameSiteModeStringArr = [4]string{
+	"Unspecified",
+	"None",
+	"Lax",
+	"Strict",
+}
+
+func (m SameSiteMode) String() string {
+	if m > SameSiteModeStrict {
+		return fmt.Sprintf("SameSiteMode(%d)", m)
+	}
+	return sameSiteModeStringArr[m]
+}
+
+func (m SameSiteMode) MarshalText() ([]byte, error) {
+	return []byte(m.String()), nil
+}
+
+func (m *SameSiteMode) UnmarshalText(text []byte) error {
+	if m == nil {
+		return errUnmarshalNilSameSiteMode
+	}
+
+	switch string(bytes.ToLower(text)) {
+	case "", "unspecified":
+		*m = SameSiteModeUnspecified
+	case "none":
+		*m = SameSiteModeNone
+	case "lax":
+		*m = SameSiteModeLax
+	case "strict":
+		*m = SameSiteModeStrict
+	default:
+		return fmt.Errorf("unknown same-site mode: %q", text)
+	}
+	return nil
+}
+
+type AuthnTokenCookie struct {
+	Name   *string `json:"name"`
+	Domain *string `json:"domain"`
+	Path   *string `json:"path"`
+	MinAge *uint32 `json:"minAge"` // in seconds
+
+	// MaxAge=0 means no 'Max-Age' attribute specified.
+	// MaxAge<0 means delete cookie now, equivalently 'Max-Age: 0'.
+	// MaxAge>0 means Max-Age attribute present and given in seconds.
+	MaxAge   *int          `json:"maxAge"`
+	Secure   *bool         `json:"secure"`
+	HttpOnly *bool         `json:"httpOnly"`
+	SameSite *SameSiteMode `json:"sameSite"`
+}
+
+func (a *CookieAuthn) Config() *cookies.CookieAuthnConfig {
+	c := cookies.NewCookieAuthnConfig()
+	if a.UserToken != nil {
+		a.UserToken.applyTo(c.UserToken)
+	}
+	if a.ClientToken != nil {
+		a.ClientToken.applyTo(c.ClientToken)
+	}
+	return c
+}
+
+func (c *AuthnTokenCookie) applyTo(config *cookies.CookieConfig) {
+	if c.Name != nil {
+		config.Name = *c.Name
+	}
+	if c.Domain != nil {
+		config.Domain = *c.Domain
+	}
+	if c.Path != nil {
+		config.Path = *c.Path
+	}
+	if c.MinAge != nil {
+		config.MinAge = *c.MinAge
+	}
+	if c.MaxAge != nil {
+		config.MaxAge = *c.MaxAge
+	}
+	if c.Secure != nil {
+		config.Secure = *c.Secure
+	}
+	if c.HttpOnly != nil {
+		config.HttpOnly = *c.HttpOnly
+	}
+	if c.SameSite != nil {
+		switch *c.SameSite {
+		case SameSiteModeUnspecified:
+			config.SameSite = http.SameSiteDefaultMode
+		case SameSiteModeNone:
+			config.SameSite = http.SameSiteNoneMode
+		case SameSiteModeLax:
+			config.SameSite = http.SameSiteLaxMode
+		case SameSiteModeStrict:
+			config.SameSite = http.SameSiteStrictMode
+		}
+	}
 }
