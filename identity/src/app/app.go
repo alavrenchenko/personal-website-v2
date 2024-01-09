@@ -823,7 +823,14 @@ func (a *Application) configure() error {
 }
 
 func (a *Application) configureHttpServer() error {
-	am, err := cookies.NewCookieAuthnManager(a.identityManager, cookies.NewCookieAuthnConfig(), a.loggerFactory)
+	var ac *cookies.CookieAuthnConfig
+	if a.config.Auth != nil && a.config.Auth.Authn != nil && a.config.Auth.Authn.Http != nil && a.config.Auth.Authn.Http.Cookies != nil {
+		ac = a.config.Auth.Authn.Http.Cookies.Config()
+	} else {
+		ac = cookies.NewCookieAuthnConfig()
+	}
+
+	am, err := cookies.NewCookieAuthnManager(a.identityManager, ac, a.loggerFactory)
 	if err != nil {
 		return fmt.Errorf("[app.Application.configureHttpServer] new cookie authentication manager: %w", err)
 	}
