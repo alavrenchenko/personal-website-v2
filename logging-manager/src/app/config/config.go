@@ -30,6 +30,7 @@ type AppConfig struct {
 	Net     *config.Net     `json:"net"`
 	Db      *config.Db      `json:"db"`
 	Apis    *Apis           `json:"apis"`
+	Auth    *config.Auth    `json:"auth"`
 }
 
 type Startup struct {
