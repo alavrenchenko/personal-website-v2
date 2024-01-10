@@ -19,7 +19,7 @@ bin/
 /config-storage/
 /email-notifier/
 /web/dist/
-/web/website/src/envs/
+/web/website/src/environments/
 /web/website/src/assets/
 
 /db/postgres/identity/**/private/
