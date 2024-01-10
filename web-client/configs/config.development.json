@@ -58,7 +58,7 @@
                     "channelBufferSize": 1024,
                     "version": "3.5.0"
                 },
-                "kafkaTopic": "webclient.log"
+                "kafkaTopic": "web_client.log"
             }
         },
         "fileLog": {
@@ -169,8 +169,8 @@
                             "channelBufferSize": 1024,
                             "version": "3.5.0"
                         },
-                        "requestTopic": "webclient.http_server.requests",
-                        "responseTopic": "webclient.http_server.responses"
+                        "requestTopic": "web_client.http_server.requests",
+                        "responseTopic": "web_client.http_server.responses"
                     }
                 }
             }
@@ -225,7 +225,7 @@
                             "channelBufferSize": 1024,
                             "version": "3.5.0"
                         },
-                        "callTopic": "webclient.grpc_server.calls"
+                        "callTopic": "web_client.grpc_server.calls"
                     }
                 }
             }
