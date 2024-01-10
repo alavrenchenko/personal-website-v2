@@ -7,8 +7,8 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "build-prod": "ng build --configuration production",
-    "build-dev": "ng build"
+    "build": "ng build",
+    "build-prod": "ng build --configuration production"
   },
   "type": "module",
   "dependencies": {
