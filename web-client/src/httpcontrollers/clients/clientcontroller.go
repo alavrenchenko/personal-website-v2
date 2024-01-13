@@ -111,7 +111,7 @@ func (c *ClientController) refreshClientToken(opCtx *actions.OperationContext, h
 			"[clients.ClientController.refreshClientToken] refresh a client token",
 		)
 
-		if err2 := errors.Unwrap(err); err2 == errors.ErrWebIdentity_AuthnTokenExpired {
+		if err2 := errors.Unwrap(err); err2 == errors.ErrWebIdentity_NoAuthnToken || err2 == errors.ErrWebIdentity_AuthnTokenExpired {
 			return c.createClient(opCtx, httpCtx)
 		}
 		if err = apihttp.InternalServerError(httpCtx); err != nil {
