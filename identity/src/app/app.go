@@ -795,6 +795,10 @@ func (a *Application) configure() error {
 		return fmt.Errorf("[app.Application.configure] new authentication manager: %w", err)
 	}
 
+	if err = authnManager.Init(); err != nil {
+		return fmt.Errorf("[app.Application.configure] init an authentication manager: %w", err)
+	}
+
 	authzManager, err := authorizationmanager.NewAuthorizationManager(userManager, clientManager, userRoleAssignmentManager, groupRoleAssignmentManager, rolePermissionManager, a.loggerFactory)
 	if err != nil {
 		return fmt.Errorf("[app.Application.configure] new authentication manager: %w", err)
