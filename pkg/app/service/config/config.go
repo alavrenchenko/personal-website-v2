@@ -20,8 +20,10 @@ import (
 	"fmt"
 	"net/http"
 
+	"personal-website-v2/pkg/base/nullable"
 	"personal-website-v2/pkg/logging"
 	grpclogging "personal-website-v2/pkg/net/grpc/logging"
+	"personal-website-v2/pkg/net/http/server/services/cors"
 	"personal-website-v2/pkg/web/identity/authn/cookies"
 )
 
@@ -115,11 +117,12 @@ type Http struct {
 }
 
 type HttpServer struct {
-	Addr         string             `json:"addr"`
-	ReadTimeout  int64              `json:"readTimeout"`  // in milliseconds
-	WriteTimeout int64              `json:"writeTimeout"` // in milliseconds
-	IdleTimeout  int64              `json:"idleTimeout"`  // in milliseconds
-	Logging      *HttpServerLogging `json:"logging"`
+	Addr         string              `json:"addr"`
+	ReadTimeout  int64               `json:"readTimeout"`  // in milliseconds
+	WriteTimeout int64               `json:"writeTimeout"` // in milliseconds
+	IdleTimeout  int64               `json:"idleTimeout"`  // in milliseconds
+	Logging      *HttpServerLogging  `json:"logging"`
+	Services     *HttpServerServices `json:"services"`
 }
 
 type HttpServerLogging struct {
@@ -130,6 +133,42 @@ type HttpServerLoggingKafka struct {
 	KafkaConfig   *KafkaConfig `json:"kafkaConfig"`
 	RequestTopic  string       `json:"requestTopic"`
 	ResponseTopic string       `json:"responseTopic"`
+}
+
+type HttpServerServices struct {
+	Cors *Cors `json:"cors"`
+}
+
+type Cors struct {
+	// The origins that are allowed to access the resource.
+	AllowedOrigins []string `json:"allowedOrigins"`
+
+	// The methods that are supported by the resource.
+	AllowedMethods []string `json:"allowedMethods"`
+
+	// The headers that are supported by the resource.
+	AllowedHeaders []string `json:"allowedHeaders"`
+
+	// The response headers that can be made available to scripts running in the browser,
+	// in response to a cross-origin request.
+	ExposedHeaders []string `json:"exposedHeaders"`
+
+	// AllowCredentials indicates whether the user credentials are allowed in the request.
+	AllowCredentials bool `json:"allowCredentials"`
+
+	// PreflightMaxAge indicates how long (in seconds) the results of a preflight request can be cached.
+	PreflightMaxAge *int `json:"preflightMaxAge"`
+}
+
+func (c *Cors) Options() *cors.Options {
+	return &cors.Options{
+		AllowedOrigins:   c.AllowedOrigins,
+		AllowedMethods:   c.AllowedMethods,
+		AllowedHeaders:   c.AllowedHeaders,
+		ExposedHeaders:   c.ExposedHeaders,
+		AllowCredentials: c.AllowCredentials,
+		PreflightMaxAge:  nullable.FromPtr(c.PreflightMaxAge),
+	}
 }
 
 type Grpc struct {
