@@ -22,6 +22,7 @@ import (
 	"github.com/google/uuid"
 
 	"personal-website-v2/pkg/base/nullable"
+	"personal-website-v2/pkg/net/http/headers"
 )
 
 type RequestStatus uint8
@@ -69,13 +70,13 @@ func NewRequestInfo(r *http.Request) *RequestInfo {
 		RemoteAddr:     r.RemoteAddr,
 		RequestURI:     r.RequestURI,
 		ContentLength:  r.ContentLength,
-		ContentType:    r.Header.Get("Content-Type"),
+		ContentType:    r.Header.Get(headers.HeaderNameContentType),
 		UserAgent:      r.UserAgent(),
 		Referer:        r.Referer(),
-		Origin:         r.Header.Get("Origin"),
-		Accept:         r.Header.Get("Accept"),
-		AcceptEncoding: r.Header.Get("Accept-Encoding"),
-		AcceptLanguage: r.Header.Get("Accept-Language"),
+		Origin:         r.Header.Get(headers.HeaderNameOrigin),
+		Accept:         r.Header.Get(headers.HeaderNameAccept),
+		AcceptEncoding: r.Header.Get(headers.HeaderNameAcceptEncoding),
+		AcceptLanguage: r.Header.Get(headers.HeaderNameAcceptLanguage),
 	}
 }
 
