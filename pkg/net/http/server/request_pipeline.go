@@ -36,6 +36,7 @@ import (
 	"personal-website-v2/pkg/logging"
 	"personal-website-v2/pkg/logging/context"
 	"personal-website-v2/pkg/logging/events"
+	"personal-website-v2/pkg/net/http/server/services/cors"
 )
 
 type requestPipeline struct {
@@ -52,6 +53,7 @@ type requestPipeline struct {
 	wgInProgress         sync.WaitGroup
 	isAllowedToServeHTTP atomic.Bool
 	loggerCtx            *context.LogEntryContext
+	cors                 *cors.Cors
 }
 
 func newRequestPipeline(
@@ -59,22 +61,20 @@ func newRequestPipeline(
 	appSessionId uint64,
 	config *RequestPipelineConfig,
 	httpServerLogger Logger,
-	loggerFactory logging.LoggerFactory[*context.LogEntryContext]) (*requestPipeline, error) {
+	loggerFactory logging.LoggerFactory[*context.LogEntryContext],
+) (*requestPipeline, error) {
 	l, err := loggerFactory.CreateLogger("net.http.server.requestPipeline")
-
 	if err != nil {
 		return nil, fmt.Errorf("[server.newRequestPipeline] create a logger: %w", err)
 	}
 
 	concurrencyLevel := uint32(runtime.NumCPU() * 2)
 	reqIdGenerator, err := newIdGenerator(appSessionId, httpServerId, concurrencyLevel)
-
 	if err != nil {
 		return nil, fmt.Errorf("[server.newRequestPipeline] new idGenerator for requests: %w", err)
 	}
 
 	resIdGenerator, err := newIdGenerator(appSessionId, httpServerId, concurrencyLevel)
-
 	if err != nil {
 		return nil, fmt.Errorf("[server.newRequestPipeline] new idGenerator for responses: %w", err)
 	}
@@ -86,7 +86,7 @@ func newRequestPipeline(
 		},
 	}
 
-	return &requestPipeline{
+	p := &requestPipeline{
 		httpServerId:     httpServerId,
 		appSessionId:     appSessionId,
 		reqIdGenerator:   reqIdGenerator,
@@ -98,7 +98,16 @@ func newRequestPipeline(
 		httpServerLogger: httpServerLogger,
 		logger:           l,
 		loggerCtx:        loggerCtx,
-	}, nil
+	}
+
+	if config.UseCors {
+		c, err := cors.NewCors(httpServerId, appSessionId, config.CorsOptions, loggerFactory)
+		if err != nil {
+			return nil, fmt.Errorf("[server.newRequestPipeline] new cors: %w", err)
+		}
+		p.cors = c
+	}
+	return p, nil
 }
 
 func (p *requestPipeline) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -247,16 +256,21 @@ func (p *requestPipeline) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (p *requestPipeline) handleRequest(ctx *HttpContext) {
+	if p.cors != nil {
+		p.cors.ServeHTTP(ctx.Response.Writer, ctx.Request, ctx.reqId.UUID)
+		if ctx.Response.isHeaderWritten() {
+			return
+		}
+	}
+
 	if p.lifetime != nil {
 		p.lifetime.BeginRequest(ctx)
-
 		if ctx.Response.isHeaderWritten() {
 			return
 		}
 
 		if p.config.UseAuthentication {
 			p.lifetime.Authenticate(ctx)
-
 			if ctx.Response.isHeaderWritten() {
 				return
 			}
@@ -268,10 +282,9 @@ func (p *requestPipeline) handleRequest(ctx *HttpContext) {
 
 		if p.config.UseAuthorization {
 			p.lifetime.Authorize(ctx)
-		}
-
-		if ctx.Response.isHeaderWritten() {
-			return
+			if ctx.Response.isHeaderWritten() {
+				return
+			}
 		}
 	} else {
 		ctx.User = identity.NewDefaultIdentity(nullable.Nullable[uint64]{}, identity.UserTypeUser, nullable.Nullable[uint64]{})

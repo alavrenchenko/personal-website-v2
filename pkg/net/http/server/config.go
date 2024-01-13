@@ -16,6 +16,7 @@ package server
 
 import (
 	"crypto/tls"
+	"personal-website-v2/pkg/net/http/server/services/cors"
 	"time"
 )
 
@@ -54,6 +55,7 @@ type RequestPipelineConfig struct {
 	UseCors           bool
 	UseErrorHandler   bool
 	UseHttpLogging    bool
+	CorsOptions       *cors.Options
 }
 
 type RequestPipelineConfigBuilder struct {
@@ -64,6 +66,7 @@ type RequestPipelineConfigBuilder struct {
 	useCors           bool
 	useErrorHandler   bool
 	useHttpLogging    bool
+	corsOpts          *cors.Options
 }
 
 func NewRequestPipelineConfigBuilder() *RequestPipelineConfigBuilder {
@@ -85,8 +88,9 @@ func (b *RequestPipelineConfigBuilder) UseAuthorization() *RequestPipelineConfig
 	return b
 }
 
-func (b *RequestPipelineConfigBuilder) UseCors() *RequestPipelineConfigBuilder {
+func (b *RequestPipelineConfigBuilder) UseCors(opts *cors.Options) *RequestPipelineConfigBuilder {
 	b.useCors = true
+	b.corsOpts = opts
 	return b
 }
 
@@ -114,5 +118,6 @@ func (b *RequestPipelineConfigBuilder) Build() *RequestPipelineConfig {
 		UseCors:           b.useCors,
 		UseErrorHandler:   b.useErrorHandler,
 		UseHttpLogging:    b.useHttpLogging,
+		CorsOptions:       b.corsOpts,
 	}
 }
