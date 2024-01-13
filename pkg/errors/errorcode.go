@@ -57,8 +57,9 @@ const (
 
 	// Web Identity (../pkg/web/identity) error codes (2400-2599).
 	ErrorCodeWebIdentityError              ErrorCode = 2400
-	ErrorCodeWebIdentity_InvalidAuthnToken ErrorCode = 2401
-	ErrorCodeWebIdentity_AuthnTokenExpired ErrorCode = 2402
+	ErrorCodeWebIdentity_NoAuthnToken      ErrorCode = 2401
+	ErrorCodeWebIdentity_InvalidAuthnToken ErrorCode = 2402
+	ErrorCodeWebIdentity_AuthnTokenExpired ErrorCode = 2403
 
 	// Common error codes (10000-19999).
 	ErrorCodeInvalidOperation ErrorCode = 10000

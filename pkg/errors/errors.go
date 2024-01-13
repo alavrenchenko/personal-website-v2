@@ -16,6 +16,7 @@ package errors
 
 var (
 	// Web Identity (../pkg/web/identity) errors.
+	ErrWebIdentity_NoAuthnToken      = NewError(ErrorCodeWebIdentity_NoAuthnToken, "authentication token is missing")
 	ErrWebIdentity_InvalidAuthnToken = NewError(ErrorCodeWebIdentity_InvalidAuthnToken, "invalid authentication token")
 	ErrWebIdentity_AuthnTokenExpired = NewError(ErrorCodeWebIdentity_AuthnTokenExpired, "authentication token expired")
 )
