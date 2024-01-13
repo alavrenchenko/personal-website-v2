@@ -21,6 +21,8 @@ import { provideHttpClient } from "@angular/common/http";
 import { provideRouter, Routes, withInMemoryScrolling } from "@angular/router";
 import { provideAnimations, provideNoopAnimations } from "@angular/platform-browser/animations";
 
+import { IdentityService, IdentityUrls, IDENTITY_URLS_TOKEN } from "../../../pkg/identity";
+import { environment } from '../environments/environment';
 import { HomeComponent } from "./pages/home";
 import { InfoComponent } from "./pages/info";
 import { AboutComponent } from "./pages/about";
@@ -37,6 +39,10 @@ const appRoutes: Routes = [
 
 const prefersReducedMotion = typeof matchMedia === 'function' ? matchMedia('(prefers-reduced-motion)').matches : false;
 
+const identityUrls: IdentityUrls = {
+    webClientServiceUrl: environment.webClientServiceUrl
+}
+
 export const appConfig: ApplicationConfig = {
     providers: [
         provideRouter(appRoutes, withInMemoryScrolling({
@@ -46,5 +52,7 @@ export const appConfig: ApplicationConfig = {
         { provide: LocationStrategy, useClass: PathLocationStrategy },
         provideHttpClient(),
         prefersReducedMotion ? provideNoopAnimations() : provideAnimations(),
+        { provide: IDENTITY_URLS_TOKEN, useValue: identityUrls },
+        IdentityService
     ]
 };
