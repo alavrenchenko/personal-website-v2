@@ -172,6 +172,24 @@
                         "requestTopic": "website.http_server.requests",
                         "responseTopic": "website.http_server.responses"
                     }
+                },
+                "services": {
+                    "cors": {
+                        "allowedOrigins": [
+                            "*"
+                        ],
+                        "allowedMethods": [
+                            "*"
+                        ],
+                        "allowedHeaders": [
+                            "*"
+                        ],
+                        "exposedHeaders": [
+                            "*"
+                        ],
+                        "allowCredentials": false,
+                        "preflightMaxAge": 3600
+                    }
                 }
             }
         },
