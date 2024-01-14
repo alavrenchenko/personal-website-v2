@@ -164,6 +164,7 @@ func (p *RequestProcessor) ProcessWithAuthnCheck(ctx *server.HttpContext, atype 
 				if err := apihttp.InternalServerError(ctx); err != nil {
 					p.logger.ErrorWithEvent(leCtx, events.NetHttp_ServerEvent, err, "[server.RequestProcessor.ProcessWithAuthnCheck] write InternalServerError")
 				}
+				return false
 			}
 			return f(opCtx)
 		},
@@ -228,6 +229,7 @@ func (p *RequestProcessor) ProcessWithAuthnCheckAndAuthz(
 				if err := apihttp.InternalServerError(ctx); err != nil {
 					p.logger.ErrorWithEvent(leCtx, events.NetHttp_ServerEvent, err, "[server.RequestProcessor.ProcessWithAuthnCheckAndAuthz] write InternalServerError")
 				}
+				return false
 			}
 
 			if authorized, err := p.identityManager.Authorize(opCtx, ctx.User, requiredPermissions); err != nil {
