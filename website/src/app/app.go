@@ -705,11 +705,14 @@ func (a *Application) configureHttpServer() error {
 	}
 
 	rpcb := httpserver.NewRequestPipelineConfigBuilder()
-	rpc := rpcb.SetPipelineLifetime(rpl).
+	rpcb.SetPipelineLifetime(rpl).
 		UseAuthentication().
 		UseErrorHandler().
-		UseRouting(router).
-		Build()
+		UseRouting(router)
+
+	if a.config.Net.Http.Server.Services != nil && a.config.Net.Http.Server.Services.Cors != nil {
+		rpcb.UseCors(a.config.Net.Http.Server.Services.Cors.Options())
+	}
 
 	c := &httpserverlogging.LoggerConfig{
 		AppInfo: &info.AppInfo{
@@ -738,7 +741,7 @@ func (a *Application) configureHttpServer() error {
 		config.ReadTimeout = time.Duration(a.config.Net.Http.Server.ReadTimeout) * time.Millisecond
 		config.WriteTimeout = time.Duration(a.config.Net.Http.Server.WriteTimeout) * time.Millisecond
 		config.IdleTimeout = time.Duration(a.config.Net.Http.Server.IdleTimeout) * time.Millisecond
-		config.PipelineConfig = rpc
+		config.PipelineConfig = rpcb.Build()
 	})
 
 	s, err := hsb.Build()
