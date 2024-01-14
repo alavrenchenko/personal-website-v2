@@ -82,6 +82,18 @@ func (c *ContactMessageController) Create(ctx *server.HttpContext) {
 		[]string{widentity.PermissionContactMessage_Create},
 		func(opCtx *actions.OperationContext) bool {
 			leCtx := opCtx.CreateLogEntryContext()
+			if !ctx.User.ClientId().HasValue {
+				c.logger.ErrorWithEvent(leCtx, events.HttpControllers_ContactMessageControllerEvent, nil,
+					"[contact.ContactMessageController.Create] clientId is null",
+				)
+				if err := apihttp.Forbidden(ctx, apierrors.ErrPermissionDenied); err != nil {
+					c.logger.ErrorWithEvent(leCtx, events.HttpControllers_ContactMessageControllerEvent, err,
+						"[contact.ContactMessageController.Create] write Forbidden",
+					)
+				}
+				return false
+			}
+
 			req := new(messagerequests.CreateRequest)
 			if err := json.NewDecoder(ctx.Request.Body).Decode(req); err != nil {
 				c.logger.ErrorWithEvent(leCtx, events.HttpControllers_ContactMessageControllerEvent, err,
