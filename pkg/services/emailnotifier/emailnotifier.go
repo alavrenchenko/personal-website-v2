@@ -26,11 +26,13 @@ import (
 	"runtime"
 	"strconv"
 	"sync/atomic"
+	"time"
 	"unsafe"
 
 	"github.com/google/uuid"
 
 	"personal-website-v2/pkg/actions"
+	"personal-website-v2/pkg/base/datetime"
 	binaryencoding "personal-website-v2/pkg/base/encoding/binary"
 	"personal-website-v2/pkg/base/nullable"
 	"personal-website-v2/pkg/base/sequence"
@@ -56,15 +58,33 @@ type Config struct {
 	KafkaTopic         string
 }
 
+// The notification.
 type Notification struct {
-	Id         uuid.UUID
+	// The unique ID to identify the notification.
+	Id uuid.UUID
+
+	// It stores the date and time at which the notification was created.
+	CreatedAt time.Time
+
+	// The user ID to identify the user who created the notification.
+	CreatedBy uint64
+
+	// The notification recipients.
 	Recipients []string
-	Subject    string
-	Body       []byte
-	Metadata   *NotificationMetadata
+
+	// The notification subject.
+	Subject string
+
+	// The notification body.
+	Body []byte
+
+	// The notification metadata.
+	Metadata *NotificationMetadata
 }
 
+// The notification metadata.
 type NotificationMetadata struct {
+	// The transaction ID.
 	TranId uuid.UUID
 }
 
@@ -178,18 +198,6 @@ func (n *emailNotifier) Send(ctx *actions.OperationContext, recipients []string,
 	err := n.opExecutor.Exec(ctx, sactions.OperationTypeEmailNotifier_Send,
 		[]*actions.OperationParam{actions.NewOperationParam("recipients", recipients), actions.NewOperationParam("subject", subject)},
 		func(opCtx *actions.OperationContext) error {
-			for i := 0; i < len(recipients); i++ {
-				if _, err := mail.ParseAddress(recipients[i]); err != nil {
-					return errs.NewError(errs.ErrorCodeInvalidData, "invalid recipients")
-				}
-			}
-			if strings.IsEmptyOrWhitespace(subject) {
-				return errs.NewError(errs.ErrorCodeInvalidData, "subject is empty")
-			}
-			if len(body) == 0 {
-				return errs.NewError(errs.ErrorCodeInvalidData, "body is nil or empty")
-			}
-
 			var err error
 			if id, err = n.send(opCtx, recipients, subject, body); err != nil {
 				return fmt.Errorf("[emailnotifier.emailNotifier.Send] send a notification: %w", err)
@@ -214,14 +222,6 @@ func (n *emailNotifier) SendUsingTemplate(ctx *actions.OperationContext, recipie
 	err := n.opExecutor.Exec(ctx, sactions.OperationTypeEmailNotifier_SendUsingTemplate,
 		[]*actions.OperationParam{actions.NewOperationParam("recipients", recipients), actions.NewOperationParam("subject", subject), actions.NewOperationParam("tmplName", tmplName)},
 		func(opCtx *actions.OperationContext) error {
-			for i := 0; i < len(recipients); i++ {
-				if _, err := mail.ParseAddress(recipients[i]); err != nil {
-					return errs.NewError(errs.ErrorCodeInvalidData, "invalid recipients")
-				}
-			}
-			if strings.IsEmptyOrWhitespace(subject) {
-				return errs.NewError(errs.ErrorCodeInvalidData, "subject is empty")
-			}
 			if strings.IsEmptyOrWhitespace(tmplName) {
 				return errs.NewError(errs.ErrorCodeInvalidData, "tmplName is empty")
 			}
@@ -259,6 +259,21 @@ func (n *emailNotifier) SendUsingTemplate(ctx *actions.OperationContext, recipie
 }
 
 func (n *emailNotifier) send(ctx *actions.OperationContext, recipients []string, subject string, body []byte) (uuid.UUID, error) {
+	if !ctx.UserId.HasValue {
+		return uuid.UUID{}, errors.New("[emailnotifier.emailNotifier.send] userId is null")
+	}
+	for i := 0; i < len(recipients); i++ {
+		if _, err := mail.ParseAddress(recipients[i]); err != nil {
+			return uuid.UUID{}, errs.NewError(errs.ErrorCodeInvalidData, "invalid recipients")
+		}
+	}
+	if strings.IsEmptyOrWhitespace(subject) {
+		return uuid.UUID{}, errs.NewError(errs.ErrorCodeInvalidData, "subject is empty")
+	}
+	if len(body) == 0 {
+		return uuid.UUID{}, errs.NewError(errs.ErrorCodeInvalidData, "body is nil or empty")
+	}
+
 	id, err := n.idGenerator.get()
 	if err != nil {
 		return uuid.UUID{}, fmt.Errorf("[emailnotifier.emailNotifier.send] get id from idGenerator: %w", err)
@@ -266,6 +281,8 @@ func (n *emailNotifier) send(ctx *actions.OperationContext, recipients []string,
 
 	ntf := &Notification{
 		Id:         id,
+		CreatedAt:  datetime.Now(),
+		CreatedBy:  ctx.UserId.Value,
 		Recipients: recipients,
 		Subject:    subject,
 		Body:       body,
@@ -286,9 +303,12 @@ func (n *emailNotifier) send(ctx *actions.OperationContext, recipients []string,
 		return uuid.UUID{}, fmt.Errorf("[emailnotifier.emailNotifier.send] send a message: %w", err)
 	}
 
-	n.logger.InfoWithEvent(ctx.CreateLogEntryContext(), events.EmailNotifierEvent,
-		"[emailnotifier.emailNotifier.send] notification has been sent",
+	n.logger.InfoWithEvent(ctx.CreateLogEntryContext(), events.EmailNotifierEvent, "[emailnotifier.emailNotifier.send] notification has been sent",
 		logging.NewField("id", id),
+		logging.NewField("createdAt", ntf.CreatedAt),
+		logging.NewField("createdBy", ntf.CreatedBy),
+		logging.NewField("recipients", recipients),
+		logging.NewField("subject", subject),
 	)
 	return id, nil
 }
