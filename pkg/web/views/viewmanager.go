@@ -21,6 +21,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"reflect"
 	"sync"
 	"unsafe"
 )
@@ -51,7 +52,8 @@ func (m *ViewManager) Render(w http.ResponseWriter, viewName string, viewData an
 	}
 
 	// w.WriteHeader(http.StatusOK)
-	// if viewData != nil {
+	// val := reflect.ValueOf(viewData)
+	// if viewData != nil && (val.Kind() != reflect.Ptr || !val.IsNil()) {
 	// 	if err = v.tmpl.Execute(w, viewData); err != nil {
 	// 		return fmt.Errorf("[views.ViewManager.Render] execute a view template: %w", err)
 	// 	}
@@ -60,14 +62,14 @@ func (m *ViewManager) Render(w http.ResponseWriter, viewName string, viewData an
 	// }
 
 	var b []byte
-	if viewData != nil {
+	val := reflect.ValueOf(viewData)
+	if viewData != nil && (val.Kind() != reflect.Ptr || !val.IsNil()) {
 		buf := new(bytes.Buffer)
 		buf.Grow(len(v.content))
 
 		if err = v.tmpl.Execute(buf, viewData); err != nil {
 			return fmt.Errorf("[views.ViewManager.Render] execute a view template: %w", err)
 		}
-
 		b = buf.Bytes()
 	} else {
 		b = v.content
