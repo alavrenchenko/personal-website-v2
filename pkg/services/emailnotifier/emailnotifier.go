@@ -26,7 +26,6 @@ import (
 	"runtime"
 	"strconv"
 	"sync/atomic"
-	"time"
 	"unsafe"
 
 	"github.com/google/uuid"
@@ -42,6 +41,8 @@ import (
 	actionhelper "personal-website-v2/pkg/helper/actions"
 	"personal-website-v2/pkg/logging"
 	lcontext "personal-website-v2/pkg/logging/context"
+	"personal-website-v2/pkg/services/emailnotifier/formatting/protobuf"
+	"personal-website-v2/pkg/services/emailnotifier/models"
 	sactions "personal-website-v2/pkg/services/internal/actions"
 	"personal-website-v2/pkg/services/internal/logging/events"
 )
@@ -56,36 +57,6 @@ type Config struct {
 	Kafka              *kafka.Config
 	AsyncKafkaProducer bool
 	KafkaTopic         string
-}
-
-// The notification.
-type Notification struct {
-	// The unique ID to identify the notification.
-	Id uuid.UUID
-
-	// It stores the date and time at which the notification was created.
-	CreatedAt time.Time
-
-	// The user ID to identify the user who created the notification.
-	CreatedBy uint64
-
-	// The notification recipients.
-	Recipients []string
-
-	// The notification subject.
-	Subject string
-
-	// The notification body.
-	Body []byte
-
-	// The notification metadata.
-	Metadata *NotificationMetadata
-}
-
-// The notification metadata.
-type NotificationMetadata struct {
-	// The transaction ID.
-	TranId uuid.UUID
 }
 
 // EmailNotifier is email notification sender.
@@ -111,11 +82,11 @@ type emailNotifier struct {
 	tmpls           map[string]*ntfBodyTmpl // map[TemplateName]Template
 	config          *Config
 	opExecutor      *actionhelper.OperationExecutor
-	// formatter          *formatting.ProtobufFormatter
-	producer  kafka.Producer
-	logger    logging.Logger[*lcontext.LogEntryContext]
-	loggerCtx *lcontext.LogEntryContext
-	disposed  atomic.Bool
+	ntfFormatter    *protobuf.NotificationFormatter
+	producer        kafka.Producer
+	logger          logging.Logger[*lcontext.LogEntryContext]
+	loggerCtx       *lcontext.LogEntryContext
+	disposed        atomic.Bool
 }
 
 // templates: map[TemplateName]TemplateContent.
@@ -279,23 +250,28 @@ func (n *emailNotifier) send(ctx *actions.OperationContext, recipients []string,
 		return uuid.UUID{}, fmt.Errorf("[emailnotifier.emailNotifier.send] get id from idGenerator: %w", err)
 	}
 
-	ntf := &Notification{
+	ntf := &models.Notification{
 		Id:         id,
 		CreatedAt:  datetime.Now(),
 		CreatedBy:  ctx.UserId.Value,
 		Recipients: recipients,
 		Subject:    subject,
 		Body:       body,
-		Metadata: &NotificationMetadata{
+		Metadata: &models.NotificationMetadata{
 			TranId: ctx.Transaction.Id(),
 		},
+	}
+
+	b, err := n.ntfFormatter.Format(ntf)
+	if err != nil {
+		return uuid.UUID{}, fmt.Errorf("[emailnotifier.emailNotifier.send] format a notification: %w", err)
 	}
 
 	tranId := ctx.Transaction.Id()
 	msg := &kafka.ProducerMessage{
 		Topic:    n.config.KafkaTopic,
 		Key:      tranId[:],
-		Value:    nil,
+		Value:    b,
 		Metadata: ntf,
 	}
 
@@ -324,7 +300,7 @@ func (n *emailNotifier) onCompletion(msg *kafka.ProducerMessage, err error) {
 	// </test>
 
 	if err != nil {
-		ntf := msg.Metadata.(*Notification)
+		ntf := msg.Metadata.(*models.Notification)
 		n.logger.ErrorWithEvent(n.loggerCtx, events.EmailNotifierEvent, err,
 			"[emailnotifier.emailNotifier.onCompletion] an error occurred while sending a notification to kafka",
 			logging.NewField("id", ntf.Id),
