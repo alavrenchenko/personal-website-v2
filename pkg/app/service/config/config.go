@@ -28,30 +28,32 @@ import (
 )
 
 type AppConfig[TApis any] struct {
-	AppInfo     *AppInfo `json:"appInfo"`
-	Env         string   `json:"env"`
-	UserId      uint64   `json:"userId"`
-	ResourceDir *string  `json:"resourceDir"`
-	Logging     *Logging `json:"logging"`
-	Actions     *Actions `json:"actions"`
-	Net         *Net     `json:"net"`
-	Db          *Db      `json:"db"`
-	Apis        TApis    `json:"apis"`
-	Auth        *Auth    `json:"auth"`
+	AppInfo       *AppInfo       `json:"appInfo"`
+	Env           string         `json:"env"`
+	UserId        uint64         `json:"userId"`
+	ResourceDir   *string        `json:"resourceDir"`
+	Logging       *Logging       `json:"logging"`
+	Actions       *Actions       `json:"actions"`
+	Net           *Net           `json:"net"`
+	Db            *Db            `json:"db"`
+	Apis          TApis          `json:"apis"`
+	Auth          *Auth          `json:"auth"`
+	Notifications *Notifications `json:"notifications"`
 }
 
 type WebAppConfig[TApis any] struct {
-	AppInfo     *AppInfo `json:"appInfo"`
-	Env         string   `json:"env"`
-	UserId      uint64   `json:"userId"`
-	ResourceDir *string  `json:"resourceDir"`
-	Logging     *Logging `json:"logging"`
-	Actions     *Actions `json:"actions"`
-	Net         *Net     `json:"net"`
-	Db          *Db      `json:"db"`
-	Apis        TApis    `json:"apis"`
-	Auth        *Auth    `json:"auth"`
-	Web         *Web     `json:"web"`
+	AppInfo       *AppInfo       `json:"appInfo"`
+	Env           string         `json:"env"`
+	UserId        uint64         `json:"userId"`
+	ResourceDir   *string        `json:"resourceDir"`
+	Logging       *Logging       `json:"logging"`
+	Actions       *Actions       `json:"actions"`
+	Net           *Net           `json:"net"`
+	Db            *Db            `json:"db"`
+	Apis          TApis          `json:"apis"`
+	Auth          *Auth          `json:"auth"`
+	Web           *Web           `json:"web"`
+	Notifications *Notifications `json:"notifications"`
 }
 
 type AppInfo struct {
@@ -363,4 +365,12 @@ func (c *AuthnTokenCookie) applyTo(config *cookies.CookieConfig) {
 			config.SameSite = http.SameSiteStrictMode
 		}
 	}
+}
+
+type Notifications struct {
+	Email map[string]*EmailNotification `json:"email"` // map[NotificationName]NotificationConfig
+}
+
+type EmailNotification struct {
+	Recipients []string `json:"recipients"`
 }
