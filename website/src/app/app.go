@@ -38,6 +38,7 @@ import (
 	"personal-website-v2/pkg/actions"
 	actionlogging "personal-website-v2/pkg/actions/logging"
 	"personal-website-v2/pkg/app"
+	appresources "personal-website-v2/pkg/app/resources"
 	"personal-website-v2/pkg/app/service"
 	"personal-website-v2/pkg/app/service/config"
 	actionencoding "personal-website-v2/pkg/app/service/helper/loggingerror/encoding/actions"
@@ -67,7 +68,7 @@ import (
 	httpserverlogging "personal-website-v2/pkg/net/http/server/logging"
 	httpserverrouting "personal-website-v2/pkg/net/http/server/routing"
 	"personal-website-v2/pkg/web/identity/authn/cookies"
-	"personal-website-v2/pkg/web/resources"
+	webresources "personal-website-v2/pkg/web/resources"
 	"personal-website-v2/pkg/web/staticfiles"
 	"personal-website-v2/pkg/web/views"
 	wappconfig "personal-website-v2/website/src/app/config"
@@ -104,6 +105,8 @@ type Application struct {
 	wg                sync.WaitGroup
 	mu                sync.Mutex
 	done              chan struct{}
+
+	resources appresources.AppResources
 
 	identityManager identity.IdentityManager
 
@@ -255,6 +258,8 @@ func (a *Application) Start() (err error) {
 	a.env = env.NewEnvironment(a.config.Env)
 	a.info = app.NewApplicationInfo(a.config.AppInfo.Id, a.config.AppInfo.GroupId, a.config.AppInfo.Version)
 
+	a.configureResources()
+
 	if err = a.configureGrpcLogging(); err != nil {
 		return fmt.Errorf("[app.Application.Start] configure gRPC logging: %w", err)
 	}
@@ -336,6 +341,12 @@ func (a *Application) loadConfig() error {
 
 	a.config = config
 	return nil
+}
+
+func (a *Application) configureResources() {
+	if a.config.ResourceDir != nil {
+		a.resources = appresources.NewAppResources(*a.config.ResourceDir)
+	}
 }
 
 func (a *Application) startLoggingSession() error {
@@ -766,7 +777,7 @@ func (a *Application) configureHttpRouting(router *httpserverrouting.Router) err
 		return fmt.Errorf("[app.Application.configureHttpRouting] new page controller: %w", err)
 	}
 
-	rm := resources.NewResourceManager(a.config.Web.RootDir)
+	rm := webresources.NewResourceManager(a.config.Web.RootDir)
 	webResourceController, err := webrootcontrollers.NewWebResourceController(a.appSessionId.Value, a.actionManager, a.identityManager, rm, a.loggerFactory)
 	if err != nil {
 		return fmt.Errorf("[app.Application.configureHttpRouting] new web resource controller: %w", err)
