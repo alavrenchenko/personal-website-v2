@@ -318,5 +318,12 @@
             "dir": "web/root/static",
             "requestUrlPathPrefix": "/static/"
         }
+    },
+    "notifications": {
+        "email": {
+            "ContactMessages_MessageAdded": {
+                "recipients": []
+            }
+        }
     }
 }
