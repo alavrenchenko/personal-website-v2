@@ -15,28 +15,74 @@
 package manager
 
 import (
+	"errors"
 	"fmt"
 
 	"personal-website-v2/pkg/actions"
+	"personal-website-v2/pkg/app/service/config"
+	"personal-website-v2/pkg/base/datetime"
 	actionhelper "personal-website-v2/pkg/helper/actions"
 	"personal-website-v2/pkg/logging"
 	"personal-website-v2/pkg/logging/context"
+	"personal-website-v2/pkg/services/emailnotifier"
 	wactions "personal-website-v2/website/src/internal/actions"
 	"personal-website-v2/website/src/internal/contact"
+	messageemailnotifs "personal-website-v2/website/src/internal/contact/notifications/email/messages"
 	messageoperations "personal-website-v2/website/src/internal/contact/operations/messages"
 	"personal-website-v2/website/src/internal/logging/events"
 )
 
+type msgNotifConfig struct {
+	email *msgEmailNotifConfig
+}
+
+func newMsgNotifConfig(notifConfig config.Notifications) (*msgNotifConfig, error) {
+	if notifConfig.Email == nil {
+		return nil, errors.New("[manager.newMsgNotifConfig] email notification config is nil")
+	}
+
+	enc, err := newMsgEmailNotifConfig(notifConfig.Email)
+	if err != nil {
+		return nil, fmt.Errorf("[manager.newMsgNotifConfig] new msg email notif config: %w", err)
+	}
+
+	return &msgNotifConfig{
+		email: enc,
+	}, nil
+}
+
+type msgEmailNotifConfig struct {
+	messageAdded *config.EmailNotification
+}
+
+func newMsgEmailNotifConfig(notifConfig map[string]*config.EmailNotification) (*msgEmailNotifConfig, error) {
+	msgAddedConfig := notifConfig["ContactMessages_MessageAdded"]
+	if msgAddedConfig == nil {
+		return nil, errors.New("[manager.newMsgEmailNotifConfig] 'ContactMessages_MessageAdded' notification config is missing")
+	}
+
+	return &msgEmailNotifConfig{
+		messageAdded: msgAddedConfig,
+	}, nil
+}
+
 // ContactMessageManager is a contact message manager.
 type ContactMessageManager struct {
-	opExecutor   *actionhelper.OperationExecutor
-	messageStore contact.ContactMessageStore
-	logger       logging.Logger[*context.LogEntryContext]
+	opExecutor    *actionhelper.OperationExecutor
+	emailNotifier emailnotifier.EmailNotifier
+	messageStore  contact.ContactMessageStore
+	notifConfig   *msgNotifConfig
+	logger        logging.Logger[*context.LogEntryContext]
 }
 
 var _ contact.ContactMessageManager = (*ContactMessageManager)(nil)
 
-func NewContactMessageManager(messageStore contact.ContactMessageStore, loggerFactory logging.LoggerFactory[*context.LogEntryContext]) (*ContactMessageManager, error) {
+func NewContactMessageManager(
+	emailNotifier emailnotifier.EmailNotifier,
+	messageStore contact.ContactMessageStore,
+	notifConfig config.Notifications,
+	loggerFactory logging.LoggerFactory[*context.LogEntryContext],
+) (*ContactMessageManager, error) {
 	l, err := loggerFactory.CreateLogger("internal.contact.manager.ContactMessageManager")
 	if err != nil {
 		return nil, fmt.Errorf("[manager.NewContactMessageManager] create a logger: %w", err)
@@ -52,10 +98,17 @@ func NewContactMessageManager(messageStore contact.ContactMessageStore, loggerFa
 		return nil, fmt.Errorf("[manager.NewContactMessageManager] new operation executor: %w", err)
 	}
 
+	nc, err := newMsgNotifConfig(notifConfig)
+	if err != nil {
+		return nil, fmt.Errorf("[manager.NewContactMessageManager] new msg notif config: %w", err)
+	}
+
 	return &ContactMessageManager{
-		opExecutor:   e,
-		messageStore: messageStore,
-		logger:       l,
+		opExecutor:    e,
+		emailNotifier: emailNotifier,
+		messageStore:  messageStore,
+		notifConfig:   nc,
+		logger:        l,
 	}, nil
 }
 
@@ -74,12 +127,12 @@ func (m *ContactMessageManager) Create(ctx *actions.OperationContext, data *mess
 				return fmt.Errorf("[manager.ContactMessageManager.Create] create a message: %w", err)
 			}
 
-			m.logger.InfoWithEvent(
-				opCtx.CreateLogEntryContext(),
-				events.ContactMessageEvent,
+			m.logger.InfoWithEvent(opCtx.CreateLogEntryContext(), events.ContactMessageEvent,
 				"[manager.ContactMessageManager.Create] message has been created",
 				logging.NewField("id", id),
 			)
+
+			m.sendMessageAddedNotif(opCtx, id, data)
 			return nil
 		},
 	)
@@ -87,4 +140,23 @@ func (m *ContactMessageManager) Create(ctx *actions.OperationContext, data *mess
 		return 0, fmt.Errorf("[manager.ContactMessageManager.Create] execute an operation: %w", err)
 	}
 	return id, nil
+}
+
+func (m *ContactMessageManager) sendMessageAddedNotif(ctx *actions.OperationContext, msgId uint64, data *messageoperations.CreateOperationData) {
+	leCtx := ctx.CreateLogEntryContext()
+	tdata := messageemailnotifs.NewMessageAddedNotifTmplData(datetime.Now(), data.Name, data.Email)
+	id, err := m.emailNotifier.SendUsingTemplate(ctx, m.notifConfig.email.messageAdded.Recipients,
+		messageemailnotifs.MessageAddedNotifSubject, messageemailnotifs.MessageAddedNotifTmplName, tdata,
+	)
+	if err != nil {
+		m.logger.ErrorWithEvent(leCtx, events.ContactMessageEvent, err,
+			"[manager.ContactMessageManager.sendMessageAddedNotif] send an email notification using a template",
+			logging.NewField("messageId", msgId),
+		)
+	}
+
+	m.logger.InfoWithEvent(leCtx, events.ContactMessageEvent, "[manager.ContactMessageManager.sendMessageAddedNotif] email notification has been sent",
+		logging.NewField("notificationId", id),
+		logging.NewField("messageId", msgId),
+	)
 }
