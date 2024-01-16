@@ -6,6 +6,7 @@
     },
     "env": "development",
     "userId": 1,
+    "resourceDir": "../resources",
     "logging": {
         "minLogLevel": "trace",
         "maxLogLevel": "fatal",
