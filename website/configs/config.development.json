@@ -319,6 +319,61 @@
             "requestUrlPathPrefix": "/static/"
         }
     },
+    "services": {
+        "emailNotifier": {
+            "kafka": {
+                "kafkaConfig": {
+                    "addrs": [
+                        "localhost:9092"
+                    ],
+                    "net": {
+                        "maxOpenRequests": 5,
+                        "dialTimeout": 10000,
+                        "readTimeout": 10000,
+                        "writeTimeout": 10000,
+                        "keepAlive": 0
+                    },
+                    "metadata": {
+                        "retry": {
+                            "max": 5,
+                            "backoff": 100
+                        },
+                        "refreshFrequency": 30000,
+                        "full": false,
+                        "allowAutoTopicCreation": false
+                    },
+                    "producer": {
+                        "maxMessageBytes": 1048576,
+                        "requiredAcks": "WaitForAll",
+                        "timeout": 10000,
+                        "compression": "snappy",
+                        "idempotent": false,
+                        "flush": {
+                            "bytes": 10485760,
+                            "messages": 100,
+                            "frequency": 5,
+                            "maxMessages": 100
+                        },
+                        "retry": {
+                            "max": 5,
+                            "backoff": 100
+                        }
+                    },
+                    "clientId": "WebsiteEmailNotifier",
+                    "channelBufferSize": 1024,
+                    "version": "3.5.0"
+                },
+                "asyncProducer": true
+            },
+            "notificationGroups": {
+                "website.contactMessages": {
+                    "kafka": {
+                        "notificationTopic": "website.email_notifier.notifications"
+                    }
+                }
+            }
+        }
+    },
     "notifications": {
         "email": {
             "ContactMessages_MessageAdded": {
