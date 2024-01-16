@@ -28,28 +28,30 @@ import (
 )
 
 type AppConfig[TApis any] struct {
-	AppInfo *AppInfo `json:"appInfo"`
-	Env     string   `json:"env"`
-	UserId  uint64   `json:"userId"`
-	Logging *Logging `json:"logging"`
-	Actions *Actions `json:"actions"`
-	Net     *Net     `json:"net"`
-	Db      *Db      `json:"db"`
-	Apis    TApis    `json:"apis"`
-	Auth    *Auth    `json:"auth"`
+	AppInfo     *AppInfo `json:"appInfo"`
+	Env         string   `json:"env"`
+	UserId      uint64   `json:"userId"`
+	ResourceDir *string  `json:"resourceDir"`
+	Logging     *Logging `json:"logging"`
+	Actions     *Actions `json:"actions"`
+	Net         *Net     `json:"net"`
+	Db          *Db      `json:"db"`
+	Apis        TApis    `json:"apis"`
+	Auth        *Auth    `json:"auth"`
 }
 
 type WebAppConfig[TApis any] struct {
-	AppInfo *AppInfo `json:"appInfo"`
-	Env     string   `json:"env"`
-	UserId  uint64   `json:"userId"`
-	Logging *Logging `json:"logging"`
-	Actions *Actions `json:"actions"`
-	Net     *Net     `json:"net"`
-	Db      *Db      `json:"db"`
-	Apis    TApis    `json:"apis"`
-	Auth    *Auth    `json:"auth"`
-	Web     *Web     `json:"web"`
+	AppInfo     *AppInfo `json:"appInfo"`
+	Env         string   `json:"env"`
+	UserId      uint64   `json:"userId"`
+	ResourceDir *string  `json:"resourceDir"`
+	Logging     *Logging `json:"logging"`
+	Actions     *Actions `json:"actions"`
+	Net         *Net     `json:"net"`
+	Db          *Db      `json:"db"`
+	Apis        TApis    `json:"apis"`
+	Auth        *Auth    `json:"auth"`
+	Web         *Web     `json:"web"`
 }
 
 type AppInfo struct {
