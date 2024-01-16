@@ -69,7 +69,7 @@ type EmailNotifier interface {
 	SendUsingTemplate(ctx *actions.OperationContext, recipients []string, subject string, tmplName string, tmplData any) (uuid.UUID, error)
 }
 
-type ntfBodyTmpl struct {
+type notifBodyTmpl struct {
 	content []byte
 	tmpl    *template.Template
 }
@@ -79,10 +79,10 @@ type emailNotifier struct {
 	emailNotifierId uint16
 	appSessionId    uint64
 	idGenerator     *idGenerator
-	tmpls           map[string]*ntfBodyTmpl // map[TemplateName]Template
+	tmpls           map[string]*notifBodyTmpl // map[TemplateName]Template
 	config          *Config
 	opExecutor      *actionhelper.OperationExecutor
-	ntfFormatter    *protobuf.NotificationFormatter
+	notifFormatter  *protobuf.NotificationFormatter
 	producer        kafka.Producer
 	logger          logging.Logger[*lcontext.LogEntryContext]
 	loggerCtx       *lcontext.LogEntryContext
@@ -111,13 +111,13 @@ func NewEmailNotifier(
 		return nil, fmt.Errorf("[emailnotifier.NewEmailNotifier] new operation executor: %w", err)
 	}
 
-	ts := make(map[string]*ntfBodyTmpl, len(templates))
+	ts := make(map[string]*notifBodyTmpl, len(templates))
 	for n, c := range templates {
 		t, err := template.New(n).Parse(unsafe.String(unsafe.SliceData(c), len(c)))
 		if err != nil {
 			return nil, fmt.Errorf("[emailnotifier.NewEmailNotifier] parse the template content: %w", err)
 		}
-		ts[n] = &ntfBodyTmpl{content: c, tmpl: t}
+		ts[n] = &notifBodyTmpl{content: c, tmpl: t}
 	}
 
 	n := &emailNotifier{
@@ -250,7 +250,7 @@ func (n *emailNotifier) send(ctx *actions.OperationContext, recipients []string,
 		return uuid.UUID{}, fmt.Errorf("[emailnotifier.emailNotifier.send] get id from idGenerator: %w", err)
 	}
 
-	ntf := &models.Notification{
+	notif := &models.Notification{
 		Id:         id,
 		CreatedAt:  datetime.Now(),
 		CreatedBy:  ctx.UserId.Value,
@@ -262,7 +262,7 @@ func (n *emailNotifier) send(ctx *actions.OperationContext, recipients []string,
 		},
 	}
 
-	b, err := n.ntfFormatter.Format(ntf)
+	b, err := n.notifFormatter.Format(notif)
 	if err != nil {
 		return uuid.UUID{}, fmt.Errorf("[emailnotifier.emailNotifier.send] format a notification: %w", err)
 	}
@@ -272,7 +272,7 @@ func (n *emailNotifier) send(ctx *actions.OperationContext, recipients []string,
 		Topic:    n.config.KafkaTopic,
 		Key:      tranId[:],
 		Value:    b,
-		Metadata: ntf,
+		Metadata: notif,
 	}
 
 	if err = n.producer.SendMessage(msg); err != nil {
@@ -281,8 +281,8 @@ func (n *emailNotifier) send(ctx *actions.OperationContext, recipients []string,
 
 	n.logger.InfoWithEvent(ctx.CreateLogEntryContext(), events.EmailNotifierEvent, "[emailnotifier.emailNotifier.send] notification has been sent",
 		logging.NewField("id", id),
-		logging.NewField("createdAt", ntf.CreatedAt),
-		logging.NewField("createdBy", ntf.CreatedBy),
+		logging.NewField("createdAt", notif.CreatedAt),
+		logging.NewField("createdBy", notif.CreatedBy),
 		logging.NewField("recipients", recipients),
 		logging.NewField("subject", subject),
 	)
@@ -300,12 +300,12 @@ func (n *emailNotifier) onCompletion(msg *kafka.ProducerMessage, err error) {
 	// </test>
 
 	if err != nil {
-		ntf := msg.Metadata.(*models.Notification)
+		notif := msg.Metadata.(*models.Notification)
 		n.logger.ErrorWithEvent(n.loggerCtx, events.EmailNotifierEvent, err,
 			"[emailnotifier.emailNotifier.onCompletion] an error occurred while sending a notification to kafka",
-			logging.NewField("id", ntf.Id),
-			logging.NewField("recipients", ntf.Recipients),
-			logging.NewField("subject", ntf.Subject),
+			logging.NewField("id", notif.Id),
+			logging.NewField("recipients", notif.Recipients),
+			logging.NewField("subject", notif.Subject),
 		)
 	}
 }
