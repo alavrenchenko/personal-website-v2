@@ -53,20 +53,14 @@ const (
 
 var emailNotifierIdCounter atomic.Int32
 
-type Config struct {
-	Kafka              *kafka.Config
-	AsyncKafkaProducer bool
-	KafkaTopic         string
-}
-
 // EmailNotifier is email notification sender.
 type EmailNotifier interface {
 	// Send sends an email notification and returns the notification ID if the operation is successful.
-	Send(ctx *actions.OperationContext, recipients []string, subject string, body []byte) (uuid.UUID, error)
+	Send(ctx *actions.OperationContext, notifGroup string, recipients []string, subject string, body []byte) (uuid.UUID, error)
 
 	// SendUsingTemplate sends an email notification using a template and returns the notification ID
 	// if the operation is successful.
-	SendUsingTemplate(ctx *actions.OperationContext, recipients []string, subject string, tmplName string, tmplData any) (uuid.UUID, error)
+	SendUsingTemplate(ctx *actions.OperationContext, notifGroup string, recipients []string, subject string, tmplName string, tmplData any) (uuid.UUID, error)
 }
 
 type notifBodyTmpl struct {
@@ -128,14 +122,14 @@ func NewEmailNotifier(
 		logger:       l,
 	}
 
-	if config.Kafka.Producer.OnCompletion == nil {
-		config.Kafka.Producer.OnCompletion = n.onCompletion
+	if config.Kafka.Config.Producer.OnCompletion == nil {
+		config.Kafka.Config.Producer.OnCompletion = n.onCompletion
 	}
-	if len(config.Kafka.ClientId) == 0 {
-		config.Kafka.ClientId = defaultKafkaClientId
+	if len(config.Kafka.Config.ClientId) == 0 {
+		config.Kafka.Config.ClientId = defaultKafkaClientId
 	}
 
-	p, err := kafka.NewProducer(config.Kafka, config.AsyncKafkaProducer)
+	p, err := kafka.NewProducer(config.Kafka.Config, config.Kafka.AsyncProducer)
 	if err != nil {
 		return nil, fmt.Errorf("[emailnotifier.NewEmailNotifier] new producer: %w", err)
 	}
@@ -160,7 +154,7 @@ func NewEmailNotifier(
 }
 
 // Send sends an email notification and returns the notification ID if the operation is successful.
-func (n *emailNotifier) Send(ctx *actions.OperationContext, recipients []string, subject string, body []byte) (uuid.UUID, error) {
+func (n *emailNotifier) Send(ctx *actions.OperationContext, notifGroup string, recipients []string, subject string, body []byte) (uuid.UUID, error) {
 	if n.disposed.Load() {
 		return uuid.UUID{}, errors.New("[emailnotifier.emailNotifier.Send] emailNotifier was disposed")
 	}
@@ -170,7 +164,7 @@ func (n *emailNotifier) Send(ctx *actions.OperationContext, recipients []string,
 		[]*actions.OperationParam{actions.NewOperationParam("recipients", recipients), actions.NewOperationParam("subject", subject)},
 		func(opCtx *actions.OperationContext) error {
 			var err error
-			if id, err = n.send(opCtx, recipients, subject, body); err != nil {
+			if id, err = n.send(opCtx, notifGroup, recipients, subject, body); err != nil {
 				return fmt.Errorf("[emailnotifier.emailNotifier.Send] send a notification: %w", err)
 			}
 			return nil
@@ -184,7 +178,7 @@ func (n *emailNotifier) Send(ctx *actions.OperationContext, recipients []string,
 
 // SendUsingTemplate sends an email notification using a template and returns the notification ID
 // if the operation is successful.
-func (n *emailNotifier) SendUsingTemplate(ctx *actions.OperationContext, recipients []string, subject string, tmplName string, tmplData any) (uuid.UUID, error) {
+func (n *emailNotifier) SendUsingTemplate(ctx *actions.OperationContext, notifGroup string, recipients []string, subject string, tmplName string, tmplData any) (uuid.UUID, error) {
 	if n.disposed.Load() {
 		return uuid.UUID{}, errors.New("[emailnotifier.emailNotifier.SendUsingTemplate] emailNotifier was disposed")
 	}
@@ -217,7 +211,7 @@ func (n *emailNotifier) SendUsingTemplate(ctx *actions.OperationContext, recipie
 			}
 
 			var err error
-			if id, err = n.send(opCtx, recipients, subject, b); err != nil {
+			if id, err = n.send(opCtx, notifGroup, recipients, subject, b); err != nil {
 				return fmt.Errorf("[emailnotifier.emailNotifier.SendUsingTemplate] send a notification: %w", err)
 			}
 			return nil
@@ -229,9 +223,12 @@ func (n *emailNotifier) SendUsingTemplate(ctx *actions.OperationContext, recipie
 	return id, nil
 }
 
-func (n *emailNotifier) send(ctx *actions.OperationContext, recipients []string, subject string, body []byte) (uuid.UUID, error) {
+func (n *emailNotifier) send(ctx *actions.OperationContext, notifGroup string, recipients []string, subject string, body []byte) (uuid.UUID, error) {
 	if !ctx.UserId.HasValue {
 		return uuid.UUID{}, errors.New("[emailnotifier.emailNotifier.send] userId is null")
+	}
+	if strings.IsEmptyOrWhitespace(notifGroup) {
+		return uuid.UUID{}, errs.NewError(errs.ErrorCodeInvalidData, "notifGroup is empty")
 	}
 	for i := 0; i < len(recipients); i++ {
 		if _, err := mail.ParseAddress(recipients[i]); err != nil {
@@ -245,6 +242,11 @@ func (n *emailNotifier) send(ctx *actions.OperationContext, recipients []string,
 		return uuid.UUID{}, errs.NewError(errs.ErrorCodeInvalidData, "body is nil or empty")
 	}
 
+	gc := n.config.NotificationGroups[notifGroup]
+	if gc == nil {
+		return uuid.UUID{}, errors.New("[emailnotifier.emailNotifier.send] notification group config is missing")
+	}
+
 	id, err := n.idGenerator.get()
 	if err != nil {
 		return uuid.UUID{}, fmt.Errorf("[emailnotifier.emailNotifier.send] get id from idGenerator: %w", err)
@@ -254,6 +256,7 @@ func (n *emailNotifier) send(ctx *actions.OperationContext, recipients []string,
 		Id:         id,
 		CreatedAt:  datetime.Now(),
 		CreatedBy:  ctx.UserId.Value,
+		Group:      notifGroup,
 		Recipients: recipients,
 		Subject:    subject,
 		Body:       body,
@@ -269,7 +272,7 @@ func (n *emailNotifier) send(ctx *actions.OperationContext, recipients []string,
 
 	tranId := ctx.Transaction.Id()
 	msg := &kafka.ProducerMessage{
-		Topic:    n.config.KafkaTopic,
+		Topic:    gc.Kafka.NotificationTopic,
 		Key:      tranId[:],
 		Value:    b,
 		Metadata: notif,
@@ -283,6 +286,7 @@ func (n *emailNotifier) send(ctx *actions.OperationContext, recipients []string,
 		logging.NewField("id", id),
 		logging.NewField("createdAt", notif.CreatedAt),
 		logging.NewField("createdBy", notif.CreatedBy),
+		logging.NewField("group", notifGroup),
 		logging.NewField("recipients", recipients),
 		logging.NewField("subject", subject),
 	)
@@ -304,6 +308,7 @@ func (n *emailNotifier) onCompletion(msg *kafka.ProducerMessage, err error) {
 		n.logger.ErrorWithEvent(n.loggerCtx, events.EmailNotifierEvent, err,
 			"[emailnotifier.emailNotifier.onCompletion] an error occurred while sending a notification to kafka",
 			logging.NewField("id", notif.Id),
+			logging.NewField("group", notif.Group),
 			logging.NewField("recipients", notif.Recipients),
 			logging.NewField("subject", notif.Subject),
 		)

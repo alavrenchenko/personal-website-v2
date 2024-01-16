@@ -20,6 +20,10 @@ import (
 	"github.com/google/uuid"
 )
 
+// Notification group names have the following formats:
+// SERVICE, SERVICE.RESOURCE_TYPE, SERVICE:ANY_NAME or SERVICE.RESOURCE_TYPE:ANY_NAME
+// For example, website, website.contactMessages, website:notifications, website.contactMessages:notifications.
+
 // The notification.
 type Notification struct {
 	// The unique ID to identify the notification.
@@ -30,6 +34,9 @@ type Notification struct {
 
 	// The user ID to identify the user who created the notification.
 	CreatedBy uint64
+
+	// The notification group name.
+	Group string
 
 	// The notification recipients.
 	Recipients []string
