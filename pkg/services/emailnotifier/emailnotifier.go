@@ -53,7 +53,7 @@ const (
 
 var emailNotifierIdCounter atomic.Int32
 
-// EmailNotifier is email notification sender.
+// EmailNotifier is an email notification sender.
 type EmailNotifier interface {
 	// Send sends an email notification and returns the notification ID if the operation is successful.
 	Send(ctx *actions.OperationContext, notifGroup string, recipients []string, subject string, body []byte) (uuid.UUID, error)
@@ -71,7 +71,7 @@ type notifBodyTmpl struct {
 	tmpl    *template.Template
 }
 
-// emailNotifier is email notification sender.
+// emailNotifier is an email notification sender.
 type emailNotifier struct {
 	emailNotifierId uint16
 	appSessionId    uint64
