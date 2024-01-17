@@ -67,6 +67,7 @@ import (
 	httpserver "personal-website-v2/pkg/net/http/server"
 	httpserverlogging "personal-website-v2/pkg/net/http/server/logging"
 	httpserverrouting "personal-website-v2/pkg/net/http/server/routing"
+	"personal-website-v2/pkg/services/emailnotifier"
 	"personal-website-v2/pkg/web/identity/authn/cookies"
 	webresources "personal-website-v2/pkg/web/resources"
 	"personal-website-v2/pkg/web/staticfiles"
@@ -99,7 +100,7 @@ type Application struct {
 	fileLoggerFactory logging.LoggerFactory[*context.LogEntryContext]
 	fileLogger        logging.Logger[*context.LogEntryContext]
 	configPath        string
-	config            *config.WebAppConfig[*wappconfig.Apis]
+	config            *config.WebAppConfig[*wappconfig.Apis, wappconfig.Services]
 	isStarted         atomic.Bool
 	isStopped         bool
 	wg                sync.WaitGroup
@@ -123,6 +124,8 @@ type Application struct {
 	appManagerService     *appmanager.AppManagerService
 	loggingManagerService *loggingmanager.LoggingManagerService
 	identityService       *identityclient.IdentityService
+
+	emailNotifier emailnotifier.EmailNotifier
 
 	contactMessageManager *contactmanager.ContactMessageManager
 }
@@ -334,7 +337,7 @@ func (a *Application) loadConfig() error {
 		return fmt.Errorf("[app.Application.loadConfig] read a file: %w", err)
 	}
 
-	config := new(config.WebAppConfig[*wappconfig.Apis])
+	config := new(config.WebAppConfig[*wappconfig.Apis, wappconfig.Services])
 	if err = json.Unmarshal(c, config); err != nil {
 		return fmt.Errorf("[app.Application.loadConfig] unmarshal JSON-encoded data (config): %w", err)
 	}
@@ -683,7 +686,18 @@ func (a *Application) configureDb() error {
 }
 
 func (a *Application) configure() error {
-	contactMessageManager, err := contactmanager.NewContactMessageManager(a.postgresManager.Stores.ContactMessageStore(), a.loggerFactory)
+	rs, err := a.resources.Get("notifications/email/templates")
+	if err != nil {
+		return fmt.Errorf("[app.Application.configure] get resources ('notifications/email/templates'): %w", err)
+	}
+
+	emailNotifier, err := emailnotifier.NewEmailNotifier(a.appSessionId.Value, rs, a.config.Services.EmailNotifier.Config(), a.loggerFactory)
+	if err != nil {
+		return fmt.Errorf("[app.Application.configure] new email notifier: %w", err)
+	}
+	a.emailNotifier = emailNotifier
+
+	contactMessageManager, err := contactmanager.NewContactMessageManager(emailNotifier, a.postgresManager.Stores.ContactMessageStore(), a.config.Notifications, a.loggerFactory)
 	if err != nil {
 		return fmt.Errorf("[app.Application.configure] new contact message manager: %w", err)
 	}
@@ -924,6 +938,12 @@ func (a *Application) stop(ctx *actions.OperationContext) {
 	if a.httpServerLogger != nil {
 		if err := a.httpServerLogger.Dispose(); err != nil {
 			a.logWithContext(leCtx, logging.LogLevelError, events.ApplicationEvent, err, "[app.Application.stop] dispose of the HTTP server logger")
+		}
+	}
+
+	if a.emailNotifier != nil {
+		if err := a.emailNotifier.Dispose(); err != nil {
+			a.logWithContext(leCtx, logging.LogLevelError, events.ApplicationEvent, err, "[app.Application.stop] dispose of the email notifier")
 		}
 	}
 
