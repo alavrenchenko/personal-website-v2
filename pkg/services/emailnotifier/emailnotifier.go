@@ -61,6 +61,9 @@ type EmailNotifier interface {
 	// SendUsingTemplate sends an email notification using a template and returns the notification ID
 	// if the operation is successful.
 	SendUsingTemplate(ctx *actions.OperationContext, notifGroup string, recipients []string, subject string, tmplName string, tmplData any) (uuid.UUID, error)
+
+	// Dispose disposes of the EmailNotifier.
+	Dispose() error
 }
 
 type notifBodyTmpl struct {
@@ -315,6 +318,7 @@ func (n *emailNotifier) onCompletion(msg *kafka.ProducerMessage, err error) {
 	}
 }
 
+// Dispose disposes of the emailNotifier.
 func (n *emailNotifier) Dispose() error {
 	if n.disposed.Load() {
 		return nil
