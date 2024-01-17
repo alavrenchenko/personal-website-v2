@@ -145,7 +145,7 @@ func (m *ContactMessageManager) Create(ctx *actions.OperationContext, data *mess
 func (m *ContactMessageManager) sendMessageAddedNotif(ctx *actions.OperationContext, msgId uint64, data *messageoperations.CreateOperationData) {
 	leCtx := ctx.CreateLogEntryContext()
 	tdata := messageemailnotifs.NewMessageAddedNotifTmplData(datetime.Now(), data.Name, data.Email)
-	id, err := m.emailNotifier.SendUsingTemplate(ctx, m.notifConfig.email.messageAdded.Recipients,
+	id, err := m.emailNotifier.SendUsingTemplate(ctx, messageemailnotifs.NotifGroup, m.notifConfig.email.messageAdded.Recipients,
 		messageemailnotifs.MessageAddedNotifSubject, messageemailnotifs.MessageAddedNotifTmplName, tdata,
 	)
 	if err != nil {
