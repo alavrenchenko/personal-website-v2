@@ -28,6 +28,9 @@ var (
 	errUnmarshalNilSASLMechanism    = errors.New("[kafka] can't unmarshal a nil *SASLMechanism")
 	errUnmarshalNilCompressionCodec = errors.New("[kafka] can't unmarshal a nil *CompressionCodec")
 	errUnmarshalNilRequiredAcks     = errors.New("[kafka] can't unmarshal nil *RequiredAcks")
+	errUnmarshalNilBalanceStrategy  = errors.New("[kafka] can't unmarshal nil *BalanceStrategy")
+	errUnmarshalNilConsumerOffset   = errors.New("[kafka] can't unmarshal nil *ConsumerOffset")
+	errUnmarshalNilIsolationLevel   = errors.New("[kafka] can't unmarshal nil *IsolationLevel")
 )
 
 type SASLMechanism uint8
@@ -182,11 +185,154 @@ func (c *CompressionCodec) UnmarshalText(text []byte) error {
 	return nil
 }
 
+type BalanceStrategy uint8
+
+const (
+	// BalanceStrategyRange identifies strategies that use the range partition assignment strategy.
+	BalanceStrategyRange BalanceStrategy = iota
+
+	// BalanceStrategyRoundRobin identifies strategies that use the round-robin partition assignment strategy.
+	BalanceStrategyRoundRobin
+
+	// BalanceStrategySticky identifies strategies that use the sticky-partition assignment strategy.
+	BalanceStrategySticky
+)
+
+func (s BalanceStrategy) String() string {
+	switch s {
+	case BalanceStrategyRange:
+		return "range"
+	case BalanceStrategyRoundRobin:
+		return "roundrobin"
+	case BalanceStrategySticky:
+		return "sticky"
+	}
+	return fmt.Sprintf("BalanceStrategy(%d)", s)
+}
+
+func (s BalanceStrategy) MarshalText() ([]byte, error) {
+	return []byte(s.String()), nil
+}
+
+func (s *BalanceStrategy) UnmarshalText(text []byte) error {
+	if s == nil {
+		return errUnmarshalNilBalanceStrategy
+	}
+
+	switch string(bytes.ToLower(text)) {
+	case "range":
+		*s = BalanceStrategyRange
+	case "roundrobin":
+		*s = BalanceStrategyRoundRobin
+	case "sticky":
+		*s = BalanceStrategySticky
+	default:
+		return fmt.Errorf("unknown BalanceStrategy: %q", text)
+	}
+	return nil
+}
+
+type ConsumerOffset int64
+
+const (
+	// ConsumerOffsetNewest stands for the log head offset, i.e. the offset that will be
+	// assigned to the next message that will be produced to the partition. You
+	// can send this to a client's GetOffset method to get this offset, or when
+	// calling ConsumePartition to start consuming new messages.
+	ConsumerOffsetNewest ConsumerOffset = -1
+
+	// ConsumerOffsetOldest stands for the oldest offset available on the broker for a
+	// partition. You can send this to a client's GetOffset method to get this
+	// offset, or when calling ConsumePartition to start consuming from the
+	// oldest offset that is still available on the broker.
+	ConsumerOffsetOldest ConsumerOffset = -2
+)
+
+func (o ConsumerOffset) String() string {
+	switch o {
+	case ConsumerOffsetNewest:
+		return "Newest"
+	case ConsumerOffsetOldest:
+		return "Oldest"
+	}
+	return fmt.Sprintf("ConsumerOffset(%d)", o)
+}
+
+func (a ConsumerOffset) MarshalText() ([]byte, error) {
+	return []byte(a.String()), nil
+}
+
+func (a *ConsumerOffset) UnmarshalText(text []byte) error {
+	if a == nil {
+		return errUnmarshalNilConsumerOffset
+	}
+
+	switch string(text) {
+	case "Newest":
+		*a = ConsumerOffsetNewest
+	case "Oldest":
+		*a = ConsumerOffsetOldest
+	default:
+		return fmt.Errorf("unknown ConsumerOffset: %q", text)
+	}
+	return nil
+}
+
+type IsolationLevel uint8
+
+const (
+	IsolationLevelReadUncommitted IsolationLevel = iota
+	IsolationLevelReadCommitted
+)
+
+func (s IsolationLevel) String() string {
+	switch s {
+	case IsolationLevelReadUncommitted:
+		return "ReadUncommitted"
+	case IsolationLevelReadCommitted:
+		return "ReadCommitted"
+	}
+	return fmt.Sprintf("IsolationLevel(%d)", s)
+}
+
+func (s IsolationLevel) MarshalText() ([]byte, error) {
+	return []byte(s.String()), nil
+}
+
+func (s *IsolationLevel) UnmarshalText(text []byte) error {
+	if s == nil {
+		return errUnmarshalNilIsolationLevel
+	}
+
+	switch string(text) {
+	case "ReadUncommitted":
+		*s = IsolationLevelReadUncommitted
+	case "ReadCommitted":
+		*s = IsolationLevelReadCommitted
+	default:
+		return fmt.Errorf("unknown IsolationLevel: %q", text)
+	}
+	return nil
+}
+
 type Config struct {
-	Addrs    []string
-	Net      *NetConfig
+	Addrs []string
+
+	// Net is the namespace for network-level properties used by the Broker, and
+	// shared by the Client/Producer/Consumer.
+	Net *NetConfig
+
+	// Metadata is the namespace for metadata management properties used by the
+	// Client, and shared by the Producer/Consumer.
 	Metadata *MetadataConfig
+
+	// Producer is the namespace for configuration related to producing messages,
+	// used by the Producer.
 	Producer *ProducerConfig
+
+	// Consumer is the namespace for configuration related to consuming messages,
+	// used by the Consumer.
+	Consumer *ConsumerConfig
 
 	// A user-provided string sent with every request to the brokers for logging,
 	// debugging, and auditing purposes. Defaults to "sarama", but you should
@@ -298,7 +444,9 @@ type ProducerConfig struct {
 }
 
 type ProducerFlushConfig struct {
-	// The best-effort number of bytes needed to trigger a flush.
+	// The best-effort number of bytes needed to trigger a flush. Use the
+	// global kafka.SetMaxRequestSize() (or sarama.MaxRequestSize) to set
+	// a hard upper limit.
 	Bytes int
 
 	// The best-effort number of messages needed to trigger a flush. Use
@@ -322,4 +470,184 @@ type ProducerRetryConfig struct {
 
 	// Similar to the `retry.backoff.ms` setting of the JVM producer.
 	Backoff time.Duration
+}
+
+type ConsumerConfig struct {
+	// Group is the namespace for configuring consumer group.
+	Group *ConsumerGroupConfig
+
+	Retry *ConsumerRetryConfig
+
+	// Fetch is the namespace for controlling how many bytes are retrieved by any
+	// given request.
+	Fetch *ConsumerFetchConfig
+
+	// The maximum amount of time the broker will wait for Consumer.Fetch.Min
+	// bytes to become available before it returns fewer than that anyways.
+	// The value of 0 causes the consumer to spin when no events are
+	// available. 100-500ms is a reasonable range for most cases. Kafka only
+	// supports precision up to milliseconds; nanoseconds will be truncated.
+	// Equivalent to the JVM's `fetch.wait.max.ms`.
+	MaxWaitTime time.Duration
+
+	// The maximum amount of time the consumer expects a message takes to
+	// process for the user. If writing to the Messages channel takes longer
+	// than this, that partition will stop fetching more messages until it
+	// can proceed again.
+	// Note that, since the Messages channel is buffered, the actual grace time is
+	// (MaxProcessingTime * ChannelBufferSize).
+	// If a message is not written to the Messages channel between two ticks
+	// of the expiryTicker then a timeout is detected.
+	// Using a ticker instead of a timer to detect timeouts should typically
+	// result in many fewer calls to Timer functions which may result in a
+	// significant performance improvement if many messages are being sent
+	// and timeouts are infrequent.
+	// The disadvantage of using a ticker instead of a timer is that
+	// timeouts will be less accurate. That is, the effective timeout could
+	// be between `MaxProcessingTime` and `2 * MaxProcessingTime`. For
+	// example, if `MaxProcessingTime` is 100ms then a delay of 180ms
+	// between two messages being sent may not be recognized as a timeout.
+	MaxProcessingTime time.Duration
+
+	// Offsets specifies configuration for how and when to commit consumed offsets.
+	Offsets *ConsumerOffsetsConfig
+
+	// IsolationLevel supports 2 modes:
+	// 	- use `IsolationLevelReadUncommitted` (sarama.ReadUncommitted) to consume and return all messages in message channel;
+	//	- use `IsolationLevelReadCommitted` (sarama.ReadCommitted) to hide messages that are part of an aborted transaction.
+	IsolationLevel IsolationLevel
+}
+
+type ConsumerGroupConfig struct {
+	Session   *ConsumerGroupSessionConfig
+	Heartbeat *ConsumerGroupHeartbeatConfig
+	Rebalance *ConsumerGroupRebalanceConfig
+	Member    *ConsumerGroupMemberConfig
+
+	// support KIP-345
+	InstanceId string
+
+	// If true, consumer offsets will be automatically reset to configured Initial value
+	// if the fetched consumer offset is out of range of available offsets. Out of range
+	// can happen if the data has been deleted from the server, or during situations of
+	// under-replication where a replica does not have all the data yet. It can be
+	// dangerous to reset the offset automatically, particularly in the latter case. Defaults
+	// to true to maintain existing behavior.
+	ResetInvalidOffsets bool
+}
+
+type ConsumerGroupSessionConfig struct {
+	// The timeout used to detect consumer failures when using Kafka's group management facility.
+	// The consumer sends periodic heartbeats to indicate its liveness to the broker.
+	// If no heartbeats are received by the broker before the expiration of this session timeout,
+	// then the broker will remove this consumer from the group and initiate a rebalance.
+	// Note that the value must be in the allowable range as configured in the broker configuration
+	// by `group.min.session.timeout.ms` and `group.max.session.timeout.ms`.
+	Timeout time.Duration
+}
+
+type ConsumerGroupHeartbeatConfig struct {
+	// The expected time between heartbeats to the consumer coordinator when using Kafka's group
+	// management facilities. Heartbeats are used to ensure that the consumer's session stays active and
+	// to facilitate rebalancing when new consumers join or leave the group.
+	// The value must be set lower than Consumer.Group.Session.Timeout, but typically should be set no
+	// higher than 1/3 of that value.
+	// It can be adjusted even lower to control the expected time for normal rebalances.
+	Interval time.Duration
+}
+
+type ConsumerGroupRebalanceConfig struct {
+	// GroupStrategies is the priority-ordered list of client-side consumer group
+	// balancing strategies that will be offered to the coordinator. The first
+	// strategy that all group members support will be chosen by the leader.
+	GroupStrategies []BalanceStrategy
+
+	// The maximum allowed time for each worker to join the group once a rebalance has begun.
+	// This is basically a limit on the amount of time needed for all tasks to flush any pending
+	// data and commit offsets. If the timeout is exceeded, then the worker will be removed from
+	// the group, which will cause offset commit failures.
+	Timeout time.Duration
+
+	Retry *ConsumerGroupRebalanceRetryConfig
+}
+
+type ConsumerGroupRebalanceRetryConfig struct {
+	// When a new consumer joins a consumer group the set of consumers attempt to "rebalance"
+	// the load to assign partitions to each consumer. If the set of consumers changes while
+	// this assignment is taking place the rebalance will fail and retry. This setting controls
+	// the maximum number of attempts before giving up.
+	Max int
+
+	// Backoff time between retries during rebalance.
+	Backoff time.Duration
+}
+
+type ConsumerGroupMemberConfig struct {
+	// Custom metadata to include when joining the group. The user data for all joined members
+	// can be retrieved by sending a DescribeGroupRequest to the broker that is the
+	// coordinator for the group.
+	UserData []byte
+}
+
+type ConsumerRetryConfig struct {
+	// How long to wait after a failing to read from a partition before
+	// trying again.
+	Backoff time.Duration
+}
+
+type ConsumerFetchConfig struct {
+	// The minimum number of message bytes to fetch in a request - the broker
+	// will wait until at least this many are available. The value of 0 causes
+	// the consumer to spin when no messages are available.
+	// Equivalent to the JVM's `fetch.min.bytes`.
+	Min int32
+
+	// The default number of message bytes to fetch from the broker in each
+	// request. This should be larger than the majority of
+	// your messages, or else the consumer will spend a lot of time
+	// negotiating sizes and not actually consuming. Similar to the JVM's
+	// `fetch.message.max.bytes`.
+	Default int32
+
+	// The maximum number of message bytes to fetch from the broker in a
+	// single request. Messages larger than this will return
+	// ErrMessageTooLarge and will not be consumable, so you must be sure
+	// this is at least as large as your largest message. Defaults to 0
+	// (no limit). Similar to the JVM's `fetch.message.max.bytes`. The
+	// global `sarama.MaxResponseSize` still applies.
+	Max int32
+}
+
+type ConsumerOffsetsConfig struct {
+	// AutoCommit specifies configuration for commit messages automatically.
+	AutoCommit *ConsumerOffsetsAutoCommitConfig
+
+	// The initial offset to use if no offset was previously committed.
+	// Should be ConsumerOffsetNewest (sarama.OffsetNewest) or ConsumerOffsetOldest (sarama.OffsetOldest).
+	Initial int64
+
+	// The retention duration for committed offsets. If zero, disabled
+	// (in which case the `offsets.retention.minutes` option on the
+	// broker will be used).  Kafka only supports precision up to
+	// milliseconds; nanoseconds will be truncated. Requires Kafka
+	// broker version 0.9.0 or later.
+	// (0: disabled).
+	Retention time.Duration
+
+	Retry *ConsumerOffsetsRetryConfig
+}
+
+type ConsumerOffsetsAutoCommitConfig struct {
+	// Whether or not to auto-commit updated offsets back to the broker.
+	Enable bool
+
+	// How frequently to commit updated offsets. Ineffective unless
+	// auto-commit is enabled.
+	Interval time.Duration
+}
+
+type ConsumerOffsetsRetryConfig struct {
+	// The total number of times to retry failing commit
+	// requests during OffsetManager shutdown.
+	Max int
 }
