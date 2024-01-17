@@ -1,0 +1,277 @@
+{
+    "appInfo": {
+        "id": 6,
+        "groupId": 6,
+        "version": "0.1.0"
+    },
+    "env": "development",
+    "userId": 1,
+    "logging": {
+        "minLogLevel": "trace",
+        "maxLogLevel": "fatal",
+        "adapters": {
+            "console": {
+                "minLogLevel": "trace",
+                "maxLogLevel": "fatal"
+            },
+            "kafka": {
+                "minLogLevel": "trace",
+                "maxLogLevel": "fatal",
+                "kafkaConfig": {
+                    "addrs": [
+                        "localhost:9092"
+                    ],
+                    "net": {
+                        "maxOpenRequests": 5,
+                        "dialTimeout": 10000,
+                        "readTimeout": 10000,
+                        "writeTimeout": 10000,
+                        "keepAlive": 0
+                    },
+                    "metadata": {
+                        "retry": {
+                            "max": 5,
+                            "backoff": 100
+                        },
+                        "refreshFrequency": 30000,
+                        "full": false,
+                        "allowAutoTopicCreation": false
+                    },
+                    "producer": {
+                        "maxMessageBytes": 1048576,
+                        "requiredAcks": "WaitForAll",
+                        "timeout": 10000,
+                        "compression": "snappy",
+                        "idempotent": false,
+                        "flush": {
+                            "bytes": 10485760,
+                            "messages": 100,
+                            "frequency": 5,
+                            "maxMessages": 100
+                        },
+                        "retry": {
+                            "max": 5,
+                            "backoff": 100
+                        }
+                    },
+                    "clientId": "EmailNotifierLogging",
+                    "channelBufferSize": 1024,
+                    "version": "3.5.0"
+                },
+                "kafkaTopic": "email_notifier.log"
+            }
+        },
+        "fileLog": {
+            "minLogLevel": "trace",
+            "maxLogLevel": "fatal",
+            "writer": {
+                "fileDir": "../log"
+            }
+        }
+    },
+    "actions": {
+        "logging": {
+            "kafka": {
+                "kafkaConfig": {
+                    "addrs": [
+                        "localhost:9092"
+                    ],
+                    "net": {
+                        "maxOpenRequests": 5,
+                        "dialTimeout": 10000,
+                        "readTimeout": 10000,
+                        "writeTimeout": 10000,
+                        "keepAlive": 0
+                    },
+                    "metadata": {
+                        "retry": {
+                            "max": 5,
+                            "backoff": 100
+                        },
+                        "refreshFrequency": 30000,
+                        "full": false,
+                        "allowAutoTopicCreation": false
+                    },
+                    "producer": {
+                        "maxMessageBytes": 1048576,
+                        "requiredAcks": "WaitForAll",
+                        "timeout": 10000,
+                        "compression": "snappy",
+                        "idempotent": false,
+                        "flush": {
+                            "bytes": 10485760,
+                            "messages": 100,
+                            "frequency": 5,
+                            "maxMessages": 100
+                        },
+                        "retry": {
+                            "max": 5,
+                            "backoff": 100
+                        }
+                    },
+                    "clientId": "EmailNotifierActions",
+                    "channelBufferSize": 1024,
+                    "version": "3.5.0"
+                },
+                "transactionTopic": "base.transactions",
+                "actionTopic": "base.actions",
+                "operationTopic": "base.operations"
+            }
+        }
+    },
+    "net": {
+        "http": {
+            "server": {
+                "addr": "{host}:{port}",
+                "readTimeout": 0,
+                "writeTimeout": 0,
+                "idleTimeout": 0,
+                "logging": {
+                    "kafka": {
+                        "kafkaConfig": {
+                            "addrs": [
+                                "localhost:9092"
+                            ],
+                            "net": {
+                                "maxOpenRequests": 5,
+                                "dialTimeout": 10000,
+                                "readTimeout": 10000,
+                                "writeTimeout": 10000,
+                                "keepAlive": 0
+                            },
+                            "metadata": {
+                                "retry": {
+                                    "max": 5,
+                                    "backoff": 100
+                                },
+                                "refreshFrequency": 30000,
+                                "full": false,
+                                "allowAutoTopicCreation": false
+                            },
+                            "producer": {
+                                "maxMessageBytes": 1048576,
+                                "requiredAcks": "WaitForAll",
+                                "timeout": 10000,
+                                "compression": "snappy",
+                                "idempotent": false,
+                                "flush": {
+                                    "bytes": 10485760,
+                                    "messages": 100,
+                                    "frequency": 5,
+                                    "maxMessages": 100
+                                },
+                                "retry": {
+                                    "max": 5,
+                                    "backoff": 100
+                                }
+                            },
+                            "clientId": "EmailNotifierHttpServer",
+                            "channelBufferSize": 1024,
+                            "version": "3.5.0"
+                        },
+                        "requestTopic": "email_notifier.http_server.requests",
+                        "responseTopic": "email_notifier.http_server.responses"
+                    }
+                }
+            }
+        },
+        "grpc": {
+            "logging": {
+                "minLogLevel": "info",
+                "maxLogLevel": "fatal"
+            },
+            "server": {
+                "addr": "{host}:{port}",
+                "logging": {
+                    "kafka": {
+                        "kafkaConfig": {
+                            "addrs": [
+                                "localhost:9092"
+                            ],
+                            "net": {
+                                "maxOpenRequests": 5,
+                                "dialTimeout": 10000,
+                                "readTimeout": 10000,
+                                "writeTimeout": 10000,
+                                "keepAlive": 0
+                            },
+                            "metadata": {
+                                "retry": {
+                                    "max": 5,
+                                    "backoff": 100
+                                },
+                                "refreshFrequency": 30000,
+                                "full": false,
+                                "allowAutoTopicCreation": false
+                            },
+                            "producer": {
+                                "maxMessageBytes": 1048576,
+                                "requiredAcks": "WaitForAll",
+                                "timeout": 10000,
+                                "compression": "snappy",
+                                "idempotent": false,
+                                "flush": {
+                                    "bytes": 10485760,
+                                    "messages": 100,
+                                    "frequency": 5,
+                                    "maxMessages": 100
+                                },
+                                "retry": {
+                                    "max": 5,
+                                    "backoff": 100
+                                }
+                            },
+                            "clientId": "EmailNotifierGrpcServer",
+                            "channelBufferSize": 1024,
+                            "version": "3.5.0"
+                        },
+                        "callTopic": "email_notifier.grpc_server.calls"
+                    }
+                }
+            }
+        }
+    },
+    "db": {
+        "postgres": {
+            "configs": {
+                "EmailNotifierDb": {
+                    "applicationName": "EmailNotifier",
+                    "host": "{host}",
+                    "port": 0,
+                    "database": "email_notifier",
+                    "user": "{user}",
+                    "password": "{password}",
+                    "sslMode": "disable",
+                    "connectTimeout": 10,
+                    "minConns": 10,
+                    "maxConns": 100,
+                    "maxConnLifetime": 86400,
+                    "maxConnIdleTime": 30,
+                    "healthCheckPeriod": 5
+                }
+            },
+            "dataMap": {
+                "EmailNotifier": "EmailNotifierDb"
+            }
+        }
+    },
+    "apis": {
+        "clients": {
+            "appManagerService": {
+                "serverAddr": "{host}:{port}",
+                "dialTimeout": 10000,
+                "callTimeout": 30000
+            },
+            "loggingManagerService": {
+                "serverAddr": "{host}:{port}",
+                "dialTimeout": 10000,
+                "callTimeout": 30000
+            },
+            "identityService": {
+                "serverAddr": "{host}:{port}",
+                "dialTimeout": 10000,
+                "callTimeout": 30000
+            }
+        }
+    }
+}
