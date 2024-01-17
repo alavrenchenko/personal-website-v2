@@ -21,6 +21,7 @@ import (
 	"net/http"
 
 	"personal-website-v2/pkg/base/nullable"
+	"personal-website-v2/pkg/db/postgres"
 	"personal-website-v2/pkg/logging"
 	grpclogging "personal-website-v2/pkg/net/grpc/logging"
 	"personal-website-v2/pkg/net/http/server/services/cors"
@@ -208,6 +209,37 @@ type Db struct {
 type DbSettings struct {
 	Configs map[string]*DbConfig `json:"configs"` // map[DbConfigName]DbConfig
 	DataMap map[string]string    `json:"dataMap"` // map[DataCategory]DbConfigName
+}
+
+func (s *DbSettings) PostgresDbSettings() *postgres.DbSettings {
+	dbConfigs := make(map[string]*postgres.DbConfig, len(s.Configs))
+	for n, c := range s.Configs {
+		dbConfigs[n] = &postgres.DbConfig{
+			ApplicationName:   c.ApplicationName,
+			Host:              c.Host,
+			Port:              c.Port,
+			Database:          c.Database,
+			User:              c.User,
+			Password:          c.Password,
+			SslMode:           c.SslMode,
+			ConnectTimeout:    c.ConnectTimeout,
+			MinConns:          c.MinConns,
+			MaxConns:          c.MaxConns,
+			MaxConnLifetime:   c.MaxConnLifetime,
+			MaxConnIdleTime:   c.MaxConnIdleTime,
+			HealthCheckPeriod: c.HealthCheckPeriod,
+		}
+	}
+
+	dataMap := make(map[string]string, len(s.DataMap))
+	for dc, cn := range s.DataMap {
+		dataMap[dc] = cn
+	}
+
+	return &postgres.DbSettings{
+		Configs: dbConfigs,
+		DataMap: dataMap,
+	}
 }
 
 type DbConfig struct {
