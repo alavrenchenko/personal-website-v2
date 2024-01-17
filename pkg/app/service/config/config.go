@@ -27,7 +27,7 @@ import (
 	"personal-website-v2/pkg/web/identity/authn/cookies"
 )
 
-type AppConfig[TApis any] struct {
+type AppConfig[TApis, TServices any] struct {
 	AppInfo       *AppInfo       `json:"appInfo"`
 	Env           string         `json:"env"`
 	UserId        uint64         `json:"userId"`
@@ -38,10 +38,11 @@ type AppConfig[TApis any] struct {
 	Db            *Db            `json:"db"`
 	Apis          TApis          `json:"apis"`
 	Auth          *Auth          `json:"auth"`
+	Services      TServices      `json:"services"`
 	Notifications *Notifications `json:"notifications"`
 }
 
-type WebAppConfig[TApis any] struct {
+type WebAppConfig[TApis, TServices any] struct {
 	AppInfo       *AppInfo       `json:"appInfo"`
 	Env           string         `json:"env"`
 	UserId        uint64         `json:"userId"`
@@ -53,6 +54,7 @@ type WebAppConfig[TApis any] struct {
 	Apis          TApis          `json:"apis"`
 	Auth          *Auth          `json:"auth"`
 	Web           *Web           `json:"web"`
+	Services      TServices      `json:"services"`
 	Notifications *Notifications `json:"notifications"`
 }
 
