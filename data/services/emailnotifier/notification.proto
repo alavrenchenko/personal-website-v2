@@ -32,18 +32,21 @@ message Notification {
 
 	// The user ID to identify the user who created the notification.
     uint64 created_by = 3;
+
+	// The notification group name.
+    string group = 4;
     
 	// The notification recipients.
-    repeated string recipients = 4;
+    repeated string recipients = 5;
 
 	// The notification subject.
-    string subject = 5;
+    string subject = 6;
 
 	// The notification body.
-    bytes body = 6;
+    bytes body = 7;
 
 	// The notification metadata.
-    NotificationMetadata metadata = 7;
+    NotificationMetadata metadata = 8;
 }
 
 // The notification metadata.
