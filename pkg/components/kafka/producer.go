@@ -27,10 +27,9 @@ type Producer interface {
 }
 
 func NewProducer(config *Config, async bool) (Producer, error) {
-	c, err := createConfigForProducer(config)
-
+	c, err := config.SaramaConfig()
 	if err != nil {
-		return nil, fmt.Errorf("[kafka.NewProducer] create a config for the producer: %w", err)
+		return nil, fmt.Errorf("[kafka.NewProducer] get a sarama config: %w", err)
 	}
 
 	if async {
@@ -48,104 +47,6 @@ func NewProducer(config *Config, async bool) (Producer, error) {
 		return nil, fmt.Errorf("[kafka.NewProducer] new sync producer: %w", err)
 	}
 	return p, nil
-}
-
-func createConfigForProducer(config *Config) (*sarama.Config, error) {
-	v, err := sarama.ParseKafkaVersion(config.Version)
-
-	if err != nil {
-		return nil, fmt.Errorf("[kafka.createConfigForProducer] parse a kafka version: %w", err)
-	}
-
-	c := sarama.NewConfig()
-	c.Version = v
-
-	if config.Net != nil {
-		c.Net.MaxOpenRequests = config.Net.MaxOpenRequests
-		c.Net.DialTimeout = config.Net.DialTimeout
-		c.Net.ReadTimeout = config.Net.ReadTimeout
-		c.Net.WriteTimeout = config.Net.WriteTimeout
-
-		if config.Net.TLS != nil {
-			c.Net.TLS.Enable = config.Net.TLS.Enable
-			c.Net.TLS.Config = config.Net.TLS.Config
-		}
-
-		if config.Net.SASL != nil {
-			c.Net.SASL.Enable = config.Net.SASL.Enable
-
-			if config.Net.SASL.Mechanism == SASLMechanismPlain {
-				c.Net.SASL.Mechanism = sarama.SASLTypePlaintext
-			} else {
-				return nil, fmt.Errorf("[kafka.createConfigForProducer] '%s' authentication (SASL mechanism) isn't supported", config.Net.SASL.Mechanism)
-			}
-
-			c.Net.SASL.Handshake = config.Net.SASL.Handshake
-			c.Net.SASL.User = config.Net.SASL.User
-			c.Net.SASL.Password = config.Net.SASL.Password
-		}
-
-		c.Net.KeepAlive = config.Net.KeepAlive
-	}
-
-	if config.Metadata != nil {
-		if config.Metadata.Retry != nil {
-			c.Metadata.Retry.Max = config.Metadata.Retry.Max
-			c.Metadata.Retry.Backoff = config.Metadata.Retry.Backoff
-		}
-
-		c.Metadata.RefreshFrequency = config.Metadata.RefreshFrequency
-		c.Metadata.Full = config.Metadata.Full
-		c.Metadata.AllowAutoTopicCreation = config.Metadata.AllowAutoTopicCreation
-	}
-
-	if config.Producer != nil {
-		c.Producer.MaxMessageBytes = config.Producer.MaxMessageBytes
-		c.Producer.RequiredAcks = sarama.RequiredAcks(config.Producer.RequiredAcks)
-		c.Producer.Timeout = config.Producer.Timeout
-
-		switch config.Producer.Compression {
-		case CompressionCodecNone:
-			c.Producer.Compression = sarama.CompressionNone
-		case CompressionCodecGZIP:
-			c.Producer.Compression = sarama.CompressionGZIP
-		case CompressionCodecSnappy:
-			c.Producer.Compression = sarama.CompressionSnappy
-		case CompressionCodecLZ4:
-			c.Producer.Compression = sarama.CompressionLZ4
-		case CompressionCodecZSTD:
-			c.Producer.Compression = sarama.CompressionZSTD
-		default:
-			return nil, fmt.Errorf("[kafka.createConfigForProducer] unknown compression type ('%s')", config.Producer.Compression)
-		}
-
-		if config.Producer.CompressionLevel.HasValue {
-			c.Producer.CompressionLevel = config.Producer.CompressionLevel.Value
-		}
-
-		c.Producer.Idempotent = config.Producer.Idempotent
-
-		if config.Producer.Flush != nil {
-			c.Producer.Flush.Bytes = config.Producer.Flush.Bytes
-			c.Producer.Flush.Messages = config.Producer.Flush.Messages
-			c.Producer.Flush.Frequency = config.Producer.Flush.Frequency
-			c.Producer.Flush.MaxMessages = config.Producer.Flush.MaxMessages
-		}
-
-		if config.Producer.Retry != nil {
-			c.Producer.Retry.Max = config.Producer.Retry.Max
-			c.Producer.Retry.Backoff = config.Producer.Retry.Backoff
-		}
-	}
-
-	c.Producer.Partitioner = sarama.NewHashPartitioner
-	c.Producer.Return.Successes = true
-	c.Producer.Return.Errors = true
-
-	c.ClientID = config.ClientId
-	c.ChannelBufferSize = config.ChannelBufferSize
-
-	return c, nil
 }
 
 type syncProducer struct {
