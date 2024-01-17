@@ -36,7 +36,7 @@ type msgNotifConfig struct {
 	email *msgEmailNotifConfig
 }
 
-func newMsgNotifConfig(notifConfig config.Notifications) (*msgNotifConfig, error) {
+func newMsgNotifConfig(notifConfig *config.Notifications) (*msgNotifConfig, error) {
 	if notifConfig.Email == nil {
 		return nil, errors.New("[manager.newMsgNotifConfig] email notification config is nil")
 	}
@@ -80,7 +80,7 @@ var _ contact.ContactMessageManager = (*ContactMessageManager)(nil)
 func NewContactMessageManager(
 	emailNotifier emailnotifier.EmailNotifier,
 	messageStore contact.ContactMessageStore,
-	notifConfig config.Notifications,
+	notifConfig *config.Notifications,
 	loggerFactory logging.LoggerFactory[*context.LogEntryContext],
 ) (*ContactMessageManager, error) {
 	l, err := loggerFactory.CreateLogger("internal.contact.manager.ContactMessageManager")
