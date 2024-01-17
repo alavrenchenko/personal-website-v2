@@ -15,7 +15,8 @@
 package config
 
 import (
-	"personal-website-v2/api-clients/config"
+	apiclientconfig "personal-website-v2/api-clients/config"
+	"personal-website-v2/pkg/app/service/config"
 )
 
 type Apis struct {
@@ -23,7 +24,11 @@ type Apis struct {
 }
 
 type ApiClients struct {
-	AppManagerService     *config.ServiceClientConfig `json:"appManagerService"`
-	LoggingManagerService *config.ServiceClientConfig `json:"loggingManagerService"`
-	IdentityService       *config.ServiceClientConfig `json:"identityService"`
+	AppManagerService     *apiclientconfig.ServiceClientConfig `json:"appManagerService"`
+	LoggingManagerService *apiclientconfig.ServiceClientConfig `json:"loggingManagerService"`
+	IdentityService       *apiclientconfig.ServiceClientConfig `json:"identityService"`
+}
+
+type Services struct {
+	EmailNotifier *config.EmailNotifier `json:"emailNotifier"`
 }
