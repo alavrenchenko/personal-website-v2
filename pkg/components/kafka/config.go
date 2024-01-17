@@ -21,6 +21,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/IBM/sarama"
+
 	"personal-website-v2/pkg/base/nullable"
 )
 
@@ -344,6 +346,176 @@ type Config struct {
 	// in the background while user code is working, greatly improving throughput.
 	ChannelBufferSize int
 	Version           string
+}
+
+func (c *Config) SaramaConfig() (*sarama.Config, error) {
+	v, err := sarama.ParseKafkaVersion(c.Version)
+	if err != nil {
+		return nil, fmt.Errorf("[kafka.SaramaConfig] parse a kafka version: %w", err)
+	}
+
+	sc := sarama.NewConfig()
+	sc.Version = v
+
+	if c.Net != nil {
+		sc.Net.MaxOpenRequests = c.Net.MaxOpenRequests
+		sc.Net.DialTimeout = c.Net.DialTimeout
+		sc.Net.ReadTimeout = c.Net.ReadTimeout
+		sc.Net.WriteTimeout = c.Net.WriteTimeout
+
+		if c.Net.TLS != nil {
+			sc.Net.TLS.Enable = c.Net.TLS.Enable
+			sc.Net.TLS.Config = c.Net.TLS.Config
+		}
+		if c.Net.SASL != nil {
+			sc.Net.SASL.Enable = c.Net.SASL.Enable
+
+			if c.Net.SASL.Mechanism == SASLMechanismPlain {
+				sc.Net.SASL.Mechanism = sarama.SASLTypePlaintext
+			} else {
+				return nil, fmt.Errorf("[kafka.SaramaConfig] '%s' authentication (SASL mechanism) isn't supported", c.Net.SASL.Mechanism)
+			}
+
+			sc.Net.SASL.Handshake = c.Net.SASL.Handshake
+			sc.Net.SASL.User = c.Net.SASL.User
+			sc.Net.SASL.Password = c.Net.SASL.Password
+		}
+
+		sc.Net.KeepAlive = c.Net.KeepAlive
+	}
+	if c.Metadata != nil {
+		if c.Metadata.Retry != nil {
+			sc.Metadata.Retry.Max = c.Metadata.Retry.Max
+			sc.Metadata.Retry.Backoff = c.Metadata.Retry.Backoff
+		}
+
+		sc.Metadata.RefreshFrequency = c.Metadata.RefreshFrequency
+		sc.Metadata.Full = c.Metadata.Full
+		sc.Metadata.AllowAutoTopicCreation = c.Metadata.AllowAutoTopicCreation
+	}
+	if c.Producer != nil {
+		sc.Producer.MaxMessageBytes = c.Producer.MaxMessageBytes
+		sc.Producer.RequiredAcks = sarama.RequiredAcks(c.Producer.RequiredAcks)
+		sc.Producer.Timeout = c.Producer.Timeout
+
+		switch c.Producer.Compression {
+		case CompressionCodecNone:
+			sc.Producer.Compression = sarama.CompressionNone
+		case CompressionCodecGZIP:
+			sc.Producer.Compression = sarama.CompressionGZIP
+		case CompressionCodecSnappy:
+			sc.Producer.Compression = sarama.CompressionSnappy
+		case CompressionCodecLZ4:
+			sc.Producer.Compression = sarama.CompressionLZ4
+		case CompressionCodecZSTD:
+			sc.Producer.Compression = sarama.CompressionZSTD
+		default:
+			return nil, fmt.Errorf("[kafka.SaramaConfig] unknown compression type ('%s')", c.Producer.Compression)
+		}
+
+		if c.Producer.CompressionLevel.HasValue {
+			sc.Producer.CompressionLevel = c.Producer.CompressionLevel.Value
+		}
+
+		sc.Producer.Idempotent = c.Producer.Idempotent
+
+		if c.Producer.Flush != nil {
+			sc.Producer.Flush.Bytes = c.Producer.Flush.Bytes
+			sc.Producer.Flush.Messages = c.Producer.Flush.Messages
+			sc.Producer.Flush.Frequency = c.Producer.Flush.Frequency
+			sc.Producer.Flush.MaxMessages = c.Producer.Flush.MaxMessages
+		}
+		if c.Producer.Retry != nil {
+			sc.Producer.Retry.Max = c.Producer.Retry.Max
+			sc.Producer.Retry.Backoff = c.Producer.Retry.Backoff
+		}
+	}
+
+	sc.Producer.Partitioner = sarama.NewHashPartitioner
+	sc.Producer.Return.Successes = true
+	sc.Producer.Return.Errors = true
+
+	if c.Consumer != nil {
+		if c.Consumer.Group != nil {
+			if c.Consumer.Group.Session != nil {
+				sc.Consumer.Group.Session.Timeout = c.Consumer.Group.Session.Timeout
+			}
+			if c.Consumer.Group.Heartbeat != nil {
+				sc.Consumer.Group.Heartbeat.Interval = c.Consumer.Group.Heartbeat.Interval
+			}
+			if c.Consumer.Group.Rebalance != nil {
+				if len(c.Consumer.Group.Rebalance.GroupStrategies) > 0 {
+					bss := make([]sarama.BalanceStrategy, len(c.Consumer.Group.Rebalance.GroupStrategies))
+					for i, s := range c.Consumer.Group.Rebalance.GroupStrategies {
+						switch s {
+						case BalanceStrategyRange:
+							bss[i] = sarama.NewBalanceStrategyRange()
+						case BalanceStrategyRoundRobin:
+							bss[i] = sarama.NewBalanceStrategyRoundRobin()
+						case BalanceStrategySticky:
+							bss[i] = sarama.NewBalanceStrategySticky()
+						default:
+							return nil, fmt.Errorf("[kafka.SaramaConfig] unknown consumer group balancing strategy ('%s')", s)
+						}
+					}
+					sc.Consumer.Group.Rebalance.GroupStrategies = bss
+				}
+
+				sc.Consumer.Group.Rebalance.Timeout = c.Consumer.Group.Rebalance.Timeout
+
+				if c.Consumer.Group.Rebalance.Retry != nil {
+					sc.Consumer.Group.Rebalance.Retry.Max = c.Consumer.Group.Rebalance.Retry.Max
+					sc.Consumer.Group.Rebalance.Retry.Backoff = c.Consumer.Group.Rebalance.Retry.Backoff
+				}
+			}
+			if c.Consumer.Group.Member != nil {
+				sc.Consumer.Group.Member.UserData = c.Consumer.Group.Member.UserData
+			}
+
+			sc.Consumer.Group.InstanceId = c.Consumer.Group.InstanceId
+			sc.Consumer.Group.ResetInvalidOffsets = c.Consumer.Group.ResetInvalidOffsets
+		}
+		if c.Consumer.Retry != nil {
+			sc.Consumer.Retry.Backoff = c.Consumer.Retry.Backoff
+		}
+		if c.Consumer.Fetch != nil {
+			sc.Consumer.Fetch.Min = c.Consumer.Fetch.Min
+			sc.Consumer.Fetch.Default = c.Consumer.Fetch.Default
+			sc.Consumer.Fetch.Max = c.Consumer.Fetch.Max
+		}
+
+		sc.Consumer.MaxWaitTime = c.Consumer.MaxWaitTime
+		sc.Consumer.MaxProcessingTime = c.Consumer.MaxProcessingTime
+
+		if c.Consumer.Offsets != nil {
+			if c.Consumer.Offsets.AutoCommit != nil {
+				sc.Consumer.Offsets.AutoCommit.Enable = c.Consumer.Offsets.AutoCommit.Enable
+				sc.Consumer.Offsets.AutoCommit.Interval = c.Consumer.Offsets.AutoCommit.Interval
+			}
+
+			sc.Consumer.Offsets.Initial = c.Consumer.Offsets.Initial
+			sc.Consumer.Offsets.Retention = c.Consumer.Offsets.Retention
+
+			if c.Consumer.Offsets.Retry != nil {
+				sc.Consumer.Offsets.Retry.Max = c.Consumer.Offsets.Retry.Max
+			}
+		}
+
+		sc.Consumer.MaxWaitTime = c.Consumer.MaxWaitTime
+
+		switch c.Consumer.IsolationLevel {
+		case IsolationLevelReadUncommitted:
+			sc.Consumer.IsolationLevel = sarama.ReadUncommitted
+		case IsolationLevelReadCommitted:
+			sc.Consumer.IsolationLevel = sarama.ReadCommitted
+		default:
+			return nil, fmt.Errorf("[kafka.SaramaConfig] unknown IsolationLevel ('%s')", c.Consumer.IsolationLevel)
+		}
+	}
+
+	sc.ClientID = c.ClientId
+	sc.ChannelBufferSize = c.ChannelBufferSize
+	return sc, nil
 }
 
 type NetConfig struct {
