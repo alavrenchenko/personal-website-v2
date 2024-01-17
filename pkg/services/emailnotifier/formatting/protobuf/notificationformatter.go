@@ -40,6 +40,7 @@ func (f *NotificationFormatter) Format(n *models.Notification) ([]byte, error) {
 		Id:         n.Id.String(),
 		CreatedAt:  timestamppb.New(n.CreatedAt),
 		CreatedBy:  n.CreatedBy,
+		Group:      n.Group,
 		Recipients: n.Recipients,
 		Subject:    n.Subject,
 		Body:       n.Body,
