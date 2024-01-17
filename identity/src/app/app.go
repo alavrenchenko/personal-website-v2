@@ -112,7 +112,7 @@ type Application struct {
 	fileLoggerFactory logging.LoggerFactory[*context.LogEntryContext]
 	fileLogger        logging.Logger[*context.LogEntryContext]
 	configPath        string
-	config            *config.AppConfig[*iappconfig.Apis]
+	config            *config.AppConfig[*iappconfig.Apis, struct{}]
 	isStarted         atomic.Bool
 	isStopped         bool
 	wg                sync.WaitGroup
@@ -370,7 +370,7 @@ func (a *Application) loadConfig() error {
 		return fmt.Errorf("[app.Application.loadConfig] read a file: %w", err)
 	}
 
-	config := new(config.AppConfig[*iappconfig.Apis])
+	config := new(config.AppConfig[*iappconfig.Apis, struct{}])
 
 	if err = json.Unmarshal(c, config); err != nil {
 		return fmt.Errorf("[app.Application.loadConfig] unmarshal JSON-encoded data (config): %w", err)
