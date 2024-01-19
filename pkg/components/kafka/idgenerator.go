@@ -74,7 +74,7 @@ func NewMessageIdGenerator(appSessionId uint64, concurrencyLevel uint32) (*Messa
 	}, nil
 }
 
-func (g *MessageIdGenerator) get() (uuid.UUID, error) {
+func (g *MessageIdGenerator) Get() (uuid.UUID, error) {
 	i := (atomic.AddUint64(g.idx, 1) - 1) % g.numSeqs
 	seqv, err := g.seqs[i].Next()
 	if err != nil {
