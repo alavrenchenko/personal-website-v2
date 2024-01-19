@@ -513,6 +513,8 @@ func (c *Config) SaramaConfig() (*sarama.Config, error) {
 		}
 	}
 
+	sc.Consumer.Return.Errors = true
+
 	sc.ClientID = c.ClientId
 	sc.ChannelBufferSize = c.ChannelBufferSize
 	return sc, nil
