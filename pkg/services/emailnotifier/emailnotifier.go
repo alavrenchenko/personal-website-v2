@@ -37,6 +37,7 @@ import (
 	"personal-website-v2/pkg/base/sequence"
 	"personal-website-v2/pkg/base/strings"
 	"personal-website-v2/pkg/components/kafka"
+	"personal-website-v2/pkg/components/kafka/metadata"
 	errs "personal-website-v2/pkg/errors"
 	actionhelper "personal-website-v2/pkg/helper/actions"
 	"personal-website-v2/pkg/logging"
@@ -81,17 +82,18 @@ type notifBodyTmpl struct {
 
 // emailNotifier is an email notification sender.
 type emailNotifier struct {
-	id             uint16
-	appSessionId   uint64
-	idGenerator    *idGenerator
-	tmpls          map[string]*notifBodyTmpl // map[TemplateName]Template
-	config         *Config
-	opExecutor     *actionhelper.OperationExecutor
-	notifFormatter *protobuf.NotificationFormatter
-	producer       kafka.Producer
-	logger         logging.Logger[*lcontext.LogEntryContext]
-	loggerCtx      *lcontext.LogEntryContext
-	disposed       atomic.Bool
+	id              uint16
+	appSessionId    uint64
+	idGenerator     *idGenerator
+	tmpls           map[string]*notifBodyTmpl // map[TemplateName]Template
+	config          *Config
+	opExecutor      *actionhelper.OperationExecutor
+	notifFormatter  *protobuf.NotificationFormatter
+	kMsgIdGenerator *kafka.MessageIdGenerator
+	producer        kafka.Producer
+	logger          logging.Logger[*lcontext.LogEntryContext]
+	loggerCtx       *lcontext.LogEntryContext
+	disposed        atomic.Bool
 }
 
 // templates: map[TemplateName]TemplateContent.
@@ -145,18 +147,25 @@ func NewEmailNotifier(
 		return nil, fmt.Errorf("[emailnotifier.NewEmailNotifier] new producer: %w", err)
 	}
 
+	concurrencyLevel := uint32(runtime.NumCPU() * 2)
+	kMsgIdGenerator, err := kafka.NewMessageIdGenerator(appSessionId, concurrencyLevel)
+	if err != nil {
+		return nil, fmt.Errorf("[emailnotifier.NewEmailNotifier] new message id generator: %w", err)
+	}
+
 	id, err := emailNotifierIdSeq.Next()
 	if err != nil {
 		return nil, fmt.Errorf("[emailnotifier.NewEmailNotifier] next value of the sequence 'emailNotifierIdSeq': %w", err)
 	}
 
-	idGenerator, err := newIdGenerator(appSessionId, id, uint32(runtime.NumCPU()*2))
+	idGenerator, err := newIdGenerator(appSessionId, id, concurrencyLevel)
 	if err != nil {
 		return nil, fmt.Errorf("[emailnotifier.NewEmailNotifier] new idGenerator: %w", err)
 	}
 
 	n.id = id
 	n.idGenerator = idGenerator
+	n.kMsgIdGenerator = kMsgIdGenerator
 	n.loggerCtx = &lcontext.LogEntryContext{
 		AppSessionId: nullable.NewNullable(appSessionId),
 		Fields: []*logging.Field{
@@ -284,9 +293,15 @@ func (n *emailNotifier) send(ctx *actions.OperationContext, notifGroup string, r
 		return uuid.UUID{}, fmt.Errorf("[emailnotifier.emailNotifier.send] format a notification: %w", err)
 	}
 
+	msgId, err := n.kMsgIdGenerator.Get()
+	if err != nil {
+		return uuid.UUID{}, fmt.Errorf("[emailnotifier.emailNotifier.send] get id from kMsgIdGenerator: %w", err)
+	}
+
 	tranId := ctx.Transaction.Id()
 	msg := &kafka.ProducerMessage{
 		Topic:    gc.Kafka.NotificationTopic,
+		Headers:  kafka.RecordHeaders{metadata.MessageIdHeader(msgId)},
 		Key:      tranId[:],
 		Value:    b,
 		Metadata: notif,
@@ -297,6 +312,7 @@ func (n *emailNotifier) send(ctx *actions.OperationContext, notifGroup string, r
 	}
 
 	n.logger.InfoWithEvent(ctx.CreateLogEntryContext(), events.EmailNotifierEvent, "[emailnotifier.emailNotifier.send] notification has been sent",
+		logging.NewField("kafkaMsgId", msgId),
 		logging.NewField("id", id),
 		logging.NewField("createdAt", notif.CreatedAt),
 		logging.NewField("createdBy", notif.CreatedBy),
@@ -317,16 +333,34 @@ func (n *emailNotifier) onCompletion(msg *kafka.ProducerMessage, err error) {
 	// fmt.Printf("Err: %v\n\n", err)
 	// </test>
 
-	if err != nil {
-		notif := msg.Metadata.(*models.Notification)
-		n.logger.ErrorWithEvent(n.loggerCtx, events.EmailNotifierEvent, err,
-			"[emailnotifier.emailNotifier.onCompletion] an error occurred while sending a notification to kafka",
-			logging.NewField("id", notif.Id),
-			logging.NewField("group", notif.Group),
-			logging.NewField("recipients", notif.Recipients),
-			logging.NewField("subject", notif.Subject),
-		)
+	if err == nil {
+		return
 	}
+
+	notif := msg.Metadata.(*models.Notification)
+	fs := []*logging.Field{
+		logging.NewField("id", notif.Id),
+		logging.NewField("group", notif.Group),
+		logging.NewField("recipients", notif.Recipients),
+		logging.NewField("subject", notif.Subject),
+		nil,
+	}
+
+	if msgIdVal := msg.Headers.Get(metadata.MessageIdMDKey); len(msgIdVal) > 0 {
+		if msgId, err2 := metadata.DecodeMessageId(msgIdVal); err2 != nil {
+			n.logger.ErrorWithEvent(n.loggerCtx, events.EmailNotifierEvent, err2, "[emailnotifier.emailNotifier.onCompletion] decode the kafka message id")
+			fs = fs[:4]
+		} else {
+			fs[4] = logging.NewField("kafkaMsgId", msgId)
+		}
+	} else {
+		n.logger.WarningWithEvent(n.loggerCtx, events.EmailNotifierEvent, "[emailnotifier.emailNotifier.onCompletion] kafka message id is missing")
+		fs = fs[:4]
+	}
+
+	n.logger.ErrorWithEvent(n.loggerCtx, events.EmailNotifierEvent, err,
+		"[emailnotifier.emailNotifier.onCompletion] an error occurred while sending a notification to kafka", fs...,
+	)
 }
 
 // Dispose disposes of the emailNotifier.
