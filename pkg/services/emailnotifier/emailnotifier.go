@@ -51,7 +51,15 @@ const (
 	defaultKafkaClientId = "EmailNotifier"
 )
 
-var emailNotifierIdCounter atomic.Int32
+var emailNotifierIdSeq *sequence.Sequence[uint16]
+
+func init() {
+	s, err := sequence.NewSequence[uint16]("emailNotifierIdSeq", 1, 1, math.MaxUint16)
+	if err != nil {
+		panic(fmt.Sprint("[emailnotifier.init] new sequence 'emailNotifierIdSeq': ", err))
+	}
+	emailNotifierIdSeq = s
+}
 
 // EmailNotifier is an email notification sender.
 type EmailNotifier interface {
@@ -73,17 +81,17 @@ type notifBodyTmpl struct {
 
 // emailNotifier is an email notification sender.
 type emailNotifier struct {
-	emailNotifierId uint16
-	appSessionId    uint64
-	idGenerator     *idGenerator
-	tmpls           map[string]*notifBodyTmpl // map[TemplateName]Template
-	config          *Config
-	opExecutor      *actionhelper.OperationExecutor
-	notifFormatter  *protobuf.NotificationFormatter
-	producer        kafka.Producer
-	logger          logging.Logger[*lcontext.LogEntryContext]
-	loggerCtx       *lcontext.LogEntryContext
-	disposed        atomic.Bool
+	id             uint16
+	appSessionId   uint64
+	idGenerator    *idGenerator
+	tmpls          map[string]*notifBodyTmpl // map[TemplateName]Template
+	config         *Config
+	opExecutor     *actionhelper.OperationExecutor
+	notifFormatter *protobuf.NotificationFormatter
+	producer       kafka.Producer
+	logger         logging.Logger[*lcontext.LogEntryContext]
+	loggerCtx      *lcontext.LogEntryContext
+	disposed       atomic.Bool
 }
 
 // templates: map[TemplateName]TemplateContent.
@@ -137,19 +145,22 @@ func NewEmailNotifier(
 		return nil, fmt.Errorf("[emailnotifier.NewEmailNotifier] new producer: %w", err)
 	}
 
-	emailNotifierId := uint16(emailNotifierIdCounter.Add(1))
+	id, err := emailNotifierIdSeq.Next()
+	if err != nil {
+		return nil, fmt.Errorf("[emailnotifier.NewEmailNotifier] next value of the sequence 'emailNotifierIdSeq': %w", err)
+	}
 
-	idGenerator, err := newIdGenerator(appSessionId, emailNotifierId, uint32(runtime.NumCPU()*2))
+	idGenerator, err := newIdGenerator(appSessionId, id, uint32(runtime.NumCPU()*2))
 	if err != nil {
 		return nil, fmt.Errorf("[emailnotifier.NewEmailNotifier] new idGenerator: %w", err)
 	}
 
-	n.emailNotifierId = emailNotifierId
+	n.id = id
 	n.idGenerator = idGenerator
 	n.loggerCtx = &lcontext.LogEntryContext{
 		AppSessionId: nullable.NewNullable(appSessionId),
 		Fields: []*logging.Field{
-			logging.NewField("emailNotifierId", emailNotifierId),
+			logging.NewField("emailNotifierId", id),
 		},
 	}
 	n.producer = p
