@@ -15,6 +15,7 @@
 package metadata
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/google/uuid"
@@ -33,10 +34,14 @@ func MessageIdHeader(msgId uuid.UUID) *kafka.RecordHeader {
 	}
 }
 
-func DecodeMessageIdHeaderValue(encodedMsgId []byte) (uuid.UUID, error) {
+func DecodeMessageId(encodedMsgId []byte) (uuid.UUID, error) {
+	if len(encodedMsgId) == 0 {
+		return uuid.UUID{}, errors.New("[metadata.DecodeMessageId] encodedMsgId is nil or empty")
+	}
+
 	id, err := uuid.ParseBytes(encodedMsgId)
 	if err != nil {
-		return uuid.UUID{}, fmt.Errorf("[metadata.DecodeMessageIdHeaderValue] parse encodedMsgId: %w", err)
+		return uuid.UUID{}, fmt.Errorf("[metadata.DecodeMessageId] parse encodedMsgId: %w", err)
 	}
 	return id, nil
 }
