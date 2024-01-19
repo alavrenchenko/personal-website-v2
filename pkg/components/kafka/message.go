@@ -14,7 +14,9 @@
 
 package kafka
 
-import "time"
+import (
+	"time"
+)
 
 type ProducerMessage struct {
 	// The Kafka topic for this message.
@@ -28,7 +30,7 @@ type ProducerMessage struct {
 
 	// The headers are key-value pairs that are transparently passed
 	// by Kafka between producers and consumers.
-	Headers []*RecordHeader
+	Headers RecordHeaders
 
 	// This field is used to hold arbitrary data you wish to include,
 	// so it will be available when handle it on the Writer's `Completion` method.

@@ -14,7 +14,22 @@
 
 package kafka
 
+import "unsafe"
+
 type RecordHeader struct {
 	Key   []byte
 	Value []byte
+}
+
+type RecordHeaders []*RecordHeader
+
+func (hs RecordHeaders) Get(key string) []byte {
+	for i := 0; i < len(hs); i++ {
+		h := hs[i]
+		k := unsafe.String(unsafe.SliceData(h.Key), len(h.Key))
+		if k == key {
+			return h.Value
+		}
+	}
+	return nil
 }
