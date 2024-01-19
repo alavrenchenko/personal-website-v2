@@ -269,7 +269,7 @@ type errorWriter struct {
 
 func (w *errorWriter) Write(p []byte) (int, error) {
 	w.stats.addError()
-	const s = "[server.HttpServer] an error occurred while running the HTTP server: "
+	const s = "[server.HttpServer] an error occurred while the HTTP server was running: "
 	b := make([]byte, len(s)+len(p))
 	copy(b, s)
 	copy(b[len(s):], p)
