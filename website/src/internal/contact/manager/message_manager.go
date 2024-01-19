@@ -43,7 +43,7 @@ func newMsgNotifConfig(notifConfig *config.Notifications) (*msgNotifConfig, erro
 
 	enc, err := newMsgEmailNotifConfig(notifConfig.Email)
 	if err != nil {
-		return nil, fmt.Errorf("[manager.newMsgNotifConfig] new msg email notif config: %w", err)
+		return nil, fmt.Errorf("[manager.newMsgNotifConfig] new msgEmailNotifConfig: %w", err)
 	}
 
 	return &msgNotifConfig{
@@ -100,7 +100,7 @@ func NewContactMessageManager(
 
 	nc, err := newMsgNotifConfig(notifConfig)
 	if err != nil {
-		return nil, fmt.Errorf("[manager.NewContactMessageManager] new msg notif config: %w", err)
+		return nil, fmt.Errorf("[manager.NewContactMessageManager] new msgNotifConfig: %w", err)
 	}
 
 	return &ContactMessageManager{
