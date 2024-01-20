@@ -36,7 +36,7 @@ func NewNotificationFormatter(ctx *formatting.FormatterContext) *NotificationFor
 }
 
 func (f *NotificationFormatter) Format(n *models.Notification) ([]byte, error) {
-	op := &emailnotifierpb.Notification{
+	notif := &emailnotifierpb.Notification{
 		Id:         n.Id.String(),
 		CreatedAt:  timestamppb.New(n.CreatedAt),
 		CreatedBy:  n.CreatedBy,
@@ -51,7 +51,7 @@ func (f *NotificationFormatter) Format(n *models.Notification) ([]byte, error) {
 		},
 	}
 
-	b, err := proto.Marshal(op)
+	b, err := proto.Marshal(notif)
 	if err != nil {
 		return nil, fmt.Errorf("[protobuf.NotificationFormatter.Format] marshal a notification to Protobuf: %w", err)
 	}
