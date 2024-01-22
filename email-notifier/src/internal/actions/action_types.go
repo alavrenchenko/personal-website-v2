@@ -24,4 +24,13 @@ const (
 
 	// Notification action types (11000-11199).
 	ActionTypeNotification_Process actions.ActionType = 11000
+
+	// Notification group action types (11200-11399).
+	ActionTypeNotificationGroup_Create        actions.ActionType = 11200
+	ActionTypeNotificationGroup_Delete        actions.ActionType = 11201
+	ActionTypeNotificationGroup_GetById       actions.ActionType = 11202
+	ActionTypeNotificationGroup_GetByName     actions.ActionType = 11203
+	ActionTypeNotificationGroup_GetByIdOrName actions.ActionType = 11204
+	ActionTypeNotificationGroup_Exists        actions.ActionType = 11205
+	ActionTypeNotificationGroup_GetStatusById actions.ActionType = 11206
 )
