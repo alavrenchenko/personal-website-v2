@@ -20,5 +20,6 @@ import "personal-website-v2/pkg/actions"
 // Action groups: 0-999
 
 const (
-	ActionGroupNotification actions.ActionGroup = 1000
+	ActionGroupNotification      actions.ActionGroup = 1000
+	ActionGroupNotificationGroup actions.ActionGroup = 1001
 )
