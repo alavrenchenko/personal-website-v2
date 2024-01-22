@@ -36,5 +36,8 @@ var (
 	// NotificationCGHandler events (id: 0, 10300-10399)
 	NotificationCGHandlerEvent = logging.NewEvent(0, "NotificationCGHandler", logging.EventCategoryCommon, enlogging.EventGroupNotificationCGHandler)
 
+	// NotificationGroup events (id: 0, 10400-10599)
+	NotificationGroupEvent = logging.NewEvent(0, "NotificationGroup", logging.EventCategoryCommon, enlogging.EventGroupNotificationGroup)
+
 	// ApplicationStore events (id: 0, 20000-20199)
 )
