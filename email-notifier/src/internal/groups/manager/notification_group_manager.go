@@ -19,8 +19,8 @@ import (
 
 	enactions "personal-website-v2/email-notifier/src/internal/actions"
 	"personal-website-v2/email-notifier/src/internal/groups"
+	"personal-website-v2/email-notifier/src/internal/groups/dbmodels"
 
-	// "personal-website-v2/email-notifier/src/internal/groups/dbmodels"
 	// "personal-website-v2/email-notifier/src/internal/groups/models"
 	groupoperations "personal-website-v2/email-notifier/src/internal/groups/operations/groups"
 	"personal-website-v2/email-notifier/src/internal/logging/events"
@@ -108,4 +108,22 @@ func (m *NotificationGroupManager) Delete(ctx *actions.OperationContext, id uint
 		return fmt.Errorf("[manager.NotificationGroupManager.Delete] execute an operation: %w", err)
 	}
 	return nil
+}
+
+// FindById finds and returns a notification group, if any, by the specified notification group ID.
+func (m *NotificationGroupManager) FindById(ctx *actions.OperationContext, id uint64) (*dbmodels.NotificationGroup, error) {
+	var g *dbmodels.NotificationGroup
+	err := m.opExecutor.Exec(ctx, enactions.OperationTypeNotificationGroupManager_FindById, []*actions.OperationParam{actions.NewOperationParam("id", id)},
+		func(opCtx *actions.OperationContext) error {
+			var err error
+			if g, err = m.notifGroupStore.FindById(opCtx, id); err != nil {
+				return fmt.Errorf("[manager.NotificationGroupManager.FindById] find a notification group by id: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("[manager.NotificationGroupManager.FindById] execute an operation: %w", err)
+	}
+	return g, nil
 }

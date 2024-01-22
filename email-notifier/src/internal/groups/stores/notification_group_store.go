@@ -158,3 +158,22 @@ func (s *NotificationGroupStore) Delete(ctx *actions.OperationContext, id uint64
 	}
 	return nil
 }
+
+// FindById finds and returns a notification group, if any, by the specified notification group ID.
+func (s *NotificationGroupStore) FindById(ctx *actions.OperationContext, id uint64) (*dbmodels.NotificationGroup, error) {
+	var g *dbmodels.NotificationGroup
+	err := s.opExecutor.Exec(ctx, enactions.OperationTypeNotificationGroupStore_FindById, []*actions.OperationParam{actions.NewOperationParam("id", id)},
+		func(opCtx *actions.OperationContext) error {
+			const query = "SELECT * FROM " + notifGroupsTable + " WHERE id = $1 LIMIT 1"
+			var err error
+			if g, err = s.store.Find(opCtx.Ctx, query, id); err != nil {
+				return fmt.Errorf("[stores.NotificationGroupStore.FindById] find a notification group by id: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("[stores.NotificationGroupStore.FindById] execute an operation: %w", err)
+	}
+	return g, nil
+}
