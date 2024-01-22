@@ -17,8 +17,22 @@ package identity
 const (
 	// Application permissions.
 	PermissionApp_Stop = "emailnotifier.app.stop"
+
+	// Notification group permissions.
+	PermissionNotificationGroup_Create = "emailnotifier.notificationGroups.create"
+	PermissionNotificationGroup_Delete = "emailnotifier.notificationGroups.delete"
+	// GetById, GetByName, GetByIdOrName.
+	PermissionNotificationGroup_Get    = "emailnotifier.notificationGroups.get"
+	PermissionNotificationGroup_Exists = "emailnotifier.notificationGroups.exists"
+	// GetStatusById.
+	PermissionNotificationGroup_GetStatus = "emailnotifier.notificationGroups.getStatus"
 )
 
 var Permissions = []string{
 	PermissionApp_Stop,
+	PermissionNotificationGroup_Create,
+	PermissionNotificationGroup_Delete,
+	PermissionNotificationGroup_Get,
+	PermissionNotificationGroup_Exists,
+	PermissionNotificationGroup_GetStatus,
 }
