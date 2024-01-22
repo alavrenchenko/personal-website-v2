@@ -88,3 +88,24 @@ func (m *NotificationGroupManager) Create(ctx *actions.OperationContext, data *g
 	}
 	return id, nil
 }
+
+// Delete deletes a notification group by the specified notification group ID.
+func (m *NotificationGroupManager) Delete(ctx *actions.OperationContext, id uint64) error {
+	err := m.opExecutor.Exec(ctx, enactions.OperationTypeNotificationGroupManager_Delete, []*actions.OperationParam{actions.NewOperationParam("id", id)},
+		func(opCtx *actions.OperationContext) error {
+			if err := m.notifGroupStore.Delete(opCtx, id); err != nil {
+				return fmt.Errorf("[manager.NotificationGroupManager.Delete] delete a notification group: %w", err)
+			}
+
+			m.logger.InfoWithEvent(opCtx.CreateLogEntryContext(), events.NotificationGroupEvent,
+				"[manager.NotificationGroupManager.Delete] notification group has been deleted",
+				logging.NewField("id", id),
+			)
+			return nil
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("[manager.NotificationGroupManager.Delete] execute an operation: %w", err)
+	}
+	return nil
+}

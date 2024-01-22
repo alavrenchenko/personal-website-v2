@@ -31,8 +31,7 @@ import (
 	"personal-website-v2/pkg/actions"
 	dberrors "personal-website-v2/pkg/db/errors"
 	"personal-website-v2/pkg/db/postgres"
-
-	// errs "personal-website-v2/pkg/errors"
+	errs "personal-website-v2/pkg/errors"
 	actionhelper "personal-website-v2/pkg/helper/actions"
 	"personal-website-v2/pkg/logging"
 	lcontext "personal-website-v2/pkg/logging/context"
@@ -120,4 +119,42 @@ func (s *NotificationGroupStore) Create(ctx *actions.OperationContext, data *gro
 		return 0, fmt.Errorf("[stores.NotificationGroupStore.Create] execute an operation: %w", err)
 	}
 	return id, nil
+}
+
+// Delete deletes a notification group by the specified notification group ID.
+func (s *NotificationGroupStore) Delete(ctx *actions.OperationContext, id uint64) error {
+	err := s.opExecutor.Exec(ctx, enactions.OperationTypeNotificationGroupStore_Delete, []*actions.OperationParam{actions.NewOperationParam("id", id)},
+		func(opCtx *actions.OperationContext) error {
+			err := s.txManager.ExecWithReadCommittedLevel(opCtx.Ctx, func(txCtx context.Context, tx pgx.Tx) error {
+				var errCode dberrors.DbErrorCode
+				var errMsg string
+				// PROCEDURE: public.delete_notification_group(IN _id, IN _deleted_by, IN _status_comment, OUT err_code, OUT err_msg)
+				const query = "CALL public.delete_notification_group($1, $2, 'deletion', NULL, NULL)"
+				r := tx.QueryRow(txCtx, query, id, opCtx.UserId.Ptr())
+
+				if err := r.Scan(&errCode, &errMsg); err != nil {
+					return fmt.Errorf("[stores.NotificationGroupStore.Delete] execute a query (delete_notification_group): %w", err)
+				}
+
+				switch errCode {
+				case dberrors.DbErrorCodeNoError:
+					return nil
+				case dberrors.DbErrorCodeInvalidOperation:
+					return errs.NewError(errs.ErrorCodeInvalidOperation, errMsg)
+				case endberrors.DbErrorCodeNotificationGroupNotFound:
+					return enerrors.ErrNotificationGroupNotFound
+				}
+				// unknown error
+				return fmt.Errorf("[stores.NotificationGroupStore.Delete] invalid operation: %w", dberrors.NewDbError(errCode, errMsg))
+			})
+			if err != nil {
+				return fmt.Errorf("[stores.NotificationGroupStore.Delete] execute a transaction: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("[stores.NotificationGroupStore.Delete] execute an operation: %w", err)
+	}
+	return nil
 }
