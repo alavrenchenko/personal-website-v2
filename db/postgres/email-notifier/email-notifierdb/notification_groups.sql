@@ -75,3 +75,50 @@ BEGIN
             RAISE;
 END;
 $$ LANGUAGE plpgsql;
+
+-- PROCEDURE: public.delete_notification_group(bigint, bigint, text)
+/*
+Notification group statuses:
+    Deleted = 5
+
+Error codes:
+    NoError                   = 0
+    InvalidOperation          = 3
+    NotificationGroupNotFound = 11200
+*/
+-- Minimum transaction isolation level: Read committed.
+CREATE OR REPLACE PROCEDURE public.delete_notification_group(
+    IN _id public.notification_groups.id%TYPE,
+    IN _deleted_by public.notification_groups.updated_by%TYPE,
+    IN _status_comment public.notification_groups.status_comment%TYPE,
+    OUT err_code bigint,
+    OUT err_msg text) AS $$
+DECLARE
+    _time timestamp(6) without time zone;
+    _status public.notification_groups.status%TYPE;
+BEGIN
+    err_code := 0; -- NoError
+    err_msg := '';
+
+    SELECT status INTO _status FROM public.notification_groups WHERE id = _id LIMIT 1 FOR UPDATE;
+    IF NOT FOUND THEN
+        err_code := 11200; -- NotificationGroupNotFound
+        err_msg := 'notification group not found';
+        RETURN;
+    END IF;
+
+    -- notification group status: Deleted(5)
+    IF _status = 5 THEN
+        err_code := 3; -- InvalidOperation
+        err_msg := 'notification group has already been deleted';
+        RETURN;
+    END IF;
+
+    _time := (clock_timestamp() AT TIME ZONE 'UTC');
+    -- notification group status: Deleted(5)
+    UPDATE public.notification_groups
+        SET updated_at = _time, updated_by = _deleted_by, status = 5, status_updated_at = _time, status_updated_by = _deleted_by,
+            status_comment = _status_comment, _version_stamp = _version_stamp + 1, _timestamp = _time
+        WHERE id = _id;
+END;
+$$ LANGUAGE plpgsql;
