@@ -56,9 +56,9 @@ type msgEmailNotifConfig struct {
 }
 
 func newMsgEmailNotifConfig(notifConfig map[string]*config.EmailNotification) (*msgEmailNotifConfig, error) {
-	msgAddedConfig := notifConfig["ContactMessages_MessageAdded"]
+	msgAddedConfig := notifConfig[messageemailnotifs.MessageAddedNotifName]
 	if msgAddedConfig == nil {
-		return nil, errors.New("[manager.newMsgEmailNotifConfig] 'ContactMessages_MessageAdded' notification config is missing")
+		return nil, fmt.Errorf("[manager.newMsgEmailNotifConfig] '%s' notification config is missing", messageemailnotifs.MessageAddedNotifName)
 	}
 
 	return &msgEmailNotifConfig{

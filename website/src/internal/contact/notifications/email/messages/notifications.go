@@ -19,6 +19,7 @@ import "time"
 const (
 	NotifGroup = "website.contactMessages"
 
+	MessageAddedNotifName     = "ContactMessages_MessageAdded"
 	MessageAddedNotifSubject  = "[pw:website.contactMessages] A new message has been added"
 	MessageAddedNotifTmplName = "ContactMessages_MessageAdded.html"
 )
