@@ -25,6 +25,8 @@ import (
 	groupoperations "personal-website-v2/email-notifier/src/internal/groups/operations/groups"
 	"personal-website-v2/email-notifier/src/internal/logging/events"
 	"personal-website-v2/pkg/actions"
+	"personal-website-v2/pkg/base/strings"
+	"personal-website-v2/pkg/errors"
 	actionhelper "personal-website-v2/pkg/helper/actions"
 	"personal-website-v2/pkg/logging"
 	"personal-website-v2/pkg/logging/context"
@@ -124,6 +126,28 @@ func (m *NotificationGroupManager) FindById(ctx *actions.OperationContext, id ui
 	)
 	if err != nil {
 		return nil, fmt.Errorf("[manager.NotificationGroupManager.FindById] execute an operation: %w", err)
+	}
+	return g, nil
+}
+
+// FindByName finds and returns a notification group, if any, by the specified notification group name.
+func (m *NotificationGroupManager) FindByName(ctx *actions.OperationContext, name string) (*dbmodels.NotificationGroup, error) {
+	var g *dbmodels.NotificationGroup
+	err := m.opExecutor.Exec(ctx, enactions.OperationTypeNotificationGroupManager_FindByName, []*actions.OperationParam{actions.NewOperationParam("name", name)},
+		func(opCtx *actions.OperationContext) error {
+			if strings.IsEmptyOrWhitespace(name) {
+				return errors.NewError(errors.ErrorCodeInvalidData, "name is empty")
+			}
+
+			var err error
+			if g, err = m.notifGroupStore.FindByName(opCtx, name); err != nil {
+				return fmt.Errorf("[manager.NotificationGroupManager.FindByName] find a notification group by name: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("[manager.NotificationGroupManager.FindByName] execute an operation: %w", err)
 	}
 	return g, nil
 }

@@ -25,8 +25,7 @@ import (
 	enerrors "personal-website-v2/email-notifier/src/internal/errors"
 	"personal-website-v2/email-notifier/src/internal/groups"
 	"personal-website-v2/email-notifier/src/internal/groups/dbmodels"
-
-	// "personal-website-v2/email-notifier/src/internal/groups/models"
+	"personal-website-v2/email-notifier/src/internal/groups/models"
 	groupoperations "personal-website-v2/email-notifier/src/internal/groups/operations/groups"
 	"personal-website-v2/pkg/actions"
 	dberrors "personal-website-v2/pkg/db/errors"
@@ -174,6 +173,26 @@ func (s *NotificationGroupStore) FindById(ctx *actions.OperationContext, id uint
 	)
 	if err != nil {
 		return nil, fmt.Errorf("[stores.NotificationGroupStore.FindById] execute an operation: %w", err)
+	}
+	return g, nil
+}
+
+// FindByName finds and returns a notification group, if any, by the specified notification group name.
+func (s *NotificationGroupStore) FindByName(ctx *actions.OperationContext, name string) (*dbmodels.NotificationGroup, error) {
+	var g *dbmodels.NotificationGroup
+	err := s.opExecutor.Exec(ctx, enactions.OperationTypeNotificationGroupStore_FindByName, []*actions.OperationParam{actions.NewOperationParam("name", name)},
+		func(opCtx *actions.OperationContext) error {
+			// must be case-sensitive
+			const query = "SELECT * FROM " + notifGroupsTable + " WHERE lower(name) = lower($1) AND name = $1 AND status <> $2 LIMIT 1"
+			var err error
+			if g, err = s.store.Find(opCtx.Ctx, query, name, models.NotificationGroupStatusDeleted); err != nil {
+				return fmt.Errorf("[stores.NotificationGroupStore.FindByName] find a notification group by name: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("[stores.NotificationGroupStore.FindByName] execute an operation: %w", err)
 	}
 	return g, nil
 }
