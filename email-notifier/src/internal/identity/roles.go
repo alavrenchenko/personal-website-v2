@@ -25,6 +25,14 @@ const (
 
 	// Application roles.
 	RoleAppAdmin = "emailnotifier.appAdmin"
+
+	// Notification roles.
+	RoleNotificationAdmin  = "emailnotifier.notificationAdmin"
+	RoleNotificationViewer = "emailnotifier.notificationViewer"
+
+	// Notification group roles.
+	RoleNotificationGroupAdmin  = "emailnotifier.notificationGroupAdmin"
+	RoleNotificationGroupViewer = "emailnotifier.notificationGroupViewer"
 )
 
 var Roles = []string{
@@ -40,4 +48,8 @@ var Roles = []string{
 	RoleAdmin,
 	RoleViewer,
 	RoleAppAdmin,
+	RoleNotificationAdmin,
+	RoleNotificationViewer,
+	RoleNotificationGroupAdmin,
+	RoleNotificationGroupViewer,
 }
