@@ -19,6 +19,11 @@ import (
 
 	enactions "personal-website-v2/email-notifier/src/internal/actions"
 	"personal-website-v2/email-notifier/src/internal/groups"
+
+	// "personal-website-v2/email-notifier/src/internal/groups/dbmodels"
+	// "personal-website-v2/email-notifier/src/internal/groups/models"
+	groupoperations "personal-website-v2/email-notifier/src/internal/groups/operations/groups"
+	"personal-website-v2/email-notifier/src/internal/logging/events"
 	"personal-website-v2/pkg/actions"
 	actionhelper "personal-website-v2/pkg/helper/actions"
 	"personal-website-v2/pkg/logging"
@@ -55,4 +60,31 @@ func NewNotificationGroupManager(notifGroupStore groups.NotificationGroupStore, 
 		notifGroupStore: notifGroupStore,
 		logger:          l,
 	}, nil
+}
+
+// Create creates a notification group and returns the notification group ID if the operation is successful.
+func (m *NotificationGroupManager) Create(ctx *actions.OperationContext, data *groupoperations.CreateOperationData) (uint64, error) {
+	var id uint64
+	err := m.opExecutor.Exec(ctx, enactions.OperationTypeNotificationGroupManager_Create, []*actions.OperationParam{actions.NewOperationParam("data", data)},
+		func(opCtx *actions.OperationContext) error {
+			if err := data.Validate(); err != nil {
+				return fmt.Errorf("[manager.NotificationGroupManager.Create] validate data: %w", err)
+			}
+
+			var err error
+			if id, err = m.notifGroupStore.Create(opCtx, data); err != nil {
+				return fmt.Errorf("[manager.NotificationGroupManager.Create] create a notification group: %w", err)
+			}
+
+			m.logger.InfoWithEvent(opCtx.CreateLogEntryContext(), events.NotificationGroupEvent,
+				"[manager.NotificationGroupManager.Create] notification group has been created",
+				logging.NewField("id", id),
+			)
+			return nil
+		},
+	)
+	if err != nil {
+		return 0, fmt.Errorf("[manager.NotificationGroupManager.Create] execute an operation: %w", err)
+	}
+	return id, nil
 }

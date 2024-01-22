@@ -15,20 +15,31 @@
 package stores
 
 import (
+	"context"
 	"fmt"
 
+	"github.com/jackc/pgx/v5"
+
 	enactions "personal-website-v2/email-notifier/src/internal/actions"
+	endberrors "personal-website-v2/email-notifier/src/internal/db/errors"
+	enerrors "personal-website-v2/email-notifier/src/internal/errors"
 	"personal-website-v2/email-notifier/src/internal/groups"
 	"personal-website-v2/email-notifier/src/internal/groups/dbmodels"
+
+	// "personal-website-v2/email-notifier/src/internal/groups/models"
+	groupoperations "personal-website-v2/email-notifier/src/internal/groups/operations/groups"
 	"personal-website-v2/pkg/actions"
+	dberrors "personal-website-v2/pkg/db/errors"
 	"personal-website-v2/pkg/db/postgres"
+
+	// errs "personal-website-v2/pkg/errors"
 	actionhelper "personal-website-v2/pkg/helper/actions"
 	"personal-website-v2/pkg/logging"
 	lcontext "personal-website-v2/pkg/logging/context"
 )
 
 const (
-	appGroupsTable = "public.app_groups"
+	notifGroupsTable = "public.notification_groups"
 )
 
 // NotificationGroupStore is a notification group store.
@@ -70,4 +81,43 @@ func NewNotificationGroupStore(db *postgres.Database, loggerFactory logging.Logg
 		txManager:  txm,
 		logger:     l,
 	}, nil
+}
+
+// Create creates a notification group and returns the notification group ID if the operation is successful.
+func (s *NotificationGroupStore) Create(ctx *actions.OperationContext, data *groupoperations.CreateOperationData) (uint64, error) {
+	var id uint64
+	err := s.opExecutor.Exec(ctx, enactions.OperationTypeNotificationGroupStore_Create, []*actions.OperationParam{actions.NewOperationParam("data", data)},
+		func(opCtx *actions.OperationContext) error {
+			err := s.txManager.ExecWithReadCommittedLevel(opCtx.Ctx, func(txCtx context.Context, tx pgx.Tx) error {
+				var errCode dberrors.DbErrorCode
+				var errMsg string
+				// PROCEDURE: public.create_notification_group(IN _name, IN _title, IN _created_by, IN _status_comment, IN _description,
+				// OUT _id, OUT err_code, OUT err_msg)
+				// Minimum transaction isolation level: Read committed.
+				const query = "CALL public.create_notification_group($1, $2, $3, NULL, $4, NULL, NULL, NULL)"
+				r := tx.QueryRow(txCtx, query, data.Name, data.Title, opCtx.UserId.Ptr(), data.Description)
+
+				if err := r.Scan(&id, &errCode, &errMsg); err != nil {
+					return fmt.Errorf("[stores.NotificationGroupStore.Create] execute a query (create_notification_group): %w", err)
+				}
+
+				switch errCode {
+				case dberrors.DbErrorCodeNoError:
+					return nil
+				case endberrors.DbErrorCodeNotificationGroupAlreadyExists:
+					return enerrors.ErrNotificationGroupAlreadyExists
+				}
+				// unknown error
+				return fmt.Errorf("[stores.NotificationGroupStore.Create] invalid operation: %w", dberrors.NewDbError(errCode, errMsg))
+			})
+			if err != nil {
+				return fmt.Errorf("[stores.NotificationGroupStore.Create] execute a transaction: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return 0, fmt.Errorf("[stores.NotificationGroupStore.Create] execute an operation: %w", err)
+	}
+	return id, nil
 }
