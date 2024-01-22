@@ -16,6 +16,7 @@ package stores
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/jackc/pgx/v5"
@@ -221,4 +222,32 @@ func (s *NotificationGroupStore) Exists(ctx *actions.OperationContext, name stri
 		return false, fmt.Errorf("[stores.NotificationGroupStore.Exists] execute an operation: %w", err)
 	}
 	return exists, nil
+}
+
+// GetStatusById gets a notification group status by the specified notification group ID.
+func (s *NotificationGroupStore) GetStatusById(ctx *actions.OperationContext, id uint64) (models.NotificationGroupStatus, error) {
+	var status models.NotificationGroupStatus
+	err := s.opExecutor.Exec(ctx, enactions.OperationTypeNotificationGroupStore_GetStatusById, []*actions.OperationParam{actions.NewOperationParam("id", id)},
+		func(opCtx *actions.OperationContext) error {
+			conn, err := s.db.ConnPool.Acquire(opCtx.Ctx)
+			if err != nil {
+				return fmt.Errorf("[stores.NotificationGroupStore.GetStatusById] acquire a connection: %w", err)
+			}
+			defer conn.Release()
+
+			const query = "SELECT status FROM " + notifGroupsTable + " WHERE id = $1 LIMIT 1"
+
+			if err = conn.QueryRow(opCtx.Ctx, query, id).Scan(&status); err != nil {
+				if errors.Is(err, pgx.ErrNoRows) {
+					return enerrors.ErrNotificationGroupNotFound
+				}
+				return fmt.Errorf("[stores.NotificationGroupStore.GetStatusById] execute a query: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return status, fmt.Errorf("[stores.NotificationGroupStore.GetStatusById] execute an operation: %w", err)
+	}
+	return status, nil
 }

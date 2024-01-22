@@ -20,8 +20,7 @@ import (
 	enactions "personal-website-v2/email-notifier/src/internal/actions"
 	"personal-website-v2/email-notifier/src/internal/groups"
 	"personal-website-v2/email-notifier/src/internal/groups/dbmodels"
-
-	// "personal-website-v2/email-notifier/src/internal/groups/models"
+	"personal-website-v2/email-notifier/src/internal/groups/models"
 	groupoperations "personal-website-v2/email-notifier/src/internal/groups/operations/groups"
 	"personal-website-v2/email-notifier/src/internal/logging/events"
 	"personal-website-v2/pkg/actions"
@@ -168,4 +167,22 @@ func (m *NotificationGroupManager) Exists(ctx *actions.OperationContext, name st
 		return false, fmt.Errorf("[manager.NotificationGroupManager.Exists] execute an operation: %w", err)
 	}
 	return exists, nil
+}
+
+// GetStatusById gets a notification group status by the specified notification group ID.
+func (m *NotificationGroupManager) GetStatusById(ctx *actions.OperationContext, id uint64) (models.NotificationGroupStatus, error) {
+	var s models.NotificationGroupStatus
+	err := m.opExecutor.Exec(ctx, enactions.OperationTypeNotificationGroupManager_GetStatusById, []*actions.OperationParam{actions.NewOperationParam("id", id)},
+		func(opCtx *actions.OperationContext) error {
+			var err error
+			if s, err = m.notifGroupStore.GetStatusById(opCtx, id); err != nil {
+				return fmt.Errorf("[manager.NotificationGroupManager.GetStatusById] get a notification group status by id: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return s, fmt.Errorf("[manager.NotificationGroupManager.GetStatusById] execute an operation: %w", err)
+	}
+	return s, nil
 }
