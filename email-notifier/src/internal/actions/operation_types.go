@@ -27,6 +27,14 @@ const (
 	// NotificationCGHandler operation types (11250-11299).
 	OperationTypeNotificationCGHandler_ProcessNotification actions.OperationType = 11250
 
+	// NotificationGroupManager operation types (11300-11499).
+	OperationTypeNotificationGroupManager_Create        actions.OperationType = 11300
+	OperationTypeNotificationGroupManager_Delete        actions.OperationType = 11301
+	OperationTypeNotificationGroupManager_FindById      actions.OperationType = 11302
+	OperationTypeNotificationGroupManager_FindByName    actions.OperationType = 11303
+	OperationTypeNotificationGroupManager_Exists        actions.OperationType = 11304
+	OperationTypeNotificationGroupManager_GetStatusById actions.OperationType = 11305
+
 	// ApplicationStore operation types (30000-30999).
 
 	// caching (50000-69999)
