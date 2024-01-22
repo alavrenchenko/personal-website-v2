@@ -36,6 +36,16 @@ const (
 	OperationTypeNotificationGroupManager_GetStatusById actions.OperationType = 11305
 
 	// ApplicationStore operation types (30000-30999).
+	// NotificationStore operation types (31000-31199).
+
+	// NotificationGroupStore operation types (31200-31399).
+	OperationTypeNotificationGroupStore_Create        actions.OperationType = 31200
+	OperationTypeNotificationGroupStore_StartDeleting actions.OperationType = 31201
+	OperationTypeNotificationGroupStore_Delete        actions.OperationType = 31202
+	OperationTypeNotificationGroupStore_FindById      actions.OperationType = 31203
+	OperationTypeNotificationGroupStore_FindByName    actions.OperationType = 31204
+	OperationTypeNotificationGroupStore_Exists        actions.OperationType = 31205
+	OperationTypeNotificationGroupStore_GetStatusById actions.OperationType = 31206
 
 	// caching (50000-69999)
 
