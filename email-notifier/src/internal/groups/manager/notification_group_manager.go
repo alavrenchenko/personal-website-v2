@@ -151,3 +151,21 @@ func (m *NotificationGroupManager) FindByName(ctx *actions.OperationContext, nam
 	}
 	return g, nil
 }
+
+// Exists returns true if the notification group exists.
+func (m *NotificationGroupManager) Exists(ctx *actions.OperationContext, name string) (bool, error) {
+	var exists bool
+	err := m.opExecutor.Exec(ctx, enactions.OperationTypeNotificationGroupManager_Exists, []*actions.OperationParam{actions.NewOperationParam("name", name)},
+		func(opCtx *actions.OperationContext) error {
+			var err error
+			if exists, err = m.notifGroupStore.Exists(opCtx, name); err != nil {
+				return fmt.Errorf("[manager.NotificationGroupManager.Exists] notification group exists: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return false, fmt.Errorf("[manager.NotificationGroupManager.Exists] execute an operation: %w", err)
+	}
+	return exists, nil
+}
