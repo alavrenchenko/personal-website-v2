@@ -62,6 +62,19 @@ type NotificationGroup struct {
 	// The notification group description.
 	Description string `db:"description"`
 
+	// The notification sender's name ("From" name).
+	SenderName *string `db:"sender_name"`
+
+	// The notification sender's email address ("From" email address).
+	SenderEmail string `db:"sender_email"`
+
+	// The notification sender's address ("From" address).
+	//
+	// Example of the sender's address: "Alexey <example@example.com>"
+	//  - sender's name: "Alexey"
+	//  - sender's email address: "example@example.com"
+	SenderAddr string `db:"sender_addr"`
+
 	// rowversion
 	VersionStamp uint64 `db:"_version_stamp"`
 

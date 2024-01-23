@@ -83,7 +83,7 @@ func NewNotificationGroupStore(db *postgres.Database, loggerFactory logging.Logg
 }
 
 // Create creates a notification group and returns the notification group ID if the operation is successful.
-func (s *NotificationGroupStore) Create(ctx *actions.OperationContext, data *groupoperations.CreateOperationData) (uint64, error) {
+func (s *NotificationGroupStore) Create(ctx *actions.OperationContext, data *groupoperations.CreateDbOperationData) (uint64, error) {
 	var id uint64
 	err := s.opExecutor.Exec(ctx, enactions.OperationTypeNotificationGroupStore_Create, []*actions.OperationParam{actions.NewOperationParam("data", data)},
 		func(opCtx *actions.OperationContext) error {
@@ -91,10 +91,10 @@ func (s *NotificationGroupStore) Create(ctx *actions.OperationContext, data *gro
 				var errCode dberrors.DbErrorCode
 				var errMsg string
 				// PROCEDURE: public.create_notification_group(IN _name, IN _title, IN _created_by, IN _status_comment, IN _description,
-				// OUT _id, OUT err_code, OUT err_msg)
+				// IN _sender_name, IN _sender_email, IN _sender_addr, OUT _id, OUT err_code, OUT err_msg)
 				// Minimum transaction isolation level: Read committed.
-				const query = "CALL public.create_notification_group($1, $2, $3, NULL, $4, NULL, NULL, NULL)"
-				r := tx.QueryRow(txCtx, query, data.Name, data.Title, opCtx.UserId.Ptr(), data.Description)
+				const query = "CALL public.create_notification_group($1, $2, $3, NULL, $4, $5, $6, $7, NULL, NULL, NULL)"
+				r := tx.QueryRow(txCtx, query, data.Name, data.Title, opCtx.UserId.Ptr(), data.Description, data.SenderName.Ptr(), data.SenderEmail, data.SenderAddr)
 
 				if err := r.Scan(&id, &errCode, &errMsg); err != nil {
 					return fmt.Errorf("[stores.NotificationGroupStore.Create] execute a query (create_notification_group): %w", err)

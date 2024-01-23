@@ -15,6 +15,9 @@
 package groups
 
 import (
+	"net/mail"
+
+	"personal-website-v2/pkg/base/nullable"
 	"personal-website-v2/pkg/base/strings"
 	"personal-website-v2/pkg/errors"
 )
@@ -28,6 +31,12 @@ type CreateOperationData struct {
 
 	// The notification group description.
 	Description string `json:"description"`
+
+	// The notification sender's name ("From" name).
+	SenderName nullable.Nullable[string] `json:"senderName"`
+
+	// The notification sender's email address ("From" email address).
+	SenderEmail string `json:"senderEmail"`
 }
 
 func (d *CreateOperationData) Validate() *errors.Error {
@@ -40,5 +49,36 @@ func (d *CreateOperationData) Validate() *errors.Error {
 	if strings.IsEmptyOrWhitespace(d.Description) {
 		return errors.NewError(errors.ErrorCodeInvalidData, "description is empty")
 	}
+
+	if strings.IsEmptyOrWhitespace(d.SenderEmail) {
+		return errors.NewError(errors.ErrorCodeInvalidData, "email is empty")
+	}
+	if len(d.SenderEmail) > 500 {
+		return errors.NewError(errors.ErrorCodeInvalidData, "email length is greater than 500 characters")
+	}
+	if emailAddr, err := mail.ParseAddress(d.SenderEmail); err != nil || emailAddr.Address != d.SenderEmail {
+		return errors.NewError(errors.ErrorCodeInvalidData, "invalid email")
+	}
+
 	return nil
+}
+
+type CreateDbOperationData struct {
+	// The notification group name.
+	Name string `json:"name"`
+
+	// The notification group title.
+	Title string `json:"title"`
+
+	// The notification group description.
+	Description string `json:"description"`
+
+	// The notification sender's name ("From" name).
+	SenderName nullable.Nullable[string] `json:"senderName"`
+
+	// The notification sender's email address ("From" email address).
+	SenderEmail string `json:"senderEmail"`
+
+	// The notification sender's address ("From" address).
+	SenderAddr string `json:"senderAddr"`
 }

@@ -24,7 +24,7 @@ import (
 // NotificationGroupStore is a notification group store.
 type NotificationGroupStore interface {
 	// Create creates a notification group and returns the notification group ID if the operation is successful.
-	Create(ctx *actions.OperationContext, data *groups.CreateOperationData) (uint64, error)
+	Create(ctx *actions.OperationContext, data *groups.CreateDbOperationData) (uint64, error)
 
 	// Delete deletes a notification group by the specified notification group ID.
 	Delete(ctx *actions.OperationContext, id uint64) error
