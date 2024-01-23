@@ -26,7 +26,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- PROCEDURE: public.create_notification_group(character varying, character varying, bigint, text, text)
+-- PROCEDURE: public.create_notification_group(character varying, character varying, bigint, text, text, character varying, character varying, character varying)
 /*
 Notification group statuses:
     Active = 2
