@@ -18,18 +18,22 @@ import (
 	"net/mail"
 
 	"personal-website-v2/email-notifier/src/internal/recipients/models"
+	"personal-website-v2/pkg/base/nullable"
 	"personal-website-v2/pkg/base/strings"
 	"personal-website-v2/pkg/errors"
 )
 
 type CreateOperationData struct {
-	// The notification recipient type.
-	Type models.RecipientType `json:"type"`
-
 	// The notification group ID.
 	NotifGroupId uint64 `json:"notifGroupId"`
 
-	// The notification recipient email.
+	// The notification recipient type.
+	Type models.RecipientType `json:"type"`
+
+	// The notification recipient's name.
+	Name nullable.Nullable[string] `json:"name"`
+
+	// The notification recipient's email address.
 	Email string `json:"email"`
 }
 
@@ -44,8 +48,25 @@ func (d *CreateOperationData) Validate() *errors.Error {
 	if len(d.Email) > 500 {
 		return errors.NewError(errors.ErrorCodeInvalidData, "email length is greater than 500 characters")
 	}
-	if _, err := mail.ParseAddress(d.Email); err != nil {
+	if emailAddr, err := mail.ParseAddress(d.Email); err != nil || emailAddr.Address != d.Email {
 		return errors.NewError(errors.ErrorCodeInvalidData, "invalid email")
 	}
 	return nil
+}
+
+type CreateDbOperationData struct {
+	// The notification group ID.
+	NotifGroupId uint64 `json:"notifGroupId"`
+
+	// The notification recipient type.
+	Type models.RecipientType `json:"type"`
+
+	// The notification recipient's name.
+	Name nullable.Nullable[string] `json:"name"`
+
+	// The notification recipient's email address.
+	Email string `json:"email"`
+
+	// The notification recipient's address.
+	Addr string `json:"addr"`
 }

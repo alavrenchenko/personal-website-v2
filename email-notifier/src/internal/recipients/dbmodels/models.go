@@ -25,14 +25,11 @@ type Recipient struct {
 	// The unique ID to identify the notification recipient.
 	Id uint64 `db:"id"`
 
-	// The notification recipient type.
-	Type models.RecipientType `db:"type"`
-
 	// The notification group ID.
 	NotifGroupId uint64 `db:"notif_group_id"`
 
-	// The notification recipient email.
-	Email string `db:"email"`
+	// The notification recipient type.
+	Type models.RecipientType `db:"type"`
 
 	// It stores the date and time at which the notification recipient was created.
 	CreatedAt time.Time `db:"created_at"`
@@ -48,6 +45,19 @@ type Recipient struct {
 
 	// The user ID to identify the user who deleted the notification recipient.
 	DeletedBy *uint64 `db:"deleted_by"`
+
+	// The notification recipient's name.
+	Name *string `db:"name"`
+
+	// The notification recipient's email address.
+	Email string `db:"email"`
+
+	// The notification recipient's address.
+	//
+	// Example of the recipient's address: "Alexey <example@example.com>"
+	//  - recipient's name: "Alexey"
+	//  - recipient's email address: "example@example.com"
+	Addr string `db:"addr"`
 
 	// rowversion
 	VersionStamp uint64 `db:"_version_stamp"`
