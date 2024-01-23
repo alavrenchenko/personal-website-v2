@@ -88,3 +88,43 @@ BEGIN
             RAISE;
 END;
 $$ LANGUAGE plpgsql;
+
+-- PROCEDURE: public.delete_recipient(bigint, bigint)
+/*
+Error codes:
+    NoError           = 0
+    InvalidOperation  = 3
+    RecipientNotFound = 11400
+*/
+-- Minimum transaction isolation level: Read committed.
+CREATE OR REPLACE PROCEDURE public.delete_recipient(
+    IN _id public.recipients.id%TYPE,
+    IN _deleted_by public.recipients.deleted_by%TYPE,
+    OUT err_code bigint,
+    OUT err_msg text) AS $$
+DECLARE
+    _time timestamp(6) without time zone;
+    _is_deleted public.recipients.is_deleted%TYPE;
+BEGIN
+    err_code := 0; -- NoError
+    err_msg := '';
+
+    SELECT is_deleted INTO _is_deleted FROM public.recipients WHERE id = _id LIMIT 1 FOR UPDATE;
+    IF NOT FOUND THEN
+        err_code := 11400; -- RecipientNotFound
+        err_msg := 'notification recipient not found';
+        RETURN;
+    END IF;
+
+    IF _is_deleted THEN
+        err_code := 3; -- InvalidOperation
+        err_msg := 'notification recipient has already been deleted';
+        RETURN;
+    END IF;
+
+    _time := (clock_timestamp() AT TIME ZONE 'UTC');
+    UPDATE public.recipients
+        SET is_deleted = TRUE, deleted_at = _time, deleted_by = _deleted_by, _version_stamp = _version_stamp + 1, _timestamp = _time
+        WHERE id = _id;
+END;
+$$ LANGUAGE plpgsql;
