@@ -28,4 +28,8 @@ const (
 	// Notification group error codes (11200-11399).
 	DbErrorCodeNotificationGroupNotFound      errors.DbErrorCode = 11200
 	DbErrorCodeNotificationGroupAlreadyExists errors.DbErrorCode = 11201
+
+	// Notification recipient error codes (11400-11599).
+	DbErrorCodeRecipientNotFound      errors.DbErrorCode = 11400
+	DbErrorCodeRecipientAlreadyExists errors.DbErrorCode = 11401
 )
