@@ -29,6 +29,10 @@ const (
 	// Notification group error codes (31200-31399).
 	ErrorCodeNotificationGroupNotFound      errors.ErrorCode = 31200
 	ErrorCodeNotificationGroupAlreadyExists errors.ErrorCode = 31201
+
+	// Notification recipient error codes (31400-31599).
+	ErrorCodeRecipientNotFound      errors.ErrorCode = 31400
+	ErrorCodeRecipientAlreadyExists errors.ErrorCode = 31401
 )
 
 var (
@@ -39,4 +43,8 @@ var (
 	// Notification group errors.
 	ErrNotificationGroupNotFound      = errors.NewError(ErrorCodeNotificationGroupNotFound, "notification group not found")
 	ErrNotificationGroupAlreadyExists = errors.NewError(ErrorCodeNotificationGroupAlreadyExists, "notification group with the same name already exists")
+
+	// Notification recipient errors.
+	ErrRecipientNotFound      = errors.NewError(ErrorCodeRecipientNotFound, "notification recipient not found")
+	ErrRecipientAlreadyExists = errors.NewError(ErrorCodeRecipientAlreadyExists, "notification recipient with the same params already exists")
 )
