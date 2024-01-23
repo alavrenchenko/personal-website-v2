@@ -40,7 +40,7 @@ message AppGroup {
     // It stores the date and time at which the app group was created.
     google.protobuf.Timestamp created_at = 5;
 
-    // The user ID to identify the user who added the app group.
+    // The user ID to identify the user who created the app group.
     uint64 created_by = 6;
 
     // It stores the date and time at which the app group was updated.
