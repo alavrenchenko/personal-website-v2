@@ -38,7 +38,7 @@ type NotificationGroup struct {
 	// It stores the date and time at which the notification group was created.
 	CreatedAt time.Time `db:"created_at"`
 
-	// The user ID to identify the user who added the notification group.
+	// The user ID to identify the user who created the notification group.
 	CreatedBy uint64 `db:"created_by"`
 
 	// It stores the date and time at which the notification group was updated.
