@@ -124,5 +124,9 @@ BEGIN
         SET updated_at = _time, updated_by = _deleted_by, status = 5, status_updated_at = _time, status_updated_by = _deleted_by,
             status_comment = _status_comment, _version_stamp = _version_stamp + 1, _timestamp = _time
         WHERE id = _id;
+
+    UPDATE public.recipients
+        SET is_deleted = TRUE, deleted_at = _time, deleted_by = _deleted_by, _version_stamp = _version_stamp + 1, _timestamp = _time
+        WHERE notif_group_id = _id AND is_deleted IS FALSE;
 END;
 $$ LANGUAGE plpgsql;
