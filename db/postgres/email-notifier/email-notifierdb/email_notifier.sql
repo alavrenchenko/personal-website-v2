@@ -49,6 +49,9 @@ CREATE TABLE IF NOT EXISTS public.notification_groups
     status_updated_by bigint NOT NULL,
     status_comment text COLLATE pg_catalog."default",
     description text COLLATE pg_catalog."default" NOT NULL,
+    sender_name character varying(128) COLLATE pg_catalog."default",
+    sender_email character varying(512) COLLATE pg_catalog."default" NOT NULL,
+    sender_addr character varying(640) COLLATE pg_catalog."default" NOT NULL,
     _version_stamp bigint NOT NULL,
     _timestamp timestamp(6) without time zone NOT NULL DEFAULT (clock_timestamp() AT TIME ZONE 'UTC'::text),
     CONSTRAINT notification_groups_pkey PRIMARY KEY (id),
@@ -64,6 +67,8 @@ CREATE INDEX IF NOT EXISTS notification_groups_created_at_idx ON public.notifica
 CREATE INDEX IF NOT EXISTS notification_groups_updated_at_idx ON public.notification_groups (updated_at);
 CREATE INDEX IF NOT EXISTS notification_groups_status_idx ON public.notification_groups (status);
 CREATE INDEX IF NOT EXISTS notification_groups_status_updated_at_idx ON public.notification_groups (status_updated_at);
+CREATE INDEX IF NOT EXISTS notification_groups_sender_email_lc_idx ON public.notification_groups (lower(sender_email));
+CREATE INDEX IF NOT EXISTS notification_groups_sender_addr_lc_idx ON public.notification_groups (lower(sender_addr));
 
 -- Table: public.recipients
 /*
