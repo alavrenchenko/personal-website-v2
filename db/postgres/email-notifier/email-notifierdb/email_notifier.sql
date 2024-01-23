@@ -64,3 +64,46 @@ CREATE INDEX IF NOT EXISTS notification_groups_created_at_idx ON public.notifica
 CREATE INDEX IF NOT EXISTS notification_groups_updated_at_idx ON public.notification_groups (updated_at);
 CREATE INDEX IF NOT EXISTS notification_groups_status_idx ON public.notification_groups (status);
 CREATE INDEX IF NOT EXISTS notification_groups_status_updated_at_idx ON public.notification_groups (status_updated_at);
+
+-- Table: public.recipients
+/*
+Recipient types:
+    Unspecified = 0
+    CC          = 2
+    BCC         = 3
+*/
+CREATE TABLE IF NOT EXISTS public.recipients
+(
+    id bigint NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 9223372036854775807 CACHE 1 ),
+    notif_group_id bigint NOT NULL,
+    type smallint NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    created_by bigint NOT NULL,
+    is_deleted boolean NOT NULL DEFAULT FALSE,
+    deleted_at timestamp(6) without time zone,
+    deleted_by bigint,
+    name character varying(128) COLLATE pg_catalog."default",
+    email character varying(512) COLLATE pg_catalog."default" NOT NULL,
+    addr character varying(640) COLLATE pg_catalog."default" NOT NULL,
+    _version_stamp bigint NOT NULL,
+    _timestamp timestamp(6) without time zone NOT NULL DEFAULT (clock_timestamp() AT TIME ZONE 'UTC'::text),
+    CONSTRAINT recipients_pkey PRIMARY KEY (id),
+    CONSTRAINT recipients_notif_group_id_fkey FOREIGN KEY (notif_group_id)
+        REFERENCES public.notification_groups (id) MATCH SIMPLE
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT,
+    CONSTRAINT recipients_type_check CHECK (type = 2 OR type = 3)
+)
+TABLESPACE pg_default;
+
+CREATE UNIQUE INDEX IF NOT EXISTS recipients_notif_group_id_email_lc_idx
+    ON public.recipients (notif_group_id, lower(email))
+    WHERE is_deleted IS FALSE;
+
+CREATE INDEX IF NOT EXISTS recipients_notif_group_id_idx ON public.recipients (notif_group_id);
+CREATE INDEX IF NOT EXISTS recipients_type_idx ON public.recipients (type);
+CREATE INDEX IF NOT EXISTS recipients_created_at_idx ON public.recipients (created_at);
+CREATE INDEX IF NOT EXISTS recipients_is_deleted_idx ON public.recipients (is_deleted);
+CREATE INDEX IF NOT EXISTS recipients_deleted_at_idx ON public.recipients (deleted_at);
+CREATE INDEX IF NOT EXISTS recipients_email_lc_idx ON public.recipients (lower(email));
+CREATE INDEX IF NOT EXISTS recipients_addr_lc_idx ON public.recipients (lower(addr));
