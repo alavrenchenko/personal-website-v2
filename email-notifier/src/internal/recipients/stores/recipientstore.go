@@ -36,7 +36,7 @@ import (
 )
 
 const (
-	notifGroupsTable = "public.notification_groups"
+	recipientsTable = "public.recipients"
 )
 
 // RecipientStore is a notification recipient store.
@@ -161,4 +161,23 @@ func (s *RecipientStore) Delete(ctx *actions.OperationContext, id uint64) error 
 		return fmt.Errorf("[stores.RecipientStore.Delete] execute an operation: %w", err)
 	}
 	return nil
+}
+
+// FindById finds and returns a notification recipient, if any, by the specified notification recipient ID.
+func (s *RecipientStore) FindById(ctx *actions.OperationContext, id uint64) (*dbmodels.Recipient, error) {
+	var r *dbmodels.Recipient
+	err := s.opExecutor.Exec(ctx, enactions.OperationTypeRecipientStore_FindById, []*actions.OperationParam{actions.NewOperationParam("id", id)},
+		func(opCtx *actions.OperationContext) error {
+			const query = "SELECT * FROM " + recipientsTable + " WHERE id = $1 LIMIT 1"
+			var err error
+			if r, err = s.store.Find(opCtx.Ctx, query, id); err != nil {
+				return fmt.Errorf("[stores.RecipientStore.FindById] find a notification recipient by id: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("[stores.RecipientStore.FindById] execute an operation: %w", err)
+	}
+	return r, nil
 }

@@ -21,6 +21,7 @@ import (
 	enactions "personal-website-v2/email-notifier/src/internal/actions"
 	"personal-website-v2/email-notifier/src/internal/logging/events"
 	"personal-website-v2/email-notifier/src/internal/recipients"
+	"personal-website-v2/email-notifier/src/internal/recipients/dbmodels"
 	recipientoperations "personal-website-v2/email-notifier/src/internal/recipients/operations/recipients"
 	"personal-website-v2/pkg/actions"
 	"personal-website-v2/pkg/base/strings"
@@ -122,4 +123,22 @@ func (m *RecipientManager) Delete(ctx *actions.OperationContext, id uint64) erro
 		return fmt.Errorf("[manager.RecipientManager.Delete] execute an operation: %w", err)
 	}
 	return nil
+}
+
+// FindById finds and returns a notification recipient, if any, by the specified notification recipient ID.
+func (m *RecipientManager) FindById(ctx *actions.OperationContext, id uint64) (*dbmodels.Recipient, error) {
+	var r *dbmodels.Recipient
+	err := m.opExecutor.Exec(ctx, enactions.OperationTypeRecipientManager_FindById, []*actions.OperationParam{actions.NewOperationParam("id", id)},
+		func(opCtx *actions.OperationContext) error {
+			var err error
+			if r, err = m.recipientStore.FindById(opCtx, id); err != nil {
+				return fmt.Errorf("[manager.RecipientManager.FindById] find a notification recipient by id: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("[manager.RecipientManager.FindById] execute an operation: %w", err)
+	}
+	return r, nil
 }
