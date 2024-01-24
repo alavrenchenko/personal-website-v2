@@ -35,6 +35,14 @@ const (
 	OperationTypeNotificationGroupManager_Exists        actions.OperationType = 11304
 	OperationTypeNotificationGroupManager_GetStatusById actions.OperationType = 11305
 
+	// RecipientManager operation types (11500-11699).
+	OperationTypeRecipientManager_Create                 actions.OperationType = 11500
+	OperationTypeRecipientManager_Delete                 actions.OperationType = 11501
+	OperationTypeRecipientManager_FindById               actions.OperationType = 11502
+	OperationTypeRecipientManager_GetAllByNotifGroupId   actions.OperationType = 11503
+	OperationTypeRecipientManager_GetAllByNotifGroupName actions.OperationType = 11504
+	OperationTypeRecipientManager_Exists                 actions.OperationType = 11505
+
 	// ApplicationStore operation types (30000-30999).
 	// NotificationStore operation types (31000-31199).
 
@@ -46,6 +54,14 @@ const (
 	OperationTypeNotificationGroupStore_FindByName    actions.OperationType = 31204
 	OperationTypeNotificationGroupStore_Exists        actions.OperationType = 31205
 	OperationTypeNotificationGroupStore_GetStatusById actions.OperationType = 31206
+
+	// RecipientStore operation types (31400-31599).
+	OperationTypeRecipientStore_Create                 actions.OperationType = 31400
+	OperationTypeRecipientStore_Delete                 actions.OperationType = 31401
+	OperationTypeRecipientStore_FindById               actions.OperationType = 31402
+	OperationTypeRecipientStore_GetAllByNotifGroupId   actions.OperationType = 31403
+	OperationTypeRecipientStore_GetAllByNotifGroupName actions.OperationType = 31404
+	OperationTypeRecipientStore_Exists                 actions.OperationType = 31405
 
 	// caching (50000-69999)
 
