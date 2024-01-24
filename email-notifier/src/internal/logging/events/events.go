@@ -39,5 +39,8 @@ var (
 	// NotificationGroup events (id: 0, 10400-10599)
 	NotificationGroupEvent = logging.NewEvent(0, "NotificationGroup", logging.EventCategoryCommon, enlogging.EventGroupNotificationGroup)
 
+	// Recipient events (id: 0, 10600-10799)
+	RecipientEvent = logging.NewEvent(0, "Recipient", logging.EventCategoryCommon, enlogging.EventGroupRecipient)
+
 	// ApplicationStore events (id: 0, 20000-20199)
 )

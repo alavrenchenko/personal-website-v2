@@ -24,4 +24,5 @@ const (
 	EventGroupNotificationService   logging.EventGroup = 1001
 	EventGroupNotificationCGHandler logging.EventGroup = 1002
 	EventGroupNotificationGroup     logging.EventGroup = 1003
+	EventGroupRecipient             logging.EventGroup = 1004
 )
