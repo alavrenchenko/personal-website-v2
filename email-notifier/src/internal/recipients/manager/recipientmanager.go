@@ -102,3 +102,24 @@ func (m *RecipientManager) Create(ctx *actions.OperationContext, data *recipient
 	}
 	return id, nil
 }
+
+// Delete deletes a notification recipient by the specified notification recipient ID.
+func (m *RecipientManager) Delete(ctx *actions.OperationContext, id uint64) error {
+	err := m.opExecutor.Exec(ctx, enactions.OperationTypeRecipientManager_Delete, []*actions.OperationParam{actions.NewOperationParam("id", id)},
+		func(opCtx *actions.OperationContext) error {
+			if err := m.recipientStore.Delete(opCtx, id); err != nil {
+				return fmt.Errorf("[manager.RecipientManager.Delete] delete a notification recipient: %w", err)
+			}
+
+			m.logger.InfoWithEvent(opCtx.CreateLogEntryContext(), events.NotificationGroupEvent,
+				"[manager.RecipientManager.Delete] notification recipient has been deleted",
+				logging.NewField("id", id),
+			)
+			return nil
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("[manager.RecipientManager.Delete] execute an operation: %w", err)
+	}
+	return nil
+}

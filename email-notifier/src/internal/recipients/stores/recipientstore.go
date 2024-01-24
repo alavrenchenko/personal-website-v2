@@ -123,3 +123,42 @@ func (s *RecipientStore) Create(ctx *actions.OperationContext, data *recipientop
 	}
 	return id, nil
 }
+
+// Delete deletes a notification recipient by the specified notification recipient ID.
+func (s *RecipientStore) Delete(ctx *actions.OperationContext, id uint64) error {
+	err := s.opExecutor.Exec(ctx, enactions.OperationTypeRecipientStore_Delete, []*actions.OperationParam{actions.NewOperationParam("id", id)},
+		func(opCtx *actions.OperationContext) error {
+			err := s.txManager.ExecWithReadCommittedLevel(opCtx.Ctx, func(txCtx context.Context, tx pgx.Tx) error {
+				var errCode dberrors.DbErrorCode
+				var errMsg string
+				// PROCEDURE: public.delete_recipient(IN _id, IN _deleted_by, OUT err_code, OUT err_msg)
+				// Minimum transaction isolation level: Read committed.
+				const query = "CALL public.delete_recipient($1, $2, NULL, NULL)"
+				r := tx.QueryRow(txCtx, query, id, opCtx.UserId.Ptr())
+
+				if err := r.Scan(&errCode, &errMsg); err != nil {
+					return fmt.Errorf("[stores.RecipientStore.Delete] execute a query (delete_recipient): %w", err)
+				}
+
+				switch errCode {
+				case dberrors.DbErrorCodeNoError:
+					return nil
+				case dberrors.DbErrorCodeInvalidOperation:
+					return errs.NewError(errs.ErrorCodeInvalidOperation, errMsg)
+				case endberrors.DbErrorCodeRecipientNotFound:
+					return enerrors.ErrRecipientNotFound
+				}
+				// unknown error
+				return fmt.Errorf("[stores.RecipientStore.Delete] invalid operation: %w", dberrors.NewDbError(errCode, errMsg))
+			})
+			if err != nil {
+				return fmt.Errorf("[stores.RecipientStore.Delete] execute a transaction: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("[stores.RecipientStore.Delete] execute an operation: %w", err)
+	}
+	return nil
+}
