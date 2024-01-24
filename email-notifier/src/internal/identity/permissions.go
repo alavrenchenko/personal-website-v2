@@ -26,6 +26,15 @@ const (
 	PermissionNotificationGroup_Exists = "emailnotifier.notificationGroups.exists"
 	// GetStatusById.
 	PermissionNotificationGroup_GetStatus = "emailnotifier.notificationGroups.getStatus"
+
+	// Notification recipient permissions.
+	PermissionRecipient_Create = "emailnotifier.recipients.create"
+	PermissionRecipient_Delete = "emailnotifier.recipients.delete"
+	// GetById.
+	PermissionRecipient_Get = "emailnotifier.recipients.get"
+	// GetAllByNotifGroupId, GetAllByNotifGroupName.
+	PermissionRecipient_GetAllBy = "emailnotifier.recipients.getAllBy"
+	PermissionRecipient_Exists   = "emailnotifier.recipients.exists"
 )
 
 var Permissions = []string{
@@ -35,4 +44,9 @@ var Permissions = []string{
 	PermissionNotificationGroup_Get,
 	PermissionNotificationGroup_Exists,
 	PermissionNotificationGroup_GetStatus,
+	PermissionRecipient_Create,
+	PermissionRecipient_Delete,
+	PermissionRecipient_Get,
+	PermissionRecipient_GetAllBy,
+	PermissionRecipient_Exists,
 }
