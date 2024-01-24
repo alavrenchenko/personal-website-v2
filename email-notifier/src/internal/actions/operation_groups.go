@@ -22,4 +22,5 @@ import "personal-website-v2/pkg/actions"
 const (
 	OperationGroupNotification      actions.OperationGroup = 1000
 	OperationGroupNotificationGroup actions.OperationGroup = 1001
+	OperationGroupRecipient         actions.OperationGroup = 1002
 )
