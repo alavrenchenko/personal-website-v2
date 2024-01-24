@@ -16,7 +16,6 @@ package recipients
 
 import (
 	"personal-website-v2/email-notifier/src/internal/recipients/dbmodels"
-	"personal-website-v2/email-notifier/src/internal/recipients/models"
 	"personal-website-v2/email-notifier/src/internal/recipients/operations/recipients"
 	"personal-website-v2/pkg/actions"
 )
@@ -37,6 +36,10 @@ type RecipientManager interface {
 	// If onlyExisting is true, then it returns only existing notification recipients.
 	GetAllByNotifGroupId(ctx *actions.OperationContext, notifGroupId uint64, onlyExisting bool) ([]*dbmodels.Recipient, error)
 
+	// GetAllByNotifGroupName gets all notification recipients by the specified notification group name.
+	// If onlyExisting is true, then it returns only existing notification recipients.
+	GetAllByNotifGroupName(ctx *actions.OperationContext, notifGroupName uint64, onlyExisting bool) ([]*dbmodels.Recipient, error)
+
 	// Exists returns true if the notification recipient exists.
-	Exists(ctx *actions.OperationContext, rtype models.RecipientType, notifGroupId uint64, email string) (bool, error)
+	Exists(ctx *actions.OperationContext, notifGroupId uint64, email string) (bool, error)
 }
