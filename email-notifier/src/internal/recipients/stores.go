@@ -16,7 +16,6 @@ package recipients
 
 import (
 	"personal-website-v2/email-notifier/src/internal/recipients/dbmodels"
-	"personal-website-v2/email-notifier/src/internal/recipients/models"
 	"personal-website-v2/email-notifier/src/internal/recipients/operations/recipients"
 	"personal-website-v2/pkg/actions"
 )
@@ -25,7 +24,7 @@ import (
 type RecipientStore interface {
 	// Create creates a notification recipient and returns the notification recipient ID
 	// if the operation is successful.
-	Create(ctx *actions.OperationContext, data *recipients.CreateOperationData) (uint64, error)
+	Create(ctx *actions.OperationContext, data *recipients.CreateDbOperationData) (uint64, error)
 
 	// Delete deletes a notification recipient by the specified notification recipient ID.
 	Delete(ctx *actions.OperationContext, id uint64) error
@@ -37,6 +36,10 @@ type RecipientStore interface {
 	// If onlyExisting is true, then it returns only existing notification recipients.
 	GetAllByNotifGroupId(ctx *actions.OperationContext, notifGroupId uint64, onlyExisting bool) ([]*dbmodels.Recipient, error)
 
+	// GetAllByNotifGroupName gets all notification recipients by the specified notification group name.
+	// If onlyExisting is true, then it returns only existing notification recipients.
+	GetAllByNotifGroupName(ctx *actions.OperationContext, notifGroupName uint64, onlyExisting bool) ([]*dbmodels.Recipient, error)
+
 	// Exists returns true if the notification recipient exists.
-	Exists(ctx *actions.OperationContext, rtype models.RecipientType, notifGroupId uint64, email string) (bool, error)
+	Exists(ctx *actions.OperationContext, notifGroupId uint64, email string) (bool, error)
 }
