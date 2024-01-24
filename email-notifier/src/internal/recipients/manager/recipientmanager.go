@@ -142,3 +142,23 @@ func (m *RecipientManager) FindById(ctx *actions.OperationContext, id uint64) (*
 	}
 	return r, nil
 }
+
+// GetAllByNotifGroupId gets all notification recipients by the specified notification group ID.
+// If onlyExisting is true, then it returns only existing notification recipients.
+func (m *RecipientManager) GetAllByNotifGroupId(ctx *actions.OperationContext, notifGroupId uint64, onlyExisting bool) ([]*dbmodels.Recipient, error) {
+	var rs []*dbmodels.Recipient
+	err := m.opExecutor.Exec(ctx, enactions.OperationTypeRecipientManager_GetAllByNotifGroupId,
+		[]*actions.OperationParam{actions.NewOperationParam("notifGroupId", notifGroupId), actions.NewOperationParam("onlyExisting", onlyExisting)},
+		func(opCtx *actions.OperationContext) error {
+			var err error
+			if rs, err = m.recipientStore.GetAllByNotifGroupId(opCtx, notifGroupId, onlyExisting); err != nil {
+				return fmt.Errorf("[manager.RecipientManager.GetAllByNotifGroupId] get all notification recipients by notification group id: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("[manager.RecipientManager.GetAllByNotifGroupId] execute an operation: %w", err)
+	}
+	return rs, nil
+}

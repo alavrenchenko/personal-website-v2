@@ -181,3 +181,30 @@ func (s *RecipientStore) FindById(ctx *actions.OperationContext, id uint64) (*db
 	}
 	return r, nil
 }
+
+// GetAllByNotifGroupId gets all notification recipients by the specified notification group ID.
+// If onlyExisting is true, then it returns only existing notification recipients.
+func (s *RecipientStore) GetAllByNotifGroupId(ctx *actions.OperationContext, notifGroupId uint64, onlyExisting bool) ([]*dbmodels.Recipient, error) {
+	var rs []*dbmodels.Recipient
+	err := s.opExecutor.Exec(ctx, enactions.OperationTypeRecipientStore_GetAllByNotifGroupId,
+		[]*actions.OperationParam{actions.NewOperationParam("notifGroupId", notifGroupId), actions.NewOperationParam("onlyExisting", onlyExisting)},
+		func(opCtx *actions.OperationContext) error {
+			var query string
+			if onlyExisting {
+				query = "SELECT * FROM " + recipientsTable + " WHERE notif_group_id = $1 AND is_deleted IS FALSE"
+			} else {
+				query = "SELECT * FROM " + recipientsTable + " WHERE notif_group_id = $1"
+			}
+
+			var err error
+			if rs, err = s.store.FindAll(opCtx.Ctx, query, notifGroupId); err != nil {
+				return fmt.Errorf("[stores.RecipientStore.GetAllByNotifGroupId] find all notification recipients by notification group id: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("[stores.RecipientStore.GetAllByNotifGroupId] execute an operation: %w", err)
+	}
+	return rs, nil
+}
