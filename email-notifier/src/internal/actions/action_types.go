@@ -33,4 +33,12 @@ const (
 	ActionTypeNotificationGroup_GetByIdOrName actions.ActionType = 11204
 	ActionTypeNotificationGroup_Exists        actions.ActionType = 11205
 	ActionTypeNotificationGroup_GetStatusById actions.ActionType = 11206
+
+	// Notification recipient action types (11400-11599).
+	ActionTypeRecipient_Create                 actions.ActionType = 11400
+	ActionTypeRecipient_Delete                 actions.ActionType = 11401
+	ActionTypeRecipient_GetById                actions.ActionType = 11402
+	ActionTypeRecipient_GetAllByNotifGroupId   actions.ActionType = 11403
+	ActionTypeRecipient_GetAllByNotifGroupName actions.ActionType = 11404
+	ActionTypeRecipient_Exists                 actions.ActionType = 11405
 )
