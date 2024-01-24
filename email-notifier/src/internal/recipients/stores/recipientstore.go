@@ -15,13 +15,21 @@
 package stores
 
 import (
+	"context"
 	"fmt"
 
+	"github.com/jackc/pgx/v5"
+
 	enactions "personal-website-v2/email-notifier/src/internal/actions"
+	endberrors "personal-website-v2/email-notifier/src/internal/db/errors"
+	enerrors "personal-website-v2/email-notifier/src/internal/errors"
 	"personal-website-v2/email-notifier/src/internal/recipients"
 	"personal-website-v2/email-notifier/src/internal/recipients/dbmodels"
+	recipientoperations "personal-website-v2/email-notifier/src/internal/recipients/operations/recipients"
 	"personal-website-v2/pkg/actions"
+	dberrors "personal-website-v2/pkg/db/errors"
 	"personal-website-v2/pkg/db/postgres"
+	errs "personal-website-v2/pkg/errors"
 	actionhelper "personal-website-v2/pkg/helper/actions"
 	"personal-website-v2/pkg/logging"
 	lcontext "personal-website-v2/pkg/logging/context"
@@ -70,4 +78,48 @@ func NewRecipientStore(db *postgres.Database, loggerFactory logging.LoggerFactor
 		txManager:  txm,
 		logger:     l,
 	}, nil
+}
+
+// Create creates a notification recipient and returns the notification recipient ID
+// if the operation is successful.
+func (s *RecipientStore) Create(ctx *actions.OperationContext, data *recipientoperations.CreateDbOperationData) (uint64, error) {
+	var id uint64
+	err := s.opExecutor.Exec(ctx, enactions.OperationTypeRecipientStore_Create, []*actions.OperationParam{actions.NewOperationParam("data", data)},
+		func(opCtx *actions.OperationContext) error {
+			err := s.txManager.ExecWithReadCommittedLevel(opCtx.Ctx, func(txCtx context.Context, tx pgx.Tx) error {
+				var errCode dberrors.DbErrorCode
+				var errMsg string
+				// PROCEDURE: public.create_recipient(IN _notif_group_id, IN _type, IN _created_by, IN _name, IN _email, IN _addr,
+				// OUT _id, OUT err_code, OUT err_msg)
+				// Minimum transaction isolation level: Read committed.
+				const query = "CALL public.create_recipient($1, $2, $3, $4, $5, $6, NULL, NULL, NULL)"
+				r := tx.QueryRow(txCtx, query, data.NotifGroupId, data.Type, opCtx.UserId.Ptr(), data.Name.Ptr(), data.Email, data.Addr)
+
+				if err := r.Scan(&id, &errCode, &errMsg); err != nil {
+					return fmt.Errorf("[stores.RecipientStore.Create] execute a query (create_recipient): %w", err)
+				}
+
+				switch errCode {
+				case dberrors.DbErrorCodeNoError:
+					return nil
+				case dberrors.DbErrorCodeInvalidOperation:
+					return errs.NewError(errs.ErrorCodeInvalidOperation, errMsg)
+				case endberrors.DbErrorCodeNotificationGroupNotFound:
+					return enerrors.ErrNotificationGroupNotFound
+				case endberrors.DbErrorCodeRecipientAlreadyExists:
+					return enerrors.ErrRecipientAlreadyExists
+				}
+				// unknown error
+				return fmt.Errorf("[stores.RecipientStore.Create] invalid operation: %w", dberrors.NewDbError(errCode, errMsg))
+			})
+			if err != nil {
+				return fmt.Errorf("[stores.RecipientStore.Create] execute a transaction: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return 0, fmt.Errorf("[stores.RecipientStore.Create] execute an operation: %w", err)
+	}
+	return id, nil
 }

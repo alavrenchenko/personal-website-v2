@@ -16,10 +16,14 @@ package manager
 
 import (
 	"fmt"
+	"net/mail"
 
 	enactions "personal-website-v2/email-notifier/src/internal/actions"
+	"personal-website-v2/email-notifier/src/internal/logging/events"
 	"personal-website-v2/email-notifier/src/internal/recipients"
+	recipientoperations "personal-website-v2/email-notifier/src/internal/recipients/operations/recipients"
 	"personal-website-v2/pkg/actions"
+	"personal-website-v2/pkg/base/strings"
 	actionhelper "personal-website-v2/pkg/helper/actions"
 	"personal-website-v2/pkg/logging"
 	"personal-website-v2/pkg/logging/context"
@@ -55,4 +59,46 @@ func NewRecipientManager(recipientStore recipients.RecipientStore, loggerFactory
 		recipientStore: recipientStore,
 		logger:         l,
 	}, nil
+}
+
+// Create creates a notification recipient and returns the notification recipient ID
+// if the operation is successful.
+func (m *RecipientManager) Create(ctx *actions.OperationContext, data *recipientoperations.CreateOperationData) (uint64, error) {
+	var id uint64
+	err := m.opExecutor.Exec(ctx, enactions.OperationTypeRecipientManager_Create, []*actions.OperationParam{actions.NewOperationParam("data", data)},
+		func(opCtx *actions.OperationContext) error {
+			if err := data.Validate(); err != nil {
+				return fmt.Errorf("[manager.RecipientManager.Create] validate data: %w", err)
+			}
+
+			d := &recipientoperations.CreateDbOperationData{
+				NotifGroupId: data.NotifGroupId,
+				Type:         data.Type,
+				Name:         data.Name,
+				Email:        data.Email,
+			}
+			addr := mail.Address{Address: data.Email}
+
+			if data.Name.HasValue && !strings.IsEmptyOrWhitespace(data.Name.Value) {
+				d.Name = data.Name
+				addr.Name = data.Name.Value
+			}
+			d.Addr = addr.String()
+
+			var err error
+			if id, err = m.recipientStore.Create(opCtx, d); err != nil {
+				return fmt.Errorf("[manager.RecipientManager.Create] create a notification recipient: %w", err)
+			}
+
+			m.logger.InfoWithEvent(opCtx.CreateLogEntryContext(), events.RecipientEvent,
+				"[manager.RecipientManager.Create] notification recipient has been created",
+				logging.NewField("id", id),
+			)
+			return nil
+		},
+	)
+	if err != nil {
+		return 0, fmt.Errorf("[manager.RecipientManager.Create] execute an operation: %w", err)
+	}
+	return id, nil
 }
