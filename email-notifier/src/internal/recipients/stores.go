@@ -38,7 +38,7 @@ type RecipientStore interface {
 
 	// GetAllByNotifGroupName gets all notification recipients by the specified notification group name.
 	// If onlyExisting is true, then it returns only existing notification recipients.
-	GetAllByNotifGroupName(ctx *actions.OperationContext, notifGroupName uint64, onlyExisting bool) ([]*dbmodels.Recipient, error)
+	// GetAllByNotifGroupName(ctx *actions.OperationContext, notifGroupName string, onlyExisting bool) ([]*dbmodels.Recipient, error)
 
 	// Exists returns true if the notification recipient exists.
 	Exists(ctx *actions.OperationContext, notifGroupId uint64, email string) (bool, error)
