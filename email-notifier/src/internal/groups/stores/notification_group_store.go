@@ -129,6 +129,7 @@ func (s *NotificationGroupStore) Delete(ctx *actions.OperationContext, id uint64
 				var errCode dberrors.DbErrorCode
 				var errMsg string
 				// PROCEDURE: public.delete_notification_group(IN _id, IN _deleted_by, IN _status_comment, OUT err_code, OUT err_msg)
+				// Minimum transaction isolation level: Read committed.
 				const query = "CALL public.delete_notification_group($1, $2, 'deletion', NULL, NULL)"
 				r := tx.QueryRow(txCtx, query, id, opCtx.UserId.Ptr())
 
