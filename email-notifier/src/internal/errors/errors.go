@@ -33,6 +33,9 @@ const (
 	// Notification recipient error codes (31400-31599).
 	ErrorCodeRecipientNotFound      errors.ErrorCode = 31400
 	ErrorCodeRecipientAlreadyExists errors.ErrorCode = 31401
+
+	// Mail account error codes (31600-31799).
+	ErrorCodeMailAccountNotFound errors.ErrorCode = 31600
 )
 
 var (
@@ -47,4 +50,7 @@ var (
 	// Notification recipient errors.
 	ErrRecipientNotFound      = errors.NewError(ErrorCodeRecipientNotFound, "notification recipient not found")
 	ErrRecipientAlreadyExists = errors.NewError(ErrorCodeRecipientAlreadyExists, "notification recipient with the same params already exists")
+
+	// Mail account errors.
+	ErrMailAccountNotFound = errors.NewError(ErrorCodeMailAccountNotFound, "mail account not found")
 )
