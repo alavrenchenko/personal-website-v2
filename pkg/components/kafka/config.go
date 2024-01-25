@@ -410,7 +410,7 @@ func (c *Config) SaramaConfig() (*sarama.Config, error) {
 		case CompressionCodecZSTD:
 			sc.Producer.Compression = sarama.CompressionZSTD
 		default:
-			return nil, fmt.Errorf("[kafka.SaramaConfig] unknown compression type ('%s')", c.Producer.Compression)
+			return nil, fmt.Errorf("[kafka.SaramaConfig] unknown producer compression type ('%s')", c.Producer.Compression)
 		}
 
 		if c.Producer.CompressionLevel.HasValue {
@@ -493,7 +493,15 @@ func (c *Config) SaramaConfig() (*sarama.Config, error) {
 				sc.Consumer.Offsets.AutoCommit.Interval = c.Consumer.Offsets.AutoCommit.Interval
 			}
 
-			sc.Consumer.Offsets.Initial = c.Consumer.Offsets.Initial
+			switch c.Consumer.Offsets.Initial {
+			case ConsumerOffsetNewest:
+				sc.Consumer.Offsets.Initial = sarama.OffsetNewest
+			case ConsumerOffsetOldest:
+				sc.Consumer.Offsets.Initial = sarama.OffsetOldest
+			default:
+				return nil, fmt.Errorf("[kafka.SaramaConfig] unknown initial consumer offset ('%s')", c.Consumer.Offsets.Initial)
+			}
+
 			sc.Consumer.Offsets.Retention = c.Consumer.Offsets.Retention
 
 			if c.Consumer.Offsets.Retry != nil {
@@ -501,15 +509,13 @@ func (c *Config) SaramaConfig() (*sarama.Config, error) {
 			}
 		}
 
-		sc.Consumer.MaxWaitTime = c.Consumer.MaxWaitTime
-
 		switch c.Consumer.IsolationLevel {
 		case IsolationLevelReadUncommitted:
 			sc.Consumer.IsolationLevel = sarama.ReadUncommitted
 		case IsolationLevelReadCommitted:
 			sc.Consumer.IsolationLevel = sarama.ReadCommitted
 		default:
-			return nil, fmt.Errorf("[kafka.SaramaConfig] unknown IsolationLevel ('%s')", c.Consumer.IsolationLevel)
+			return nil, fmt.Errorf("[kafka.SaramaConfig] unknown consumer isolation level ('%s')", c.Consumer.IsolationLevel)
 		}
 	}
 
@@ -798,7 +804,7 @@ type ConsumerOffsetsConfig struct {
 
 	// The initial offset to use if no offset was previously committed.
 	// Should be ConsumerOffsetNewest (sarama.OffsetNewest) or ConsumerOffsetOldest (sarama.OffsetOldest).
-	Initial int64
+	Initial ConsumerOffset
 
 	// The retention duration for committed offsets. If zero, disabled
 	// (in which case the `offsets.retention.minutes` option on the
