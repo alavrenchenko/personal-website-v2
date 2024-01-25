@@ -273,5 +273,29 @@
                 "callTimeout": 30000
             }
         }
+    },
+    "services": {
+        "internal": {
+            "mail": {
+                "mailAccountManager": {
+                    "accounts": [
+                        {
+                            "username": "",
+                            "password": "",
+                            "user": {
+                                "name": "",
+                                "email": ""
+                            },
+                            "smtp": {
+                                "server": {
+                                    "host": "",
+                                    "port": 0
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        }
     }
 }
