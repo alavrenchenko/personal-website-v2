@@ -208,3 +208,30 @@ func (s *RecipientStore) GetAllByNotifGroupId(ctx *actions.OperationContext, not
 	}
 	return rs, nil
 }
+
+// Exists returns true if the notification recipient exists.
+func (s *RecipientStore) Exists(ctx *actions.OperationContext, notifGroupId uint64, email string) (bool, error) {
+	var exists bool
+	err := s.opExecutor.Exec(ctx, enactions.OperationTypeRecipientStore_Exists,
+		[]*actions.OperationParam{actions.NewOperationParam("notifGroupId", notifGroupId), actions.NewOperationParam("email", email)},
+		func(opCtx *actions.OperationContext) error {
+			conn, err := s.db.ConnPool.Acquire(opCtx.Ctx)
+			if err != nil {
+				return fmt.Errorf("[stores.RecipientStore.Exists] acquire a connection: %w", err)
+			}
+			defer conn.Release()
+
+			// FUNCTION: public.recipient_exists(_notif_group_id, _email) RETURNS boolean
+			const query = "SELECT public.recipient_exists($1, $2)"
+
+			if err = conn.QueryRow(opCtx.Ctx, query, notifGroupId, email).Scan(&exists); err != nil {
+				return fmt.Errorf("[stores.RecipientStore.Exists] execute a query (recipient_exists): %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return false, fmt.Errorf("[stores.RecipientStore.Exists] execute an operation: %w", err)
+	}
+	return exists, nil
+}

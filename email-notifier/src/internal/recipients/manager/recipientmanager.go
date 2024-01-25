@@ -162,3 +162,22 @@ func (m *RecipientManager) GetAllByNotifGroupId(ctx *actions.OperationContext, n
 	}
 	return rs, nil
 }
+
+// Exists returns true if the notification recipient exists.
+func (m *RecipientManager) Exists(ctx *actions.OperationContext, notifGroupId uint64, email string) (bool, error) {
+	var exists bool
+	err := m.opExecutor.Exec(ctx, enactions.OperationTypeRecipientManager_Exists,
+		[]*actions.OperationParam{actions.NewOperationParam("notifGroupId", notifGroupId), actions.NewOperationParam("email", email)},
+		func(opCtx *actions.OperationContext) error {
+			var err error
+			if exists, err = m.recipientStore.Exists(opCtx, notifGroupId, email); err != nil {
+				return fmt.Errorf("[manager.RecipientManager.Exists] notification recipient exists: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return false, fmt.Errorf("[manager.RecipientManager.Exists] execute an operation: %w", err)
+	}
+	return exists, nil
+}
