@@ -26,7 +26,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- PROCEDURE: public.create_notification_group(character varying, character varying, bigint, text, text, character varying, character varying, character varying)
+-- PROCEDURE: public.create_notification_group(character varying, character varying, bigint, text, character varying, text)
 /*
 Notification group statuses:
     Active = 2
@@ -41,10 +41,8 @@ CREATE OR REPLACE PROCEDURE public.create_notification_group(
     IN _title public.notification_groups.title%TYPE,
     IN _created_by public.notification_groups.created_by%TYPE,
     IN _status_comment public.notification_groups.status_comment%TYPE,
+    IN _mail_account_email public.notification_groups.mail_account_email%TYPE,
     IN _description public.notification_groups.description%TYPE,
-    IN _sender_name public.notification_groups.sender_name%TYPE,
-    IN _sender_email public.notification_groups.sender_email%TYPE,
-    IN _sender_addr public.notification_groups.sender_addr%TYPE,
     OUT _id public.notification_groups.id%TYPE,
     OUT err_code bigint,
     OUT err_msg text) AS $$
@@ -63,10 +61,10 @@ BEGIN
 
     _time := (clock_timestamp() AT TIME ZONE 'UTC');
     -- notification group status: Active(2)
-    INSERT INTO public.notification_groups(name, title, created_at, created_by, updated_at, updated_by, status, status_updated_at, status_updated_by,
-            status_comment, description, sender_name, sender_email, sender_addr, _version_stamp, _timestamp)
-        VALUES (_name, _title, _time, _created_by, _time, _created_by, 2, _time, _created_by, _status_comment, _description,
-            _sender_name, _sender_email, _sender_addr, 1, _time)
+    INSERT INTO public.notification_groups(name, title, created_at, created_by, updated_at, updated_by, status, status_updated_at,
+            status_updated_by, status_comment, mail_account_email, description, _version_stamp, _timestamp)
+        VALUES (_name, _title, _time, _created_by, _time, _created_by, 2, _time, _created_by, _status_comment, _mail_account_email,
+            _description, 1, _time)
         RETURNING id INTO _id;
 
     EXCEPTION
