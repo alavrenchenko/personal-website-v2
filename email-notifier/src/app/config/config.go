@@ -27,3 +27,60 @@ type ApiClients struct {
 	LoggingManagerService *apiclientconfig.ServiceClientConfig `json:"loggingManagerService"`
 	IdentityService       *apiclientconfig.ServiceClientConfig `json:"identityService"`
 }
+
+type Services struct {
+	Internal *InternalServices `json:"internal"`
+}
+
+type InternalServices struct {
+	Mail *MailServices `json:"mail"`
+}
+
+type MailServices struct {
+	MailAccountManager *MailAccountManager `json:"mailAccountManager"`
+}
+
+type MailAccountManager struct {
+	Accounts []*MailAccount `json:"accounts"`
+}
+
+// The mail account.
+type MailAccount struct {
+	// Credentials: username, password.
+
+	// The mail account username.
+	Username string `json:"username"`
+
+	// The mail account password.
+	Password string `json:"password"`
+
+	// The user info.
+	User *MailAccountUser `json:"user"`
+
+	// The SMTP info.
+	Smtp *MailAccountSmtp `json:"smtp"`
+}
+
+// The user info.
+type MailAccountUser struct {
+	// The user's name.
+	Name string `json:"name"`
+
+	// The user's email address.
+	Email string `json:"email"`
+}
+
+// The SMTP info.
+type MailAccountSmtp struct {
+	// The SMTP server info.
+	Server *MailAccountSmtpServer `json:"server"`
+}
+
+// The SMTP server info.
+type MailAccountSmtpServer struct {
+	// The SMTP server host name.
+	Host string `json:"host"`
+
+	// The SMTP server port.
+	Port uint16 `json:"port"`
+}
