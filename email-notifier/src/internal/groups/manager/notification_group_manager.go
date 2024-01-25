@@ -16,7 +16,6 @@ package manager
 
 import (
 	"fmt"
-	"net/mail"
 
 	enactions "personal-website-v2/email-notifier/src/internal/actions"
 	"personal-website-v2/email-notifier/src/internal/groups"
@@ -73,22 +72,8 @@ func (m *NotificationGroupManager) Create(ctx *actions.OperationContext, data *g
 				return fmt.Errorf("[manager.NotificationGroupManager.Create] validate data: %w", err)
 			}
 
-			d := &groupoperations.CreateDbOperationData{
-				Name:        data.Name,
-				Title:       data.Title,
-				Description: data.Description,
-				SenderEmail: data.SenderEmail,
-			}
-			addr := mail.Address{Address: data.SenderEmail}
-
-			if data.SenderName.HasValue && !strings.IsEmptyOrWhitespace(data.SenderName.Value) {
-				d.SenderName = data.SenderName
-				addr.Name = data.SenderName.Value
-			}
-			d.SenderAddr = addr.String()
-
 			var err error
-			if id, err = m.notifGroupStore.Create(opCtx, d); err != nil {
+			if id, err = m.notifGroupStore.Create(opCtx, data); err != nil {
 				return fmt.Errorf("[manager.NotificationGroupManager.Create] create a notification group: %w", err)
 			}
 
