@@ -312,7 +312,7 @@ func (n *emailNotifier) send(ctx *actions.OperationContext, notifGroup string, r
 	}
 
 	n.logger.InfoWithEvent(ctx.CreateLogEntryContext(), events.EmailNotifierEvent, "[emailnotifier.emailNotifier.send] notification has been sent",
-		logging.NewField("kafkaMsgId", msgId),
+		logging.NewField("_kafkaMsgId", msgId),
 		logging.NewField("id", id),
 		logging.NewField("createdAt", notif.CreatedAt),
 		logging.NewField("createdBy", notif.CreatedBy),
@@ -351,7 +351,7 @@ func (n *emailNotifier) onCompletion(msg *kafka.ProducerMessage, err error) {
 			n.logger.ErrorWithEvent(n.loggerCtx, events.EmailNotifierEvent, err2, "[emailnotifier.emailNotifier.onCompletion] decode the kafka message id")
 			fs = fs[:4]
 		} else {
-			fs[4] = logging.NewField("kafkaMsgId", msgId)
+			fs[4] = logging.NewField("_kafkaMsgId", msgId)
 		}
 	} else {
 		n.logger.WarningWithEvent(n.loggerCtx, events.EmailNotifierEvent, "[emailnotifier.emailNotifier.onCompletion] kafka message id is missing")
