@@ -16,6 +16,7 @@ package config
 
 import (
 	apiclientconfig "personal-website-v2/api-clients/config"
+	"personal-website-v2/pkg/app/service/config"
 )
 
 type Apis struct {
@@ -33,7 +34,8 @@ type Services struct {
 }
 
 type InternalServices struct {
-	Mail *MailServices `json:"mail"`
+	Mail          *MailServices         `json:"mail"`
+	Notifications *NotificationServices `json:"notifications"`
 }
 
 type MailServices struct {
@@ -83,4 +85,20 @@ type MailAccountSmtpServer struct {
 
 	// The SMTP server port.
 	Port uint16 `json:"port"`
+}
+
+type NotificationServices struct {
+	NotificationService *NotificationService `json:"notificationService"`
+}
+
+type NotificationService struct {
+	Kafka *NotificationServiceKafka `json:"kafka"`
+
+	// The maximum allowed number of errors during notification consumption.
+	MaxErrors uint32 `json:"maxErrors"`
+}
+
+type NotificationServiceKafka struct {
+	Config             *config.KafkaConfig `json:"kafkaConfig"`
+	NotificationTopics []string            `json:"notificationTopics"`
 }
