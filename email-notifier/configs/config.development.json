@@ -295,6 +295,83 @@
                         }
                     ]
                 }
+            },
+            "notifications": {
+                "notificationService": {
+                    "kafka": {
+                        "kafkaConfig": {
+                            "addrs": [
+                                "localhost:9092"
+                            ],
+                            "net": {
+                                "maxOpenRequests": 5,
+                                "dialTimeout": 10000,
+                                "readTimeout": 10000,
+                                "writeTimeout": 10000,
+                                "keepAlive": 0
+                            },
+                            "metadata": {
+                                "retry": {
+                                    "max": 5,
+                                    "backoff": 100
+                                },
+                                "refreshFrequency": 30000,
+                                "full": false,
+                                "allowAutoTopicCreation": false
+                            },
+                            "consumer": {
+                                "group": {
+                                    "session": {
+                                        "timeout": 10000
+                                    },
+                                    "heartbeat": {
+                                        "interval": 3000
+                                    },
+                                    "rebalance": {
+                                        "groupStrategies": [
+                                            "range"
+                                        ],
+                                        "timeout": 60000,
+                                        "retry": {
+                                            "max": 5,
+                                            "backoff": 2000
+                                        }
+                                    },
+                                    "resetInvalidOffsets": false
+                                },
+                                "retry": {
+                                    "backoff": 2000
+                                },
+                                "fetch": {
+                                    "min": 1,
+                                    "default": 1048576,
+                                    "max": 0
+                                },
+                                "maxWaitTime": 500,
+                                "maxProcessingTime": 100,
+                                "offsets": {
+                                    "autoCommit": {
+                                        "enable": true,
+                                        "interval": 1000
+                                    },
+                                    "initial": "Oldest",
+                                    "retention": 2592000000,
+                                    "retry": {
+                                        "max": 5
+                                    }
+                                },
+                                "isolationLevel": "ReadUncommitted"
+                            },
+                            "clientId": "EmailNotifierNotifications",
+                            "channelBufferSize": 1024,
+                            "version": "3.5.0"
+                        },
+                        "notificationTopics": [
+                            "email_notifier.notifications"
+                        ]
+                    },
+                    "maxErrors": 100
+                }
             }
         }
     }
