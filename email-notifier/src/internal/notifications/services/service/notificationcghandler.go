@@ -29,6 +29,7 @@ import (
 
 	enappconfig "personal-website-v2/email-notifier/src/app/config"
 	enactions "personal-website-v2/email-notifier/src/internal/actions"
+	enerrors "personal-website-v2/email-notifier/src/internal/errors"
 	"personal-website-v2/email-notifier/src/internal/logging/events"
 	"personal-website-v2/email-notifier/src/internal/notifications"
 	"personal-website-v2/email-notifier/src/internal/notifications/models"
@@ -287,8 +288,28 @@ func (h *notificationCGHandler) processNotification(tran *actions.Transaction, n
 	err = h.actionExecutor.ExecWithOperation(context.Background(), tran, enactions.ActionTypeNotification_Process, uuid.NullUUID{}, false,
 		enactions.OperationTypeNotificationCGHandler_ProcessNotification, uuid.NullUUID{}, []*actions.OperationParam{actions.NewOperationParam("notification", notif)},
 		func(ctx *actions.OperationContext) error {
-			// ctx.UserId = nullable.NewNullable(notif.CreatedBy)
-			// send a notif
+			ctx.UserId = nullable.NewNullable(notif.CreatedBy)
+			leCtx := ctx.CreateLogEntryContext()
+
+			err = h.notifSender.Send(ctx, notif)
+			if err == nil {
+				h.logger.InfoWithEvent(leCtx, events.NotificationCGHandlerEvent, "[service.notificationCGHandler.processNotification] notification has been sent",
+					logging.NewField("id", n.Id),
+				)
+				return nil
+			}
+
+			h.logger.ErrorWithEvent(leCtx, events.NotificationCGHandlerEvent, err, "[service.notificationCGHandler.processNotification] send a notification",
+				logging.NewField("id", n.Id),
+			)
+
+			if err2 := errs.Unwrap(err); err2 == nil ||
+				(err2 != enerrors.ErrNotificationGroupNotFound && err2 != enerrors.ErrMailAccountNotFound &&
+					err2.Code() != errs.ErrorCodeInvalidData && err2.Code() != errs.ErrorCodeInvalidOperation) {
+				return errors.New("[service.notificationCGHandler.processNotification] error while sending a notification")
+			}
+
+			// save a notif
 			return nil
 		},
 	)
