@@ -71,3 +71,12 @@ type NotificationGroup struct {
 	// row timestamp
 	Timestamp time.Time `db:"_timestamp"`
 }
+
+// The notification sending info.
+type NotifSendingInfo struct {
+	// The notification group ID.
+	GroupId uint64 `db:"id"`
+
+	// The mail account email address.
+	MailAccountEmail string `db:"mail_account_email"`
+}
