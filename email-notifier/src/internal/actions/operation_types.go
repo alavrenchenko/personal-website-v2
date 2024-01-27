@@ -24,16 +24,20 @@ const (
 	// NotificationManager operation types (11000-11199).
 	// NotificationService operation types (11200-11249).
 
-	// NotificationCGHandler operation types (11250-11299).
+	// NotificationCGHandler operation types (11250-11274).
 	OperationTypeNotificationCGHandler_ProcessNotification actions.OperationType = 11250
 
+	// NotificationSender operation types (11275-11299).
+	OperationTypeNotificationSender_Send actions.OperationType = 11275
+
 	// NotificationGroupManager operation types (11300-11499).
-	OperationTypeNotificationGroupManager_Create        actions.OperationType = 11300
-	OperationTypeNotificationGroupManager_Delete        actions.OperationType = 11301
-	OperationTypeNotificationGroupManager_FindById      actions.OperationType = 11302
-	OperationTypeNotificationGroupManager_FindByName    actions.OperationType = 11303
-	OperationTypeNotificationGroupManager_Exists        actions.OperationType = 11304
-	OperationTypeNotificationGroupManager_GetStatusById actions.OperationType = 11305
+	OperationTypeNotificationGroupManager_Create                        actions.OperationType = 11300
+	OperationTypeNotificationGroupManager_Delete                        actions.OperationType = 11301
+	OperationTypeNotificationGroupManager_FindById                      actions.OperationType = 11302
+	OperationTypeNotificationGroupManager_FindByName                    actions.OperationType = 11303
+	OperationTypeNotificationGroupManager_Exists                        actions.OperationType = 11304
+	OperationTypeNotificationGroupManager_GetStatusById                 actions.OperationType = 11305
+	OperationTypeNotificationGroupManager_GetStatusAndSendingInfoByName actions.OperationType = 11306
 
 	// RecipientManager operation types (11500-11699).
 	OperationTypeRecipientManager_Create                 actions.OperationType = 11500
@@ -47,13 +51,14 @@ const (
 	// NotificationStore operation types (31000-31199).
 
 	// NotificationGroupStore operation types (31200-31399).
-	OperationTypeNotificationGroupStore_Create        actions.OperationType = 31200
-	OperationTypeNotificationGroupStore_StartDeleting actions.OperationType = 31201
-	OperationTypeNotificationGroupStore_Delete        actions.OperationType = 31202
-	OperationTypeNotificationGroupStore_FindById      actions.OperationType = 31203
-	OperationTypeNotificationGroupStore_FindByName    actions.OperationType = 31204
-	OperationTypeNotificationGroupStore_Exists        actions.OperationType = 31205
-	OperationTypeNotificationGroupStore_GetStatusById actions.OperationType = 31206
+	OperationTypeNotificationGroupStore_Create                        actions.OperationType = 31200
+	OperationTypeNotificationGroupStore_StartDeleting                 actions.OperationType = 31201
+	OperationTypeNotificationGroupStore_Delete                        actions.OperationType = 31202
+	OperationTypeNotificationGroupStore_FindById                      actions.OperationType = 31203
+	OperationTypeNotificationGroupStore_FindByName                    actions.OperationType = 31204
+	OperationTypeNotificationGroupStore_Exists                        actions.OperationType = 31205
+	OperationTypeNotificationGroupStore_GetStatusById                 actions.OperationType = 31206
+	OperationTypeNotificationGroupStore_GetStatusAndSendingInfoByName actions.OperationType = 31207
 
 	// RecipientStore operation types (31400-31599).
 	OperationTypeRecipientStore_Create                 actions.OperationType = 31400
