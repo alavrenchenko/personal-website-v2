@@ -33,8 +33,11 @@ var (
 	// NotificationService events (id: 0, 10200-10299)
 	NotificationServiceEvent = logging.NewEvent(0, "NotificationService", logging.EventCategoryCommon, enlogging.EventGroupNotificationService)
 
-	// NotificationCGHandler events (id: 0, 10300-10399)
+	// NotificationCGHandler events (id: 0, 10300-10349)
 	NotificationCGHandlerEvent = logging.NewEvent(0, "NotificationCGHandler", logging.EventCategoryCommon, enlogging.EventGroupNotificationCGHandler)
+
+	// NotificationSender events (id: 0, 10350-10399)
+	NotificationSenderEvent = logging.NewEvent(0, "NotificationSender", logging.EventCategoryCommon, enlogging.EventGroupNotificationSender)
 
 	// NotificationGroup events (id: 0, 10400-10599)
 	NotificationGroupEvent = logging.NewEvent(0, "NotificationGroup", logging.EventCategoryCommon, enlogging.EventGroupNotificationGroup)
