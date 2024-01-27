@@ -40,4 +40,8 @@ type NotificationGroupStore interface {
 
 	// GetStatusById gets a notification group status by the specified notification group ID.
 	GetStatusById(ctx *actions.OperationContext, id uint64) (models.NotificationGroupStatus, error)
+
+	// GetStatusAndSendingInfoByName gets a notification group status and notification sending info
+	// by the specified notification group name.
+	GetStatusAndSendingInfoByName(ctx *actions.OperationContext, name string) (models.NotificationGroupStatus, *dbmodels.NotifSendingInfo, error)
 }

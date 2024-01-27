@@ -252,3 +252,34 @@ func (s *NotificationGroupStore) GetStatusById(ctx *actions.OperationContext, id
 	}
 	return status, nil
 }
+
+// GetStatusAndSendingInfoByName gets a notification group status and notification sending info
+// by the specified notification group name.
+func (s *NotificationGroupStore) GetStatusAndSendingInfoByName(ctx *actions.OperationContext, name string) (models.NotificationGroupStatus, *dbmodels.NotifSendingInfo, error) {
+	var status models.NotificationGroupStatus
+	var info *dbmodels.NotifSendingInfo
+	err := s.opExecutor.Exec(ctx, enactions.OperationTypeNotificationGroupStore_GetStatusAndSendingInfoByName, []*actions.OperationParam{actions.NewOperationParam("name", name)},
+		func(opCtx *actions.OperationContext) error {
+			conn, err := s.db.ConnPool.Acquire(opCtx.Ctx)
+			if err != nil {
+				return fmt.Errorf("[stores.NotificationGroupStore.GetStatusAndSendingInfoByName] acquire a connection: %w", err)
+			}
+			defer conn.Release()
+
+			info = new(dbmodels.NotifSendingInfo)
+			const query = "SELECT id, status, mail_account_email FROM " + notifGroupsTable + " WHERE name = $1 LIMIT 1"
+
+			if err = conn.QueryRow(opCtx.Ctx, query, name).Scan(&info.GroupId, &status, &info.MailAccountEmail); err != nil {
+				if errors.Is(err, pgx.ErrNoRows) {
+					return enerrors.ErrNotificationGroupNotFound
+				}
+				return fmt.Errorf("[stores.NotificationGroupStore.GetStatusAndSendingInfoByName] execute a query: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return status, nil, fmt.Errorf("[stores.NotificationGroupStore.GetStatusAndSendingInfoByName] execute an operation: %w", err)
+	}
+	return status, info, nil
+}

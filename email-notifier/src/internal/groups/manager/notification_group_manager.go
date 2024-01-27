@@ -186,3 +186,27 @@ func (m *NotificationGroupManager) GetStatusById(ctx *actions.OperationContext, 
 	}
 	return s, nil
 }
+
+// GetStatusAndSendingInfoByName gets a notification group status and notification sending info
+// by the specified notification group name.
+func (m *NotificationGroupManager) GetStatusAndSendingInfoByName(ctx *actions.OperationContext, name string) (models.NotificationGroupStatus, *dbmodels.NotifSendingInfo, error) {
+	var s models.NotificationGroupStatus
+	var info *dbmodels.NotifSendingInfo
+	err := m.opExecutor.Exec(ctx, enactions.OperationTypeNotificationGroupManager_GetStatusAndSendingInfoByName, []*actions.OperationParam{actions.NewOperationParam("name", name)},
+		func(opCtx *actions.OperationContext) error {
+			if strings.IsEmptyOrWhitespace(name) {
+				return errors.NewError(errors.ErrorCodeInvalidData, "name is empty")
+			}
+
+			var err error
+			if s, info, err = m.notifGroupStore.GetStatusAndSendingInfoByName(opCtx, name); err != nil {
+				return fmt.Errorf("[manager.NotificationGroupManager.GetStatusAndSendingInfoByName] get a status and sending info by name: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return s, nil, fmt.Errorf("[manager.NotificationGroupManager.GetStatusAndSendingInfoByName] execute an operation: %w", err)
+	}
+	return s, info, nil
+}
