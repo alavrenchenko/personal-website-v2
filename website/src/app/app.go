@@ -697,7 +697,7 @@ func (a *Application) configure() error {
 	}
 	a.emailNotifier = emailNotifier
 
-	contactMessageManager, err := contactmanager.NewContactMessageManager(emailNotifier, a.postgresManager.Stores.ContactMessageStore(), a.config.Notifications, a.loggerFactory)
+	contactMessageManager, err := contactmanager.NewContactMessageManager(a.config.UserId, emailNotifier, a.postgresManager.Stores.ContactMessageStore(), a.config.Notifications, a.loggerFactory)
 	if err != nil {
 		return fmt.Errorf("[app.Application.configure] new contact message manager: %w", err)
 	}
