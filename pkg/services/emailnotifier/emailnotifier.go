@@ -253,11 +253,16 @@ func (n *emailNotifier) send(ctx *actions.OperationContext, notifGroup string, r
 	if strings.IsEmptyOrWhitespace(notifGroup) {
 		return uuid.UUID{}, errs.NewError(errs.ErrorCodeInvalidData, "notifGroup is empty")
 	}
+
+	if len(recipients) == 0 {
+		return uuid.UUID{}, errs.NewError(errs.ErrorCodeInvalidData, "number of recipients is 0")
+	}
 	for i := 0; i < len(recipients); i++ {
 		if _, err := mail.ParseAddress(recipients[i]); err != nil {
 			return uuid.UUID{}, errs.NewError(errs.ErrorCodeInvalidData, "invalid recipients")
 		}
 	}
+
 	if strings.IsEmptyOrWhitespace(subject) {
 		return uuid.UUID{}, errs.NewError(errs.ErrorCodeInvalidData, "subject is empty")
 	}
