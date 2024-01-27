@@ -21,6 +21,7 @@ import (
 	"personal-website-v2/pkg/actions"
 	"personal-website-v2/pkg/app/service/config"
 	"personal-website-v2/pkg/base/datetime"
+	"personal-website-v2/pkg/base/nullable"
 	actionhelper "personal-website-v2/pkg/helper/actions"
 	"personal-website-v2/pkg/logging"
 	"personal-website-v2/pkg/logging/context"
@@ -68,6 +69,7 @@ func newMsgEmailNotifConfig(notifConfig map[string]*config.EmailNotification) (*
 
 // ContactMessageManager is a contact message manager.
 type ContactMessageManager struct {
+	appUserId     uint64
 	opExecutor    *actionhelper.OperationExecutor
 	emailNotifier emailnotifier.EmailNotifier
 	messageStore  contact.ContactMessageStore
@@ -78,6 +80,7 @@ type ContactMessageManager struct {
 var _ contact.ContactMessageManager = (*ContactMessageManager)(nil)
 
 func NewContactMessageManager(
+	appUserId uint64,
 	emailNotifier emailnotifier.EmailNotifier,
 	messageStore contact.ContactMessageStore,
 	notifConfig *config.Notifications,
@@ -104,6 +107,7 @@ func NewContactMessageManager(
 	}
 
 	return &ContactMessageManager{
+		appUserId:     appUserId,
 		opExecutor:    e,
 		emailNotifier: emailNotifier,
 		messageStore:  messageStore,
@@ -143,6 +147,11 @@ func (m *ContactMessageManager) Create(ctx *actions.OperationContext, data *mess
 }
 
 func (m *ContactMessageManager) sendMessageAddedNotif(ctx *actions.OperationContext, msgId uint64, data *messageoperations.CreateOperationData) {
+	if !ctx.UserId.HasValue || ctx.UserId.Value != m.appUserId {
+		ctx = ctx.Clone()
+		ctx.UserId = nullable.NewNullable(m.appUserId)
+	}
+
 	leCtx := ctx.CreateLogEntryContext()
 	tdata := messageemailnotifs.NewMessageAddedNotifTmplData(datetime.Now(), data.Name, data.Email)
 	id, err := m.emailNotifier.SendUsingTemplate(ctx, messageemailnotifs.NotifGroup, m.notifConfig.email.messageAdded.Recipients,
