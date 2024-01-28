@@ -184,7 +184,11 @@ func (n *emailNotifier) Send(ctx *actions.OperationContext, notifGroup string, r
 
 	var id uuid.UUID
 	err := n.opExecutor.Exec(ctx, sactions.OperationTypeEmailNotifier_Send,
-		[]*actions.OperationParam{actions.NewOperationParam("recipients", recipients), actions.NewOperationParam("subject", subject)},
+		[]*actions.OperationParam{
+			actions.NewOperationParam("notifGroup", notifGroup),
+			actions.NewOperationParam("recipients", recipients),
+			actions.NewOperationParam("subject", subject),
+		},
 		func(opCtx *actions.OperationContext) error {
 			var err error
 			if id, err = n.send(opCtx, notifGroup, recipients, subject, body); err != nil {
@@ -208,7 +212,12 @@ func (n *emailNotifier) SendUsingTemplate(ctx *actions.OperationContext, notifGr
 
 	var id uuid.UUID
 	err := n.opExecutor.Exec(ctx, sactions.OperationTypeEmailNotifier_SendUsingTemplate,
-		[]*actions.OperationParam{actions.NewOperationParam("recipients", recipients), actions.NewOperationParam("subject", subject), actions.NewOperationParam("tmplName", tmplName)},
+		[]*actions.OperationParam{
+			actions.NewOperationParam("notifGroup", notifGroup),
+			actions.NewOperationParam("recipients", recipients),
+			actions.NewOperationParam("subject", subject),
+			actions.NewOperationParam("tmplName", tmplName),
+		},
 		func(opCtx *actions.OperationContext) error {
 			if strings.IsEmptyOrWhitespace(tmplName) {
 				return errs.NewError(errs.ErrorCodeInvalidData, "tmplName is empty")
