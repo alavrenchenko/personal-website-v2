@@ -16,6 +16,7 @@ package recipients
 
 import (
 	"net/mail"
+	"unicode/utf8"
 
 	"personal-website-v2/email-notifier/src/internal/recipients/models"
 	"personal-website-v2/pkg/base/nullable"
@@ -41,7 +42,7 @@ func (d *CreateOperationData) Validate() *errors.Error {
 	if !d.Type.IsValid() {
 		return errors.NewError(errors.ErrorCodeInvalidData, "invalid type")
 	}
-	if d.Name.HasValue && len(d.Name.Value) > 100 {
+	if d.Name.HasValue && utf8.RuneCountInString(d.Name.Value) > 100 {
 		return errors.NewError(errors.ErrorCodeInvalidData, "name length is greater than 100 characters")
 	}
 
