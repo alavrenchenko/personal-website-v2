@@ -169,6 +169,24 @@ func (m *NotificationGroupManager) Exists(ctx *actions.OperationContext, name st
 	return exists, nil
 }
 
+// GetIdByName gets the notification group ID by the specified notification group name.
+func (m *NotificationGroupManager) GetIdByName(ctx *actions.OperationContext, name string) (uint64, error) {
+	var id uint64
+	err := m.opExecutor.Exec(ctx, enactions.OperationTypeNotificationGroupManager_GetIdByName, []*actions.OperationParam{actions.NewOperationParam("name", name)},
+		func(opCtx *actions.OperationContext) error {
+			var err error
+			if id, err = m.notifGroupStore.GetIdByName(opCtx, name); err != nil {
+				return fmt.Errorf("[manager.NotificationGroupManager.GetIdByName] get a notification group id by name: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return 0, fmt.Errorf("[manager.NotificationGroupManager.GetIdByName] execute an operation: %w", err)
+	}
+	return id, nil
+}
+
 // GetStatusById gets a notification group status by the specified notification group ID.
 func (m *NotificationGroupManager) GetStatusById(ctx *actions.OperationContext, id uint64) (models.NotificationGroupStatus, error) {
 	var s models.NotificationGroupStatus

@@ -225,6 +225,34 @@ func (s *NotificationGroupStore) Exists(ctx *actions.OperationContext, name stri
 	return exists, nil
 }
 
+// GetIdByName gets the notification group ID by the specified notification group name.
+func (s *NotificationGroupStore) GetIdByName(ctx *actions.OperationContext, name string) (uint64, error) {
+	var id uint64
+	err := s.opExecutor.Exec(ctx, enactions.OperationTypeNotificationGroupStore_GetIdByName, []*actions.OperationParam{actions.NewOperationParam("name", name)},
+		func(opCtx *actions.OperationContext) error {
+			conn, err := s.db.ConnPool.Acquire(opCtx.Ctx)
+			if err != nil {
+				return fmt.Errorf("[stores.NotificationGroupStore.GetIdByName] acquire a connection: %w", err)
+			}
+			defer conn.Release()
+
+			const query = "SELECT id FROM " + notifGroupsTable + " WHERE name = $1 LIMIT 1"
+
+			if err = conn.QueryRow(opCtx.Ctx, query, name).Scan(&id); err != nil {
+				if errors.Is(err, pgx.ErrNoRows) {
+					return enerrors.ErrNotificationGroupNotFound
+				}
+				return fmt.Errorf("[stores.NotificationGroupStore.GetIdByName] execute a query: %w", err)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return 0, fmt.Errorf("[stores.NotificationGroupStore.GetIdByName] execute an operation: %w", err)
+	}
+	return id, nil
+}
+
 // GetStatusById gets a notification group status by the specified notification group ID.
 func (s *NotificationGroupStore) GetStatusById(ctx *actions.OperationContext, id uint64) (models.NotificationGroupStatus, error) {
 	var status models.NotificationGroupStatus

@@ -38,6 +38,9 @@ type NotificationGroupManager interface {
 	// Exists returns true if the notification group exists.
 	Exists(ctx *actions.OperationContext, name string) (bool, error)
 
+	// GetIdByName gets the notification group ID by the specified notification group name.
+	GetIdByName(ctx *actions.OperationContext, name string) (uint64, error)
+
 	// GetStatusById gets a notification group status by the specified notification group ID.
 	GetStatusById(ctx *actions.OperationContext, id uint64) (models.NotificationGroupStatus, error)
 
