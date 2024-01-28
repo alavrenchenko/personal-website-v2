@@ -36,8 +36,10 @@ const (
 	OperationTypeNotificationGroupManager_FindById                      actions.OperationType = 11302
 	OperationTypeNotificationGroupManager_FindByName                    actions.OperationType = 11303
 	OperationTypeNotificationGroupManager_Exists                        actions.OperationType = 11304
-	OperationTypeNotificationGroupManager_GetStatusById                 actions.OperationType = 11305
-	OperationTypeNotificationGroupManager_GetStatusAndSendingInfoByName actions.OperationType = 11306
+	OperationTypeNotificationGroupManager_GetIdByName                   actions.OperationType = 11305
+	OperationTypeNotificationGroupManager_GetStatusById                 actions.OperationType = 11306
+	OperationTypeNotificationGroupManager_GetStatusAndSendingInfoById   actions.OperationType = 11307
+	OperationTypeNotificationGroupManager_GetStatusAndSendingInfoByName actions.OperationType = 11308
 
 	// RecipientManager operation types (11500-11699).
 	OperationTypeRecipientManager_Create                 actions.OperationType = 11500
@@ -57,8 +59,10 @@ const (
 	OperationTypeNotificationGroupStore_FindById                      actions.OperationType = 31203
 	OperationTypeNotificationGroupStore_FindByName                    actions.OperationType = 31204
 	OperationTypeNotificationGroupStore_Exists                        actions.OperationType = 31205
-	OperationTypeNotificationGroupStore_GetStatusById                 actions.OperationType = 31206
-	OperationTypeNotificationGroupStore_GetStatusAndSendingInfoByName actions.OperationType = 31207
+	OperationTypeNotificationGroupStore_GetIdByName                   actions.OperationType = 31206
+	OperationTypeNotificationGroupStore_GetStatusById                 actions.OperationType = 31207
+	OperationTypeNotificationGroupStore_GetStatusAndSendingInfoById   actions.OperationType = 31208
+	OperationTypeNotificationGroupStore_GetStatusAndSendingInfoByName actions.OperationType = 31209
 
 	// RecipientStore operation types (31400-31599).
 	OperationTypeRecipientStore_Create                 actions.OperationType = 31400
