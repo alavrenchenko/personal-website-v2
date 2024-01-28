@@ -41,6 +41,9 @@ func (d *CreateOperationData) Validate() *errors.Error {
 	if !d.Type.IsValid() {
 		return errors.NewError(errors.ErrorCodeInvalidData, "invalid type")
 	}
+	if d.Name.HasValue && len(d.Name.Value) > 100 {
+		return errors.NewError(errors.ErrorCodeInvalidData, "name length is greater than 100 characters")
+	}
 
 	if strings.IsEmptyOrWhitespace(d.Email) {
 		return errors.NewError(errors.ErrorCodeInvalidData, "email is empty")
