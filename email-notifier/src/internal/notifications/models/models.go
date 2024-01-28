@@ -20,6 +20,21 @@ import (
 	"github.com/google/uuid"
 )
 
+// The notification status.
+type NotificationStatus uint8
+
+const (
+	// Unspecified = 0 // Do not use.
+
+	NotificationStatusNew     NotificationStatus = 1
+	NotificationStatusSending NotificationStatus = 2
+	NotificationStatusSent    NotificationStatus = 3
+	// Failed to send notification.
+	NotificationStatusSendFailed NotificationStatus = 4
+	NotificationStatusDeleting   NotificationStatus = 5
+	NotificationStatusDeleted    NotificationStatus = 6
+)
+
 // Notification group names have the following formats:
 // SERVICE, SERVICE.RESOURCE_TYPE, SERVICE:ANY_NAME or SERVICE.RESOURCE_TYPE:ANY_NAME
 // For example, website, website.contactMessages, website:notifications, website.contactMessages:notifications.
@@ -45,5 +60,5 @@ type Notification struct {
 	Subject string `json:"subject"`
 
 	// The notification body.
-	Body []byte `json:"body"`
+	Body []byte `json:"-"`
 }
