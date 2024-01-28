@@ -84,7 +84,13 @@ func NewNotificationSender(
 
 // Send sends an email notification.
 func (s *NotificationSender) Send(ctx *actions.OperationContext, n *models.Notification) error {
-	err := s.opExecutor.Exec(ctx, enactions.OperationTypeNotificationSender_Send, []*actions.OperationParam{actions.NewOperationParam("notification", n)},
+	err := s.opExecutor.Exec(ctx, enactions.OperationTypeNotificationSender_Send,
+		[]*actions.OperationParam{
+			actions.NewOperationParam("id", n.Id),
+			actions.NewOperationParam("group", n.Group),
+			actions.NewOperationParam("recipients", n.Recipients),
+			actions.NewOperationParam("subject", n.Subject),
+		},
 		func(opCtx *actions.OperationContext) error {
 			if pwstrings.IsEmptyOrWhitespace(n.Group) {
 				return errors.NewError(errors.ErrorCodeInvalidData, "group is empty")
