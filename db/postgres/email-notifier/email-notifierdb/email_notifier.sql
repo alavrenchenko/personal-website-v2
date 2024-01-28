@@ -38,8 +38,8 @@ Notification group statuses:
 CREATE TABLE IF NOT EXISTS public.notification_groups
 (
     id bigint NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 9223372036854775807 CACHE 1 ),
-    name character varying(256) COLLATE pg_catalog."default" NOT NULL,
-    title character varying(256) COLLATE pg_catalog."default" NOT NULL,
+    name character varying(128) COLLATE pg_catalog."default" NOT NULL,
+    title character varying(255) COLLATE pg_catalog."default" NOT NULL,
     created_at timestamp(6) without time zone NOT NULL,
     created_by bigint NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL DEFAULT (clock_timestamp() AT TIME ZONE 'UTC'::text),
@@ -84,9 +84,9 @@ CREATE TABLE IF NOT EXISTS public.recipients
     is_deleted boolean NOT NULL DEFAULT FALSE,
     deleted_at timestamp(6) without time zone,
     deleted_by bigint,
-    name character varying(128) COLLATE pg_catalog."default",
+    name character varying(512) COLLATE pg_catalog."default",
     email character varying(512) COLLATE pg_catalog."default" NOT NULL,
-    addr character varying(640) COLLATE pg_catalog."default" NOT NULL,
+    addr text COLLATE pg_catalog."default" NOT NULL,
     _version_stamp bigint NOT NULL,
     _timestamp timestamp(6) without time zone NOT NULL DEFAULT (clock_timestamp() AT TIME ZONE 'UTC'::text),
     CONSTRAINT recipients_pkey PRIMARY KEY (id),
@@ -107,5 +107,5 @@ CREATE INDEX IF NOT EXISTS recipients_type_idx ON public.recipients (type);
 CREATE INDEX IF NOT EXISTS recipients_created_at_idx ON public.recipients (created_at);
 CREATE INDEX IF NOT EXISTS recipients_is_deleted_idx ON public.recipients (is_deleted);
 CREATE INDEX IF NOT EXISTS recipients_deleted_at_idx ON public.recipients (deleted_at);
+CREATE INDEX IF NOT EXISTS recipients_name_lc_idx ON public.recipients (lower(name));
 CREATE INDEX IF NOT EXISTS recipients_email_lc_idx ON public.recipients (lower(email));
-CREATE INDEX IF NOT EXISTS recipients_addr_lc_idx ON public.recipients (lower(addr));
