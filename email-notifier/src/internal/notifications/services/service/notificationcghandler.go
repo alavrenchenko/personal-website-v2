@@ -232,7 +232,12 @@ func (h *notificationCGHandler) processMessage(msg *sarama.ConsumerMessage, msgI
 
 	h.logger.InfoWithEvent(h.loggerCtx, events.NotificationCGHandlerEvent, "[service.notificationCGHandler.processMessage] notification info",
 		logging.NewField("_msgId", msgId),
-		logging.NewField("notification", n),
+		logging.NewField("id", n.Id),
+		logging.NewField("createdAt", n.CreatedAt),
+		logging.NewField("createdBy", n.CreatedBy),
+		logging.NewField("group", n.Group),
+		logging.NewField("recipients", n.Recipients),
+		logging.NewField("subject", n.Subject),
 	)
 
 	if err := validateNotification(n); err != nil {
@@ -286,7 +291,7 @@ func (h *notificationCGHandler) processNotification(tran *actions.Transaction, n
 	}
 
 	err = h.actionExecutor.ExecWithOperation(context.Background(), tran, enactions.ActionTypeNotification_Process, uuid.NullUUID{}, false,
-		enactions.OperationTypeNotificationCGHandler_ProcessNotification, uuid.NullUUID{}, []*actions.OperationParam{actions.NewOperationParam("notification", notif)},
+		enactions.OperationTypeNotificationCGHandler_ProcessNotification, uuid.NullUUID{}, []*actions.OperationParam{actions.NewOperationParam("notificationId", n.Id)},
 		func(ctx *actions.OperationContext) error {
 			ctx.UserId = nullable.NewNullable(notif.CreatedBy)
 			leCtx := ctx.CreateLogEntryContext()
