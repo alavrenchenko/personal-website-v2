@@ -248,10 +248,26 @@
                     "maxConnLifetime": 86400,
                     "maxConnIdleTime": 30,
                     "healthCheckPeriod": 5
+                },
+                "NotificationDb": {
+                    "applicationName": "EmailNotifier",
+                    "host": "{host}",
+                    "port": 0,
+                    "database": "email_notifier_notifications",
+                    "user": "{user}",
+                    "password": "{password}",
+                    "sslMode": "disable",
+                    "connectTimeout": 10,
+                    "minConns": 10,
+                    "maxConns": 100,
+                    "maxConnLifetime": 86400,
+                    "maxConnIdleTime": 30,
+                    "healthCheckPeriod": 5
                 }
             },
             "dataMap": {
-                "EmailNotifier": "EmailNotifierDb"
+                "EmailNotifier": "EmailNotifierDb",
+                "Notification": "NotificationDb"
             }
         }
     },
