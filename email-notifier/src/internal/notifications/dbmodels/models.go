@@ -71,4 +71,10 @@ type Notification struct {
 
 	// The user ID to identify the user who sent the notification.
 	SentBy *uint64 `db:"sent_by"`
+
+	// rowversion
+	VersionStamp uint64 `db:"_version_stamp"`
+
+	// row timestamp
+	Timestamp time.Time `db:"_timestamp"`
 }
