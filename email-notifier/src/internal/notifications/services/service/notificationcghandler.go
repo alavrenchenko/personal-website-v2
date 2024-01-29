@@ -33,6 +33,7 @@ import (
 	"personal-website-v2/email-notifier/src/internal/logging/events"
 	"personal-website-v2/email-notifier/src/internal/notifications"
 	"personal-website-v2/email-notifier/src/internal/notifications/models"
+	notifoperations "personal-website-v2/email-notifier/src/internal/notifications/operations/notifications"
 	emailnotifierpb "personal-website-v2/go-data/services/emailnotifier"
 	"personal-website-v2/pkg/actions"
 	"personal-website-v2/pkg/base/nullable"
@@ -52,6 +53,7 @@ type notificationCGHandler struct {
 	tranManager         *actions.TransactionManager
 	config              *enappconfig.NotificationService
 	actionExecutor      *actionhelper.ActionExecutor
+	notifManager        notifications.NotificationManager
 	notifSender         notifications.NotificationSender
 	logger              logging.Logger[*lcontext.LogEntryContext]
 	loggerCtx           *lcontext.LogEntryContext
@@ -66,6 +68,7 @@ func newNotificationCGHandler(
 	appSessionId uint64,
 	tranManager *actions.TransactionManager,
 	actionManager *actions.ActionManager,
+	notifManager notifications.NotificationManager,
 	notifSender notifications.NotificationSender,
 	config *enappconfig.NotificationService,
 	loggerFactory logging.LoggerFactory[*lcontext.LogEntryContext],
@@ -96,6 +99,7 @@ func newNotificationCGHandler(
 		tranManager:         tranManager,
 		config:              config,
 		actionExecutor:      e,
+		notifManager:        notifManager,
 		notifSender:         notifSender,
 		logger:              l,
 		loggerCtx:           loggerCtx,
@@ -308,13 +312,35 @@ func (h *notificationCGHandler) processNotification(tran *actions.Transaction, n
 				logging.NewField("id", n.Id),
 			)
 
-			if err2 := errs.Unwrap(err); err2 == nil ||
-				(err2 != enerrors.ErrNotificationGroupNotFound && err2 != enerrors.ErrMailAccountNotFound &&
-					err2.Code() != errs.ErrorCodeInvalidData && err2.Code() != errs.ErrorCodeInvalidOperation) {
+			if err2 := errs.Unwrap(err); err2 != nil && (err2 == enerrors.ErrNotificationGroupNotFound || err2.Code() == errs.ErrorCodeInvalidData) {
+				// the notification is invalid
+				return nil
+			} else if err2 == nil || (err2 != enerrors.ErrMailAccountNotFound && err2.Code() != errs.ErrorCodeInvalidOperation) {
 				return errors.New("[service.notificationCGHandler.processNotification] error while sending a notification")
 			}
 
-			// save a notif
+			d := &notifoperations.AddOperationData{
+				Id:         notif.Id,
+				Group:      notif.Group,
+				CreatedAt:  notif.CreatedAt,
+				CreatedBy:  notif.CreatedBy,
+				Status:     models.NotificationStatusSendFailed,
+				Recipients: notif.Recipients,
+				Subject:    notif.Subject,
+				Body:       notif.Body,
+			}
+
+			if err = h.notifManager.Add(ctx, d); err != nil {
+				h.logger.ErrorWithEvent(leCtx, events.NotificationCGHandlerEvent, err, "[service.notificationCGHandler.processNotification] add a notification",
+					logging.NewField("id", n.Id),
+				)
+				if err2 := errs.Unwrap(err); err2 != enerrors.ErrNotificationGroupNotFound {
+					// internal error
+					// If the error is InvalidData, then it's an internal error, because the data must be valid.
+					return errors.New("[service.notificationCGHandler.processNotification] error while adding a notification")
+				}
+				// ErrNotificationGroupNotFound: the notification is invalid -> return nil
+			}
 			return nil
 		},
 	)
