@@ -61,6 +61,7 @@ func NewNotificationService(
 	appSessionId uint64,
 	tranManager *actions.TransactionManager,
 	actionManager *actions.ActionManager,
+	notifManager notifications.NotificationManager,
 	notifSender notifications.NotificationSender,
 	config *enappconfig.NotificationService,
 	loggerFactory logging.LoggerFactory[*lcontext.LogEntryContext],
@@ -70,7 +71,7 @@ func NewNotificationService(
 		return nil, fmt.Errorf("[service.NewNotificationService] create a logger: %w", err)
 	}
 
-	cgh, err := newNotificationCGHandler(appSessionId, tranManager, actionManager, notifSender, config, loggerFactory)
+	cgh, err := newNotificationCGHandler(appSessionId, tranManager, actionManager, notifManager, notifSender, config, loggerFactory)
 	if err != nil {
 		return nil, fmt.Errorf("[service.NewNotificationService] new notificationCGHandler: %w", err)
 	}
