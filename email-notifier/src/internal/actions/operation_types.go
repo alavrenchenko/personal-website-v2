@@ -21,6 +21,7 @@ import "personal-website-v2/pkg/actions"
 
 const (
 	// Application operation types (10000-10999).
+
 	// NotificationManager operation types (11000-11199).
 	OperationTypeNotificationManager_Create actions.OperationType = 11000
 	OperationTypeNotificationManager_Add    actions.OperationType = 11001
@@ -53,7 +54,10 @@ const (
 	OperationTypeRecipientManager_Exists                 actions.OperationType = 11505
 
 	// ApplicationStore operation types (30000-30999).
+
 	// NotificationStore operation types (31000-31199).
+	OperationTypeNotificationStore_Create actions.OperationType = 31000
+	OperationTypeNotificationStore_Add    actions.OperationType = 31001
 
 	// NotificationGroupStore operation types (31200-31399).
 	OperationTypeNotificationGroupStore_Create                        actions.OperationType = 31200
