@@ -36,7 +36,13 @@ import (
 	"personal-website-v2/api-clients/loggingmanager"
 	enappconfig "personal-website-v2/email-notifier/src/app/config"
 	enpostgres "personal-website-v2/email-notifier/src/internal/db/postgres"
+	groupmanager "personal-website-v2/email-notifier/src/internal/groups/manager"
 	enidentity "personal-website-v2/email-notifier/src/internal/identity"
+	mailmanager "personal-website-v2/email-notifier/src/internal/mail/manager"
+	notificationmanager "personal-website-v2/email-notifier/src/internal/notifications/manager"
+	notificationsender "personal-website-v2/email-notifier/src/internal/notifications/services/sender"
+	notificationservice "personal-website-v2/email-notifier/src/internal/notifications/services/service"
+	recipientmanager "personal-website-v2/email-notifier/src/internal/recipients/manager"
 	"personal-website-v2/pkg/actions"
 	actionlogging "personal-website-v2/pkg/actions/logging"
 	"personal-website-v2/pkg/app"
@@ -89,7 +95,7 @@ type Application struct {
 	fileLoggerFactory logging.LoggerFactory[*context.LogEntryContext]
 	fileLogger        logging.Logger[*context.LogEntryContext]
 	configPath        string
-	config            *config.WebAppConfig[*enappconfig.Apis, struct{}]
+	config            *config.WebAppConfig[*enappconfig.Apis, *enappconfig.Services]
 	isStarted         atomic.Bool
 	isStopped         bool
 	wg                sync.WaitGroup
@@ -111,6 +117,13 @@ type Application struct {
 	appManagerService     *appmanager.AppManagerService
 	loggingManagerService *loggingmanager.LoggingManagerService
 	identityService       *identityclient.IdentityService
+
+	mailAccountManager *mailmanager.MailAccountManager
+	notifManager       *notificationmanager.NotificationManager
+	notifService       *notificationservice.NotificationService
+	notifSender        *notificationsender.NotificationSender
+	notifGroupManager  *groupmanager.NotificationGroupManager
+	recipientManager   *recipientmanager.RecipientManager
 }
 
 var _ app.Application = (*Application)(nil)
@@ -318,7 +331,7 @@ func (a *Application) loadConfig() error {
 		return fmt.Errorf("[app.Application.loadConfig] read a file: %w", err)
 	}
 
-	config := new(config.WebAppConfig[*enappconfig.Apis, struct{}])
+	config := new(config.WebAppConfig[*enappconfig.Apis, *enappconfig.Services])
 	if err = json.Unmarshal(c, config); err != nil {
 		return fmt.Errorf("[app.Application.loadConfig] unmarshal JSON-encoded data (config): %w", err)
 	}
@@ -632,6 +645,45 @@ func (a *Application) configureDb() error {
 }
 
 func (a *Application) configure() error {
+	mailAccountManager := mailmanager.NewMailAccountManager(a.config.Services.Internal.Mail.MailAccountManager)
+
+	notifGroupManager, err := groupmanager.NewNotificationGroupManager(a.postgresManager.Stores.NotificationGroupStore(), a.loggerFactory)
+	if err != nil {
+		return fmt.Errorf("[app.Application.configure] new notification group manager: %w", err)
+	}
+
+	notifManager, err := notificationmanager.NewNotificationManager(notifGroupManager, a.postgresManager.Stores.NotificationStore(), a.loggerFactory)
+	if err != nil {
+		return fmt.Errorf("[app.Application.configure] new notification manager: %w", err)
+	}
+
+	recipientManager, err := recipientmanager.NewRecipientManager(a.postgresManager.Stores.RecipientStore(), a.loggerFactory)
+	if err != nil {
+		return fmt.Errorf("[app.Application.configure] new recipient manager: %w", err)
+	}
+
+	notifSender, err := notificationsender.NewNotificationSender(mailAccountManager, notifGroupManager, recipientManager, a.loggerFactory)
+	if err != nil {
+		return fmt.Errorf("[app.Application.configure] new notification sender: %w", err)
+	}
+
+	notifService, err := notificationservice.NewNotificationService(a.appSessionId.Value, a.tranManager, a.actionManager, notifManager, notifSender,
+		a.config.Services.Internal.Notifications.NotificationService, a.loggerFactory,
+	)
+	if err != nil {
+		return fmt.Errorf("[app.Application.configure] new notification service: %w", err)
+	}
+
+	if err = notifService.Start(); err != nil {
+		return fmt.Errorf("[app.Application.configure] start a notification service: %w", err)
+	}
+
+	a.mailAccountManager = mailAccountManager
+	a.notifManager = notifManager
+	a.notifService = notifService
+	a.notifSender = notifSender
+	a.notifGroupManager = notifGroupManager
+	a.recipientManager = recipientManager
 	return nil
 }
 
@@ -827,6 +879,12 @@ func (a *Application) stop(ctx *actions.OperationContext) {
 		}
 	}
 
+	if a.notifService != nil && a.notifService.IsStarted() {
+		if err := a.notifService.Stop(); err != nil {
+			a.logWithContext(leCtx, logging.LogLevelError, events.ApplicationEvent, err, "[app.Application.stop] stop a notification service")
+		}
+	}
+
 	if a.session != nil && a.session.IsStarted() {
 		if a.tranManager != nil {
 			a.tranManager.AllowToCreate(false)
@@ -869,8 +927,8 @@ func (a *Application) stop(ctx *actions.OperationContext) {
 		}
 	}
 
-	a.isStarted.Store(false)
 	a.isStopped = true
+	a.isStarted.Store(false)
 	a.logWithContext(leCtx, logging.LogLevelInfo, events.ApplicationStopped, nil, "[app.Application.stop] app has been stopped")
 
 	if a.grpcLogger != nil {
