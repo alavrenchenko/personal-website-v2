@@ -62,7 +62,6 @@ type AddOperationData struct {
 func (d *AddOperationData) Validate() *errors.Error {
 	if d.SentAt.HasValue && (d.Status == models.NotificationStatusNew || d.Status == models.NotificationStatusSending || d.Status == models.NotificationStatusSendFailed) {
 		return errors.NewError(errors.ErrorCodeInvalidData, fmt.Sprintf("invalid status (%v), sentAt isn't null", d.Status))
-
 	} else if !d.SentAt.HasValue && d.Status == models.NotificationStatusSent {
 		return errors.NewError(errors.ErrorCodeInvalidData, fmt.Sprintf("sentAt is null, status is %v", d.Status))
 	}
