@@ -29,12 +29,12 @@ CREATE DATABASE email_notifier_notifications
 /*
 Notification statuses:
     Unspecified = 0
-	New         = 1
-	Sending     = 2
-	Sent        = 3
-	SendFailed  = 4
-	Deleting    = 5
-	Deleted     = 6
+    New         = 1
+    Sending     = 2
+    Sent        = 3
+    SendFailed  = 4
+    Deleting    = 5
+    Deleted     = 6
 */
 CREATE TABLE IF NOT EXISTS public.notifications
 (

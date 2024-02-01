@@ -25,10 +25,10 @@ $$ LANGUAGE plpgsql;
 -- PROCEDURE: public.add_notification(uuid, bigint, timestamp without time zone, bigint, smallint, text, text[], text, text, timestamp without time zone)
 /*
 Notification statuses:
-	New        = 1
-	Sending    = 2
-	Sent       = 3
-	SendFailed = 4
+    New        = 1
+    Sending    = 2
+    Sent       = 3
+    SendFailed = 4
 
 Error codes:
     NoError                   = 0
