@@ -44,7 +44,7 @@ func NewNotificationManager(
 	notifStore notifications.NotificationStore,
 	loggerFactory logging.LoggerFactory[*context.LogEntryContext],
 ) (*NotificationManager, error) {
-	l, err := loggerFactory.CreateLogger("internal.groups.manager.NotificationManager")
+	l, err := loggerFactory.CreateLogger("internal.notifications.manager.NotificationManager")
 	if err != nil {
 		return nil, fmt.Errorf("[manager.NewNotificationManager] create a logger: %w", err)
 	}
