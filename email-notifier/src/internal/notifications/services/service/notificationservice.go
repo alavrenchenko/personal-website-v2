@@ -88,6 +88,10 @@ func NewNotificationService(
 	}, nil
 }
 
+func (s *NotificationService) IsStarted() bool {
+	return s.isStarted.Load()
+}
+
 // Start starts the NotificationService.
 func (s *NotificationService) Start() error {
 	s.mu.Lock()

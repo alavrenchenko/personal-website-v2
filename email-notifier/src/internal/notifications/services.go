@@ -21,6 +21,8 @@ import (
 
 // NotificationService is an email notification service.
 type NotificationService interface {
+	IsStarted() bool
+
 	// Start starts the NotificationService.
 	Start() error
 
