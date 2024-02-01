@@ -89,7 +89,8 @@ func (s *NotificationStore) Add(ctx *actions.OperationContext, data *notifoperat
 				// Minimum transaction isolation level: Read committed.
 				const query = "CALL public.add_notification($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NULL, NULL)"
 				r := tx.QueryRow(txCtx, query, data.Id, data.GroupId, data.CreatedAt, data.CreatedBy, data.Status, data.StatusComment.Ptr(),
-					data.Recipients, data.Subject, data.Body, data.SentAt.Ptr())
+					data.Recipients, data.Subject, data.Body, data.SentAt.Ptr(),
+				)
 
 				if err := r.Scan(&errCode, &errMsg); err != nil {
 					return fmt.Errorf("[stores.NotificationStore.Add] execute a query (add_notification): %w", err)
