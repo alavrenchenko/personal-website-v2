@@ -74,8 +74,10 @@ func NewActionExecutor(
 	}
 
 	return &ActionExecutor{
-		config: config,
-		logger: l,
+		appSessionId:  appSessionId,
+		actionManager: actionManager,
+		config:        config,
+		logger:        l,
 	}, nil
 }
 
