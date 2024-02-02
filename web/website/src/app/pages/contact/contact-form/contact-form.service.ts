@@ -33,7 +33,7 @@ export class ContactFormService {
 
     send(msg: Message): Promise<boolean> {
         return new Promise<boolean>((resolve, reject) => {
-            this._httpClient.put<IResponse<boolean>>(this._createMsgReqUrl, msg, {
+            this._httpClient.post<IResponse<boolean>>(this._createMsgReqUrl, msg, {
                 headers: { 'Content-Type': 'application/json' },
                 observe: 'response'
             }).subscribe({
