@@ -42,6 +42,7 @@ import (
 	actionhelper "personal-website-v2/pkg/helper/actions"
 	"personal-website-v2/pkg/logging"
 	lcontext "personal-website-v2/pkg/logging/context"
+	"personal-website-v2/pkg/services/emailnotifier/formatting"
 	"personal-website-v2/pkg/services/emailnotifier/formatting/protobuf"
 	"personal-website-v2/pkg/services/emailnotifier/models"
 	sactions "personal-website-v2/pkg/services/internal/actions"
@@ -163,8 +164,13 @@ func NewEmailNotifier(
 		return nil, fmt.Errorf("[emailnotifier.NewEmailNotifier] new idGenerator: %w", err)
 	}
 
+	ctx := &formatting.FormatterContext{
+		AppSessionId:    appSessionId,
+		EmailNotifierId: id,
+	}
 	n.id = id
 	n.idGenerator = idGenerator
+	n.notifFormatter = protobuf.NewNotificationFormatter(ctx)
 	n.kMsgIdGenerator = kMsgIdGenerator
 	n.loggerCtx = &lcontext.LogEntryContext{
 		AppSessionId: nullable.NewNullable(appSessionId),
