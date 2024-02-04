@@ -37,3 +37,8 @@ bin/
 package-lock.json
 
 /.angular/
+
+/server/nginx/dev/scripts/
+/server/nginx/dev/ssl/
+/server/nginx/prod/
+/server/ssl/
