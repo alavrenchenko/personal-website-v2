@@ -18,7 +18,9 @@
                 "minLogLevel": "trace",
                 "maxLogLevel": "fatal",
                 "kafkaConfig": {
-                    "addrs": ["localhost:9092"],
+                    "addrs": [
+                        "localhost:9092"
+                    ],
                     "net": {
                         "maxOpenRequests": 5,
                         "dialTimeout": 10000,
@@ -56,7 +58,7 @@
                     "channelBufferSize": 1024,
                     "version": "3.5.0"
                 },
-                "kafkaTopic":"identity.log"
+                "kafkaTopic": "identity.log"
             }
         },
         "fileLog": {
@@ -71,7 +73,9 @@
         "logging": {
             "kafka": {
                 "kafkaConfig": {
-                    "addrs": ["localhost:9092"],
+                    "addrs": [
+                        "localhost:9092"
+                    ],
                     "net": {
                         "maxOpenRequests": 5,
                         "dialTimeout": 10000,
@@ -109,9 +113,9 @@
                     "channelBufferSize": 1024,
                     "version": "3.5.0"
                 },
-                "transactionTopic":"base.transactions",
-                "actionTopic":"base.actions",
-                "operationTopic":"base.operations"
+                "transactionTopic": "base.transactions",
+                "actionTopic": "base.actions",
+                "operationTopic": "base.operations"
             }
         }
     },
@@ -125,7 +129,9 @@
                 "logging": {
                     "kafka": {
                         "kafkaConfig": {
-                            "addrs": ["localhost:9092"],
+                            "addrs": [
+                                "localhost:9092"
+                            ],
                             "net": {
                                 "maxOpenRequests": 5,
                                 "dialTimeout": 10000,
@@ -163,14 +169,14 @@
                             "channelBufferSize": 1024,
                             "version": "3.5.0"
                         },
-                        "requestTopic":"identity.http_server.requests",
-                        "responseTopic":"identity.http_server.responses"
+                        "requestTopic": "identity.http_server.requests",
+                        "responseTopic": "identity.http_server.responses"
                     }
                 }
             }
         },
         "grpc": {
-            "logging":{
+            "logging": {
                 "minLogLevel": "info",
                 "maxLogLevel": "fatal"
             },
@@ -179,7 +185,9 @@
                 "logging": {
                     "kafka": {
                         "kafkaConfig": {
-                            "addrs": ["localhost:9092"],
+                            "addrs": [
+                                "localhost:9092"
+                            ],
                             "net": {
                                 "maxOpenRequests": 5,
                                 "dialTimeout": 10000,
@@ -217,7 +225,7 @@
                             "channelBufferSize": 1024,
                             "version": "3.5.0"
                         },
-                        "callTopic":"identity.grpc_server.calls"
+                        "callTopic": "identity.grpc_server.calls"
                     }
                 }
             }
