@@ -104,7 +104,11 @@ func (p *requestPipeline) onUnaryInterceptor(ctx context.Context, req interface{
 		p.wgInProgress.Done()
 	}()
 
-	md, _ := metadata.FromIncomingContext(ctx)
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		md = metadata.MD{}
+	}
+
 	grpcCtx := NewGrpcContext(md)
 	ctx = NewIncomingContextWithGrpcContext(ctx, grpcCtx)
 
@@ -139,7 +143,11 @@ func (p *requestPipeline) onStreamInterceptor(srv interface{}, ss grpc.ServerStr
 	}()
 
 	ctx := ss.Context()
-	md, _ := metadata.FromIncomingContext(ctx)
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		md = metadata.MD{}
+	}
+
 	grpcCtx := NewGrpcContext(md)
 	ctx = NewIncomingContextWithGrpcContext(ctx, grpcCtx)
 
