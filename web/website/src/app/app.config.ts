@@ -41,7 +41,7 @@ const prefersReducedMotion = typeof matchMedia === 'function' ? matchMedia('(pre
 
 const identityUrls: IdentityUrls = {
     webClientServiceUrl: environment.webClientServiceUrl
-}
+};
 
 export const appConfig: ApplicationConfig = {
     providers: [
