@@ -15,6 +15,8 @@
  * limitations under the License.
  */
 
-export class Message {
-    constructor(public name: string, public email: string, public message: string) { }
+export interface Message {
+    name: string;
+    email: string;
+    message: string;
 }

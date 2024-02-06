@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-import { Component, ViewEncapsulation } from "@angular/core";
+import { Component, OnDestroy, ViewChild, ViewEncapsulation } from "@angular/core";
 import {
     AbstractControl,
     FormControl,
@@ -48,26 +48,35 @@ const SNACK_BAR_DURATION: number = 5000; // in milliseconds
     providers: [ContactFormService],
     imports: [FormsModule, ReactiveFormsModule, MatFormFieldModule, MatInputModule, MatButtonModule]
 })
-export class ContactFormComponent {
+export class ContactFormComponent implements OnDestroy {
     form: FormGroup;
+
+    @ViewChild('formDirective')
+    formDirective!: FormGroupDirective;
+
     nameMatcher = new ContactFormErrorStateMatcher();
     emailMatcher = new ContactFormErrorStateMatcher();
     msgMatcher = new ContactFormErrorStateMatcher();
 
-    message = new Message('', '', '');
     sending = false;
+
+    private _destroyed = false;
 
     constructor(private _contactFormService: ContactFormService, private _snackBar: MatSnackBar) {
         this.form = new FormGroup(
             {
-                'name': new FormControl('', [Validators.required, Validators.maxLength(100), createWhitespaceValidator()]),
-                'email': new FormControl('', [Validators.required, Validators.email, Validators.maxLength(500)]),
-                'msg': new FormControl('', [Validators.required, Validators.maxLength(1000), createWhitespaceValidator()])
+                name: new FormControl('', [Validators.required, Validators.maxLength(100), createWhitespaceValidator()]),
+                email: new FormControl('', [Validators.required, Validators.email, Validators.maxLength(500)]),
+                msg: new FormControl('', [Validators.required, Validators.maxLength(1000), createWhitespaceValidator()])
             }
         );
     }
 
-    submit(): void {
+    ngOnDestroy(): void {
+        this._destroyed = true;
+    }
+
+    async submit(): Promise<void> {
         if (this.sending) {
             return;
         }
@@ -76,15 +85,40 @@ export class ContactFormComponent {
             return;
         }
 
-        this.sending = true;
 
-        this._contactFormService.send(this.message).then(r => {
-            this.sending = false;
-            this._snackBar.open('The message has been sent.', 'X', { duration: SNACK_BAR_DURATION });
-        }).catch(err => {
-            console.error('[contact-form.ContactFormComponent.submit] send a message:', err);
-            this.sending = false;
-            this._snackBar.open('Send error.', 'X', { duration: SNACK_BAR_DURATION });
+        this.sending = true;
+        let v = this.form.value;
+        let msg: Message = {
+            name: v.name,
+            email: v.email,
+            message: v.msg
+        };
+
+        try {
+            await this._contactFormService.send(msg);
+        } catch (e) {
+            if (!this._destroyed) {
+                console.error('[contact-form.ContactFormComponent.submit] send a message:', e);
+                this.sending = false;
+                this._snackBar.open('An error occurred while sending a message.', 'X', { duration: SNACK_BAR_DURATION });
+            }
+            return;
+        }
+
+        if (this._destroyed) {
+            return;
+        }
+
+        this.sending = false;
+        this._snackBar.open('The message has been sent.', 'X', { duration: SNACK_BAR_DURATION });
+        this.resetForm();
+    }
+
+    private resetForm(): void {
+        this.formDirective.resetForm({
+            name: '',
+            email: '',
+            msg: ''
         });
     }
 }

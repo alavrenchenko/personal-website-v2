@@ -1,8 +1,7 @@
-<form class="pw-contact__form" [formGroup]="form" (ngSubmit)="submit()">
+<form class="pw-contact__form" [formGroup]="form" #formDirective="ngForm" (ngSubmit)="submit()">
     <mat-form-field>
         <mat-label>Name</mat-label>
-        <input matInput name="name" formControlName="name" [(ngModel)]="message.name" [errorStateMatcher]="nameMatcher"
-            maxlength="100">
+        <input matInput name="name" formControlName="name" [errorStateMatcher]="nameMatcher" maxlength="100">
         @if (form.controls['name'].hasError('required')) {
         <mat-error>Name is <strong>required</strong></mat-error>
         }
@@ -15,8 +14,8 @@
     </mat-form-field>
     <mat-form-field>
         <mat-label>Email</mat-label>
-        <input matInput name="email" type="email" formControlName="email" [(ngModel)]="message.email"
-            [errorStateMatcher]="emailMatcher" maxlength="500" placeholder="example@example.com">
+        <input matInput name="email" type="email" formControlName="email" [errorStateMatcher]="emailMatcher"
+            maxlength="500" placeholder="example@example.com">
         @if (form.controls['email'].hasError('email') && !form.controls['email'].hasError('required')) {
         <mat-error>Please enter a valid email address</mat-error>
         }
@@ -29,8 +28,8 @@
     </mat-form-field>
     <mat-form-field>
         <mat-label>Message</mat-label>
-        <textarea matInput name="message" formControlName="msg" [(ngModel)]="message.message"
-            [errorStateMatcher]="msgMatcher" maxlength="1000"></textarea>
+        <textarea matInput name="message" formControlName="msg" [errorStateMatcher]="msgMatcher"
+            maxlength="1000"></textarea>
         @if (form.controls['msg'].hasError('required')) {
         <mat-error>Message is <strong>required</strong></mat-error>
         }
