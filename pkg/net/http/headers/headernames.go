@@ -109,4 +109,9 @@ const (
 	HeaderNameXRequestedWith                  = "X-Requested-With"
 	HeaderNameXUACompatible                   = "X-UA-Compatible"
 	HeaderNameXXSSProtection                  = "X-XSS-Protection"
+	HeaderNameXRealIP                         = "X-Real-Ip" // X-Real-IP
+	HeaderNameForwarded                       = "Forwarded"
+	HeaderNameXForwardedFor                   = "X-Forwarded-For"
+	HeaderNameXForwardedHost                  = "X-Forwarded-Host"
+	HeaderNameXForwardedProto                 = "X-Forwarded-Proto"
 )
