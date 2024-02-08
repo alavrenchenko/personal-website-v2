@@ -58,14 +58,16 @@ message RequestInfo {
     string request_uri = 14;
     int64 content_length = 15;
 
+    // The JSON-encoded headers.
+    string headers = 16;
+
     // headers
-    string content_type = 16;
-    string user_agent = 17;
-    string referer = 18;
-    string origin = 19;
-    string accept = 20;
-    string accept_encoding = 21;
-    string accept_language = 22;
+    string x_real_ip = 17;
+    string x_forwarded_for = 18;
+    string content_type = 19;
+    string origin = 20;
+    string referer = 21;
+    string user_agent = 22;
 }
 
 // Container for enum describing the request status.
