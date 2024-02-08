@@ -48,13 +48,13 @@ CREATE TABLE IF NOT EXISTS identity_http_server.requests
     remote_addr String, -- "IP:port"
     request_uri String,
     content_length Int64,
+    headers Map(LowCardinality(String), Array(String)),
+    x_real_ip String,
+    x_forwarded_for String,
     content_type LowCardinality(String),
-    user_agent String,
-    referer String,
     origin String,
-    accept String,
-    accept_encoding String,
-    accept_language String,
+    referer String,
+    user_agent String,
     _version_stamp UInt8,
 
     INDEX id_idx id TYPE bloom_filter GRANULARITY 1,
@@ -68,13 +68,14 @@ CREATE TABLE IF NOT EXISTS identity_http_server.requests
     INDEX method_idx method TYPE set(0) GRANULARITY 1,
     INDEX remote_addr_idx remote_addr TYPE tokenbf_v1(8192, 3, 0) GRANULARITY 1,
     INDEX content_length_idx content_length TYPE minmax GRANULARITY 1,
+    INDEX headers_key_idx arrayMap(k -> lowerUTF8(k), mapKeys(headers)) TYPE set(0) GRANULARITY 1,
+    INDEX headers_value_idx arrayMap(v -> lowerUTF8(v), flatten(mapValues(headers))) TYPE bloom_filter GRANULARITY 1,
+    INDEX x_real_ip_idx x_real_ip TYPE tokenbf_v1(8192, 3, 0) GRANULARITY 1,
+    INDEX x_forwarded_for_idx x_forwarded_for TYPE tokenbf_v1(8192, 3, 0) GRANULARITY 1,
     INDEX content_type_idx lowerUTF8(content_type) TYPE tokenbf_v1(8192, 3, 0) GRANULARITY 1,
-    INDEX user_agent_idx lowerUTF8(user_agent) TYPE tokenbf_v1(8192, 3, 0) GRANULARITY 1,
-    INDEX referer_idx lowerUTF8(referer) TYPE tokenbf_v1(8192, 3, 0) GRANULARITY 1,
     INDEX origin_idx lowerUTF8(origin) TYPE tokenbf_v1(8192, 3, 0) GRANULARITY 1,
-    INDEX accept_idx lowerUTF8(accept) TYPE tokenbf_v1(8192, 3, 0) GRANULARITY 1,
-    INDEX accept_encoding_idx lowerUTF8(accept_encoding) TYPE tokenbf_v1(8192, 3, 0) GRANULARITY 1,
-    INDEX accept_language_idx lowerUTF8(accept_language) TYPE tokenbf_v1(8192, 3, 0) GRANULARITY 1,
+    INDEX referer_idx lowerUTF8(referer) TYPE tokenbf_v1(8192, 3, 0) GRANULARITY 1,
+    INDEX user_agent_idx lowerUTF8(user_agent) TYPE tokenbf_v1(8192, 3, 0) GRANULARITY 1,
     INDEX _version_stamp_idx _version_stamp TYPE set(0) GRANULARITY 1
 )
 ENGINE = ReplacingMergeTree(_version_stamp)
@@ -99,13 +100,13 @@ CREATE TABLE IF NOT EXISTS identity_http_server.request_queue
     remote_addr String,
     request_uri String,
     content_length Int64,
+    headers String,
+    x_real_ip String,
+    x_forwarded_for String,
     content_type String,
-    user_agent String,
-    referer String,
     origin String,
-    accept String,
-    accept_encoding String,
-    accept_language String
+    referer String,
+    user_agent String
 )
 ENGINE = Kafka
 SETTINGS
@@ -132,12 +133,12 @@ SELECT
     remote_addr,
     request_uri,
     content_length Int64,
+    JSONExtract(headers, 'Map(LowCardinality(String), Array(String))') AS headers,
+    x_real_ip,
+    x_forwarded_for,
     content_type,
-    user_agent,
-    referer,
     origin,
-    accept,
-    accept_encoding,
-    accept_language,
+    referer,
+    user_agent,
     if(end_time IS NOT NULL, 2, 1) AS _version_stamp
 FROM identity_http_server.request_queue;
