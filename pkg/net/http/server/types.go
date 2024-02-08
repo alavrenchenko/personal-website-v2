@@ -15,9 +15,11 @@
 package server
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
+	"unsafe"
 
 	"github.com/google/uuid"
 
@@ -49,35 +51,65 @@ type RequestInfo struct {
 	RemoteAddr    string // "IP:port"
 	RequestURI    string
 	ContentLength int64
+	// Read-only.
+	Headers map[string][]string
 
 	// headers
-	ContentType    string
-	UserAgent      string
-	Referer        string
-	Origin         string
-	Accept         string
-	AcceptEncoding string
-	AcceptLanguage string
+	XRealIP       string
+	XForwardedFor string
+	ContentType   string
+	Origin        string
+	Referer       string
+	UserAgent     string
+
+	headersJson string
 }
 
 func NewRequestInfo(r *http.Request) *RequestInfo {
-	return &RequestInfo{
-		Status:         RequestStatusNew,
-		Url:            r.URL.String(),
-		Method:         r.Method,
-		Protocol:       r.Proto,
-		Host:           r.Host,
-		RemoteAddr:     r.RemoteAddr,
-		RequestURI:     r.RequestURI,
-		ContentLength:  r.ContentLength,
-		ContentType:    r.Header.Get(headers.HeaderNameContentType),
-		UserAgent:      r.UserAgent(),
-		Referer:        r.Referer(),
-		Origin:         r.Header.Get(headers.HeaderNameOrigin),
-		Accept:         r.Header.Get(headers.HeaderNameAccept),
-		AcceptEncoding: r.Header.Get(headers.HeaderNameAcceptEncoding),
-		AcceptLanguage: r.Header.Get(headers.HeaderNameAcceptLanguage),
+	hs := make(map[string][]string, len(r.Header))
+	for k, v := range r.Header {
+		hs[k] = v
 	}
+
+	delete(hs, headers.HeaderNameCookie)
+	delete(hs, headers.HeaderNameAuthorization)
+	delete(hs, headers.HeaderNameProxyAuthorization)
+
+	return &RequestInfo{
+		Status:        RequestStatusNew,
+		Url:           r.URL.String(),
+		Method:        r.Method,
+		Protocol:      r.Proto,
+		Host:          r.Host,
+		RemoteAddr:    r.RemoteAddr,
+		RequestURI:    r.RequestURI,
+		ContentLength: r.ContentLength,
+		Headers:       hs,
+		XRealIP:       r.Header.Get(headers.HeaderNameXRealIP),
+		XForwardedFor: r.Header.Get(headers.HeaderNameXForwardedFor),
+		ContentType:   r.Header.Get(headers.HeaderNameContentType),
+		Origin:        r.Header.Get(headers.HeaderNameOrigin),
+		Referer:       r.Referer(),
+		UserAgent:     r.UserAgent(),
+	}
+}
+
+// HeadersJson returns JSON-encoded request headers (map[string][]string).
+func (r *RequestInfo) HeadersJson() (string, error) {
+	if r.headersJson != "" {
+		return r.headersJson, nil
+	}
+	if len(r.Headers) == 0 {
+		return "{}", nil
+	}
+
+	b, err := json.Marshal(r.Headers)
+	if err != nil {
+		return "", fmt.Errorf("[server.RequestInfo.HeadersJson] marshal headers to JSON: %w", err)
+	}
+
+	r.headersJson = unsafe.String(unsafe.SliceData(b), len(b))
+	return r.headersJson, nil
 }
 
 func (r *RequestInfo) String() string {
