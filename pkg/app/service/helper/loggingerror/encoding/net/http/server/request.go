@@ -42,29 +42,28 @@ func EncodeRequestToString(info *server.RequestInfo) (string, error) {
 
 func serializeRequest(info *server.RequestInfo) ([]byte, error) {
 	reqInfo := &requestInfo{
-		Id:             info.Id,
-		Status:         info.Status,
-		StartTime:      info.StartTime,
-		EndTime:        info.EndTime.Ptr(),
-		ElapsedTime:    info.ElapsedTime.Ptr(),
-		Url:            info.Url,
-		Method:         info.Method,
-		Protocol:       info.Protocol,
-		Host:           info.Host,
-		RemoteAddr:     info.RemoteAddr,
-		RequestURI:     info.RequestURI,
-		ContentLength:  info.ContentLength,
-		ContentType:    info.ContentType,
-		UserAgent:      info.UserAgent,
-		Referer:        info.Referer,
-		Origin:         info.Origin,
-		Accept:         info.Accept,
-		AcceptEncoding: info.AcceptEncoding,
-		AcceptLanguage: info.AcceptLanguage,
+		Id:            info.Id,
+		Status:        info.Status,
+		StartTime:     info.StartTime,
+		EndTime:       info.EndTime.Ptr(),
+		ElapsedTime:   info.ElapsedTime.Ptr(),
+		Url:           info.Url,
+		Method:        info.Method,
+		Protocol:      info.Protocol,
+		Host:          info.Host,
+		RemoteAddr:    info.RemoteAddr,
+		RequestURI:    info.RequestURI,
+		ContentLength: info.ContentLength,
+		Headers:       info.Headers,
+		XRealIP:       info.XRealIP,
+		XForwardedFor: info.XForwardedFor,
+		ContentType:   info.ContentType,
+		Origin:        info.Origin,
+		Referer:       info.Referer,
+		UserAgent:     info.UserAgent,
 	}
 
 	b, err := json.Marshal(reqInfo)
-
 	if err != nil {
 		return nil, fmt.Errorf("[server.serializeRequest] marshal a request to JSON: %w", err)
 	}
