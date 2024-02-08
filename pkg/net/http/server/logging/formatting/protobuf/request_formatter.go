@@ -44,24 +44,23 @@ func (f *RequestFormatter) Format(info *server.RequestInfo) ([]byte, error) {
 			Version: f.ctx.AppInfo.Version,
 			Env:     f.ctx.AppInfo.Env,
 		},
-		AppSessionId:   f.ctx.AppSessionId,
-		HttpServerId:   uint32(f.ctx.HttpServerId),
-		Status:         serverpb.RequestStatusEnum_RequestStatus(info.Status),
-		StartTime:      info.StartTime.UnixMicro(),
-		Url:            info.Url,
-		Method:         info.Method,
-		Protocol:       info.Protocol,
-		Host:           info.Host,
-		RemoteAddr:     info.RemoteAddr,
-		RequestUri:     info.RequestURI,
-		ContentLength:  info.ContentLength,
-		ContentType:    info.ContentType,
-		UserAgent:      info.UserAgent,
-		Referer:        info.Referer,
-		Origin:         info.Origin,
-		Accept:         info.Accept,
-		AcceptEncoding: info.AcceptEncoding,
-		AcceptLanguage: info.AcceptLanguage,
+		AppSessionId:  f.ctx.AppSessionId,
+		HttpServerId:  uint32(f.ctx.HttpServerId),
+		Status:        serverpb.RequestStatusEnum_RequestStatus(info.Status),
+		StartTime:     info.StartTime.UnixMicro(),
+		Url:           info.Url,
+		Method:        info.Method,
+		Protocol:      info.Protocol,
+		Host:          info.Host,
+		RemoteAddr:    info.RemoteAddr,
+		RequestUri:    info.RequestURI,
+		ContentLength: info.ContentLength,
+		XRealIp:       info.XRealIP,
+		XForwardedFor: info.XForwardedFor,
+		ContentType:   info.ContentType,
+		Origin:        info.Origin,
+		Referer:       info.Referer,
+		UserAgent:     info.UserAgent,
 	}
 
 	if info.EndTime.HasValue {
@@ -72,11 +71,15 @@ func (f *RequestFormatter) Format(info *server.RequestInfo) ([]byte, error) {
 		reqInfo.ElapsedTimeUs = &elapsedTime
 	}
 
-	b, err := proto.Marshal(reqInfo)
+	hs, err := info.HeadersJson()
+	if err != nil {
+		return nil, fmt.Errorf("[protobuf.RequestFormatter.Format] get JSON-encoded request headers: %w", err)
+	}
 
+	reqInfo.Headers = hs
+	b, err := proto.Marshal(reqInfo)
 	if err != nil {
 		return nil, fmt.Errorf("[protobuf.RequestFormatter.Format] marshal a request to Protobuf: %w", err)
 	}
-
 	return b, nil
 }
