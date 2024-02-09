@@ -1077,8 +1077,8 @@ func (a *Application) stop(ctx *actions.OperationContext) {
 		}
 	}
 
-	a.isStarted.Store(false)
 	a.isStopped = true
+	a.isStarted.Store(false)
 	a.logWithContext(leCtx, logging.LogLevelInfo, events.ApplicationStopped, nil, "[app.Application.stop] app has been stopped")
 
 	if a.grpcLogger != nil {
