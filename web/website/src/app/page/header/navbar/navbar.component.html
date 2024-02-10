@@ -1,4 +1,5 @@
-<a mat-button class="pw-navbar-brand" color="primary" routerLink="/" aria-label="Alexey Lavrenchenko">Alexey Lavrenchenko</a>
+<a mat-button class="pw-navbar-brand" color="primary" routerLink="/" aria-label="Alexey Lavrenchenko">Alexey
+    Lavrenchenko</a>
 <nav class="pw-navbar-nav pw-nav-top">
     <div class="pw-nav-router-links">
         @for (item of routerLinks; track item.name) {
@@ -12,9 +13,11 @@
     <div class="flex-spacer"></div>
     <div class="pw-nav-external-links">
         @for (item of externalLinks; track item.name) {
-        <a mat-button class="pw-nav-item" [attr.href]="item.link" target="_blank" color="primary"
-            [attr.aria-label]="item.label">
-            <div class="pw-nav-item__label">{{item.label}}</div>
+        <a mat-icon-button class="pw-nav-item pw-nav-logo" [matTooltip]="item.label" [attr.href]="item.link"
+            target="_blank" color="primary" [attr.aria-label]="item.label">
+            <svg matButtonIcon viewBox="0 0 31 29">
+                <use [attr.href]="item.iconLink"></use>
+            </svg>
         </a>
         }
     </div>

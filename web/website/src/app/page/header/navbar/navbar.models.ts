@@ -16,5 +16,5 @@
  */
 
 export class LinkNavItem {
-    constructor(public name: string, public label: string, public link: string) { }
+    constructor(public name: string, public label: string, public link: string, public iconLink?: string) { }
 }

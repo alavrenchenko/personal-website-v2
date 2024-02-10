@@ -32,9 +32,9 @@ export class NavbarService {
             new LinkNavItem("contact", "Contact me", "/contact")
         ];
         this._externalLinks = [
-            new LinkNavItem("telegram", "tel", "https://t.me/"),
-            new LinkNavItem("linkedin", "LinkedIn", "https://linkedin.com/in/lavrenchenko"),
-            new LinkNavItem("github", "GitHub", "https://github.com/alavrenchenko")
+            new LinkNavItem("telegram", "Telegram", "https://t.me/", "/static/img/logos/logos-v1.svg#telegram"),
+            new LinkNavItem("linkedin", "LinkedIn", "https://linkedin.com/in/lavrenchenko", "/static/img/logos/logos-v1.svg#linkedin"),
+            new LinkNavItem("github", "GitHub", "https://github.com/alavrenchenko", "/static/img/logos/logos-v1.svg#github-mark-white")
         ];
     }
 

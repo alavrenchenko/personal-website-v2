@@ -103,6 +103,17 @@ pw-navbar {
     background-color: rgba(0, 0, 0, .3) !important;
 }
 
+.pw-nav-item.pw-nav-logo {
+    font-size: 30px !important;
+    min-width: 0;
+    padding: 9px !important;
+}
+
+.pw-nav-item.pw-nav-logo svg {
+    width: 30px;
+    height: 30px;
+}
+
 .pw-navbar-nav .flex-spacer {
     flex-grow: 1;
 }
