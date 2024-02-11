@@ -16,7 +16,6 @@ package clients
 
 import (
 	"fmt"
-	"net"
 	"strings"
 
 	"personal-website-v2/pkg/actions"
@@ -29,6 +28,7 @@ import (
 	"personal-website-v2/pkg/logging"
 	lcontext "personal-website-v2/pkg/logging/context"
 	"personal-website-v2/pkg/net/http/server"
+	"personal-website-v2/pkg/net/http/util"
 	"personal-website-v2/pkg/web/identity/authn/cookies"
 	wcactions "personal-website-v2/web-client/src/internal/actions"
 	"personal-website-v2/web-client/src/internal/clients"
@@ -139,10 +139,10 @@ func (c *ClientController) createClient(opCtx *actions.OperationContext, httpCtx
 		return false
 	}
 
-	ip, _, err := net.SplitHostPort(httpCtx.Request.RemoteAddr)
+	ip, err := util.GetClientIP(httpCtx.Request)
 	if err != nil {
 		c.logger.ErrorWithEvent(leCtx, events.HttpControllers_ClientControllerEvent, err,
-			"[clients.ClientController.createClient] split Request.RemoteAddr into host and port",
+			"[clients.ClientController.createClient] get a client's ip from a request",
 		)
 		if err := apihttp.BadRequest(httpCtx, apierrors.ErrBadRequest); err != nil {
 			c.logger.ErrorWithEvent(leCtx, events.HttpControllers_ClientControllerEvent, err,
