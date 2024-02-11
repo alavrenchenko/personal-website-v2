@@ -302,15 +302,14 @@ func (p *requestPipeline) handleRequest(ctx *HttpContext) {
 }
 
 func (p *requestPipeline) onNotFound(ctx *HttpContext) {
-	if p.lifetime == nil {
-		p.writeNotFound(ctx.Response.Writer)
+	if p.lifetime != nil {
+		p.lifetime.NotFound(ctx)
+		if ctx.Response.isHeaderWritten() {
+			return
+		}
 	}
 
-	p.lifetime.NotFound(ctx)
-
-	if !ctx.Response.isHeaderWritten() {
-		p.writeNotFound(ctx.Response.Writer)
-	}
+	p.writeNotFound(ctx.Response.Writer)
 }
 
 func (p *requestPipeline) writeNotFound(w http.ResponseWriter) {
