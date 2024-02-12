@@ -40,10 +40,8 @@ export const enum ApiErrorCode {
     // HTTP Mapping: 403 Forbidden.
     PERMISSION_DENIED = 10503,
 
-    PAGE_NOT_FOUND = 10504,
-
     // HTTP Mapping: 499 Client Closed Request.
-    OPERATION_CANCELED = 10505,
+    OPERATION_CANCELED = 10504,
 
     // Network Requests, Operations (11000-11999).
     INVALID_QUERY_STRING = 11000,
@@ -51,7 +49,6 @@ export const enum ApiErrorCode {
 
     INVALID_OPERATION = 12000,
     INVALID_DATA = 12001,
-    // DataNotFound.
     NOT_FOUND = 12002
 
     // reserved error codes: 20000-29999.
