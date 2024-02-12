@@ -15,12 +15,13 @@
  * limitations under the License.
  */
 
-import { HttpClient, HttpErrorResponse, HttpHeaders, HttpResponse, HttpStatusCode } from "@angular/common/http";
+import { HttpClient, HttpStatusCode } from "@angular/common/http";
 import { Inject, Injectable, InjectionToken } from "@angular/core";
 
 import { ApiError, ApiErrorCode, } from "../../../../../../pkg/api/errors";
 import { IResponse } from "../../../../../../pkg/api/models";
 import { Message } from "./contact-form.api-models";
+import { parseHttpError } from "../../../../../../pkg/api/http/errors";
 
 export const CREATE_MSG_REQ_URL_TOKEN = new InjectionToken('createMsgReqUrl');
 
@@ -54,17 +55,10 @@ export class ContactFormService {
                         reject(new Error('response data is null'));
                         return;
                     }
-
                     resolve(res.body.data);
                 },
                 error: err => {
-                    if (err instanceof HttpErrorResponse) {
-                        if (err.error instanceof ErrorEvent) {
-                            console.error('ErrorEvent:', err.error);
-                        }
-                    }
-                    console.error(err);
-                    reject(err);
+                    reject(parseHttpError(err));
                 }
             })
         });

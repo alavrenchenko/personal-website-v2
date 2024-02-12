@@ -36,6 +36,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { ContactFormService } from "./contact-form.service";
 import { Message } from "./contact-form.api-models";
+import { ApiError, ApiErrorCode, ApiErrorMessage } from "../../../../../../pkg/api/errors";
 
 const SNACK_BAR_DURATION: number = 5000; // in milliseconds
 
@@ -85,7 +86,6 @@ export class ContactFormComponent implements OnDestroy {
             return;
         }
 
-
         this.sending = true;
         let v = this.form.value;
         let msg: Message = {
@@ -98,9 +98,25 @@ export class ContactFormComponent implements OnDestroy {
             await this._contactFormService.send(msg);
         } catch (e) {
             if (!this._destroyed) {
-                console.error('[contact-form.ContactFormComponent.submit] send a message:', e);
                 this.sending = false;
-                this._snackBar.open('An error occurred while sending a message.', 'X', { duration: SNACK_BAR_DURATION });
+                let msg = '';
+                if (e instanceof ApiError) {
+                    switch (e.code) {
+                        case ApiErrorCode.BAD_REQUEST:
+                            msg = 'Error: ' + (e.message ? e.message : ApiErrorMessage.INVALID_OPERATION);
+                            break;
+                        case ApiErrorCode.PERMISSION_DENIED:
+                            msg = 'Error: ' + ApiErrorMessage.PERMISSION_DENIED;
+                            break;
+                        case ApiErrorCode.INVALID_DATA:
+                            msg = 'Error: ' + (e.message ? e.message : ApiErrorMessage.INVALID_OPERATION);
+                            break;
+                        default:
+                            msg = 'An error occurred while sending a message';
+                    }
+                }
+
+                this._snackBar.open(msg, 'X', { duration: SNACK_BAR_DURATION });
             }
             return;
         }
@@ -110,7 +126,7 @@ export class ContactFormComponent implements OnDestroy {
         }
 
         this.sending = false;
-        this._snackBar.open('The message has been sent.', 'X', { duration: SNACK_BAR_DURATION });
+        this._snackBar.open('The message has been sent', 'X', { duration: SNACK_BAR_DURATION });
         this.resetForm();
     }
 
