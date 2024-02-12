@@ -50,6 +50,7 @@ export class DotImageComponent implements OnInit, OnDestroy {
     private _step = DEFAULT_STEP;
     private _maxWidth = 700;
     private _maxHeight = 700;
+    private _destroyed = false;
 
     constructor(private _dotImageService: DotImageService) { }
 
@@ -63,6 +64,7 @@ export class DotImageComponent implements OnInit, OnDestroy {
 
     ngOnDestroy(): void {
         this.stopRefreshing();
+        this._destroyed = true;
     }
 
     private isVisible(): boolean {
@@ -87,6 +89,10 @@ export class DotImageComponent implements OnInit, OnDestroy {
 
     private loadImage(): void {
         this._dotImageService.getImage().then(r => {
+            if (this._destroyed) {
+                return;
+            }
+
             this._img = r;
 
             try {
@@ -101,7 +107,7 @@ export class DotImageComponent implements OnInit, OnDestroy {
                 console.error('[dot-image.DotImageComponent.loadImage] start refreshing a canvas:', e);
             }
         }).catch(err => {
-            console.error('[dot-image.DotImageComponent.loadImage] get an image:', err);
+            // console.error('[dot-image.DotImageComponent.loadImage] get an image:', err);
         });
     }
 
