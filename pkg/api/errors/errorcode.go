@@ -38,11 +38,9 @@ const (
 	// HTTP Mapping: 403 Forbidden
 	ApiErrorCodePermissionDenied ApiErrorCode = 10503
 
-	ApiErrorCodePageNotFound ApiErrorCode = 10504
-
 	// HTTP Mapping: 499 Client Closed Request
 	// gRPC Mapping: 1 Canceled
-	ApiErrorCodeOperationCanceled ApiErrorCode = 10505
+	ApiErrorCodeOperationCanceled ApiErrorCode = 10504
 
 	// Network Requests, Operations (11000-11999).
 	ApiErrorCodeInvalidQueryString ApiErrorCode = 11000
@@ -50,8 +48,7 @@ const (
 
 	ApiErrorCodeInvalidOperation ApiErrorCode = 12000
 	ApiErrorCodeInvalidData      ApiErrorCode = 12001
-	// DataNotFound
-	ApiErrorCodeNotFound ApiErrorCode = 12002
+	ApiErrorCodeNotFound         ApiErrorCode = 12002
 
 	// reserved error codes: 20000-29999
 )
