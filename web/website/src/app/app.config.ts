@@ -32,8 +32,8 @@ import { NotFoundComponent } from "./pages/not-found";
 const appRoutes: Routes = [
     { title: "Alexey Lavrenchenko", path: "", pathMatch: "full", component: HomeComponent },
     { title: "Info", path: "info", pathMatch: "full", component: InfoComponent },
-    { title: "About me", path: "about", pathMatch: "full", component: AboutComponent },
-    { title: "Contact me", path: "contact", pathMatch: "full", component: ContactComponent },
+    { title: "About", path: "about", pathMatch: "full", component: AboutComponent },
+    { title: "Contact", path: "contact", pathMatch: "full", component: ContactComponent },
     { title: "Not Found", path: "**", component: NotFoundComponent }
 ];
 
