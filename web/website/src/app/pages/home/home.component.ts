@@ -16,6 +16,9 @@
  */
 
 import { Component, ViewEncapsulation } from "@angular/core";
+import { RouterLink } from "@angular/router";
+import { MatButtonModule } from '@angular/material/button';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { DotImageComponent, IMAGE_URL_TOKEN } from "../../shared/components/dot-image";
 
@@ -28,7 +31,7 @@ import { DotImageComponent, IMAGE_URL_TOKEN } from "../../shared/components/dot-
     providers: [
         { provide: IMAGE_URL_TOKEN, useValue: '/static/img/me/me.png' }
     ],
-    imports: [DotImageComponent]
+    imports: [RouterLink, MatButtonModule, MatTooltipModule, DotImageComponent]
 })
 export class HomeComponent {
     constructor() { }
