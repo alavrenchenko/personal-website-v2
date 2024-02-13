@@ -4,6 +4,7 @@ pw-navbar {
     align-items: center;
     font-size: 16px !important;
     letter-spacing: .05em;
+    justify-content: center;
 }
 
 .pw-navbar-brand {
@@ -44,14 +45,14 @@ pw-navbar {
     flex-wrap: wrap;
     align-items: center;
     flex-grow: 1;
-    padding: 5px 16px;
+    /* padding: 5px 16px; */
 }
 
 .pw-nav-bottom {
     display: none;
 }
 
-@media (max-width: 920px) {
+@media (max-width: 820px) {
     .pw-nav-top .pw-nav-router-links {
         display: none;
     }
@@ -62,9 +63,10 @@ pw-navbar {
     }
 }
 
-@media (max-width: 500px) {
+@media (max-width: 375px) {
     .pw-nav-top {
         width: 100%;
+        justify-content: center;
     }
 }
 
@@ -114,8 +116,10 @@ pw-navbar {
     height: 30px;
 }
 
-.pw-navbar-nav .flex-spacer {
-    flex-grow: 1;
+@media (min-width: 376px) {
+    .pw-navbar-nav .flex-spacer {
+        flex-grow: 1;
+    }
 }
 
 .pw-nav-bottom .pw-nav-item {
