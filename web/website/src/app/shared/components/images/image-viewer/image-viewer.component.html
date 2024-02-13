@@ -1,0 +1,9 @@
+@if (data.imgInfo.title) {
+<h2 mat-dialog-title class="pw-image-viewer-title">{{data.imgInfo.title}}</h2>
+}
+<mat-dialog-content class="pw-image-viewer-content">
+    <img [attr.src]="data.imgInfo.src" [attr.alt]="data.imgInfo.alt">
+</mat-dialog-content>
+<mat-dialog-actions class="pw-image-viewer-actions">
+    <button mat-button mat-dialog-close class="pw-image-viewer-close">Close</button>
+</mat-dialog-actions>

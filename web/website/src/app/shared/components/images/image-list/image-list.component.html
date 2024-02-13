@@ -1,0 +1,5 @@
+@for (item of items; track item.id) {
+<div class="pw-image-list-item">
+    <img [attr.src]="item.thumbnailSrc" [attr.alt]="item.alt" (click)="showImage(item)">
+</div>
+}

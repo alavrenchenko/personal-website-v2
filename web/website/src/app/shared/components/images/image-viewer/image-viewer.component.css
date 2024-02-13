@@ -1,0 +1,25 @@
+.mat-mdc-dialog-container .mdc-dialog__surface {
+    background-color: #ddd;
+}
+
+pw-image-viewer {}
+
+.pw-image-viewer-title {}
+
+.pw-image-viewer-content {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+mat-dialog-content.pw-image-viewer-content {
+    max-height: none;
+}
+
+.pw-image-viewer-content>img {
+    max-width: 100%;
+    max-height: 65vh;
+}
+
+.pw-image-viewer-actions {}
+
+.pw-image-viewer-close {}

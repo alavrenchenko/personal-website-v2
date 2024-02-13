@@ -1,0 +1,22 @@
+pw-image-list {
+    display: flex;
+    flex-direction: row;
+}
+
+.pw-image-list-item {
+    padding-top: 5px;
+}
+
+.pw-image-list-item:not(:last-child) {
+    padding-right: 10px;
+}
+
+.pw-image-list-item>img {
+    max-width: 125px;
+    max-height: 125px;
+    border-radius: 5px;
+}
+
+.pw-image-list-item>img:hover {
+    cursor: zoom-in;
+}
