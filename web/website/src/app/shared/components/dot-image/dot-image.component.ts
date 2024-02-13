@@ -142,9 +142,9 @@ export class DotImageComponent implements OnInit, OnDestroy {
             this._step = DEFAULT_STEP;
         }
 
+        parentElem.style.height = h + 'px';
         this.canvasRef.nativeElement.width = w;
         this.canvasRef.nativeElement.height = h;
-
         this._cacheCanvas!.width = w;
         this._cacheCanvas!.height = h;
 
