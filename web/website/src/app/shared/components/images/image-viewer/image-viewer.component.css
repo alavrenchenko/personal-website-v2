@@ -12,6 +12,8 @@ pw-image-viewer {}
 }
 
 mat-dialog-content.pw-image-viewer-content {
+    display: flex;
+    flex-direction: column;
     max-height: none;
 }
 
@@ -22,4 +24,21 @@ mat-dialog-content.pw-image-viewer-content {
 
 .pw-image-viewer-actions {}
 
-.pw-image-viewer-close {}
+mat-dialog-actions.pw-image-viewer-actions {
+    position: absolute;
+    background-color: rgba(0, 0, 0, 0.3);
+    bottom: 0;
+    border-top: none;
+    width: 100%;
+    justify-content: end;
+}
+
+.pw-image-viewer-close {
+    background-color: rgba(255, 255, 255, 0.5);
+    transition: all .2s;
+}
+
+.pw-image-viewer-close:focus,
+.pw-image-viewer-close:hover {
+    background-color: rgba(255, 255, 255, 0.7);
+}
