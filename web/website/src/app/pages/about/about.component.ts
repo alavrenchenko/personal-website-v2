@@ -16,6 +16,9 @@
  */
 
 import { Component, ViewEncapsulation } from "@angular/core";
+import { MatDialog } from "@angular/material/dialog";
+
+import { ImageInfo, ImageViewerComponent, ImageViewerData } from "../../shared/components/images";
 
 @Component({
     selector: "pw-about",
@@ -25,5 +28,16 @@ import { Component, ViewEncapsulation } from "@angular/core";
     encapsulation: ViewEncapsulation.None
 })
 export class AboutComponent {
-    constructor() { }
+    readonly photo = new ImageInfo(1, '', '/static/img/me/me.png', '/static/img/me/me.png', '');
+
+    constructor(private _dialog: MatDialog) { }
+
+    showPhoto(): void {
+        this._dialog.open(ImageViewerComponent, {
+            data: { imgInfo: this.photo } as ImageViewerData,
+            autoFocus: 'dialog',
+            enterAnimationDuration: 100,
+            exitAnimationDuration: 100
+        });
+    }
 }
