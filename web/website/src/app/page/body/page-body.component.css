@@ -67,6 +67,7 @@ pw-page-body .pw-content-body {}
     pw-page-body .pw-content-header,
     pw-page-body .pw-content-footer,
     .pw-page-row-inner {
+        width: 80%;
         margin: 0 10%;
     }
 }
@@ -79,7 +80,7 @@ pw-page-body .pw-content-body {}
 .pw-page-row-header>h2,
 .pw-page-row-header>h3 {
     color: #ddd;
-    margin: 0;
+    margin-top: 0;
 }
 
 .pw-page-row-header-centered {
