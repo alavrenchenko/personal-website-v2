@@ -39,7 +39,7 @@ export class ImageListComponent {
     showImage(item: ImageInfo): void {
         this._dialog.open(ImageViewerComponent, {
             data: { imgInfo: item } as ImageViewerData,
-            // autoFocus: 'dialog'
+            autoFocus: 'dialog',
             enterAnimationDuration: 100,
             exitAnimationDuration: 100
         });
