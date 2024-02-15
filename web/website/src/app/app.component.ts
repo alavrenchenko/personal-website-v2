@@ -21,19 +21,27 @@ import { Router } from "@angular/router";
 import { IdentityService } from "../../../pkg/identity";
 import { NavigationFocus } from "./core/navigation/navigation-focus";
 import { PageBodyComponent, PageFooterComponent, PageHeaderComponent } from "./page";
+import { GoogleAnalyticsService, formatErrorEventForGAnalytics, formatErrorForGAnalytics } from "../../../pkg/analytics/google";
 
 @Component({
     selector: "app-root",
     standalone: true,
     templateUrl: './app.component.html',
     styleUrls: ['./app.component.css'],
+    host: {
+        '(window:error)': 'onWindowError($event)'
+    },
     providers: [IdentityService],
     imports: [PageHeaderComponent, PageBodyComponent, PageFooterComponent]
 })
 export class AppComponent implements OnInit, OnDestroy {
     private readonly _navFocus: NavigationFocus;
 
-    constructor(private readonly _identityService: IdentityService, router: Router) {
+    constructor(
+        private readonly _identityService: IdentityService,
+        private readonly _analytics: GoogleAnalyticsService,
+        router: Router
+    ) {
         this._navFocus = new NavigationFocus(router);
     }
 
@@ -41,9 +49,14 @@ export class AppComponent implements OnInit, OnDestroy {
         setTimeout(() => {
             this._identityService.init();
         });
+
     }
 
     ngOnDestroy(): void {
         this._navFocus.dispose();
+    }
+
+    onWindowError(e: ErrorEvent): void {
+        this._analytics.sendError(formatErrorEventForGAnalytics(e), true);
     }
 }
