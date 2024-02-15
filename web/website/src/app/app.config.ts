@@ -15,19 +15,20 @@
  * limitations under the License.
  */
 
-import { ApplicationConfig } from "@angular/core";
+import { ApplicationConfig, ErrorHandler } from "@angular/core";
 import { LocationStrategy, PathLocationStrategy } from "@angular/common";
 import { provideHttpClient } from "@angular/common/http";
 import { provideRouter, Routes, withInMemoryScrolling } from "@angular/router";
 import { provideAnimations, provideNoopAnimations } from "@angular/platform-browser/animations";
 
-import { IdentityService, IdentityUrls, IDENTITY_URLS_TOKEN } from "../../../pkg/identity";
+import { IdentityUrls, IDENTITY_URLS_TOKEN } from "../../../pkg/identity";
 import { environment } from '../environments/environment';
 import { HomeComponent } from "./pages/home";
 import { InfoComponent } from "./pages/info";
 import { AboutComponent } from "./pages/about";
 import { ContactComponent } from "./pages/contact";
 import { NotFoundComponent } from "./pages/not-found";
+import { GOOGLE_ANALYTICS_SERVICE_CONFIG_TOKEN, GoogleAnalyticsErrorSendingHandler, GoogleAnalyticsServiceConfig, Tag } from "../../../pkg/analytics/google";
 
 const appRoutes: Routes = [
     { title: "Alexey Lavrenchenko", path: "", pathMatch: "full", component: HomeComponent },
@@ -38,6 +39,10 @@ const appRoutes: Routes = [
 ];
 
 const prefersReducedMotion = typeof matchMedia === 'function' ? matchMedia('(prefers-reduced-motion)').matches : false;
+
+const gasConfig: GoogleAnalyticsServiceConfig = {
+    mainTag: new Tag(environment.googleAnalyticsPWId)
+};
 
 const identityUrls: IdentityUrls = {
     webClientServiceUrl: environment.webClientServiceUrl
@@ -50,9 +55,10 @@ export const appConfig: ApplicationConfig = {
             anchorScrolling: 'enabled'
         })),
         { provide: LocationStrategy, useClass: PathLocationStrategy },
+        { provide: GOOGLE_ANALYTICS_SERVICE_CONFIG_TOKEN, useValue: gasConfig },
+        { provide: ErrorHandler, useClass: GoogleAnalyticsErrorSendingHandler },
         provideHttpClient(),
         prefersReducedMotion ? provideNoopAnimations() : provideAnimations(),
-        { provide: IDENTITY_URLS_TOKEN, useValue: identityUrls },
-        IdentityService
+        { provide: IDENTITY_URLS_TOKEN, useValue: identityUrls }
     ]
 };
