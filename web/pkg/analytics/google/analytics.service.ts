@@ -44,7 +44,7 @@ export interface GoogleAnalyticsServiceConfig {
      * The gtag info.
      */
     mainTag: Tag;
-    additionalTags?: Tag[]
+    additionalTags?: Tag[];
 }
 
 @Injectable({ providedIn: "root" })
@@ -59,7 +59,7 @@ export class GoogleAnalyticsService {
      * @param fieldName The name of the field to get.
      * @returns The value of the requested field.
      */
-    get<T = any>(target: string, fieldName: string): Promise<T> {
+    get<T>(target: string, fieldName: string): Promise<T> {
         // https://developers.google.com/tag-platform/gtagjs/reference#get
         return new Promise<T>(resolve => {
             this.gtag('get', target, fieldName, resolve);
