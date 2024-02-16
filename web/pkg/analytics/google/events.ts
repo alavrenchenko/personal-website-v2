@@ -15,8 +15,7 @@
  * limitations under the License.
  */
 
-export * from './analytics.models';
-export * from './analytics.service';
-export * from './error-formatting';
-export * from './error-handler';
-export * from './events';
+export const enum GoogleAnalyticsEventName {
+    // The custom events.
+    WINDOW_CLICK = 'window_click'
+}
