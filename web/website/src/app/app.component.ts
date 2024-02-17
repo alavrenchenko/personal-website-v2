@@ -87,6 +87,8 @@ export class AppComponent implements OnInit, OnDestroy {
                 params.target_current_src = e.target.currentSrc;
             } else if (e.target instanceof HTMLInputElement) {
                 params.target_name = e.target.name;
+            } else if (e.target instanceof HTMLTextAreaElement) {
+                params.target_name = e.target.name;
             }
 
             const parentElem = e.target.parentElement;
