@@ -106,7 +106,6 @@ pw-navbar {
 }
 
 .pw-nav-item.pw-nav-logo {
-    font-size: 30px !important;
     min-width: 0;
     padding: 9px !important;
 }
