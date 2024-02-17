@@ -18,7 +18,6 @@
 import { Component, ViewEncapsulation } from "@angular/core";
 import { RouterLink, RouterLinkActive } from "@angular/router";
 import { MatIconModule } from '@angular/material/icon';
-import { MatDividerModule } from '@angular/material/divider';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
@@ -32,7 +31,7 @@ import { NavbarService } from "./navbar.service";
     styleUrls: ['./navbar.component.css'],
     encapsulation: ViewEncapsulation.None,
     providers: [NavbarService],
-    imports: [RouterLink, RouterLinkActive, MatButtonModule, MatDividerModule, MatIconModule, MatTooltipModule]
+    imports: [RouterLink, RouterLinkActive, MatButtonModule, MatIconModule, MatTooltipModule]
 })
 export class NavbarComponent {
     readonly routerLinks: LinkNavItem[];
