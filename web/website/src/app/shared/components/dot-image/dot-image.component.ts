@@ -18,6 +18,7 @@
 import { Component, ElementRef, OnDestroy, OnInit, ViewChild, ViewEncapsulation } from "@angular/core";
 
 import { DotImageService } from "./dot-image.service";
+import { GoogleAnalyticsService, formatAnyErrorForGAnalytics } from "../../../../../../pkg/analytics/google";
 
 const DEFAULT_STEP: number = 1500;
 const REFRESH_TIMEOUT: number = 32; // in milliseconds
@@ -52,7 +53,7 @@ export class DotImageComponent implements OnInit, OnDestroy {
     private _maxHeight = 700;
     private _destroyed = false;
 
-    constructor(private _dotImageService: DotImageService) { }
+    constructor(private readonly _dotImageService: DotImageService, private readonly _analytics: GoogleAnalyticsService) { }
 
     ngOnInit(): void {
         this._canvasCtx = this.canvasRef.nativeElement.getContext('2d');
@@ -98,16 +99,18 @@ export class DotImageComponent implements OnInit, OnDestroy {
             try {
                 this.resize();
             } catch (e) {
-                console.error('[dot-image.DotImageComponent.loadImage] resize a canvas:', e);
+                console.error(e);
+                this._analytics.sendError(`[dot-image.DotImageComponent.loadImage] resize a canvas: ${formatAnyErrorForGAnalytics(e)}`, false);
             }
 
             try {
                 this.startRefreshing();
             } catch (e) {
-                console.error('[dot-image.DotImageComponent.loadImage] start refreshing a canvas:', e);
+                console.error(e);
+                this._analytics.sendError(`[dot-image.DotImageComponent.loadImage] start refreshing a canvas: ${formatAnyErrorForGAnalytics(e)}`, false);
             }
         }).catch(err => {
-            // console.error('[dot-image.DotImageComponent.loadImage] get an image:', err);
+            this._analytics.sendError(`[dot-image.DotImageComponent.loadImage] get an image: ${formatAnyErrorForGAnalytics(err)}`, false);
         });
     }
 
