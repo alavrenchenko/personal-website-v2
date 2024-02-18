@@ -41,3 +41,12 @@ export function formatErrorEventForGAnalytics(e: ErrorEvent): string {
     }
     return `${message}\n${filename}:${lineno}:${colno}`;
 }
+
+/**
+ * Formats an error to a human-readable string that can be sent
+ * to Google Analytics.
+ * @param err The error.
+ */
+export function formatAnyErrorForGAnalytics(err: any): string {
+    return err instanceof Error ? formatErrorForGAnalytics(err) : err.toString();
+}
