@@ -37,6 +37,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { ContactFormService } from "./contact-form.service";
 import { Message } from "./contact-form.api-models";
 import { ApiError, ApiErrorCode, ApiErrorMessage } from "../../../../../../pkg/api/errors";
+import { GoogleAnalyticsService, formatAnyErrorForGAnalytics } from "../../../../../../pkg/analytics/google";
 
 const SNACK_BAR_DURATION: number = 5000; // in milliseconds
 
@@ -63,7 +64,11 @@ export class ContactFormComponent implements OnDestroy {
 
     private _destroyed = false;
 
-    constructor(private _contactFormService: ContactFormService, private _snackBar: MatSnackBar) {
+    constructor(
+        private readonly _contactFormService: ContactFormService,
+        private readonly _analytics: GoogleAnalyticsService,
+        private readonly _snackBar: MatSnackBar
+    ) {
         this.form = new FormGroup(
             {
                 name: new FormControl('', [Validators.required, Validators.maxLength(100), createWhitespaceValidator()]),
@@ -98,25 +103,25 @@ export class ContactFormComponent implements OnDestroy {
             await this._contactFormService.send(msg);
         } catch (e) {
             if (!this._destroyed) {
+                this._analytics.sendError(`[contact-form.ContactFormComponent.submit] send a message: ${formatAnyErrorForGAnalytics(e)}`, false);
                 this.sending = false;
+
                 let msg = '';
                 if (e instanceof ApiError) {
                     switch (e.code) {
                         case ApiErrorCode.BAD_REQUEST:
-                            msg = 'Error: ' + (e.message ? e.message : ApiErrorMessage.INVALID_OPERATION);
+                            msg = 'Error: ' + (e.message || ApiErrorMessage.INVALID_OPERATION);
                             break;
                         case ApiErrorCode.PERMISSION_DENIED:
                             msg = 'Error: ' + ApiErrorMessage.PERMISSION_DENIED;
                             break;
                         case ApiErrorCode.INVALID_DATA:
-                            msg = 'Error: ' + (e.message ? e.message : ApiErrorMessage.INVALID_OPERATION);
+                            msg = 'Error: ' + (e.message || ApiErrorMessage.INVALID_OPERATION);
                             break;
-                        default:
-                            msg = 'An error occurred while sending a message';
                     }
                 }
 
-                this._snackBar.open(msg, 'X', { duration: SNACK_BAR_DURATION });
+                this._snackBar.open(msg || 'An error occurred while sending a message', 'X', { duration: SNACK_BAR_DURATION });
             }
             return;
         }
