@@ -113,7 +113,7 @@ func (c *StaticFileController) GetImg(ctx *server.HttpContext) {
 	c.reqProcessor.ProcessWithAuthz(ctx, wactions.ActionTypeStaticFile_GetImg, wactions.OperationTypeStaticFileController_GetImg,
 		[]string{widentity.PermissionStaticFile_Get},
 		func(opCtx *actions.OperationContext) bool {
-			ctx.Response.Writer.Header().Set("Cache-Control", "public, max-age=300") // 5m
+			ctx.Response.Writer.Header().Set("Cache-Control", "public, max-age=3600") // 1h
 			c.staticFileManager.ServeHTTP(ctx)
 
 			if sc := ctx.Response.StatusCode(); sc >= 400 {
