@@ -22,6 +22,7 @@ import (
 	"personal-website-v2/pkg/identity"
 	"personal-website-v2/pkg/logging"
 	lcontext "personal-website-v2/pkg/logging/context"
+	"personal-website-v2/pkg/net/http/headers"
 	"personal-website-v2/pkg/net/http/server"
 	"personal-website-v2/pkg/web/resources"
 	wactions "personal-website-v2/website/src/internal/actions"
@@ -71,7 +72,12 @@ func (c *WebResourceController) Get(ctx *server.HttpContext) {
 	c.reqProcessor.ProcessWithAuthz(ctx, wactions.ActionTypeWebResource_Get, wactions.OperationTypeWebResourceController_Get,
 		[]string{widentity.PermissionWebResource_Get},
 		func(opCtx *actions.OperationContext) bool {
-			ctx.Response.Writer.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+			if ctx.Request.URL.Path == "/favicon.ico" {
+				ctx.Response.Writer.Header().Set(headers.HeaderNameCacheControl, "public, max-age=3600") // 1h
+			} else {
+				ctx.Response.Writer.Header().Set(headers.HeaderNameCacheControl, "no-cache, no-store, must-revalidate")
+			}
+
 			c.resourceManager.ServeHTTP(ctx)
 
 			if sc := ctx.Response.StatusCode(); sc >= 400 {
