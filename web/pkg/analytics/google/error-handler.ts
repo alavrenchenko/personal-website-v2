@@ -18,7 +18,7 @@
 import { ErrorHandler, Injectable } from '@angular/core';
 
 import { GoogleAnalyticsService } from './analytics.service';
-import { formatErrorForGAnalytics } from './error-formatting';
+import { formatAnyErrorForGAnalytics } from './error-formatting';
 
 @Injectable()
 export class GoogleAnalyticsErrorSendingHandler extends ErrorHandler {
@@ -28,11 +28,6 @@ export class GoogleAnalyticsErrorSendingHandler extends ErrorHandler {
 
     handleError(error: any): void {
         super.handleError(error);
-
-        if (error instanceof Error) {
-            this._analytics.sendError(formatErrorForGAnalytics(error), true);
-        } else {
-            this._analytics.sendError(error.toString(), true);
-        }
+        this._analytics.sendError(formatAnyErrorForGAnalytics(error), true);
     }
 }
