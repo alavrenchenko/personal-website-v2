@@ -34,7 +34,7 @@
     grid-row: 6;
 }
 
-@media (min-width: 401px) {
+@media (min-width: 501px) {
     .pw-home-grid-item-1 {
         padding-right: 10px;
     }
@@ -129,9 +129,10 @@
     }
 }
 
-@media (max-width: 550px) {
+@media (max-width: 600px) {
     .pw-home-grid {
         grid-template-rows: auto 1fr auto auto auto auto;
+        align-items: center;
     }
 
     .pw-home-grid-item-1 {
@@ -149,23 +150,34 @@
     }
 }
 
-@media (max-width: 400px) {
+@media (max-width: 500px) {
     .pw-home-grid {
         grid-template-rows: auto auto auto auto 1fr auto;
+        align-items: normal;
+        justify-items: center;
     }
 
     .pw-home-grid-item-1 {
         grid-column: 1 / span 2;
         grid-row: 1;
+        width: 100%;
+        max-width: 370px;
     }
 
     .pw-home-grid-item-2 {
         grid-column: 1 / span 2;
         grid-row: 2;
+        width: 100%;
     }
 
     .pw-home-grid-item-3 {
         padding-top: 0;
+        width: 100%;
+    }
+
+    .pw-home-grid-item-4,
+    .pw-home-grid-item-5 {
+        width: 100%;
     }
 }
 
