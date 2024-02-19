@@ -234,21 +234,6 @@
     "db": {
         "postgres": {
             "configs": {
-                "IdentityDb": {
-                    "applicationName": "Identity",
-                    "host": "{host}",
-                    "port": 0,
-                    "database": "identity",
-                    "user": "{user}",
-                    "password": "{password}",
-                    "sslMode": "disable",
-                    "connectTimeout": 10,
-                    "minConns": 10,
-                    "maxConns": 100,
-                    "maxConnLifetime": 86400,
-                    "maxConnIdleTime": 30,
-                    "healthCheckPeriod": 5
-                },
                 "UserDb": {
                     "applicationName": "Identity",
                     "host": "{host}",
@@ -413,10 +398,24 @@
                     "maxConnLifetime": 86400,
                     "maxConnIdleTime": 30,
                     "healthCheckPeriod": 5
+                },
+                "AuthnDb": {
+                    "applicationName": "Identity",
+                    "host": "{host}",
+                    "port": 0,
+                    "database": "identity_authn",
+                    "user": "{user}",
+                    "password": "{password}",
+                    "sslMode": "disable",
+                    "connectTimeout": 10,
+                    "minConns": 10,
+                    "maxConns": 100,
+                    "maxConnLifetime": 86400,
+                    "maxConnIdleTime": 30,
+                    "healthCheckPeriod": 5
                 }
             },
             "dataMap": {
-                "Identity": "IdentityDb",
                 "User": "UserDb",
                 "WebClient": "WebClientDb",
                 "MobileClient": "MobileClientDb",
@@ -427,7 +426,8 @@
                 "WebUserAgent": "WebUserAgentDb",
                 "MobileUserAgent": "MobileUserAgentDb",
                 "User_WebSession": "User_WebSessionDb",
-                "User_MobileSession": "User_MobileSessionDb"
+                "User_MobileSession": "User_MobileSessionDb",
+                "Authn": "AuthnDb"
             }
         }
     },
