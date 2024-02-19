@@ -43,7 +43,6 @@ export class AppComponent implements OnInit, OnDestroy {
         router: Router
     ) {
         this._navFocus = new NavigationFocus(router);
-
     }
 
     ngOnInit(): void {
