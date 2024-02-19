@@ -34,8 +34,7 @@ import (
 )
 
 const (
-	// TokenEncryptionKeyStore.
-	identityCategory = "Identity"
+	// identityCategory = "Identity"
 
 	// UserStore, UserPersonalInfoStore, UserRoleAssignmentStore.
 	userCategory = "User"
@@ -69,6 +68,9 @@ const (
 
 	// UserMobileSessionStore.
 	userMobileSessionCategory = "User_MobileSession"
+
+	// TokenEncryptionKeyStore.
+	authnCategory = "Authn"
 )
 
 type Stores interface {
@@ -210,17 +212,7 @@ func (s *stores) Init(databases map[string]*postgres.Database) error {
 		return errors.New("[postgres.stores.Init] stores have already been initialized")
 	}
 
-	database, ok := databases[identityCategory]
-	if !ok {
-		return fmt.Errorf("[postgres.stores.Init] database not found for the category '%s'", identityCategory)
-	}
-
-	tokenEncryptionKeyStore, err := authenticationstores.NewTokenEncryptionKeyStore(database, s.loggerFactory)
-	if err != nil {
-		return fmt.Errorf("[postgres.stores.Init] new token encryption key store: %w", err)
-	}
-
-	database, ok = databases[userCategory]
+	database, ok := databases[userCategory]
 	if !ok {
 		return fmt.Errorf("[postgres.stores.Init] database not found for the category '%s'", userCategory)
 	}
@@ -355,14 +347,24 @@ func (s *stores) Init(databases map[string]*postgres.Database) error {
 		return fmt.Errorf("[postgres.stores.Init] new store of users' web sessions: %w", err)
 	}
 
-	database, ok = databases[userWebSessionCategory]
+	database, ok = databases[userMobileSessionCategory]
 	if !ok {
-		return fmt.Errorf("[postgres.stores.Init] database not found for the category '%s'", userWebSessionCategory)
+		return fmt.Errorf("[postgres.stores.Init] database not found for the category '%s'", userMobileSessionCategory)
 	}
 
 	userMobileSessionStore, err := sessionstores.NewUserSessionStore(sessionmodels.UserSessionTypeMobile, database, s.loggerFactory)
 	if err != nil {
 		return fmt.Errorf("[postgres.stores.Init] new store of users' mobile sessions: %w", err)
+	}
+
+	database, ok = databases[authnCategory]
+	if !ok {
+		return fmt.Errorf("[postgres.stores.Init] database not found for the category '%s'", authnCategory)
+	}
+
+	tokenEncryptionKeyStore, err := authenticationstores.NewTokenEncryptionKeyStore(database, s.loggerFactory)
+	if err != nil {
+		return fmt.Errorf("[postgres.stores.Init] new token encryption key store: %w", err)
 	}
 
 	s.userStore = userStore
