@@ -21,7 +21,7 @@ bin/
 /web/website/src/environments/
 /web/website/src/assets/
 
-/db/postgres/identity/**/private/
+/db/postgres/identity/authndb/
 
 /pkg/auth/authn/
 /pkg/web/identity/authn/
