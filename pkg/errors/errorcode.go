@@ -32,34 +32,34 @@ const (
 	// Unauthorized.
 	ErrorCodeIdentity_PermissionDenied ErrorCode = 1202
 
-	// Transaction error codes (1400-1599).
+	// Transaction error codes (1400-1499).
 	ErrorCodeTransactionError ErrorCode = 1400
 
-	// Action error codes (1600-1799).
-	ErrorCodeActionError ErrorCode = 1600
+	// Action error codes (1500-1599).
+	ErrorCodeActionError ErrorCode = 1500
 
-	// Operation error codes (1800-1999).
-	ErrorCodeOperationError ErrorCode = 1800
+	// Operation error codes (1600-1699).
+	ErrorCodeOperationError ErrorCode = 1600
 
-	// HttpServer (../pkg/net/http/server) error codes (2000-2199).
-	ErrorCodeHttpServerError                  ErrorCode = 2000
-	ErrorCodeHttpServer_CreateRequestIdError  ErrorCode = 2001
-	ErrorCodeHttpServer_CreateResponseIdError ErrorCode = 2002
-	ErrorCodeHttpServer_RequestHandlingError  ErrorCode = 2003
-	ErrorCodeHttpServer_RequestLoggingError   ErrorCode = 2004
-	ErrorCodeHttpServer_ResponseLoggingError  ErrorCode = 2005
+	// HttpServer (../pkg/net/http/server) error codes (1700-1899).
+	ErrorCodeHttpServerError                  ErrorCode = 1700
+	ErrorCodeHttpServer_CreateRequestIdError  ErrorCode = 1701
+	ErrorCodeHttpServer_CreateResponseIdError ErrorCode = 1702
+	ErrorCodeHttpServer_RequestHandlingError  ErrorCode = 1703
+	ErrorCodeHttpServer_RequestLoggingError   ErrorCode = 1704
+	ErrorCodeHttpServer_ResponseLoggingError  ErrorCode = 1705
 
-	// GrpcServer (../pkg/net/grpc/server) error codes (2200-2399).
-	ErrorCodeGrpcServerError                 ErrorCode = 2200
-	ErrorCodeGrpcServer_CreateCallIdError    ErrorCode = 2201
-	ErrorCodeGrpcServer_RequestHandlingError ErrorCode = 2203
-	ErrorCodeGrpcServer_CallLoggingError     ErrorCode = 2204
+	// GrpcServer (../pkg/net/grpc/server) error codes (1900-2099).
+	ErrorCodeGrpcServerError                 ErrorCode = 1900
+	ErrorCodeGrpcServer_CreateCallIdError    ErrorCode = 1901
+	ErrorCodeGrpcServer_RequestHandlingError ErrorCode = 1903
+	ErrorCodeGrpcServer_CallLoggingError     ErrorCode = 1904
 
-	// Web Identity (../pkg/web/identity) error codes (2400-2599).
-	ErrorCodeWebIdentityError              ErrorCode = 2400
-	ErrorCodeWebIdentity_NoAuthnToken      ErrorCode = 2401
-	ErrorCodeWebIdentity_InvalidAuthnToken ErrorCode = 2402
-	ErrorCodeWebIdentity_AuthnTokenExpired ErrorCode = 2403
+	// Web Identity (../pkg/web/identity) error codes (2100-2299).
+	ErrorCodeWebIdentityError              ErrorCode = 2100
+	ErrorCodeWebIdentity_NoAuthnToken      ErrorCode = 2101
+	ErrorCodeWebIdentity_InvalidAuthnToken ErrorCode = 2102
+	ErrorCodeWebIdentity_AuthnTokenExpired ErrorCode = 2103
 
 	// Common error codes (10000-19999).
 	ErrorCodeInvalidOperation ErrorCode = 10000
