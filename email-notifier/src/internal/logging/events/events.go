@@ -27,23 +27,27 @@ import (
 // Event ids: 0-9999
 
 var (
-	// Notification events (id: 0, 10000-10199)
+	// Application events (id: 0, 10000-10999).
+
+	// Notification events (id: 0, 11000-11199).
 	NotificationEvent = logging.NewEvent(0, "Notification", logging.EventCategoryCommon, enlogging.EventGroupNotification)
 
-	// NotificationService events (id: 0, 10200-10299)
+	// NotificationService events (id: 0, 11200-11299).
 	NotificationServiceEvent = logging.NewEvent(0, "NotificationService", logging.EventCategoryCommon, enlogging.EventGroupNotificationService)
 
-	// NotificationCGHandler events (id: 0, 10300-10349)
+	// NotificationCGHandler events (id: 0, 11300-11349).
 	NotificationCGHandlerEvent = logging.NewEvent(0, "NotificationCGHandler", logging.EventCategoryCommon, enlogging.EventGroupNotificationCGHandler)
 
-	// NotificationSender events (id: 0, 10350-10399)
+	// NotificationSender events (id: 0, 11350-11399).
 	NotificationSenderEvent = logging.NewEvent(0, "NotificationSender", logging.EventCategoryCommon, enlogging.EventGroupNotificationSender)
 
-	// NotificationGroup events (id: 0, 10400-10599)
+	// NotificationGroup events (id: 0, 11400-11599).
 	NotificationGroupEvent = logging.NewEvent(0, "NotificationGroup", logging.EventCategoryCommon, enlogging.EventGroupNotificationGroup)
 
-	// Recipient events (id: 0, 10600-10799)
+	// Recipient events (id: 0, 11600-11799).
 	RecipientEvent = logging.NewEvent(0, "Recipient", logging.EventCategoryCommon, enlogging.EventGroupRecipient)
 
-	// ApplicationStore events (id: 0, 20000-20199)
+	// ApplicationStore events (id: 0, 30000-30999).
+	// HttpControllers_ApplicationController events (id: 0, 100000-100999).
+	// GrpcServices_ApplicationService events (id: 0, 200000-200999).
 )
