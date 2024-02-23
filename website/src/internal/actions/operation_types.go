@@ -27,12 +27,12 @@ const (
 	// Web resource operation types (11200-11399).
 	// Static file operation types (11400-11599).
 
-	// ContactMessageManager operation types (11600-11799).
+	// ContactMessageManager operation types (11600-11699).
 	OperationTypeContactMessageManager_Create actions.OperationType = 11600
 
 	// ApplicationStore operation types (30000-30999).
 
-	// ContactMessageStore operation types (31000-31199).
+	// ContactMessageStore operation types (31000-31099).
 	OperationTypeContactMessageStore_Create actions.OperationType = 31000
 
 	// caching (50000-69999)
