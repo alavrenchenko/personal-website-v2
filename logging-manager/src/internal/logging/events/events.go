@@ -27,39 +27,47 @@ import (
 // Event ids: 0-9999
 
 var (
-	// Log events (id: 0, 10000-10199)
+	// Application events (id: 0, 10000-10999).
+
+	// Log events (id: 0, 11000-11199).
 	LogEvent = logging.NewEvent(0, "Log", logging.EventCategoryCommon, lmlogging.EventGroupLog)
 
-	// LogGroup events (id: 0, 10200-10399)
+	// LogGroup events (id: 0, 11200-11399).
 	LogGroupEvent = logging.NewEvent(0, "LogGroup", logging.EventCategoryCommon, lmlogging.EventGroupLogGroup)
 
-	// LoggingSession events (id: 0, 10400-10599)
+	// LoggingSession events (id: 0, 11400-11599).
 	LoggingSessionEvent = logging.NewEvent(0, "LoggingSession", logging.EventCategoryCommon, lmlogging.EventGroupLoggingSession)
 
-	// LogStore events (id: 0, 20200-20399)
+	// ApplicationStore events (id: 0, 30000-30999).
+
+	// LogStore events (id: 0, 31000-31199).
 	LogStoreEvent = logging.NewEvent(0, "LogStore", logging.EventCategoryDatabase, lmlogging.EventGroupLogStore)
 
-	// LogGroupStore events (id: 0, 20400-20599)
+	// LogGroupStore events (id: 0, 31200-31399).
 	LogGroupStoreEvent = logging.NewEvent(0, "LogGroupStore", logging.EventCategoryDatabase, lmlogging.EventGroupLogGroupStore)
 
-	// LoggingSessionStore events (id: 0, 20600-20799)
+	// LoggingSessionStore events (id: 0, 31400-31599).
 	LoggingSessionStoreEvent = logging.NewEvent(0, "LoggingSessionStore", logging.EventCategoryDatabase, lmlogging.EventGroupLoggingSessionStore)
 
-	// HttpControllers_LogController events (id: 0, 100000-100199)
+	// HttpControllers_ApplicationController events (id: 0, 100000-100999).
+
+	// HttpControllers_LogController events (id: 0, 101000-101199).
 	HttpControllers_LogControllerEvent = logging.NewEvent(0, "HttpControllers_LogController", logging.EventCategoryCommon, lmlogging.EventGroupHttpControllers_LogController)
 
-	// HttpControllers_LogGroupController events (id: 0, 100200-100399)
+	// HttpControllers_LogGroupController events (id: 0, 101200-101399).
 	HttpControllers_LogGroupControllerEvent = logging.NewEvent(0, "HttpControllers_LogGroupController", logging.EventCategoryCommon, lmlogging.EventGroupHttpControllers_LogGroupController)
 
-	// HttpControllers_LoggingSessionController events (id: 0, 100400-100599)
+	// HttpControllers_LoggingSessionController events (id: 0, 101400-101599).
 	HttpControllers_LoggingSessionControllerEvent = logging.NewEvent(0, "HttpControllers_LoggingSessionController", logging.EventCategoryCommon, lmlogging.EventGroupHttpControllers_LoggingSessionController)
 
-	// GrpcServices_LogService events (id: 0, 200000-200199)
+	// GrpcServices_ApplicationService events (id: 0, 200000-200999).
+
+	// GrpcServices_LogService events (id: 0, 201000-201199).
 	GrpcServices_LogServiceEvent = logging.NewEvent(0, "GrpcServices_LogService", logging.EventCategoryCommon, lmlogging.EventGroupGrpcServices_LogService)
 
-	// GrpcServices_LogGroupService events (id: 0, 200200-200399)
+	// GrpcServices_LogGroupService events (id: 0, 201200-201399).
 	GrpcServices_LogGroupServiceEvent = logging.NewEvent(0, "GrpcServices_LogGroupService", logging.EventCategoryCommon, lmlogging.EventGroupGrpcServices_LogGroupService)
 
-	// GrpcServices_LoggingSessionService events (id: 0, 200400-200599)
+	// GrpcServices_LoggingSessionService events (id: 0, 201400-201599).
 	GrpcServices_LoggingSessionServiceEvent = logging.NewEvent(0, "GrpcServices_LoggingSessionService", logging.EventCategoryCommon, lmlogging.EventGroupGrpcServices_LoggingSessionService)
 )
