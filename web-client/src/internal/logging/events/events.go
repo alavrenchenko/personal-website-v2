@@ -27,9 +27,16 @@ import (
 // Event ids: 0-9999
 
 var (
-	// Client events (id: 0, 10000-10199)
+	// Application events (id: 0, 10000-10999).
+
+	// Client events (id: 0, 11000-11199).
 	ClientEvent = logging.NewEvent(0, "Client", logging.EventCategoryCommon, wclogging.EventGroupClient)
 
-	// HttpControllers_ClientController events (id: 0, 100000-100199)
+	// ApplicationStore events (id: 0, 30000-30999).
+	// HttpControllers_ApplicationController events (id: 0, 100000-100999).
+
+	// HttpControllers_ClientController events (id: 0, 101000-101199).
 	HttpControllers_ClientControllerEvent = logging.NewEvent(0, "HttpControllers_ClientController", logging.EventCategoryCommon, wclogging.EventGroupHttpControllers_ClientController)
+
+	// GrpcServices_ApplicationService events (id: 0, 200000-200999).
 )
