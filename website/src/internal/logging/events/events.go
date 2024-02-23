@@ -27,32 +27,38 @@ import (
 // Event ids: 0-9999
 
 var (
-	// Page events (id: 0, 10000-10199)
+	// Application events (id: 0, 10000-10999).
+
+	// Page events (id: 0, 11000-11199).
 	PageEvent = logging.NewEvent(0, "Page", logging.EventCategoryCommon, wlogging.EventGroupPage)
 
-	// WebResource events (id: 0, 10200-10399)
+	// WebResource events (id: 0, 11200-11399).
 	WebResourceEvent = logging.NewEvent(0, "WebResource", logging.EventCategoryCommon, wlogging.EventGroupWebResource)
 
-	// StaticFile events (id: 0, 10400-10599)
+	// StaticFile events (id: 0, 11400-11599).
 	StaticFileEvent = logging.NewEvent(0, "StaticFile", logging.EventCategoryCommon, wlogging.EventGroupStaticFile)
 
-	// ContactMessage events (id: 0, 10600-10799)
+	// ContactMessage events (id: 0, 11600-11799).
 	ContactMessageEvent = logging.NewEvent(0, "ContactMessage", logging.EventCategoryCommon, wlogging.EventGroupContactMessage)
 
-	// ApplicationStore events (id: 0, 20000-20199)
+	// ApplicationStore events (id: 0, 30000-30999).
 
-	// ContactMessageStore events (id: 0, 20200-20399)
+	// ContactMessageStore events (id: 0, 31000-31199).
 	ContactMessageStoreEvent = logging.NewEvent(0, "ContactMessageStore", logging.EventCategoryDatabase, wlogging.EventGroupContactMessageStore)
 
-	// HttpControllers_PageController events (id: 0, 100000-100199)
+	// HttpControllers_ApplicationController events (id: 0, 100000-100999).
+
+	// HttpControllers_PageController events (id: 0, 101000-101199).
 	HttpControllers_PageControllerEvent = logging.NewEvent(0, "HttpControllers_PageController", logging.EventCategoryCommon, wlogging.EventGroupHttpControllers_PageController)
 
-	// HttpControllers_WebResourceController events (id: 0, 100200-100399)
+	// HttpControllers_WebResourceController events (id: 0, 101200-101399).
 	HttpControllers_WebResourceControllerEvent = logging.NewEvent(0, "HttpControllers_WebResourceController", logging.EventCategoryCommon, wlogging.EventGroupHttpControllers_WebResourceController)
 
-	// HttpControllers_StaticFileController events (id: 0, 100400-100599)
+	// HttpControllers_StaticFileController events (id: 0, 101400-101599).
 	HttpControllers_StaticFileControllerEvent = logging.NewEvent(0, "HttpControllers_StaticFileController", logging.EventCategoryCommon, wlogging.EventGroupHttpControllers_StaticFileController)
 
-	// HttpControllers_ContactMessageController events (id: 0, 100600-100799)
+	// HttpControllers_ContactMessageController events (id: 0, 101600-101799).
 	HttpControllers_ContactMessageControllerEvent = logging.NewEvent(0, "HttpControllers_ContactMessageController", logging.EventCategoryCommon, wlogging.EventGroupHttpControllers_ContactMessageController)
+
+	// GrpcServices_ApplicationService events (id: 0, 200000-200999).
 )
