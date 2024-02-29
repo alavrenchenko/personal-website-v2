@@ -1,0 +1,108 @@
+{
+    "apps": {
+        "app-manager": {
+            "appPath": "bin/app-manager",
+            "instances": [
+                {
+                    "id": 1,
+                    "configFile": "configs/config.startup.development.json",
+                    "tags": [
+                        "startupMode"
+                    ]
+                },
+                {
+                    "id": 2,
+                    "configFile": "configs/config.full.development.1.json",
+                    "tags": [
+                        "fullMode"
+                    ]
+                },
+                {
+                    "id": 3,
+                    "configFile": "configs/config.full.development.2.json",
+                    "tags": [
+                        "fullMode"
+                    ]
+                }
+            ]
+        },
+        "logging-manager": {
+            "appPath": "bin/logging-manager",
+            "instances": [
+                {
+                    "id": 1,
+                    "configFile": "configs/config.startup.development.json",
+                    "tags": [
+                        "startupMode"
+                    ]
+                },
+                {
+                    "id": 2,
+                    "configFile": "configs/config.full.development.1.json",
+                    "tags": [
+                        "fullMode"
+                    ]
+                },
+                {
+                    "id": 3,
+                    "configFile": "configs/config.full.development.2.json",
+                    "tags": [
+                        "fullMode"
+                    ]
+                }
+            ]
+        },
+        "identity": {
+            "appPath": "bin/identity",
+            "instances": [
+                {
+                    "id": 1,
+                    "configFile": "configs/config.development.1.json"
+                },
+                {
+                    "id": 2,
+                    "configFile": "configs/config.development.2.json"
+                }
+            ]
+        },
+        "email-notifier": {
+            "appPath": "bin/email-notifier",
+            "instances": [
+                {
+                    "id": 1,
+                    "configFile": "configs/config.development.1.json"
+                },
+                {
+                    "id": 2,
+                    "configFile": "configs/config.development.2.json"
+                }
+            ]
+        },
+        "web-client": {
+            "appPath": "bin/web-client",
+            "instances": [
+                {
+                    "id": 1,
+                    "configFile": "configs/config.development.1.json"
+                },
+                {
+                    "id": 2,
+                    "configFile": "configs/config.development.2.json"
+                }
+            ]
+        },
+        "website": {
+            "appPath": "bin/website",
+            "instances": [
+                {
+                    "id": 1,
+                    "configFile": "configs/config.development.1.json"
+                },
+                {
+                    "id": 2,
+                    "configFile": "configs/config.development.2.json"
+                }
+            ]
+        }
+    }
+}

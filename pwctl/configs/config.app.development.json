@@ -1,0 +1,23 @@
+{
+    "apps": {
+        "{app}": {
+            "appPath": "{appPath}",
+            "instances": [
+                {
+                    "id": 1,
+                    "configFile": "{configFile}",
+                    "tags": [
+                        "{tag}"
+                    ]
+                },
+                {
+                    "id": 2,
+                    "configFile": "{configFile}",
+                    "tags": [
+                        "{tag}"
+                    ]
+                }
+            ]
+        }
+    }
+}
