@@ -36,6 +36,11 @@ const (
 	appWebsite        = "website"
 )
 
+const (
+	tagFullMode    = "fullMode"
+	tagStartupMode = "startupMode"
+)
+
 // ExecPWCmd executes a pw command.
 func ExecPWCmd(cmd string, opts map[string]string, c *config.Config) error {
 	if strings.IsEmptyOrWhitespace(cmd) {
