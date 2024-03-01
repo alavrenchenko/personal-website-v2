@@ -48,6 +48,9 @@ func stop(app string, ac *config.App) error {
 	if pwstrings.IsEmptyOrWhitespace(ac.Path) {
 		return errors.NewError(errors.ErrorCodeInvalidData, "app path is empty")
 	}
+	if len(ac.Instances) == 0 {
+		return errors.NewError(errors.ErrorCodeInvalidData, "number of app instances is 0")
+	}
 
 	for _, inst := range ac.Instances {
 		if pwstrings.IsEmptyOrWhitespace(inst.ConfigPath) {
