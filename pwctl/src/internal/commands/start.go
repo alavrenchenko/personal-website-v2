@@ -81,7 +81,9 @@ func ExecStartPWCmd(opts map[string]string, c *config.Config) error {
 		}
 	}
 
-	// stop app-manager (startup)
+	if err = stopPWAppInstance(appAppManager, amPath, samInst); err != nil {
+		return fmt.Errorf("[ERROR] [commands.ExecStartPWCmd] stop the %s instance (%d): %w", appAppManager, samInst.Id, err)
+	}
 
 	for _, inst := range lmInsts {
 		if err = startPWAppInstance(appLoggingManager, lmPath, inst); err != nil {
@@ -89,7 +91,9 @@ func ExecStartPWCmd(opts map[string]string, c *config.Config) error {
 		}
 	}
 
-	// stop logging-manager (startup)
+	if err = stopPWAppInstance(appLoggingManager, lmPath, slmInst); err != nil {
+		return fmt.Errorf("[ERROR] [commands.ExecStartPWCmd] stop the %s instance (%d): %w", appLoggingManager, slmInst.Id, err)
+	}
 
 	if len(ic.Instances) > 1 {
 		for _, inst := range ic.Instances[1:] {
