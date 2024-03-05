@@ -32,6 +32,146 @@ import (
 
 // ExecStopPWCmd executes a command to stop a personal website.
 func ExecStopPWCmd(opts map[string]string, c *config.Config) error {
+	if wc := c.Apps[appWebsite]; wc != nil && len(wc.Instances) > 0 {
+		if err := stop(appWebsite, wc); err != nil {
+			fmt.Printf("[ERROR] [commands.ExecStopPWCmd] stop the %s: %v\n", appWebsite, err)
+		}
+	}
+
+	if wcc := c.Apps[appWebClient]; wcc != nil && len(wcc.Instances) > 0 {
+		if err := stop(appWebClient, wcc); err != nil {
+			fmt.Printf("[ERROR] [commands.ExecStopPWCmd] stop the %s: %v\n", appWebClient, err)
+		}
+	}
+
+	if enc := c.Apps[appEmailNotifier]; enc != nil && len(enc.Instances) > 0 {
+		if err := stop(appEmailNotifier, enc); err != nil {
+			fmt.Printf("[ERROR] [commands.ExecStopPWCmd] stop the %s: %v\n", appEmailNotifier, err)
+		}
+	}
+
+	if lmPath, lmInsts, _, err := getAppParamsWithStartupMode(appLoggingManager, c); err != nil {
+		fmt.Printf("[commands.ExecStopPWCmd] get %s params with startup mode: %v\n", appLoggingManager, err)
+	} else {
+		ac := &config.App{Path: lmPath, Instances: lmInsts}
+		if err = stop(appLoggingManager, ac); err != nil {
+			fmt.Printf("[ERROR] [commands.ExecStopPWCmd] stop the %s: %v\n", appLoggingManager, err)
+		}
+	}
+
+	ic := c.Apps[appIdentity]
+	if ic != nil {
+		if len(ic.Instances) > 1 {
+			ac := &config.App{Path: ic.Path, Instances: ic.Instances[1:]}
+			if err := stop(appIdentity, ac); err != nil {
+				fmt.Printf("[ERROR] [commands.ExecStopPWCmd] stop the %s: %v\n", appIdentity, err)
+			}
+		}
+	} else {
+		return fmt.Errorf("[commands.ExecStopPWCmd] %s config is missing", appIdentity)
+	}
+
+	amPath, amInsts, samInst, err := getAppParamsWithStartupMode(appAppManager, c)
+	if err != nil {
+		fmt.Printf("[commands.ExecStopPWCmd] get %s params with startup mode: %v\n", appAppManager, err)
+	} else if err = startPWAppInstance(appAppManager, amPath, samInst); err != nil {
+		fmt.Printf("[ERROR] [commands.ExecStopPWCmd] start the %s instance (%d): %v\n", appAppManager, samInst.Id, err)
+		samInst = nil
+	}
+
+	if len(amInsts) > 0 {
+		ac := &config.App{Path: amPath, Instances: amInsts}
+		if err = stop(appAppManager, ac); err != nil {
+			fmt.Printf("[ERROR] [commands.ExecStopPWCmd] stop the %s: %v\n", appAppManager, err)
+		}
+	}
+
+	if ic != nil {
+		if len(ic.Instances) > 0 {
+			ac := &config.App{Path: ic.Path, Instances: ic.Instances[:1]}
+			if err = stop(appIdentity, ac); err != nil {
+				fmt.Printf("[ERROR] [commands.ExecStopPWCmd] stop the %s: %v\n", appIdentity, err)
+			}
+		} else {
+			fmt.Printf("[ERROR] [commands.ExecStopPWCmd] number of %s instances is 0\n", appIdentity)
+		}
+	}
+
+	if samInst != nil {
+		ac := &config.App{Path: amPath, Instances: []*config.AppInstance{samInst}}
+		if err = stop(appAppManager, ac); err != nil {
+			fmt.Printf("[ERROR] [commands.ExecStopPWCmd] stop the %s: %v\n", appAppManager, err)
+		}
+	}
+	return nil
+}
+
+func stopPWAppInstance(app, appPath string, inst *config.AppInstance) error {
+	if pwstrings.IsEmptyOrWhitespace(inst.ConfigPath) {
+		return fmt.Errorf("[ERROR] [commands.stopPWAppInstance] [%s, instance %d] config path is empty", app, inst.Id)
+	}
+
+	pattern := "^" + appPath + ".*config-file=" + inst.ConfigPath
+	cmd := exec.Command("pgrep", "-f", "-d,", pattern)
+	b, err := cmd.Output()
+	if err != nil {
+		// https://manpages.debian.org/bookworm/procps/pgrep.1.en.html
+		// EXIT STATUS:
+		// 0 - One or more processes matched the criteria.
+		// 1 - No processes matched or none of them could be signalled.
+		// 2 - Syntax error in the command line.
+		// 3 - Fatal error: out of memory etc.
+		if cmd.ProcessState != nil && cmd.ProcessState.ExitCode() == 1 {
+			fmt.Printf("[WARNING] [commands.stopPWAppInstance] [%s, instance %d] not found (no processes)\n", app, inst.Id)
+			return nil
+		}
+		return fmt.Errorf("[ERROR] [commands.stopPWAppInstance] [%s, instance %d] run a pgrep command: %w", app, inst.Id, err)
+	}
+
+	b = bytes.TrimSpace(b)
+	pids := strings.Split(unsafe.String(unsafe.SliceData(b), len(b)), ",")
+	pidslen := len(pids)
+	if pidslen == 0 {
+		fmt.Printf("[WARNING] [commands.stopPWAppInstance] [%s, instance %d] not found (no processes)\n", app, inst.Id)
+		return nil
+	}
+	if pidslen > 1 {
+		fmt.Printf("[WARNING] [commands.stopPWAppInstance] [%s, instance %d] more than 1 process found (%d processes)\n", app, inst.Id, pidslen)
+	}
+
+	for i := 0; i < pidslen; i++ {
+		pid, err := strconv.Atoi(pids[i])
+		if err != nil {
+			return fmt.Errorf("[ERROR] [commands.stopPWAppInstance] [%s, instance %d] convert pid from string to int: %w", app, inst.Id, err)
+		}
+
+		p, err := os.FindProcess(pid)
+		if err != nil {
+			return fmt.Errorf("[ERROR] [commands.stopPWAppInstance] [%s, instance %d] find a process by pid (%d): %w", app, inst.Id, pid, err)
+		}
+
+		if err = p.Signal(syscall.SIGTERM); err != nil {
+			return fmt.Errorf("[ERROR] [commands.stopPWAppInstance] [%s, instance %d] send the '%s' signal (%d) to a process (pid=%d): %w",
+				app, inst.Id, syscall.SIGTERM, syscall.SIGTERM, pid, err,
+			)
+		}
+
+		// There will be an error: no child processes.
+		// if _, err = p.Wait(); err != nil {
+		// 	return fmt.Errorf("[ERROR] [commands.stopPWAppInstance] [%s, instance %d] wait for the process (pid=%d) to exit: %w", app, inst.Id, pid, err)
+		// }
+
+		for {
+			if err = p.Signal(syscall.Signal(0)); err != nil {
+				if err == os.ErrProcessDone {
+					fmt.Printf("[commands.stopPWAppInstance] %s (instance %d) has been stopped (pid=%d)\n", app, inst.Id, pid)
+					break
+				}
+				return fmt.Errorf("[ERROR] [commands.stopPWAppInstance] [%s, instance %d] send a signal 0 to a process (pid=%d): %w", app, inst.Id, pid, err)
+			}
+			time.Sleep(100 * time.Millisecond)
+		}
+	}
 	return nil
 }
 
