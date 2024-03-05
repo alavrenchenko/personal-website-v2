@@ -156,21 +156,11 @@ func stopPWAppInstance(app, appPath string, inst *config.AppInstance) error {
 			)
 		}
 
-		// There will be an error: no child processes.
-		// if _, err = p.Wait(); err != nil {
-		// 	return fmt.Errorf("[ERROR] [commands.stopPWAppInstance] [%s, instance %d] wait for the process (pid=%d) to exit: %w", app, inst.Id, pid, err)
-		// }
-
-		for {
-			if err = p.Signal(syscall.Signal(0)); err != nil {
-				if err == os.ErrProcessDone {
-					fmt.Printf("[commands.stopPWAppInstance] %s (instance %d) has been stopped (pid=%d)\n", app, inst.Id, pid)
-					break
-				}
-				return fmt.Errorf("[ERROR] [commands.stopPWAppInstance] [%s, instance %d] send a signal 0 to a process (pid=%d): %w", app, inst.Id, pid, err)
-			}
-			time.Sleep(100 * time.Millisecond)
+		if _, err = p.Wait(); err != nil {
+			return fmt.Errorf("[ERROR] [commands.stopPWAppInstance] [%s, instance %d] wait for the process (pid=%d) to exit: %w", app, inst.Id, pid, err)
 		}
+
+		fmt.Printf("[commands.stopPWAppInstance] %s (instance %d) has been stopped (pid=%d)\n", app, inst.Id, pid)
 	}
 	return nil
 }
@@ -192,6 +182,7 @@ func stop(app string, ac *config.App) error {
 		return errors.NewError(errors.ErrorCodeInvalidData, "number of app instances is 0")
 	}
 
+InstanceLoop:
 	for _, inst := range ac.Instances {
 		if pwstrings.IsEmptyOrWhitespace(inst.ConfigPath) {
 			fmt.Printf("[ERROR] [commands.stop] [%s, instance %d] config path is empty\n", app, inst.Id)
@@ -247,23 +238,25 @@ func stop(app string, ac *config.App) error {
 				continue
 			}
 
-			// There will be an error: no child processes.
-			// if _, err = p.Wait(); err != nil {
-			// 	fmt.Printf("[ERROR] [commands.stop] [%s, instance %d] wait for the process (pid=%d) to exit: %v\n", app, inst.Id, pid, err)
-			// 	continue
-			// }
-
-			for {
-				if err = p.Signal(syscall.Signal(0)); err != nil {
-					if err == os.ErrProcessDone {
-						fmt.Printf("[commands.stop] %s (instance %d) has been stopped (pid=%d)\n", app, inst.Id, pid)
-					} else {
-						fmt.Printf("[ERROR] [commands.stop] [%s, instance %d] send a signal 0 to a process (pid=%d): %v\n", app, inst.Id, pid, err)
-					}
-					break
+			if _, err = p.Wait(); err != nil {
+				if err.Error() != "waitid: no child processes" {
+					fmt.Printf("[ERROR] [commands.stop] [%s, instance %d] wait for the process (pid=%d) to exit: %v\n", app, inst.Id, pid, err)
+					continue
 				}
-				time.Sleep(100 * time.Millisecond)
+
+				for {
+					if err = p.Signal(syscall.Signal(0)); err != nil {
+						if err == os.ErrProcessDone {
+							break
+						}
+						fmt.Printf("[ERROR] [commands.stop] [%s, instance %d] send a signal 0 to a process (pid=%d): %v\n", app, inst.Id, pid, err)
+						continue InstanceLoop
+					}
+					time.Sleep(100 * time.Millisecond)
+				}
 			}
+
+			fmt.Printf("[commands.stop] %s (instance %d) has been stopped (pid=%d)\n", app, inst.Id, pid)
 		}
 	}
 	return nil
