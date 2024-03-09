@@ -11,12 +11,12 @@ pw-contact {
 
 pw-contact .pw-page-row {
     padding-top: 0;
-    padding-bottom: 0;
+    padding-bottom: 25px;
 }
 
 pw-contact .pw-page-row-item {
     background-color: rgba(0, 0, 0, 0.1);
-    padding: 35px;
+    padding: 20px;
     border: var(--pw-primary-border);
     border-radius: 10px;
 }
