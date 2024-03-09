@@ -32,10 +32,10 @@ import { GOOGLE_ANALYTICS_SERVICE_CONFIG_TOKEN, GoogleAnalyticsErrorSendingHandl
 
 const appRoutes: Routes = [
     { title: "Alexey Lavrenchenko", path: "", pathMatch: "full", component: HomeComponent },
-    { title: "Info", path: "info", pathMatch: "full", component: InfoComponent },
-    { title: "About", path: "about", pathMatch: "full", component: AboutComponent },
-    { title: "Contact", path: "contact", pathMatch: "full", component: ContactComponent },
-    { title: "Not Found", path: "**", component: NotFoundComponent }
+    { title: "Info | Alexey Lavrenchenko", path: "info", pathMatch: "full", component: InfoComponent },
+    { title: "About | Alexey Lavrenchenko", path: "about", pathMatch: "full", component: AboutComponent },
+    { title: "Contact | Alexey Lavrenchenko", path: "contact", pathMatch: "full", component: ContactComponent },
+    { title: "Page Not Found | Alexey Lavrenchenko", path: "**", component: NotFoundComponent }
 ];
 
 const prefersReducedMotion = typeof matchMedia === 'function' ? matchMedia('(prefers-reduced-motion)').matches : false;
