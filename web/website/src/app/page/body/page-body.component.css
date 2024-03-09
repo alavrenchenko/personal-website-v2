@@ -2,35 +2,35 @@ pw-page-body {
     display: block;
     position: relative;
     flex: 1;
-    margin-top: 56px;
+    margin-top: 54px;
     overflow: auto;
     -webkit-overflow-scrolling: touch;
     outline: none;
     z-index: 1;
 }
 
-@media (max-width: 820px) {
+@media (max-width: 720px) {
     pw-page-body {
-        margin-top: 92px;
+        margin-top: 90px;
         overflow-y: visible
     }
 }
 
-@media (max-width: 397px) {
+@media (max-width: 372px) {
     pw-page-body {
-        margin-top: 128px;
+        margin-top: 126px;
     }
 }
 
-@media (max-width: 375px) {
+@media (max-width: 357px) {
     pw-page-body {
-        margin-top: 164px;
+        margin-top: 162px;
     }
 }
 
-@media (max-width: 237px) {
+@media (max-width: 230px) {
     pw-page-body {
-        margin-top: 200px;
+        margin-top: 198px;
     }
 }
 
