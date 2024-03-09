@@ -2,7 +2,8 @@ pw-navbar {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    font-size: 16px !important;
+    font-size: 14px;
+    font-weight: 500;
     letter-spacing: .05em;
     justify-content: center;
 }
@@ -12,6 +13,7 @@ pw-navbar {
     position: relative;
     background-color: transparent;
     color: #fff;
+    font-size: 16px !important;
     font-weight: bold !important;
     align-items: center;
     justify-content: center;
@@ -45,14 +47,13 @@ pw-navbar {
     flex-wrap: wrap;
     align-items: center;
     flex-grow: 1;
-    /* padding: 5px 16px; */
 }
 
 .pw-nav-bottom {
     display: none;
 }
 
-@media (max-width: 820px) {
+@media (max-width: 720px) {
     .pw-nav-top .pw-nav-router-links {
         display: none;
     }
@@ -64,6 +65,12 @@ pw-navbar {
 }
 
 @media (max-width: 375px) {
+    .pw-navbar-brand {
+        font-size: 15px !important;
+    }
+}
+
+@media (max-width: 357px) {
     .pw-nav-top {
         width: 100%;
         justify-content: center;
@@ -105,17 +112,23 @@ pw-navbar {
     background-color: rgba(0, 0, 0, .3) !important;
 }
 
+.pw-nav-external-links>.mat-mdc-icon-button.mat-mdc-button-base,
+.pw-nav-external-links .mat-mdc-icon-button .mat-mdc-button-touch-target {
+    width: 46px;
+    height: 46px;
+}
+
 .pw-nav-item.pw-nav-logo {
     min-width: 0;
     padding: 9px !important;
 }
 
 .pw-nav-item.pw-nav-logo svg {
-    width: 30px;
-    height: 30px;
+    width: 28px;
+    height: 28px;
 }
 
-@media (min-width: 376px) {
+@media (min-width: 358px) {
     .pw-navbar-nav .flex-spacer {
         flex-grow: 1;
     }
@@ -125,7 +138,7 @@ pw-navbar {
     flex: 1;
 }
 
-@media (max-width: 700px) {
+@media (max-width: 630px) {
     .pw-nav-bottom {
         justify-content: center;
     }
