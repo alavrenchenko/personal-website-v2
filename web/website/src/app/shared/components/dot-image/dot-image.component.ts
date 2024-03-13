@@ -83,7 +83,7 @@ export class DotImageComponent implements OnInit, OnDestroy {
     onDocVisibilityChange(): void {
         if (document.hidden) {
             this.stopRefreshing();
-        } else {
+        } else if (this._img) {
             this.startRefreshing();
         }
     }
