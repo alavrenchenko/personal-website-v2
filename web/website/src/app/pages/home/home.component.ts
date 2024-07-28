@@ -21,12 +21,6 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { DotImageComponent, IMAGE_URL_TOKEN } from "../../shared/components/dot-image";
-import { IMAGES_TOKEN, ImageInfo, ImageListComponent } from "../../shared/components/images";
-
-const photos = [
-    new ImageInfo(1, '', '/static/img/me/me.png', '/static/img/me/me.png', ''),
-    new ImageInfo(2, '', '/static/img/me/me2.jpg', '/static/img/me/me2.jpg', '')
-];
 
 @Component({
     selector: "pw-home",
@@ -35,10 +29,9 @@ const photos = [
     styleUrls: ['./home.component.css'],
     encapsulation: ViewEncapsulation.None,
     providers: [
-        { provide: IMAGE_URL_TOKEN, useValue: '/static/img/me/me.png' },
-        { provide: IMAGES_TOKEN, useValue: photos }
+        { provide: IMAGE_URL_TOKEN, useValue: '/static/img/me/me.png' }
     ],
-    imports: [RouterLink, MatButtonModule, MatTooltipModule, DotImageComponent, ImageListComponent]
+    imports: [RouterLink, MatButtonModule, MatTooltipModule, DotImageComponent]
 })
 export class HomeComponent {
     constructor() { }
