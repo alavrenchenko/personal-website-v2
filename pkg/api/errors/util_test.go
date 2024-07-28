@@ -19,11 +19,11 @@ import (
 	"fmt"
 	"testing"
 
-	errs "personal-website-v2/pkg/errors"
+	errs "personal-website-v2/pkg/api/errors"
 )
 
 func TestUnwrap(t *testing.T) {
-	target := errs.NewError(1, "error")
+	target := errs.NewApiError(1, "error")
 	wrapErrWithTarget := fmt.Errorf("err: %w", fmt.Errorf("err: %w", fmt.Errorf("err: %w", target)))
 	wrapErrWithoutTarget := fmt.Errorf("err: %w", fmt.Errorf("err: %w", fmt.Errorf("err: %w", errors.New("err"))))
 
