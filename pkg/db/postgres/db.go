@@ -165,7 +165,5 @@ func (m *DbManager[TStores]) Dispose() {
 			db.ConnPool.Close()
 		}
 	}
-
 	m.disposed = true
-	return
 }
